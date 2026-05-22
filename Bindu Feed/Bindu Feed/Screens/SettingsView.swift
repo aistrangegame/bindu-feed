@@ -137,7 +137,10 @@ struct SettingsView: View {
                     .strokeBorder(BinduTheme.hairline, lineWidth: 0.5)
             )
             .submitLabel(.done)
-            .onSubmit { nameFocused = false }
+            .onSubmit {
+                nameFocused = false
+                saveSettings()
+            }
         }
     }
 
@@ -316,10 +319,13 @@ struct SettingsView: View {
     }
 
     private func saveSettings() {
+        // Dismiss focus first so the TextField commits any in-flight character
+        // before we read `name` — on device, tapping the button while the
+        // keyboard is up can otherwise drop the last keystroke.
+        nameFocused = false
         let s = ArrivalSettings(name: name, glyph: glyph, colorHex: colorHex)
         s.save()
         savedSnapshot = s
-        nameFocused = false
     }
 
     // MARK: - Options
@@ -353,7 +359,7 @@ struct SettingsView: View {
 
 // MARK: - Persistence model
 
-struct ArrivalSettings: Equatable {
+struct ArrivalSettings: Codable, Equatable {
     var name: String = ""
     var glyph: String = "·"
     var colorHex: String = "#9B6BD6"  // Lalita violet default
@@ -361,28 +367,17 @@ struct ArrivalSettings: Equatable {
     static let defaultsKey = "bindu.arrival.settings"
 
     static func load() -> ArrivalSettings {
-        let d = UserDefaults.standard
         guard
-            let data = d.data(forKey: defaultsKey),
-            let dict = try? JSONSerialization.jsonObject(with: data) as? [String: String]
+            let data = UserDefaults.standard.data(forKey: defaultsKey),
+            let decoded = try? JSONDecoder().decode(ArrivalSettings.self, from: data)
         else {
             return ArrivalSettings()
         }
-        return ArrivalSettings(
-            name: dict["name"] ?? "",
-            glyph: dict["glyph"] ?? "·",
-            colorHex: dict["colorHex"] ?? "#9B6BD6"
-        )
+        return decoded
     }
 
     func save() {
-        let dict: [String: String] = [
-            "name": name,
-            "glyph": glyph,
-            "colorHex": colorHex
-        ]
-        if let data = try? JSONSerialization.data(withJSONObject: dict) {
-            UserDefaults.standard.set(data, forKey: ArrivalSettings.defaultsKey)
-        }
+        guard let data = try? JSONEncoder().encode(self) else { return }
+        UserDefaults.standard.set(data, forKey: ArrivalSettings.defaultsKey)
     }
 }

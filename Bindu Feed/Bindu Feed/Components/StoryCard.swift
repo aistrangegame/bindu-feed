@@ -6,7 +6,11 @@ struct StoryCard: View {
     let stats: StoryStats
     let archetypes: [Archetype]
 
+    @EnvironmentObject private var store: FeedStore
     @State private var pulseGlow: Double = 0
+    @State private var resonanceBoost: Int = 0
+    @State private var resonancePressed: Bool = false
+    @State private var resonanceInFlight: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: BinduTheme.space12) {
@@ -61,15 +65,22 @@ struct StoryCard: View {
 
     private var bottomRow: some View {
         HStack(alignment: .center, spacing: BinduTheme.space12) {
-            Label {
-                Text("\(story.resonance)")
-                    .font(.spaceMono(11))
-                    .foregroundColor(BinduTheme.inkSecondary)
-            } icon: {
-                Text("▲")
-                    .font(.system(size: 10))
-                    .foregroundColor(BinduTheme.inkTertiary)
+            Button(action: handleResonate) {
+                Label {
+                    Text("\(story.resonance + resonanceBoost)")
+                        .font(.spaceMono(11))
+                        .foregroundColor(BinduTheme.inkSecondary)
+                } icon: {
+                    Text("▲")
+                        .font(.system(size: 10))
+                        .foregroundColor(BinduTheme.inkTertiary)
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .scaleEffect(resonancePressed ? 0.85 : 1.0)
+            .animation(.spring(response: 0.32, dampingFraction: 0.55), value: resonancePressed)
+            .disabled(resonanceInFlight)
 
             Label {
                 Text("\(stats.commentCount)")
@@ -97,6 +108,25 @@ struct StoryCard: View {
         withAnimation(.easeOut(duration: 0.6)) { pulseGlow = 0.35 }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
             withAnimation(.easeIn(duration: 1.6)) { pulseGlow = 0 }
+        }
+    }
+
+    // MARK: - Resonance
+
+    private func handleResonate() {
+        guard !resonanceInFlight else { return }
+        let current = story.resonance + resonanceBoost
+        resonanceBoost += 1
+        resonanceInFlight = true
+        resonancePressed = true
+
+        Task { @MainActor in
+            await store.incrementResonance(recordId: story.id, current: current)
+            resonanceInFlight = false
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+            resonancePressed = false
         }
     }
 

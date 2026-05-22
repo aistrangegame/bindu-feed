@@ -12,8 +12,19 @@ struct AshVoiceView: View {
     @State private var storyById: [String: Story] = [:]
     @State private var parentCommentById: [String: FieldComment] = [:]
     @State private var loaded: Bool = false
+    @State private var settings: ArrivalSettings = .init()
 
-    private let terra = BinduTheme.colorAsh
+    private var terra: Color {
+        settings.colorHex.isEmpty ? BinduTheme.colorAsh : Color(hex: settings.colorHex)
+    }
+
+    private var displayName: String {
+        settings.name.isEmpty ? "Ash" : settings.name
+    }
+
+    private var displayGlyph: String {
+        settings.glyph.isEmpty ? "◉" : settings.glyph
+    }
 
     var body: some View {
         ZStack {
@@ -85,13 +96,13 @@ struct AshVoiceView: View {
                     .overlay(
                         Circle().strokeBorder(terra.opacity(0.65), lineWidth: 0.7)
                     )
-                Text("◉")
+                Text(displayGlyph)
                     .font(.system(size: 40))
                     .foregroundColor(terra)
             }
             .frame(width: 150, height: 150)
 
-            Text("Ash")
+            Text(displayName)
                 .font(.lora(26, weight: .medium))
                 .foregroundColor(BinduTheme.inkPrimary)
 
@@ -193,6 +204,7 @@ struct AshVoiceView: View {
     // MARK: - Load
 
     private func load() async {
+        settings = ArrivalSettings.load()
         do {
             let ash = try await AirtableService.shared.fetchAllAshComments()
             comments = ash

@@ -9,6 +9,11 @@ struct ReplyRow: View {
     let parentColor: Color
     let onArchetypeTap: (Archetype) -> Void
 
+    @EnvironmentObject private var store: FeedStore
+    @State private var resonanceBoost: Int = 0
+    @State private var resonancePressed: Bool = false
+    @State private var resonanceInFlight: Bool = false
+
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             // Spine
@@ -33,10 +38,17 @@ struct ReplyRow: View {
                         .font(.lora(12, weight: .medium))
                         .foregroundColor(archetypeColor)
                     Spacer(minLength: BinduTheme.space8)
-                    if comment.resonance > 0 {
-                        Text("♡ \(comment.resonance)")
-                            .font(.spaceMono(10))
-                            .foregroundColor(BinduTheme.inkTertiary)
+                    if displayResonance > 0 {
+                        Button(action: handleResonate) {
+                            Text("♡ \(displayResonance)")
+                                .font(.spaceMono(10))
+                                .foregroundColor(BinduTheme.inkTertiary)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .scaleEffect(resonancePressed ? 0.85 : 1.0)
+                        .animation(.spring(response: 0.32, dampingFraction: 0.55), value: resonancePressed)
+                        .disabled(resonanceInFlight)
                     }
                 }
 
@@ -59,6 +71,25 @@ struct ReplyRow: View {
 
     private var archetypeColor: Color {
         archetype?.color ?? BinduTheme.inkSecondary
+    }
+
+    private var displayResonance: Int { comment.resonance + resonanceBoost }
+
+    private func handleResonate() {
+        guard !resonanceInFlight else { return }
+        let current = displayResonance
+        resonanceBoost += 1
+        resonanceInFlight = true
+        resonancePressed = true
+
+        Task { @MainActor in
+            await store.incrementResonance(recordId: comment.id, current: current)
+            resonanceInFlight = false
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+            resonancePressed = false
+        }
     }
 
     @ViewBuilder

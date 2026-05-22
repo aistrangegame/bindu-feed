@@ -78,6 +78,10 @@ final class AirtableService {
             components?.queryItems = items
             guard let url = components?.url else { throw AirtableError.badURL }
 
+            #if DEBUG
+            print("[AirtableService] GET \(url.absoluteString)")
+            #endif
+
             var req = URLRequest(url: url)
             req.httpMethod = "GET"
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -137,22 +141,23 @@ final class AirtableService {
         return records.map(Story.init(from:))
     }
 
+    // Airtable's filterByFormula cannot reliably match a linked-record field
+    // by record ID: in formula context {Linked Story} evaluates to the linked
+    // records' primary field VALUES (story names), not their record IDs, so
+    // FIND('recXXX', ARRAYJOIN({Linked Story})) never matches. Fetch by type
+    // server-side, then narrow by linkedStoryId client-side.
     func fetchFieldComments(storyId: String) async throws -> [FieldComment] {
-        let filter = "AND({Type}='Field Comment',{Status}='Live',FIND('\(storyId)',ARRAYJOIN({Linked Story})))"
-        let records = try await fetch(
-            filter: filter,
-            sort: [(field: "Comment Order", direction: "asc")]
-        )
-        return records.map(FieldComment.init(from:))
+        let all = try await fetchAllFieldComments()
+        return all
+            .filter { $0.linkedStoryId == storyId }
+            .sorted { $0.commentOrder < $1.commentOrder }
     }
 
     func fetchAshComments(storyId: String) async throws -> [FieldComment] {
-        let filter = "AND({Type}='Ash Comment',{Status}='Live',FIND('\(storyId)',ARRAYJOIN({Linked Story})))"
-        let records = try await fetch(
-            filter: filter,
-            sort: [(field: "Comment Order", direction: "asc")]
-        )
-        return records.map(FieldComment.init(from:))
+        let all = try await fetchAllAshComments()
+        return all
+            .filter { $0.linkedStoryId == storyId }
+            .sorted { $0.commentOrder < $1.commentOrder }
     }
 
     func fetchAllFieldComments() async throws -> [FieldComment] {
@@ -250,12 +255,48 @@ final class AirtableService {
             guard let first = result.records.first else {
                 throw AirtableError.http(200, "Empty response from Airtable")
             }
+            // Refresh the parent Story's Last Activity Date so the home feed
+            // surfaces this room as freshly stirred. Last Activity Date is a
+            // manual date field — it does not auto-update from linked comments.
+            // Best-effort: the comment already posted, so if this PATCH fails
+            // we swallow rather than surface an error that no longer reflects
+            // reality.
+            do {
+                try await updateStoryLastActivityDate(storyId: storyId)
+            } catch {
+                #if DEBUG
+                print("[AirtableService] Last Activity Date update failed for story \(storyId): \(error)")
+                #endif
+            }
             return first
         } catch let err as AirtableError {
             throw err
         } catch {
             throw AirtableError.decoding(error)
         }
+    }
+
+    private func updateStoryLastActivityDate(storyId: String) async throws {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: "\(baseURLString)/\(storyId)") else { throw AirtableError.badURL }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        let today = formatter.string(from: Date())
+
+        let payload: [String: Any] = [
+            "fields": ["Last Activity Date": today]
+        ]
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "PATCH"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
     }
 
     func updateResonance(recordId: String, newResonance: Int) async throws {
