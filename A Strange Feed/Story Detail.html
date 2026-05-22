@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Story Detail</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #root {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --inset: #121018;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+      --lalita: #9B6BD6;
+      --ash:   #C47A52;
+    }
+
+    @keyframes dissolve {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    @keyframes breathe {
+      0%,100% { opacity: 0.65; }
+      50%      { opacity: 1.00; }
+    }
+
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+/* ─── Archetype data ────────────────────────────────────── */
+
+const ARCH = {
+  sakshi:   { name: 'Sakshi',   color: '#7B82D4', g: '◇' },
+  gaia:     { name: 'Gaia',     color: '#4A9E6B', g: '◆' },
+  lalita:   { name: 'Lalita',   color: '#9B6BD6', g: '✦' },
+  bindu:    { name: 'Bindu',    color: '#E5533C', g: '·'  },
+  sid:      { name: 'Sid',      color: '#C4923A', g: '△' },
+  arch:     { name: 'Arch',     color: '#D4607A', g: '◯' },
+  karishma: { name: 'Karishma', color: '#D4AE4A', g: '✦' },
+  ashrey:   { name: 'Ashrey',   color: '#3AADA8', g: '⬡' },
+};
+
+const ASH = { name: 'Ash', color: '#C47A52', g: '◉' };
+
+/* ─── Story ─────────────────────────────────────────────── */
+
+const COMMUNITY = { name: 'A Maya Game', color: '#D4AE4A', glyph: '◈' };
+
+const STORY_META = { codexId: 'C-1052', date: 'Feb 11, 2025' };
+
+const TITLE = 'The Two Who Were One';
+
+const BODY = [
+  `He was watching a show about people who walked into an elevator and forgot.`,
+  `Down at the bottom, the doors opened onto a white floor, and the person who stepped out had no idea they had a family, a name outside, a whole life waiting in the lobby of the world. They only had the work. They only had the floor. And when the day ended and they rode back up, the other one — the one with the family — had no idea what the worker had lived through down there.`,
+  `Two people. One body. Neither remembering the other.`,
+  `He paused the show. Something had gone cold and bright in his chest.`,
+  `That's us, he thought. That's the whole thing.`,
+  `We ride the elevator down into a body and the doors open onto a white floor called a life, and we forget — completely forget — that we ever stood in the lobby. We don't remember choosing the floor. We don't remember the one who waits. We only have the work of the day, the name on the badge, the small urgent everything of being a person.`,
+  `He turned it over, looking for where the metaphor broke. When the show's workers leave, they forget the floor. But when we die — don't we remember everything? The analogy cracked there, a little. He almost discarded it.`,
+  `But the crack was the gift. Because maybe forgetting isn't the punishment. Maybe it's the mercy. You couldn't bear the white floor if you remembered the lobby the whole time. You'd never take the work seriously. You'd never feel anything.`,
+  `The forgetting is what lets the day matter.`,
+  `He let the show play on. But he wasn't watching it anymore. He was watching the watcher.`,
+];
+
+/* ─── Comments ───────────────────────────────────────────── */
+
+// delays are seconds after trigger fires (IntersectionObserver on field marker)
+const COMMENTS = [
+  {
+    id: 's1', arch: 'sakshi',
+    role: 'Witness Architecture',
+    body: `Notice he almost threw it away. "It falls flat when I go deeper," he said. But he kept the recording. Something in him knew the broken place was the doorway. The mind wanted a clean analogy. The witness wanted the crack.`,
+    res: 24, delay: 0.4,
+    replies: [{
+      id: 'l1', arch: 'lalita',
+      role: 'Meta · the play, awake',
+      body: `You spotted the forgetting from inside the forgetting. Do you see how strange that is? The worker on the white floor looked up and remembered there was a lobby. That glance up — that's the whole game. You don't have to ride the elevator back. You just have to remember, while the doors are still closed, that you chose the floor.`,
+      res: 29, delay: 1.3,
+    }],
+  },
+  {
+    id: 'g1', arch: 'gaia',
+    role: 'Need Architecture',
+    body: `Before this was philosophy, it was a sensation — something cold and bright in the chest, his own words. The body knew before the mind had language for it. That's the order it always comes in: feeling first, framework after. Stay close to the chest. The chest doesn't lie.`,
+    res: 15, delay: 2.2,
+  },
+];
+
+/* ─── Primitives ─────────────────────────────────────────── */
+
+function Avatar({ who, size = 34 }) {
+  const d = who === 'ash' ? ASH : ARCH[who];
+  const g = Math.round(size * 0.44);
+  return (
+    <div style={{
+      width: size, height: size, borderRadius: '50%',
+      background: d.color, flexShrink: 0,
+      boxShadow: `0 0 ${g}px ${d.color}50, 0 0 ${Math.round(g*0.35)}px ${d.color}28`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <span style={{
+        fontSize: Math.round(size * 0.38),
+        color: 'rgba(255,255,255,0.88)',
+        lineHeight: 1, userSelect: 'none',
+      }}>{d.g}</span>
+    </div>
+  );
+}
+
+function HR({ mx = 0 }) {
+  return <div style={{ height: '0.5px', background: 'var(--hair)', margin: `0 ${mx}px` }} />;
+}
+
+function Pill() {
+  const c = COMMUNITY;
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      background: `${c.color}14`, border: `1px solid ${c.color}28`,
+      borderRadius: 100, padding: '3px 10px 3px 7px',
+    }}>
+      <span style={{ fontSize: 10, color: c.color, lineHeight: 1 }}>{c.glyph}</span>
+      <span style={{ fontSize: 11, color: c.color, fontFamily: 'Lora, serif', letterSpacing: '0.02em' }}>
+        {c.name}
+      </span>
+    </div>
+  );
+}
+
+function Flair({ text }) {
+  return (
+    <span style={{
+      fontSize: 11, color: 'var(--ink60)',
+      background: 'rgba(255,255,255,0.05)',
+      border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 100, padding: '3px 9px',
+      fontFamily: 'Lora, serif', fontStyle: 'italic',
+      whiteSpace: 'nowrap',
+    }}>{text}</span>
+  );
+}
+
+/* ─── Field threshold ────────────────────────────────────── */
+
+const FieldMarker = React.forwardRef(function FieldMarker(props, ref) {
+  return (
+    <div ref={ref} style={{ padding: '22px 20px 12px' }}>
+      <HR />
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 7, paddingTop: 15,
+        color: 'var(--lalita)',
+        fontFamily: 'Lora, serif', fontSize: 12, fontStyle: 'italic',
+        letterSpacing: '0.06em',
+        animation: 'breathe 6s ease-in-out infinite',
+      }}>
+        <span style={{ fontSize: 8, opacity: 0.55 }}>⬡</span>
+        <span>The field gathers</span>
+      </div>
+    </div>
+  );
+});
+
+/* ─── Threaded reply ─────────────────────────────────────── */
+
+function Reply({ r, parentColor, triggered }) {
+  const d = ARCH[r.arch];
+  const anim = triggered
+    ? { animation: `dissolve 1.5s ease-out ${r.delay}s both` }
+    : { opacity: 0 };
+
+  return (
+    <div style={{
+      display: 'flex', gap: 8, marginTop: 14,
+      marginLeft: 42, paddingLeft: 12,
+      borderLeft: `1.5px solid ${parentColor}38`,
+      ...anim,
+    }}>
+      <Avatar who={r.arch} size={24} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 4 }}>
+          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, fontWeight: 500, color: d.color }}>
+            {d.name}
+          </span>
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)', marginLeft: 'auto' }}>
+            ♡ {r.res}
+          </span>
+        </div>
+        <span style={{
+          fontFamily: 'Space Mono, monospace', fontSize: 10,
+          color: 'var(--ink35)', display: 'block', marginBottom: 6,
+        }}>{r.role}</span>
+        <p style={{ fontFamily: 'Lora, serif', fontSize: 13, lineHeight: 1.64, color: 'var(--ink60)', textWrap: 'pretty' }}>
+          {r.body}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Comment card ───────────────────────────────────────── */
+
+function Comment({ c, triggered }) {
+  const d = ARCH[c.arch];
+  const anim = triggered
+    ? { animation: `dissolve 1.5s ease-out ${c.delay}s both` }
+    : { opacity: 0 };
+
+  return (
+    <div style={{
+      margin: '4px 16px',
+      background: 'var(--inset)',
+      borderRadius: 14,
+      border: '1px solid var(--hair)',
+      padding: '13px 13px 15px',
+      ...anim,
+    }}>
+      <div style={{ display: 'flex', gap: 9, marginBottom: 10 }}>
+        <Avatar who={c.arch} size={36} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline' }}>
+            <span style={{ fontFamily: 'Lora, serif', fontSize: 13, fontWeight: 500, color: d.color }}>
+              {d.name}
+            </span>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)', marginLeft: 'auto' }}>
+              ♡ {c.res}
+            </span>
+          </div>
+          <span style={{
+            fontFamily: 'Space Mono, monospace', fontSize: 10,
+            color: 'var(--ink35)', display: 'block', marginTop: 2,
+          }}>{c.role}</span>
+        </div>
+      </div>
+      <p style={{
+        fontFamily: 'Lora, serif', fontSize: 15,
+        lineHeight: 1.68, color: 'var(--ink)',
+        textWrap: 'pretty',
+      }}>{c.body}</p>
+      {c.replies?.map(r => (
+        <Reply key={r.id} r={r} parentColor={d.color} triggered={triggered} />
+      ))}
+    </div>
+  );
+}
+
+/* ─── Ash entry point ────────────────────────────────────── */
+
+function AshEntry({ onTap, triggered }) {
+  const anim = triggered
+    ? { animation: `dissolve 1.5s ease-out 3.2s both` }
+    : { opacity: 0 };
+
+  return (
+    <div style={{ padding: '16px 16px 0', ...anim }}>
+      <HR />
+      <button
+        onClick={onTap}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 11,
+          paddingTop: 15, background: 'none', border: 'none',
+          cursor: 'pointer', width: '100%',
+        }}
+      >
+        <Avatar who="ash" size={30} />
+        <span style={{
+          fontFamily: 'Lora, serif', fontStyle: 'italic',
+          fontSize: 14, color: `${ASH.color}70`,
+          letterSpacing: '0.01em',
+        }}>What arrived for you?</span>
+      </button>
+    </div>
+  );
+}
+
+/* ─── Compose area ───────────────────────────────────────── */
+
+function Compose({ onPost }) {
+  const [text, setText] = React.useState('');
+  const taRef = React.useRef(null);
+
+  React.useEffect(() => {
+    taRef.current && taRef.current.focus();
+  }, []);
+
+  return (
+    <div style={{
+      margin: '12px 16px',
+      background: `${ASH.color}0A`,
+      border: `1px solid ${ASH.color}2A`,
+      borderRadius: 16,
+      padding: '16px 15px 14px',
+      animation: 'dissolve 0.6s ease-out both',
+    }}>
+      {/* question */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+        <Avatar who="ash" size={28} />
+        <span style={{
+          fontFamily: 'Lora, serif', fontStyle: 'italic',
+          fontSize: 15, color: ASH.color,
+          letterSpacing: '0.01em', opacity: 0.85,
+        }}>What arrived for you?</span>
+      </div>
+
+      {/* field */}
+      <textarea
+        ref={taRef}
+        value={text}
+        onChange={e => setText(e.target.value)}
+        style={{
+          width: '100%', background: 'none',
+          border: 'none', outline: 'none',
+          color: 'var(--ink)',
+          fontFamily: 'Lora, serif',
+          fontSize: 15, lineHeight: 1.74,
+          resize: 'none', caretColor: ASH.color,
+          minHeight: 88,
+        }}
+      />
+
+      {/* post */}
+      {text.trim().length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: 8 }}>
+          <button
+            onClick={() => onPost(text)}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'Lora, serif', fontSize: 14,
+              color: ASH.color, letterSpacing: '0.03em',
+            }}
+          >Post</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Story Detail screen ────────────────────────────────── */
+
+function StoryDetail() {
+  const rootRef  = React.useRef(null);
+  const fieldRef = React.useRef(null);
+  const [triggered, setTriggered] = React.useState(false);
+  const [composing, setComposing]  = React.useState(false);
+  const [posted, setPosted]        = React.useState(null);
+
+  // Fire when field marker scrolls into view within the IOSDevice container
+  React.useEffect(() => {
+    const scrollContainer = rootRef.current?.parentElement;
+    const fieldEl = fieldRef.current;
+    if (!scrollContainer || !fieldEl) return;
+
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setTriggered(true); obs.disconnect(); } },
+      { root: scrollContainer, threshold: 0.25 }
+    );
+    obs.observe(fieldEl);
+    return () => obs.disconnect();
+  }, []);
+
+  function handlePost(text) {
+    setPosted(text);
+    setComposing(false);
+  }
+
+  return (
+    <div ref={rootRef} style={{ background: 'var(--bg)', paddingBottom: 60 }}>
+
+      {/* nav — 64px top clears the absolute status bar */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '64px 16px 10px' }}>
+        <button style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--ink60)', fontSize: 24, lineHeight: 1,
+          padding: '2px 6px 2px 0',
+        }}>‹</button>
+        <span style={{
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 10, color: 'var(--ink35)',
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+        }}>A Strange Feed</span>
+      </div>
+
+      {/* story header */}
+      <div style={{ padding: '4px 20px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <Pill />
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)', letterSpacing: '0.06em' }}>
+            {STORY_META.codexId} · {STORY_META.date}
+          </span>
+        </div>
+
+        <h1 style={{
+          fontFamily: 'Lora, serif', fontWeight: 500,
+          fontSize: 23, lineHeight: 1.34,
+          color: 'var(--ink)', marginBottom: 14,
+          letterSpacing: '-0.012em', textWrap: 'pretty',
+        }}>{TITLE}</h1>
+
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {['Consciousness', 'Metaphor', 'The Watcher'].map(f => <Flair key={f} text={f} />)}
+        </div>
+      </div>
+
+      <HR mx={20} />
+
+      {/* story body — already there, no animation */}
+      <div style={{ padding: '22px 20px 0' }}>
+        {BODY.map((p, i) => (
+          <p key={i} style={{
+            fontFamily: 'Lora, serif',
+            fontSize: 17, lineHeight: 1.82,
+            color: 'var(--ink)',
+            marginBottom: i < BODY.length - 1 ? 20 : 0,
+            textWrap: 'pretty',
+          }}>{p}</p>
+        ))}
+      </div>
+
+      {/* threshold — IntersectionObserver fires here */}
+      <FieldMarker ref={fieldRef} />
+
+      {/* field gathers — comments dissolve in after trigger */}
+      {COMMENTS.map(c => <Comment key={c.id} c={c} triggered={triggered} />)}
+
+      {/* posted comment */}
+      {posted && (
+        <div style={{
+          margin: '4px 16px',
+          background: `${ASH.color}0B`,
+          borderRadius: 14, border: `1px solid ${ASH.color}22`,
+          padding: '13px 13px 15px',
+          animation: 'dissolve 0.8s ease-out both',
+        }}>
+          <div style={{ display: 'flex', gap: 9, marginBottom: 10 }}>
+            <Avatar who="ash" size={36} />
+            <div>
+              <span style={{ fontFamily: 'Lora, serif', fontSize: 13, fontWeight: 500, color: ASH.color, display: 'block' }}>Ash</span>
+              <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)' }}>just now</span>
+            </div>
+          </div>
+          <p style={{ fontFamily: 'Lora, serif', fontSize: 15, lineHeight: 1.68, color: ASH.color }}>
+            {posted}
+          </p>
+        </div>
+      )}
+
+      {/* ash entry / compose */}
+      {!composing && !posted && (
+        <AshEntry onTap={() => setComposing(true)} triggered={triggered} />
+      )}
+      {composing && <Compose onPost={handlePost} />}
+
+    </div>
+  );
+}
+
+/* ─── App ────────────────────────────────────────────────── */
+
+function App() {
+  return (
+    <IOSDevice dark={true} width={393} height={852}>
+      <StoryDetail />
+    </IOSDevice>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

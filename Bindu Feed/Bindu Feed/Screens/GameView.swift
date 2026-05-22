@@ -1,0 +1,408 @@
+import SwiftUI
+
+// PHASE 6 — Game View.
+// One room at a time. The arrow buttons cycle through all 13 rooms in
+// Sort Order; room-to-room is a cross-dissolve, not a slide. The room
+// the user arrived in is just `initialRoom`; from there the screen
+// owns its own current-room state.
+struct GameView: View {
+    @EnvironmentObject private var store: FeedStore
+    @Binding var path: NavigationPath
+    let initialRoom: Room
+
+    // Cross-dissolve state
+    @State private var currentRoom: Room
+    @State private var heroVisible: Bool = true
+
+    // Room-scoped state
+    @State private var sort: StorySort = .mostActive
+    @State private var stories: [Story] = []
+    @State private var loadingStories: Bool = false
+    @State private var loadError: Bool = false
+
+    // Flood transition arriving from Room Selection.
+    @State private var floodOpacity: Double = 1.0
+
+    init(path: Binding<NavigationPath>, room: Room) {
+        self._path = path
+        self.initialRoom = room
+        self._currentRoom = State(initialValue: room)
+    }
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            BinduTheme.bgDeep.ignoresSafeArea()
+
+            // Hero gradient wash in current room color — also cross-dissolves.
+            LinearGradient(
+                colors: [currentRoom.color.opacity(0.14),
+                         currentRoom.color.opacity(0.0)],
+                startPoint: .top,
+                endPoint: .center
+            )
+            .ignoresSafeArea()
+            .opacity(heroVisible ? 1 : 0)
+            .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
+
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Reserve space behind the floating nav bar.
+                    Color.clear.frame(height: 56)
+
+                    hero
+                        .padding(.horizontal, BinduTheme.space20)
+                        .opacity(heroVisible ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
+
+                    statsBar
+                        .padding(.horizontal, BinduTheme.space20)
+                        .padding(.top, BinduTheme.space20)
+                        .opacity(heroVisible ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
+
+                    Rectangle()
+                        .fill(BinduTheme.hairline)
+                        .frame(height: 0.5)
+                        .padding(.horizontal, BinduTheme.space20)
+                        .padding(.top, BinduTheme.space16)
+
+                    sortBar
+                        .padding(.horizontal, BinduTheme.space20)
+                        .padding(.top, BinduTheme.space12)
+
+                    Rectangle()
+                        .fill(BinduTheme.hairline)
+                        .frame(height: 0.5)
+                        .padding(.horizontal, BinduTheme.space20)
+
+                    storyFeed
+                        .padding(.top, BinduTheme.space16)
+                        .opacity(heroVisible ? 1 : 0)
+                        .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
+
+                    Color.clear.frame(height: BinduTheme.space24)
+                }
+            }
+            .scrollIndicators(.hidden)
+
+            // Floating nav bar (sits over the hero).
+            floatingNavBar
+                .padding(.horizontal, BinduTheme.space16)
+                .padding(.top, BinduTheme.space8)
+
+            // Flood color carries over from Room Selection on first appearance.
+            currentRoom.color
+                .ignoresSafeArea()
+                .opacity(floodOpacity)
+                .allowsHitTesting(false)
+        }
+        .navigationBarBackButtonHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.9)) { floodOpacity = 0 }
+        }
+        .task(id: TaskKey(room: currentRoom.id, sort: sort)) {
+            await loadStoriesForCurrentRoom()
+        }
+    }
+
+    // MARK: - Floating nav bar
+
+    private var floatingNavBar: some View {
+        HStack(alignment: .center) {
+            BackChevron { if !path.isEmpty { path.removeLast() } }
+
+            Spacer(minLength: BinduTheme.space12)
+
+            VStack(spacing: 2) {
+                navBarRoomLabel
+                    .lineLimit(1)
+                Text("\(roomIndex + 1) · 13")
+                    .font(.spaceMono(9))
+                    .tracking(1.4)
+                    .foregroundColor(BinduTheme.inkTertiary)
+            }
+
+            Spacer(minLength: BinduTheme.space12)
+
+            HStack(spacing: 8) {
+                ArrowCircle(direction: .left) { stepRoom(by: -1) }
+                ArrowCircle(direction: .right) { stepRoom(by: +1) }
+            }
+        }
+    }
+
+    // MARK: - Hero
+
+    private var hero: some View {
+        VStack(spacing: BinduTheme.space16) {
+            GlyphView(
+                glyph: currentRoom.glyph,
+                size: 92,
+                color: currentRoom.color,
+                animation: currentRoom.animation
+            )
+            .id(currentRoom.id)
+
+            Text(currentRoom.name)
+                .font(roomNameFont)
+                .foregroundColor(BinduTheme.inkPrimary)
+                .tracking(currentRoom.name == "The Watcher" ? 2.0 : 0)
+
+            if !currentRoom.blurb.isEmpty {
+                Text(currentRoom.blurb)
+                    .font(.loraItalic(13))
+                    .foregroundColor(BinduTheme.inkSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, BinduTheme.space12)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, BinduTheme.space12)
+    }
+
+    private var roomNameFont: Font {
+        switch currentRoom.name {
+        case "The Descent", "The Return", "The Field":
+            return .loraItalic(28, weight: .medium)
+        case "The Watcher":
+            return .spaceMono(20)
+        default:
+            return .lora(28, weight: .medium)
+        }
+    }
+
+    // Chrome label in the floating nav bar. Honors the room's canonical
+    // style: italic Lora for the three italic rooms, Space Mono uppercase
+    // for The Watcher, regular Lora elsewhere.
+    @ViewBuilder
+    private var navBarRoomLabel: some View {
+        switch currentRoom.name {
+        case "The Descent", "The Return", "The Field":
+            Text(currentRoom.name)
+                .font(.loraItalic(12, weight: .medium))
+                .tracking(0.4)
+                .foregroundColor(BinduTheme.inkSecondary)
+        case "The Watcher":
+            Text(currentRoom.name.uppercased())
+                .font(.spaceMono(9))
+                .tracking(2.0)
+                .foregroundColor(BinduTheme.inkSecondary)
+        default:
+            Text(currentRoom.name)
+                .font(.lora(12, weight: .medium))
+                .tracking(0.2)
+                .foregroundColor(BinduTheme.inkSecondary)
+        }
+    }
+
+    // MARK: - Stats bar
+
+    private var statsBar: some View {
+        HStack(spacing: 0) {
+            statCell(value: "\(stories.count)", label: "STORIES")
+            statDivider
+            statCell(value: "\(totalResonance)", label: "RESONANCE")
+            statDivider
+            statCell(value: "\(activeVoiceCount)", label: "VOICES")
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func statCell(value: String, label: String) -> some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.lora(18, weight: .medium))
+                .foregroundColor(BinduTheme.inkPrimary)
+            Text(label)
+                .font(.spaceMono(9))
+                .tracking(1.6)
+                .foregroundColor(BinduTheme.inkTertiary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var statDivider: some View {
+        Rectangle()
+            .fill(BinduTheme.hairline)
+            .frame(width: 0.5, height: 28)
+    }
+
+    private var totalResonance: Int {
+        stories.reduce(0) { $0 + $1.resonance }
+    }
+
+    private var activeVoiceCount: Int {
+        var set = Set<String>()
+        for s in stories {
+            for a in store.stats(for: s.id).archetypes {
+                set.insert(a)
+            }
+        }
+        return set.count
+    }
+
+    // MARK: - Sort bar
+
+    private var sortBar: some View {
+        HStack(spacing: BinduTheme.space24) {
+            sortPill("MOST RECENT", value: .mostRecent)
+            sortPill("MOST ACTIVE", value: .mostActive)
+            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private func sortPill(_ text: String, value: StorySort) -> some View {
+        let active = sort == value
+        Button {
+            sort = value
+        } label: {
+            VStack(spacing: 6) {
+                Text(text)
+                    .font(.spaceMono(9))
+                    .tracking(1.6)
+                    .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkTertiary)
+                Rectangle()
+                    .fill(active ? currentRoom.color : Color.clear)
+                    .frame(height: 1)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Story feed
+
+    @ViewBuilder
+    private var storyFeed: some View {
+        if loadingStories && stories.isEmpty {
+            Text("the room is gathering…")
+                .font(.loraItalic(13))
+                .foregroundColor(BinduTheme.inkTertiary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, BinduTheme.space24)
+        } else if loadError && stories.isEmpty {
+            Text("The field is resting. Try again when you're ready.")
+                .font(.loraItalic(14))
+                .foregroundColor(BinduTheme.colorLalita)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 280)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, BinduTheme.space24)
+        } else if stories.isEmpty {
+            Text("Nothing has gathered here yet.")
+                .font(.loraItalic(13))
+                .foregroundColor(BinduTheme.inkTertiary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, BinduTheme.space24)
+        } else {
+            LazyVStack(spacing: BinduTheme.space14) {
+                ForEach(stories) { story in
+                    Button {
+                        path.append(FeedRoute.story(story))
+                    } label: {
+                        StoryCard(
+                            story: story,
+                            room: store.room(named: story.room) ?? currentRoom,
+                            stats: store.stats(for: story.id),
+                            archetypes: archetypes(for: story.id)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, BinduTheme.space16)
+                }
+            }
+        }
+    }
+
+    private func archetypes(for storyId: String) -> [Archetype] {
+        store.stats(for: storyId).archetypes.compactMap { store.archetype(named: $0) }
+    }
+
+    // MARK: - Arrow navigation
+
+    private var roomsInOrder: [Room] {
+        store.rooms.sorted { $0.sortOrder < $1.sortOrder }
+    }
+
+    private var roomIndex: Int {
+        roomsInOrder.firstIndex(where: { $0.id == currentRoom.id }) ?? 0
+    }
+
+    private func stepRoom(by delta: Int) {
+        let ordered = roomsInOrder
+        guard !ordered.isEmpty else { return }
+        let count = ordered.count
+        let nextIndex = ((roomIndex + delta) % count + count) % count
+        let next = ordered[nextIndex]
+
+        // Cross-dissolve: fade body out, swap room, fade back in.
+        withAnimation(.easeInOut(duration: 0.28)) {
+            heroVisible = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+            currentRoom = next
+            stories = []
+            withAnimation(.easeInOut(duration: 0.28)) {
+                heroVisible = true
+            }
+        }
+    }
+
+    // MARK: - Loading
+
+    private func loadStoriesForCurrentRoom() async {
+        loadingStories = true
+        defer { loadingStories = false }
+        do {
+            let fetched = try await AirtableService.shared.fetchStories(
+                room: currentRoom.name,
+                sort: sort
+            )
+            stories = fetched
+            loadError = false
+            // Make sure story stats are present so the avatar stack and
+            // voices count render even when the user landed here without
+            // going through the home feed first.
+            if store.storyStats.isEmpty {
+                await store.loadStoryStats()
+            }
+        } catch {
+            stories = []
+            loadError = true
+        }
+    }
+
+    // MARK: - Task key
+
+    private struct TaskKey: Hashable {
+        let room: String
+        let sort: StorySort
+    }
+}
+
+// MARK: - Local helpers
+
+private struct ArrowCircle: View {
+    enum Direction { case left, right }
+    let direction: Direction
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: direction == .left ? "chevron.left" : "chevron.right")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(BinduTheme.inkPrimary)
+                .frame(width: 34, height: 34)
+                .background(
+                    Circle().fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    Circle().strokeBorder(BinduTheme.hairline, lineWidth: 0.5)
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+

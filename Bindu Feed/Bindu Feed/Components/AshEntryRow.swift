@@ -1,0 +1,102 @@
+import SwiftUI
+
+// The closed-state entry point that lives below all field comments.
+// Tap to open the inline composer. The four words are exact and
+// permanent: "What arrived for you?"
+struct AshEntryRow: View {
+    let onTap: () -> Void
+
+    private let terra = BinduTheme.colorAsh
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Rectangle()
+                .fill(BinduTheme.hairline)
+                .frame(height: 0.5)
+
+            Button(action: onTap) {
+                HStack(spacing: 11) {
+                    ZStack {
+                        Circle()
+                            .fill(terra.opacity(0.22))
+                            .blur(radius: 4)
+                            .frame(width: 46, height: 46)
+                        Circle()
+                            .fill(terra)
+                            .frame(width: 30, height: 30)
+                        Text("◉")
+                            .font(.system(size: 13))
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                    .frame(width: 30, height: 30)
+
+                    Text("What arrived for you?")
+                        .font(.loraItalic(14))
+                        .foregroundColor(terra.opacity(0.70))
+                        .tracking(0.2)
+
+                    Spacer()
+                }
+                .padding(.top, 15)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+// Posted Ash comment confirmation card.
+// Optimistic UI — shown immediately after a successful post.
+struct AshPostedCard: View {
+    let commentBody: String
+
+    private let terra = BinduTheme.colorAsh
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 9) {
+                ZStack {
+                    Circle()
+                        .fill(terra.opacity(0.22))
+                        .blur(radius: 4)
+                        .frame(width: 54, height: 54)
+                    Circle()
+                        .fill(terra)
+                        .frame(width: 36, height: 36)
+                    Text("◉")
+                        .font(.system(size: 15))
+                        .foregroundColor(.white.opacity(0.9))
+                }
+                .frame(width: 36, height: 36)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Ash")
+                        .font(.lora(13, weight: .medium))
+                        .foregroundColor(terra)
+                    Text("JUST NOW")
+                        .font(.spaceMono(10))
+                        .tracking(0.6)
+                        .foregroundColor(BinduTheme.inkTertiary)
+                }
+                Spacer()
+            }
+
+            Text(commentBody)
+                .font(.lora(15))
+                .foregroundColor(terra)
+                .lineSpacing(5)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 13)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(terra.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(terra.opacity(0.22), lineWidth: 0.5)
+        )
+    }
+}

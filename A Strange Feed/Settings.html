@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; min-height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #root {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 100vh; padding: 40px 20px;
+    }
+    :root {
+      --bg:    #0E0C12; --card: #171420; --inset: #121018;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3; --ink60: rgba(237,232,227,0.60); --ink35: rgba(237,232,227,0.35);
+    }
+    @keyframes dissolve { from{opacity:0} to{opacity:1} }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+/* ─── Mood colors — how you arrive ──────────────────────── */
+const MOODS = [
+  { color: '#C47A52', name: 'Terra',   quality: 'grounded, present'  },
+  { color: '#E5A352', name: 'Ember',   quality: 'warm, seeking'       },
+  { color: '#7B82D4', name: 'Clear',   quality: 'witness, open'       },
+  { color: '#4A9E6B', name: 'Deep',    quality: 'rooted, growing'     },
+  { color: '#D4607A', name: 'Open',    quality: 'expressive, alive'   },
+  { color: '#9B6BD6', name: 'Play',    quality: 'awake, aware'        },
+  { color: '#C4923A', name: 'Held',    quality: 'solid, warm'         },
+  { color: '#3AADA8', name: 'Flow',    quality: 'connected, synthesis' },
+];
+
+const GLYPHS = ['◉', '◈', '◆', '△', '✦', '⊕', '◎', '∞'];
+
+const DEFAULT = { name: 'Ash', color: '#C47A52', glyph: '◉' };
+
+function load() {
+  try { return JSON.parse(localStorage.getItem('ashSettings')) || DEFAULT; }
+  catch { return DEFAULT; }
+}
+
+function save(s) {
+  localStorage.setItem('ashSettings', JSON.stringify(s));
+}
+
+/* ─── Settings screen ────────────────────────────────────── */
+function Settings() {
+  const saved = load();
+  const [name,    setName]    = React.useState(saved.name);
+  const [color,   setColor]   = React.useState(saved.color);
+  const [glyph,   setGlyph]   = React.useState(saved.glyph);
+  const [saved_,  setSaved_]  = React.useState(false);
+
+  const changed = name !== saved.name || color !== saved.color || glyph !== saved.glyph;
+
+  function handleSave() {
+    save({ name, color, glyph });
+    setSaved_(true);
+    setTimeout(() => setSaved_(false), 2000);
+  }
+
+  const currentMood = MOODS.find(m => m.color === color) || MOODS[0];
+
+  return (
+    <div style={{ background: 'var(--bg)', minHeight: '100%', paddingBottom: 60 }}>
+
+      {/* nav */}
+      <div style={{ display:'flex', alignItems:'center', gap:8, padding:'66px 16px 0' }}>
+        <button style={{ background:'none',border:'none',cursor:'pointer',color:'var(--ink60)',fontSize:24,lineHeight:1,padding:'2px 6px 2px 0' }}>‹</button>
+        <span style={{ fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)',letterSpacing:'0.14em' }}>HOW YOU ARRIVE</span>
+      </div>
+
+      {/* live avatar preview */}
+      <div style={{ display:'flex',flexDirection:'column',alignItems:'center',padding:'28px 20px 24px' }}>
+        <div style={{
+          width:96, height:96, borderRadius:'50%',
+          background: `radial-gradient(circle at 38% 38%, rgba(255,255,255,0.15), ${color})`,
+          boxShadow: `0 0 36px ${color}45, 0 0 14px ${color}28`,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          marginBottom:16, transition:'background 0.4s ease, box-shadow 0.4s ease',
+        }}>
+          <span style={{ fontSize:40, color:'rgba(255,255,255,0.88)', lineHeight:1, userSelect:'none' }}>{glyph}</span>
+        </div>
+        <span style={{
+          fontFamily:'Lora, serif', fontSize:20, fontWeight:500,
+          color:'var(--ink)', marginBottom:5,
+          letterSpacing:'-0.01em', transition:'color 0.3s ease',
+        }}>{name || 'Ash'}</span>
+        <span style={{
+          fontFamily:'Space Mono, monospace', fontSize:10,
+          color, opacity:0.75, letterSpacing:'0.08em',
+          transition:'color 0.4s ease',
+        }}>{currentMood.quality}</span>
+      </div>
+
+      {/* hairline */}
+      <div style={{ height:'0.5px',background:'var(--hair)',margin:'0 20px' }} />
+
+      {/* name */}
+      <div style={{ padding:'22px 20px 0' }}>
+        <label style={{ fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.1em',textTransform:'uppercase',display:'block',marginBottom:12 }}>
+          Your name
+        </label>
+        <div style={{
+          background:'var(--inset)', border:'1px solid var(--hair)',
+          borderRadius:14, padding:'12px 16px',
+        }}>
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="What do you call yourself?"
+            maxLength={32}
+            style={{
+              width:'100%', background:'none', border:'none', outline:'none',
+              fontFamily:'Lora, serif', fontSize:16, color:'var(--ink)',
+              caretColor: color, letterSpacing:'0.01em',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* color — your mood today */}
+      <div style={{ padding:'24px 20px 0' }}>
+        <label style={{ fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.1em',textTransform:'uppercase',display:'block',marginBottom:14 }}>
+          Your color today
+        </label>
+        <div style={{ display:'grid',gridTemplateColumns:'1fr 1fr',gap:10 }}>
+          {MOODS.map(m => {
+            const active = color === m.color;
+            return (
+              <button key={m.color} onClick={() => setColor(m.color)} style={{
+                display:'flex', alignItems:'center', gap:12,
+                background: active ? `${m.color}14` : 'var(--inset)',
+                border: active ? `1px solid ${m.color}40` : '1px solid var(--hair)',
+                borderRadius:14, padding:'11px 14px',
+                cursor:'pointer', textAlign:'left',
+                transition:'all 0.25s ease',
+                boxShadow: active ? `0 0 14px ${m.color}18` : 'none',
+              }}>
+                <div style={{
+                  width:28, height:28, borderRadius:'50%', flexShrink:0,
+                  background:m.color,
+                  boxShadow: active ? `0 0 14px ${m.color}60` : 'none',
+                  transition:'box-shadow 0.25s ease',
+                }} />
+                <div>
+                  <div style={{ fontFamily:'Lora, serif',fontSize:13,fontWeight:500,color:active?m.color:'var(--ink60)',marginBottom:2,transition:'color 0.25s ease' }}>{m.name}</div>
+                  <div style={{ fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.03em',lineHeight:1.4 }}>{m.quality}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* glyph — your mark */}
+      <div style={{ padding:'24px 20px 0' }}>
+        <label style={{ fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.1em',textTransform:'uppercase',display:'block',marginBottom:14 }}>
+          Your mark
+        </label>
+        <div style={{ display:'flex',gap:8,flexWrap:'wrap' }}>
+          {GLYPHS.map(g => {
+            const active = glyph === g;
+            return (
+              <button key={g} onClick={() => setGlyph(g)} style={{
+                width:52, height:52, borderRadius:14,
+                background: active ? `${color}18` : 'var(--inset)',
+                border: active ? `1px solid ${color}45` : '1px solid var(--hair)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                cursor:'pointer', fontSize:24,
+                color: active ? color : 'var(--ink35)',
+                boxShadow: active ? `0 0 14px ${color}25` : 'none',
+                transition:'all 0.25s ease',
+              }}>{g}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* save */}
+      <div style={{ padding:'32px 20px 0', display:'flex', justifyContent:'center' }}>
+        {saved_ ? (
+          <span style={{ fontFamily:'Lora, serif',fontStyle:'italic',fontSize:14,color,opacity:0.8,animation:'dissolve 0.4s ease-out both' }}>
+            Saved. You've arrived.
+          </span>
+        ) : changed ? (
+          <button onClick={handleSave} style={{
+            background:`${color}18`, border:`1px solid ${color}40`,
+            borderRadius:100, padding:'11px 32px',
+            fontFamily:'Lora, serif', fontSize:15, color,
+            cursor:'pointer', letterSpacing:'0.02em',
+            boxShadow:`0 0 18px ${color}20`,
+            transition:'all 0.25s ease',
+          }}>Save</button>
+        ) : (
+          <span style={{ fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.1em' }}>
+            NO CHANGES
+          </span>
+        )}
+      </div>
+
+    </div>
+  );
+}
+
+function App() {
+  return <IOSDevice dark={true} width={393} height={852}><Settings /></IOSDevice>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
