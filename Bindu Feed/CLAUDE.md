@@ -469,9 +469,11 @@ The AVAudioSourceNode blocks (BreathVoice, ThresholdTone) run on the audio threa
 
 ### Verification status
 
-**Sim-verified (2026-06-15):** engine starts post-token, Breath fades in, room crossfades (rapid cycling stays capped at two voices), Practice Door bloom on cross, Arrival bloom on foreground resume, scene-phase fades, `mainMixerNode` auto-create / engine-running-before-attach, AVAudioSession honors the silent switch, `.mixWithOthers` doesn't hijack other audio.
+**Sim-verified (2026-06-15):** app builds, installs, and launches without crash; `SoundEngine` instantiates cleanly (AVAudioSession + AVAudioEngine allocate without error); "quiet until token" gating is honored (no audio activity pre-token); TokenEntryView renders with the design language intact; SourceKit "missing type" diagnostics confirmed false positives. Deeper audio behaviors (Breath fade-in, room crossfades, threshold blooms, scene-phase fades) require a PAT in the sim keychain to exercise.
 
-**Deploy-verified (pending):** the binaural dual-oscillator path itself. The iOS Simulator reports as built-in / no-headphones, so the sim runs the single-centered-tone fallback — the actual binaural beat is on-device-first, by design. Coincides with Ashrey's first hearing on Neev at deploy.
+**On-device crash + fix (2026-06-15):** first on-device launch surfaced `AVAudioEngineGraph::Initialize: required condition is false: inputNode != nullptr || outputNode != nullptr` — an Obj-C runtime assert (not a Swift throw, so the existing `do/catch` couldn't catch it). Root cause: `engine.start()` was called on a graph that had no I/O node materialized yet (the post-token "quiet window" before the first BreathVoice attaches). Fix in `SoundEngine.start()`: touch `engine.mainMixerNode` before `engine.start()` — accessing it pulls the output node into the graph so the assert can't fire even when zero source nodes are attached. Also call `engine.prepare()` for good measure. The sim hid this because the iOS Simulator's audio backend is permissive about empty graphs; the device is not.
+
+**Deploy-verified (pending):** the binaural dual-oscillator path itself. The iOS Simulator reports as built-in / no-headphones, so the sim runs the single-centered-tone fallback — the actual binaural beat is on-device-first, by design. Coincides with Ashrey's first hearing on Neev at deploy. Re-verify after the mainMixerNode fix: the crash signature to confirm gone is the absence of any `com.apple.coreaudio.avfaudio` exception at launch.
 
 ### Sound Layer deferred
 

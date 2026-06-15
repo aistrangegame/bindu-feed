@@ -75,9 +75,24 @@ final class SoundEngine: ObservableObject {
             try session.setActive(true, options: [])
             updateRouteState()
             installObservers()
+
+            // Force the output node to instantiate before `engine.start()`
+            // by touching `mainMixerNode`. Without this, AVAudioEngineGraph
+            // asserts on device (inputNode != nullptr || outputNode !=
+            // nullptr) — a graph with no I/O. The simulator hides it; the
+            // do/catch can't catch it because it's an Obj-C runtime assert,
+            // not a Swift throw. Touching mainMixerNode pulls the output
+            // node into the graph, so source nodes can attach lazily
+            // afterward — the post-token quiet window before the first
+            // Breath spawns is exactly that state.
+            _ = engine.mainMixerNode
+            engine.prepare()
+
             try engine.start()
             isRunning = true
         } catch {
+            // Soft-fail: sound is non-essential. The app continues silent
+            // if the session or engine refuses, never crashes.
             #if DEBUG
             print("[SoundEngine] start failed: \(error)")
             #endif
