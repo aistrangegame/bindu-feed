@@ -17,12 +17,43 @@ struct StoryDetailView: View {
     // Reveal state
     @State private var triggered = false
 
-    // Ash voice state
-    @State private var composeOpen = false
-    @State private var postedComments: [PostedAshComment] = []
-    @State private var postingInFlight = false
-    @State private var showRoomChanged = false
-    @State private var roomChangedFadeOpacity: Double = 0
+    // Resonance + Depth state.
+    // One gesture, two outcomes: a tap increments resonance like StoryCard;
+    // a hold past 1.5s opens the Resonance Depth overlay. `didTriggerDepth`
+    // is what tells endResonancePress() which path the press took.
+    @State private var resonanceBoost = 0
+    @State private var resonanceInFlight = false
+    @State private var resonancePressed = false
+    @State private var resonancePressStart: Date?
+    @State private var didTriggerDepth = false
+    @State private var depthHoldProgress: Double = 0
+    @State private var depthHoldTask: Task<Void, Never>?
+    @State private var depthAutoAdvanceTask: Task<Void, Never>?
+    @State private var depthOverlayPhase: DepthPhase = .closed
+    @State private var storyDim: Double = 1.0
+    @State private var overlayVisible: Double = 0
+    @State private var depthClosingLine: String = ""
+    @State private var depthThresholdSentence: ThresholdSentence?
+    @State private var depthVoice: FieldComment?
+
+    @State private var showHub = false
+    @State private var arrivalSettings: ArrivalSettings = .init()
+
+    private enum DepthPhase {
+        case closed
+        case dim                  // overlay bg fades in, story dims under
+        case closingLine          // 3.0s or tap
+        case thresholdSentence    // 3.0s or tap
+        case archetypeVoice       // 4.0s or tap → enters hold
+        case hold                 // persists until tap
+        case dissolve             // 1.5s fade out, then closed
+    }
+
+    private let depthHoldDuration: TimeInterval = 1.5
+
+    private var storyRoomColor: Color {
+        store.room(named: story.room)?.color ?? BinduTheme.colorLalita
+    }
 
     var body: some View {
         ZStack {
@@ -44,17 +75,22 @@ struct StoryDetailView: View {
                         .padding(.horizontal, BinduTheme.space20)
                         .padding(.top, 22)
 
+                    resonanceAffordance
+
                     FieldGathersMarker(onArrive: triggerFieldArrival)
 
                     fieldComments
 
-                    if !postedComments.isEmpty {
+                    if !ashNodes.isEmpty {
                         VStack(spacing: 8) {
-                            ForEach(postedComments) { posted in
-                                AshPostedCard(commentBody: posted.body)
-                                    .padding(.horizontal, BinduTheme.space16)
-                                    .padding(.top, 4)
-                                    .transition(.opacity)
+                            ForEach(ashNodes) { node in
+                                AshPostedCard(
+                                    commentBody: node.comment.body,
+                                    date: formattedAshDate(node.comment.sourceDate),
+                                    name: arrivalName
+                                )
+                                .padding(.horizontal, BinduTheme.space16)
+                                .padding(.top, 4)
                             }
                         }
                     }
@@ -63,29 +99,40 @@ struct StoryDetailView: View {
                         .padding(.horizontal, BinduTheme.space16)
                         .padding(.top, 12)
 
-                    if showRoomChanged {
-                        Text("The room has changed.")
-                            .font(.loraItalic(13))
-                            .foregroundColor(BinduTheme.colorAsh.opacity(0.30))
-                            .opacity(roomChangedFadeOpacity)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.top, BinduTheme.space16)
-                    }
-
                     Color.clear.frame(height: 80)
                 }
             }
             .scrollIndicators(.hidden)
+            .opacity(storyDim)
+
+            if depthOverlayPhase != .closed {
+                depthOverlay
+                    .opacity(overlayVisible)
+            }
         }
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 BackChevron { if !path.isEmpty { path.removeLast() } }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                HubTrigger(open: $showHub)
+            }
         }
         .task(id: story.id) {
             await loadComments()
         }
+        .onAppear {
+            arrivalSettings = ArrivalSettings.load()
+            if store.consumeStoryRefresh(storyId: story.id) {
+                Task { await forceReloadComments() }
+            }
+        }
+        .onDisappear {
+            depthHoldTask?.cancel()
+            depthAutoAdvanceTask?.cancel()
+        }
+        .hubOverlay(open: $showHub, path: $path)
     }
 
     // MARK: - Story header (no animation; already there on arrival)
@@ -193,33 +240,26 @@ struct StoryDetailView: View {
         }
     }
 
-    // Only show top-level nodes whose author isn't Ash here — Ash's voice
-    // surfaces below as PostedAshComments and the entry row.
+    // Field voices in the staggered reveal; Ash's voice surfaces below
+    // as AshPostedCards via ashNodes (refreshed after compose post).
     private var visibleNodes: [CommentNode] {
         commentNodes.filter { !$0.comment.isAsh }
     }
 
+    private var ashNodes: [CommentNode] {
+        commentNodes.filter { $0.comment.isAsh }
+    }
+
     // MARK: - Ash entry / compose
 
-    @ViewBuilder
     private var ashEntryArea: some View {
-        if composeOpen {
-            AshComposer(
-                onPost: { text in
-                    Task { await submitAshComment(text) }
-                },
-                onCancel: { composeOpen = false }
-            )
-            .transition(.opacity)
-            .animation(.easeOut(duration: 0.5), value: composeOpen)
-        } else {
-            StaggeredReveal(triggered: triggered, delay: ashEntryDelay, duration: 1.5) {
-                AshEntryRow(onTap: {
-                    withAnimation(.easeOut(duration: 0.5)) {
-                        composeOpen = true
-                    }
-                })
-            }
+        // The compose ritual lives in AshComposeView, pushed as a route.
+        // AshComposeView posts the comment + flags this story for
+        // refresh; .onAppear below pulls the new tree on return.
+        StaggeredReveal(triggered: triggered, delay: ashEntryDelay, duration: 1.5) {
+            AshEntryRow(onTap: {
+                path.append(FeedRoute.compose(story))
+            })
         }
     }
 
@@ -250,39 +290,409 @@ struct StoryDetailView: View {
         path.append(FeedRoute.archetype(archetype))
     }
 
-    // MARK: - Ash post
+    // MARK: - Ash refresh
 
-    private func submitAshComment(_ text: String) async {
-        guard !postingInFlight else { return }
-        postingInFlight = true
-        defer { postingInFlight = false }
+    // Re-fetches comments after a successful compose post. The compose
+    // view flags the story via FeedStore.flagStoryRefresh; .onAppear
+    // below consumes the flag and calls this to pull the latest tree
+    // so the new Ash entry surfaces below the field comments.
+    private func forceReloadComments() async {
+        let (field, ash) = await store.loadComments(for: story.id)
+        let tree = store.buildCommentTree(field + ash)
+        commentNodes = tree
+    }
 
-        // Optimistic UI — show the comment immediately, fade in the
-        // confirmation, then collapse the composer.
-        let posted = PostedAshComment(body: text)
-        withAnimation(.easeOut(duration: 0.6)) {
-            postedComments.append(posted)
-            composeOpen = false
+    // The user's arrival name from Settings (falls back to "Ash" — the
+    // canonical Airtable identity — when no name has been chosen). Loaded
+    // in .onAppear so a name change in Settings surfaces on next return.
+    private var arrivalName: String {
+        arrivalSettings.name.isEmpty ? "Ash" : arrivalSettings.name
+    }
+
+    private func formattedAshDate(_ raw: String) -> String {
+        guard !raw.isEmpty else { return "JUST NOW" }
+        let inFmt = DateFormatter()
+        inFmt.dateFormat = "yyyy-MM-dd"
+        inFmt.timeZone = TimeZone(identifier: "UTC")
+        guard let d = inFmt.date(from: raw) else { return raw }
+        let outFmt = DateFormatter()
+        outFmt.dateFormat = "MMM d, yyyy"
+        return outFmt.string(from: d).uppercased()
+    }
+
+    // MARK: - Resonance affordance
+
+    private var resonanceAffordance: some View {
+        VStack(spacing: 0) {
+            Rectangle()
+                .fill(BinduTheme.hairline)
+                .frame(height: 0.5)
+
+            HStack(spacing: 10) {
+                Spacer()
+
+                ZStack {
+                    Circle()
+                        .strokeBorder(BinduTheme.hairline, lineWidth: 1)
+                        .frame(width: 44, height: 44)
+
+                    Circle()
+                        .trim(from: 0, to: depthHoldProgress)
+                        .stroke(
+                            storyRoomColor,
+                            style: StrokeStyle(lineWidth: 1.5, lineCap: .round)
+                        )
+                        .rotationEffect(.degrees(-90))
+                        .frame(width: 44, height: 44)
+                        .animation(.easeOut(duration: 0.2), value: depthHoldProgress)
+
+                    Text("▲")
+                        .font(.system(size: 13))
+                        .foregroundColor(BinduTheme.inkSecondary)
+                }
+                .scaleEffect(resonancePressed ? 0.85 : 1.0)
+                .animation(.spring(response: 0.32, dampingFraction: 0.55), value: resonancePressed)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { _ in
+                            if resonancePressStart == nil {
+                                beginResonancePress()
+                            }
+                        }
+                        .onEnded { _ in
+                            endResonancePress()
+                        }
+                )
+
+                Text("\(story.resonance + resonanceBoost)")
+                    .font(.spaceMono(11))
+                    .foregroundColor(BinduTheme.inkSecondary)
+
+                Spacer()
+            }
+            .padding(.top, BinduTheme.space24)
+
+            Text("hold for depth")
+                .font(.loraItalic(11))
+                .tracking(0.2)
+                .foregroundColor(BinduTheme.inkTertiary)
+                .padding(.top, 10)
         }
-        triggerRoomChanged()
+        .padding(.horizontal, BinduTheme.space20)
+        .padding(.bottom, BinduTheme.space24)
+    }
 
-        do {
-            try await store.postComment(storyId: story.id, body: text, parentId: nil)
-        } catch {
-            // Leave the optimistic card in place — the field saw it,
-            // even if Airtable didn't. The store will surface the error.
+    // MARK: - Resonance gesture (tap → increment, hold → open depth)
+
+    private func beginResonancePress() {
+        guard depthOverlayPhase == .closed else { return }
+        resonancePressStart = Date()
+        didTriggerDepth = false
+        let start = Date()
+        depthHoldTask?.cancel()
+        depthHoldTask = Task { @MainActor in
+            while !Task.isCancelled {
+                let elapsed = Date().timeIntervalSince(start)
+                let p = min(1.0, elapsed / depthHoldDuration)
+                depthHoldProgress = p
+                if p >= 1.0 {
+                    didTriggerDepth = true
+                    openDepth()
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 16_000_000) // ~60fps
+            }
         }
     }
 
-    private func triggerRoomChanged() {
-        showRoomChanged = true
-        roomChangedFadeOpacity = 0
-        withAnimation(.easeOut(duration: 0.6)) { roomChangedFadeOpacity = 1 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
-            withAnimation(.easeIn(duration: 1.0)) { roomChangedFadeOpacity = 0 }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                showRoomChanged = false
+    private func endResonancePress() {
+        depthHoldTask?.cancel()
+        depthHoldTask = nil
+        let triggered = didTriggerDepth
+        resonancePressStart = nil
+        didTriggerDepth = false
+
+        withAnimation(.easeOut(duration: 0.25)) {
+            depthHoldProgress = 0
+        }
+
+        // A short press that never reached the depth threshold is a tap.
+        // Increment the resonance count exactly like StoryCard does.
+        if !triggered {
+            handleResonanceTap()
+        }
+    }
+
+    private func handleResonanceTap() {
+        guard !resonanceInFlight else { return }
+        let current = story.resonance + resonanceBoost
+        resonanceBoost += 1
+        resonanceInFlight = true
+        resonancePressed = true
+
+        Task { @MainActor in
+            await store.incrementResonance(recordId: story.id, current: current)
+            resonanceInFlight = false
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+            resonancePressed = false
+        }
+    }
+
+    // MARK: - Depth phase management
+
+    private func openDepth() {
+        guard depthOverlayPhase == .closed else { return }
+
+        depthClosingLine = story.closingLine
+        depthThresholdSentence = store.thresholdSentences.isEmpty
+            ? nil
+            : store.selectThresholdSentence(from: store.thresholdSentences)
+
+        // The voice fetch is the only async piece; render it as soon as it
+        // arrives. If the call fails we leave depthVoice = nil, and the
+        // archetype phase falls back to a generic Sakshi "Notice." render.
+        Task { @MainActor in
+            do {
+                depthVoice = try await AirtableService.shared.fetchResonanceVoice(storyId: story.id)
+            } catch {
+                #if DEBUG
+                print("[StoryDetail] Resonance Voice fetch failed for \(story.id): \(error)")
+                #endif
+                depthVoice = nil
             }
+        }
+
+        depthOverlayPhase = .dim
+        withAnimation(.easeInOut(duration: 0.8)) {
+            storyDim = 0.30
+            overlayVisible = 1.0
+        }
+        scheduleAutoAdvance(after: 800_000_000)
+    }
+
+    // Schedule the auto-advance for whichever phase we just entered.
+    // A tap during the phase cancels this task and calls advanceDepthPhase()
+    // directly, so the two triggers (tap, timer) reach the same place.
+    private func scheduleAutoAdvance(after ns: UInt64) {
+        depthAutoAdvanceTask?.cancel()
+        depthAutoAdvanceTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: ns)
+            if !Task.isCancelled {
+                advanceDepthPhase()
+            }
+        }
+    }
+
+    private func nextDepthPhase(after current: DepthPhase) -> DepthPhase {
+        switch current {
+        case .closed:             return .closed
+        case .dim:                return depthClosingLine.isEmpty ? .thresholdSentence : .closingLine
+        case .closingLine:        return .thresholdSentence
+        case .thresholdSentence:  return .archetypeVoice
+        case .archetypeVoice:     return .hold
+        case .hold:               return .dissolve
+        case .dissolve:           return .closed
+        }
+    }
+
+    private func advanceDepthPhase() {
+        let next = nextDepthPhase(after: depthOverlayPhase)
+
+        switch next {
+        case .closed:
+            closeDepth()
+        case .dissolve:
+            beginDissolve()
+        case .hold:
+            depthAutoAdvanceTask?.cancel()
+            depthAutoAdvanceTask = nil
+            depthOverlayPhase = .hold
+        case .closingLine:
+            depthOverlayPhase = .closingLine
+            scheduleAutoAdvance(after: 3_000_000_000)
+        case .thresholdSentence:
+            depthOverlayPhase = .thresholdSentence
+            scheduleAutoAdvance(after: 3_000_000_000)
+        case .archetypeVoice:
+            depthOverlayPhase = .archetypeVoice
+            scheduleAutoAdvance(after: 4_000_000_000)
+        case .dim:
+            // Shouldn't happen — .dim only comes from .closed → openDepth().
+            break
+        }
+    }
+
+    private func beginDissolve() {
+        depthAutoAdvanceTask?.cancel()
+        depthOverlayPhase = .dissolve
+
+        Task { @MainActor in
+            await store.markStoryDepth(storyId: story.id)
+        }
+
+        withAnimation(.easeIn(duration: 1.5)) {
+            storyDim = 1.0
+            overlayVisible = 0
+        }
+        scheduleAutoAdvance(after: 1_500_000_000)
+    }
+
+    private func closeDepth() {
+        depthAutoAdvanceTask?.cancel()
+        depthAutoAdvanceTask = nil
+        depthOverlayPhase = .closed
+        storyDim = 1.0
+        overlayVisible = 0
+        depthThresholdSentence = nil
+        depthVoice = nil
+        depthClosingLine = ""
+    }
+
+    private func handleDepthOverlayTap() {
+        switch depthOverlayPhase {
+        case .closed:
+            break
+        case .dim, .closingLine, .thresholdSentence, .archetypeVoice:
+            advanceDepthPhase()
+        case .hold:
+            beginDissolve()
+        case .dissolve:
+            closeDepth()
+        }
+    }
+
+    // MARK: - Depth overlay
+
+    private var depthOverlay: some View {
+        ZStack {
+            BinduTheme.bgDeep.ignoresSafeArea()
+
+            RadialGradient(
+                colors: [storyRoomColor.opacity(0.10), .clear],
+                center: .center,
+                startRadius: 0,
+                endRadius: 400
+            )
+            .ignoresSafeArea()
+
+            depthPhaseContent
+                .padding(.horizontal, BinduTheme.space24)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            handleDepthOverlayTap()
+        }
+    }
+
+    @ViewBuilder
+    private var depthPhaseContent: some View {
+        switch depthOverlayPhase {
+        case .closed:
+            EmptyView()
+        case .dim:
+            GlyphView(
+                glyph: "·",
+                size: 14,
+                color: BinduTheme.colorLalita,
+                animation: .glyphBreathe
+            )
+        case .closingLine:
+            Text(depthClosingLine)
+                .font(.lora(24))
+                .foregroundColor(BinduTheme.inkPrimary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(6)
+                .frame(maxWidth: 320)
+        case .thresholdSentence:
+            depthThresholdSentenceView
+        case .archetypeVoice, .hold:
+            depthArchetypeVoiceView
+        case .dissolve:
+            // Keep the previous content visible while opacity animates out;
+            // archetypeVoice is the last "live" phase before dissolve, so
+            // render its content here for the fade-out frames.
+            depthArchetypeVoiceView
+        }
+    }
+
+    @ViewBuilder
+    private var depthThresholdSentenceView: some View {
+        if let sentence = depthThresholdSentence {
+            if sentence.isBinduDot {
+                binduDot(size: 180)
+            } else {
+                Text(sentence.text)
+                    .font(.lora(20))
+                    .foregroundColor(BinduTheme.inkPrimary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(5)
+                    .frame(maxWidth: 320)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var depthArchetypeVoiceView: some View {
+        let voice = depthVoice
+        let archetype = voice.flatMap { store.archetype(named: $0.archetype) }
+            ?? store.archetype(named: "Sakshi")
+        let body = voice?.body ?? "Notice."
+        let name = voice?.archetype ?? "Sakshi"
+        let color = archetype?.color ?? BinduTheme.colorSakshi
+
+        if voice?.isBinduSilence == true {
+            // The Bindu special case: the dot IS the voice.
+            binduDot(size: 200)
+        } else {
+            VStack(spacing: 0) {
+                Text(archetype?.glyph ?? "·")
+                    .font(.system(size: 32))
+                    .foregroundColor(color)
+
+                Text(name)
+                    .font(.lora(14, weight: .medium))
+                    .tracking(0.4)
+                    .foregroundColor(color)
+                    .padding(.top, 12)
+
+                Text(body)
+                    .font(.lora(22))
+                    .foregroundColor(BinduTheme.inkPrimary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
+                    .frame(maxWidth: 320)
+                    .padding(.top, 24)
+            }
+        }
+    }
+
+    // Reusable Bindu glow used for both the threshold-sentence and the
+    // archetype-voice Bindu special cases. Same radial wash + Lora dot +
+    // shadow as BinduSilenceCard, just unboxed (no inset card chrome).
+    private func binduDot(size: CGFloat) -> some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            BinduTheme.colorBindu.opacity(0.22),
+                            .clear
+                        ],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: size * 0.5
+                    )
+                )
+                .frame(width: size, height: size)
+
+            Text("·")
+                .font(.lora(size * 0.4))
+                .foregroundColor(BinduTheme.colorBindu)
+                .shadow(color: BinduTheme.colorBindu.opacity(0.45), radius: size * 0.1)
+                .offset(y: -size * 0.12) // optical centering — Lora dot sits low in its em-box
         }
     }
 }
@@ -307,39 +717,4 @@ private struct FlairChip: View {
     }
 }
 
-// MARK: - Posted Ash comment value type
-
-private struct PostedAshComment: Identifiable, Equatable {
-    let id = UUID()
-    let body: String
-}
-
-// MARK: - Staggered reveal helper
-//
-// Holds opacity=0 until `triggered` is true, then fades in over `duration`
-// after `delay` seconds. Uses its own @State so the animation fires correctly
-// regardless of whether the view materializes before or after `triggered`
-// flips — `.animation(value: triggered)` would silently no-op when a view
-// is first rendered with `triggered` already true.
-private struct StaggeredReveal<Content: View>: View {
-    let triggered: Bool
-    let delay: Double
-    let duration: Double
-    @ViewBuilder let content: () -> Content
-
-    @State private var visible = false
-
-    var body: some View {
-        content()
-            .opacity(visible ? 1 : 0)
-            .onAppear { revealIfReady() }
-            .onChange(of: triggered) { _ in revealIfReady() }
-    }
-
-    private func revealIfReady() {
-        guard triggered, !visible else { return }
-        withAnimation(.easeOut(duration: duration).delay(delay)) {
-            visible = true
-        }
-    }
-}
+// StaggeredReveal lives in Components/StaggeredReveal.swift.

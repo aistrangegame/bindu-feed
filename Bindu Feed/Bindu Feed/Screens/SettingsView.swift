@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var glyph: String = ""
     @State private var colorHex: String = ""
     @State private var savedSnapshot: ArrivalSettings = .init()
+    @State private var showHub = false
 
     @FocusState private var nameFocused: Bool
 
@@ -54,8 +55,12 @@ struct SettingsView: View {
             ToolbarItem(placement: .topBarLeading) {
                 BackChevron { if !path.isEmpty { path.removeLast() } }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                HubTrigger(open: $showHub)
+            }
         }
         .onAppear(perform: loadSavedSettings)
+        .hubOverlay(open: $showHub, path: $path)
     }
 
     // MARK: - Label

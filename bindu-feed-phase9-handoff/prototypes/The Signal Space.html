@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — The Signal Space</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+      --teal:  #3AADA8;
+    }
+    /* the antenna — long quiet, then the arrival */
+    @keyframes sigArrive {
+      0%, 58%  { transform: scale(1);    opacity: 0.40; }
+      70%      { transform: scale(1.55); opacity: 1;    }
+      100%     { transform: scale(1);    opacity: 0.40; }
+    }
+    /* once received — a steady field-mark, barely breathing */
+    @keyframes sigHold {
+      0%,100% { opacity: 0.78; transform: scale(0.98); }
+      50%     { opacity: 1;    transform: scale(1.04); }
+    }
+    @keyframes hintFade { 0%,100% { opacity: 0.24; } 50% { opacity: 0.52; } }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="stage"><div id="root"></div></div>
+<script type="text/babel">
+
+function hexA(hex, a) {
+  return hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+}
+
+const TEAL = '#3AADA8';   // the signal — reception, the antenna open
+
+/* ─── The transmissions from the field ────────────────────────── */
+/* Second person. Oracular — from further out than the personal mind.*/
+/* Each is already a complete seed with a turn in it. One arrives     */
+/* whole; nothing to tap into, no resonance, no next.                 */
+
+const SIGNALS = [
+  { lines: ['The fear is the doorway.', 'Not the obstacle to it.', 'Walk into it. Completely.'] },
+  { lines: ['You built the architecture', 'to keep yourself from failing.', 'The architecture became', 'the room you cannot leave.', 'The door was never locked —', 'you have been holding it shut', 'from the inside.'] },
+  { lines: ['You keep asking the field', 'for a sign.', 'The asking is the sign.', 'You already turned toward it.'] },
+  { lines: ['What you are guarding', 'does not need a guard.', 'It needs to be let out', 'into the weather —', 'where things that are alive', 'are allowed to change.'] },
+  { lines: ['You think you are waiting', 'for clarity.', 'Clarity is waiting', 'for you to move.', 'Move first.', 'It will meet you on the road.'] },
+  { lines: ['The thing you cannot', 'say out loud', 'is the thing the field', 'has been trying to hand you.', 'Say it.', 'This room was built to hold it.'] },
+];
+
+/* ─── Day seeding — one signal, received not pushed ───────────── */
+function dayKey(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; } return h; }
+function seededIdx(key) { return hashStr(key + '·signal') % SIGNALS.length; }
+
+/* ─── The Signal Space ────────────────────────────────────────── */
+
+function SignalSpace() {
+  const [dayOffset, setDayOffset] = React.useState(0);
+  const key = dayKey(dayOffset);
+  const sig = SIGNALS[seededIdx(key)];
+
+  // phases: arriving → received → gone
+  const [phase, setPhase] = React.useState('arriving');
+  const timers = React.useRef([]);
+  const clear = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+
+  React.useEffect(() => {
+    clear();
+    setPhase('arriving');
+    timers.current.push(setTimeout(() => setPhase('received'), 2600));
+    return clear;
+  }, [key]);
+
+  React.useEffect(() => () => clear(), []);
+
+  function leave() {
+    if (phase !== 'received') return;
+    setPhase('gone');
+  }
+  function passDay() {
+    clear();
+    setDayOffset(o => o + 1);   // effect re-runs → arriving for the new day's signal
+  }
+
+  const received = phase === 'received';
+  const gone     = phase === 'gone';
+
+  return (
+    <div style={{
+      position: 'relative', width: 393, height: 852,
+      borderRadius: 46, overflow: 'hidden',
+      background: '#08070D',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+      userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+    }}>
+
+      {/* the reception glow — focused from the point, brightening as it lands */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 78% 42% at 50% 30%, ${hexA(TEAL, received ? 0.18 : 0.07)} 0%, ${hexA(TEAL, received ? 0.05 : 0.02)} 42%, rgba(0,0,0,0) 70%)`,
+        opacity: gone ? 0 : 1,
+        transition: 'background 1.6s ease, opacity 1.4s ease',
+      }} />
+
+      {/* status bar */}
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 30px 0', zIndex: 6 }}>
+        <span style={{ fontFamily: '-apple-system, system-ui', fontWeight: 600, fontSize: 15, color: '#fff', opacity: 0.9 }}>9:41</span>
+        <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', width: 112, height: 30, borderRadius: 20, background: '#000' }} />
+        <span style={{ color: '#fff', fontSize: 12, letterSpacing: '0.04em', opacity: 0.9 }}>􀙇 􀛨 􀋦</span>
+      </div>
+
+      {/* back to the rooms */}
+      <a href="Room Selection.html" style={{
+        position: 'absolute', top: 52, left: 16, zIndex: 7,
+        width: 36, height: 36, borderRadius: '50%', textDecoration: 'none',
+        background: 'rgba(14,12,18,0.55)', backdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--ink60)', fontSize: 20, lineHeight: 1,
+      }}>‹</a>
+
+      {/* portal title */}
+      <div style={{ position: 'relative', zIndex: 5, paddingTop: 60, display: 'flex', justifyContent: 'center' }}>
+        <span style={{
+          fontFamily: 'Space Mono, monospace', fontSize: 11, color: hexA(TEAL, gone ? 0.4 : 0.8),
+          letterSpacing: '0.30em', textTransform: 'uppercase', transition: 'color 1.2s ease',
+        }}>The Signal Space</span>
+      </div>
+
+      {/* ── the field-mark / antenna ── */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: gone ? 300 : 188, zIndex: 4,
+        display: 'flex', justifyContent: 'center',
+        transition: 'top 1.4s ease',
+      }}>
+        <span style={{
+          display: 'block', width: 9, height: 9, borderRadius: '50%',
+          background: TEAL,
+          boxShadow: `0 0 ${received ? 26 : 16}px ${hexA(TEAL, received ? 0.85 : 0.6)}, 0 0 ${received ? 52 : 30}px ${hexA(TEAL, 0.4)}`,
+          animation: received ? 'sigHold 6s ease-in-out infinite' : 'sigArrive 7s ease-in-out infinite',
+          opacity: gone ? 0.3 : 1, transition: 'opacity 1.4s ease',
+        }} />
+      </div>
+
+      {/* ── the transmission ── */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: 250, zIndex: 4,
+        padding: '0 40px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+      }}>
+        {/* arriving caption */}
+        {!received && !gone && (
+          <span style={{
+            fontFamily: 'Space Mono, monospace', fontSize: 9.5, color: hexA(TEAL, 0.5),
+            letterSpacing: '0.22em', textTransform: 'uppercase',
+            animation: 'hintFade 3.4s ease-in-out infinite',
+          }}>a signal is arriving</span>
+        )}
+
+        {/* the words — resolving line by line as it lands */}
+        {received && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {sig.lines.map((line, i) => (
+              <Line key={i} text={line} index={i} total={sig.lines.length} />
+            ))}
+            <FieldMark count={sig.lines.length} />
+          </div>
+        )}
+
+        {/* gone — the field is quiet */}
+        {gone && <GoneState onPassDay={passDay} />}
+      </div>
+
+      {/* leave — a clean way out */}
+      {received && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 54, zIndex: 5, display: 'flex', justifyContent: 'center' }}>
+          <button onClick={leave} style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)',
+            letterSpacing: '0.22em', textTransform: 'uppercase', padding: 10,
+            animation: 'hintFade 5s ease-in-out infinite',
+          }}>leave</button>
+        </div>
+      )}
+
+      {/* home indicator */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 6, height: 30, display: 'flex', justifyContent: 'center', alignItems: 'flex-end', paddingBottom: 9, pointerEvents: 'none' }}>
+        <div style={{ width: 134, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.7)' }} />
+      </div>
+    </div>
+  );
+}
+
+/* one line of the transmission, resolving from the dark in sequence */
+function Line({ text, index, total }) {
+  const [on, setOn] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setOn(true), 120 + index * 520);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <p style={{
+      fontFamily: 'Lora, serif', fontSize: 23, lineHeight: 1.62, color: 'var(--ink)',
+      textAlign: 'center', textWrap: 'balance', letterSpacing: '0.004em',
+      opacity: on ? 1 : 0,
+      transform: on ? 'translateY(0)' : 'translateY(8px)',
+      transition: 'opacity 1.4s ease, transform 1.4s ease',
+    }}>{text}</p>
+  );
+}
+
+/* the field's quiet signature, appearing after the last line */
+function FieldMark({ count }) {
+  const [on, setOn] = React.useState(false);
+  React.useEffect(() => {
+    const t = setTimeout(() => setOn(true), 120 + count * 520 + 600);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <span style={{
+      marginTop: 30,
+      fontFamily: 'Space Mono, monospace', fontSize: 10, color: hexA(TEAL, 0.6),
+      letterSpacing: '0.20em', textTransform: 'uppercase',
+      opacity: on ? 1 : 0, transition: 'opacity 1.6s ease',
+    }}>— the field</span>
+  );
+}
+
+/* after you leave — the field is quiet; a new day brings a new signal */
+function GoneState({ onPassDay }) {
+  const [on, setOn] = React.useState(false);
+  React.useEffect(() => { const t = setTimeout(() => setOn(true), 700); return () => clearTimeout(t); }, []);
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20,
+      opacity: on ? 1 : 0, transition: 'opacity 1.6s ease', paddingTop: 30,
+    }}>
+      <p style={{
+        fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 17, lineHeight: 1.6,
+        color: 'var(--ink60)', textAlign: 'center',
+      }}>The signal was received.<br />The field is quiet now.</p>
+      <span style={{
+        fontFamily: 'Space Mono, monospace', fontSize: 9.5, color: 'var(--ink35)',
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+      }}>one a day · return tomorrow</span>
+      {/* prototype affordance — bring the next day's signal */}
+      <button onClick={onPassDay} style={{
+        marginTop: 4, background: 'transparent', border: '1px solid rgba(58,173,168,0.28)',
+        borderRadius: 100, padding: '9px 18px', cursor: 'pointer',
+        fontFamily: 'Space Mono, monospace', fontSize: 9, color: hexA(TEAL, 0.75),
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+      }}>a new day arrives</button>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<SignalSpace />);
+
+(function fit() {
+  const stage = document.getElementById('stage');
+  function apply() {
+    const s = Math.min(1, (window.innerHeight - 36) / 852, (window.innerWidth - 36) / 393);
+    stage.style.transform = `scale(${s})`;
+    stage.style.transformOrigin = 'center center';
+  }
+  apply(); window.addEventListener('resize', apply);
+})();
+</script>
+</body>
+</html>

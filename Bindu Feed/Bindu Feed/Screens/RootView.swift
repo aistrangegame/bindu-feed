@@ -7,6 +7,7 @@ struct RootView: View {
     @State private var selectedRoom: String? = nil
     @State private var sort: StorySort = .mostActive
     @State private var hasLoaded = false
+    @State private var showHub = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -41,7 +42,7 @@ struct RootView: View {
                         .padding(.top, BinduTheme.space12)
 
                     subtitle
-                        .padding(.horizontal, BinduTheme.space16)
+                        .padding(.horizontal, BinduTheme.space16 + 44)  // align under the wordmark, past the hub trigger
 
                     CommunityFilterBar(rooms: store.rooms, selectedRoom: $selectedRoom)
 
@@ -57,41 +58,30 @@ struct RootView: View {
             .scrollIndicators(.hidden)
         }
         .navigationBarHidden(true)
+        .hubOverlay(open: $showHub, path: $path)
     }
 
     private var header: some View {
-        HStack(alignment: .center) {
-            HStack(spacing: 8) {
-                Image(systemName: "eye.fill")
-                    .font(.system(size: 14))
-                    .foregroundColor(BinduTheme.inkPrimary)
-                Text("A Strange Feed")
-                    .font(.lora(20, weight: .bold))
-                    .foregroundColor(BinduTheme.inkPrimary)
-            }
-            Spacer()
-            HStack(spacing: BinduTheme.space12) {
-                Button { path.append(FeedRoute.rooms) } label: {
-                    Image(systemName: "square.grid.2x2")
-                        .font(.system(size: 15))
-                        .foregroundColor(BinduTheme.inkSecondary)
-                }
-                .buttonStyle(.plain)
+        HStack(alignment: .top, spacing: 11) {
+            HubTrigger(open: $showHub)
+                .padding(.top, 2)
 
-                Button { path.append(FeedRoute.settings) } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 15))
-                        .foregroundColor(BinduTheme.inkSecondary)
-                }
-                .buttonStyle(.plain)
-            }
+            Text("A Strange Feed")
+                .font(.lora(22, weight: .medium))
+                .foregroundColor(BinduTheme.inkPrimary)
+                .tracking(-0.3)
+
+            Spacer(minLength: 8)
+
+            AshMark { path.append(FeedRoute.ash) }
         }
     }
 
     private var subtitle: some View {
         Text("the field reads the Codex back")
-            .font(.loraItalic(12))
+            .font(.loraItalic(13))
             .foregroundColor(BinduTheme.inkSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -159,11 +149,30 @@ struct RootView: View {
         case .story(let story):
             StoryDetailView(path: $path, story: story)
         case .archetype(let archetype):
-            ArchetypeProfileView(path: $path, archetype: archetype)
+            TheTurningView(path: $path, archetype: archetype)
         case .ash:
             AshVoiceView(path: $path)
         case .settings:
             SettingsView(path: $path)
+        case .mirror:
+            MirrorView(path: $path)
+        case .signal:
+            SignalView(path: $path)
+        case .players:
+            PlayersView(path: $path)
+        case .practiceDoor:
+            // Hub-launched Practice Door — crossing returns to home (pops
+            // the entire stack). The launch-time door lives outside the
+            // NavigationStack in ContentCoordinator.
+            PracticeDoorView(onComplete: {
+                path.removeLast(path.count)
+            })
+        case .compose(let story):
+            // AshComposeView handles its own post + refresh flag; this
+            // closure just pops back to Story Detail.
+            AshComposeView(story: story, onPosted: {
+                if !path.isEmpty { path.removeLast() }
+            })
         }
     }
 

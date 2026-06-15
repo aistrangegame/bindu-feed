@@ -7,4 +7,9 @@ enum FeedRoute: Hashable {
     case archetype(Archetype)
     case ash
     case settings
+    case mirror
+    case signal
+    case players
+    case practiceDoor
+    case compose(Story)
 }

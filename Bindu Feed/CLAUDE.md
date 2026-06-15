@@ -2,24 +2,23 @@
 
 > **Standing instruction: Never reduce. Always emerge. If you see a better way, take it.**
 
-This file is the persistent memory for Bindu Feed. A fresh Claude Code session reading this should know what the app is, where it lives, what's already decided, and what cannot be undone.
-
-The master spec — the source of truth for wording, screens, and phase audits — lives at:
-`/Users/ashrey/Bindu Feed/BINDU_FEED_CLAUDE_CODE.md`
+This file is the persistent memory for Bindu Feed. A fresh Claude Code session reading this should know what the app is, what's already decided, and what cannot be undone. **Phase 9 landed 2026-06-14**; this document is its true record — written after a code-side structural audit ([`bindu-feed-phase9-audit.md`](../bindu-feed-phase9-audit.md)) and a data-side inventory were reconciled, the punch list was resolved, and both halves saw the thing whole.
 
 ---
 
 ## 1. What this app is
 
-Bindu Feed is a living consciousness feed — an iOS SwiftUI app that renders a man's Codex entries as stories and lets eight archetype voices gather in the comments around each one. There is no local data; every story, voice, room, and threshold sentence is read live from a single Airtable table. The aesthetic mantra is **Slow. Intimate. Already there.** — the app is meant to feel like a field that was already alive when you arrived, not a product you opened.
+Bindu Feed is a living consciousness feed — an iOS SwiftUI app that renders one man's Codex entries as Stories and lets eight archetype voices gather in the comments around each one, with two roots (Neev, Shweta) and Ash (the physical user) as a third register. There is no local data; every Story, voice, room, threshold sentence, mirror card, and signal is read live from a single Airtable table. The aesthetic mantra is **Slow. Intimate. Already there.** — the app is meant to feel like a field that was already alive when you arrived, not a product you opened.
 
 ---
 
 ## 2. Current build state
 
-- **Phases 1–7 complete** as of 2026-05-21
-- **Phase 8 in progress** — Xcode signing + on-device deploy to iPhone "Neev"
-- iOS 16+, iPhone-only, portrait, dark mode only
+**Phases 1–9 complete** as of 2026-06-14. The branch `phase-9` carries all of Phase 9; `main` holds the pre-Phase-9 baseline. After the §12 device verification, the branch merges.
+
+- iOS 17.6 deployment target (project.pbxproj); spec/intent is iOS 16+ — see §11
+- iPhone only, portrait only, dark mode only
+- No third-party dependencies
 
 **Build sanity check:**
 ```
@@ -42,44 +41,72 @@ Source root: `Bindu Feed/Bindu Feed/Bindu Feed/`
 
 ### `App/`
 - `BinduFeedApp.swift` — `@main` entry point
-- `ContentCoordinator.swift` — decides Launch vs. TokenEntry vs. Root
-- `Navigation.swift` — `FeedRoute` enum (rooms/room/story/archetype/ash/settings) used by `NavigationPath`
+- `ContentCoordinator.swift` — Token gate → Practice Door (every open) → Root
+- `Navigation.swift` — `FeedRoute` enum, 11 cases
 
 ### `Services/`
-- `AirtableService.swift` — single source for all network calls. Key helpers:
-  - `fetch(filter:sort:)` — paginated GET (handles `offset` token)
-  - `fetchStoriesByIds([String])` and `fetchFieldCommentsByIds([String])` — bulk RECORD_ID() lookups used by Archetype Profile and Ash's Voice
-- `KeychainService.swift` — stores the Airtable Personal Access Token
+- `AirtableService.swift` — single source for all network calls; weighted threshold-sentence picker
+- `KeychainService.swift` — stores the Airtable PAT
 
 ### `Models/`
-- `Models.swift` — all wire types + domain models + `CommentNode` tree. Single `CodingKeys` enum maps every Airtable field name to its Swift property (see §4).
+- `Models.swift` — wire types + domain models + `CommentNode` tree + `PracticeDoorKind`/`PracticeDoorContent` + `CardRegister`. **Single `CodingKeys` enum** for all Airtable fields (don't fragment).
 
 ### `Store/`
-- `FeedStore.swift` — `@MainActor` `ObservableObject`. Owns rooms, archetypes, stories, comments cache.
+- `FeedStore.swift` — `@MainActor ObservableObject`; owns rooms / archetypes / stories / comments / cards / signals / practices; the 5-kind weighted Practice Door selector; the post-compose refresh handoff
 
 ### `Theme/`
-- `Theme.swift` — `BinduTheme` enum + `Color` and `Font` extensions. Lora and Space Mono are registered by PostScript name — do not silently fall back to `.system`.
-- `GlyphAnimation.swift` — `GlyphView` + all 13 room animations.
+- `Theme.swift` — `BinduTheme` enum + `Color`/`Font` extensions + `panel()` modifier. Lora and Space Mono registered by PostScript name — do not silently fall back to `.system`.
+- `GlyphAnimation.swift` — 13-case enum + `GlyphView`. Each Room's Airtable `Animation Name` field maps to a case via `init(name:)`; all 13 cases reachable at runtime via that bridge.
 
-### `Components/`
-- `StoryCard`, `CommunityPill`, `CommunityFilterBar`, `CommentCard`, `ReplyRow`, `AshComposer`, `AshEntryRow`, `BinduSilenceCard`, `FieldGathersMarker`, `RoomPortalCard`, `VoiceAvatar`
+### `Components/` (15 files)
+Shared SwiftUI subviews. All reachable; nothing orphaned. Notable: `HubTrigger` + `HubOverlay` (`.hubOverlay()` modifier) on every screen except Practice Door; `FieldSurfacePortalCard` for the Mirror/Signal tier; `StaggeredReveal` for field-comment + Signal arrivals; `AshPostedCard` renders with the user's arrival identity (name/glyph/color).
 
-### `Screens/` (one file per screen)
-- `LaunchView` — Threshold Sentence
-- `RootView` — owns the `NavigationPath`
-- `GameView` — Home Feed / single-room feed
-- `RoomSelectionView` — 13 living portals; also defines the shared `BackChevron`
-- `StoryDetailView` — immersive read + the field gathering
-- `ArchetypeProfileView` — voice identity + Hold-to-Witness
-- `AshVoiceView` — physical user's comment history
-- `SettingsView` — "HOW YOU ARRIVE"
-- `TokenEntryView` — first-run Airtable PAT entry
-
-Every screen takes `@Binding var path: NavigationPath` and uses cross-dissolve transitions — **never slides**.
+### `Screens/` (13 files)
+One file per screen — see §5 for the full screen↔route map.
 
 ---
 
-## 4. Airtable connection
+## 4. Navigation
+
+`RootView` owns the `NavigationPath`. `FeedRoute` cases:
+
+`rooms · room(Room) · story(Story) · archetype(Archetype) · ash · settings · mirror · signal · players · practiceDoor · compose(Story)`
+
+Every screen takes `@Binding var path: NavigationPath`. **All transitions are cross-dissolves; nothing slides.**
+
+**Launch flow:** `BinduFeedApp` → `ContentCoordinator` → either `TokenEntryView` (first launch) or `PracticeDoorView` (every open) → `RootView`.
+
+**Hub:** `RootView`'s header is `HubTrigger + "A Strange Feed" wordmark + AshMark`. Every other top-level + sub-flow screen also carries a `HubTrigger` (top-left, beside the back chevron). Tapping it opens the "WHERE TO" overlay with four rows: Rooms, Players, Practice Door, How You Arrive. **Practice Door is the only screen without the hub** — its tap-anywhere-to-cross gesture would conflict.
+
+**Back chevron:** every sub-screen has a frosted `BackChevron` (‹), top-left. Cross-dissolve only, no slides.
+
+**Practice Door has two flows:**
+1. **Launch surface** — runs every open from `ContentCoordinator`, no nav chrome. Tap to cross → `doorCrossed = true` → `RootView` dissolves up.
+2. **Hub-launched route** (`.practiceDoor`) — pushed from `HubOverlay`, same chrome-free body. Crossing pops the entire path to root.
+
+---
+
+## 5. The 13 screens
+
+| Screen | Role | Reached via |
+|---|---|---|
+| `TokenEntryView` | First-launch PAT entry | `ContentCoordinator` if `!store.hasToken` |
+| `PracticeDoorView` | Threshold every open; 5 weighted kinds (threshold 40 / practice 23 / gaiaSeed 20 / story 12 / binduDot 5); tap-anywhere-to-cross | (a) launch surface (b) `.practiceDoor` route |
+| `RootView` | Home Feed — story river, room filter, sort, hub + Ash mark in header | After Practice Door |
+| `RoomSelectionView` | 12 portals 2-col + The Field full-width + "AND THE FIELD TURNS TO YOU" divider + Mirror/Signal Space horizontal cards | `.rooms` (hub) |
+| `GameView` | One room at a time; prev/next chevrons cycle all 13 in Sort Order; 0.28s cross-dissolve between rooms | `.room(Room)` |
+| `StoryDetailView` | Story body + sequential field gathering + Ash entry; Resonance Depth ritual on hold (1.5s) of resonance affordance | `.story(Story)` |
+| `TheTurningView` | Trace-the-∞ + dawn-light ritual; archetype's words resolve from dark past 55% progress | `.archetype(Archetype)` |
+| `PlayersView` | 8 lenses (canonical order, not Airtable Sort) + 2 roots + Ash full-width card | `.players` (hub) |
+| `MirrorView` | One reflection per day; Vow/Koan registers; one Bindu Draw per day | `.mirror` (Room Selection tier) |
+| `SignalView` | One transmission per day; line-by-line arrival; signs "— THE FIELD"; clean leave | `.signal` (Room Selection tier) |
+| `AshComposeView` | Full-screen writing ritual; hold-ember-to-release; lit by arrival color/glyph | `.compose(Story)` (Story Detail) |
+| `AshVoiceView` | User's footprint — every Ash Comment with story + reply context | `.ash` (AshMark, Settings link, Turning's Ash link) |
+| `SettingsView` | "HOW YOU ARRIVE" — name / glyph / color with live preview | `.settings` (hub) |
+
+---
+
+## 6. Airtable connection
 
 ```
 Base ID:    app248ZTWhYJlvQj2
@@ -90,113 +117,275 @@ Auth:       Bearer <PAT>, stored in Keychain via KeychainService
 Page size:  100 records max; follow `offset` token for pagination
 ```
 
-### The Feed table — purpose
+### The Feed — 10 record Types (Type singleSelect discriminates)
 
-One table holds everything. The `Type` singleSelect discriminates the row.
+| Type | Choice ID | Readers |
+|---|---|---|
+| Story | `sely4gGZUloH4KEeX` | `fetchStories(room:sort:)`, `fetchStoriesByIds([id])` |
+| Field Comment | `seltI2oj6xdeh098G` | `fetchAllFieldComments`, `fetchFieldComments(storyId:)`, `fetchArchetypeComments(name:)`, `fetchFieldCommentsByIds([id])` |
+| Ash Comment | `selgUdEAGB47eOQDg` | `fetchAllAshComments`, `fetchAshComments(storyId:)` — written via `postAshComment(...)` |
+| Room | `selqsVmjeI5oHc891` | `fetchRooms` |
+| Archetype | `selnJ0w96NTMozu0h` | `fetchArchetypes` (11 rows: 8 lenses + Neev + Shweta + Ash) |
+| Threshold Sentence | `selK1wJy98fUacJS6` | `fetchThresholdSentences` |
+| Resonance Voice | `sel90xRl5Vtm809ar` | `fetchResonanceVoice(storyId:)` |
+| Mirror Card | `selOPdnOomjXCHyJP` | `fetchMirrorCards` |
+| Signal | `selpEUJq8wI5Q1xDJ` | `fetchSignals` |
+| Practice Invitation | `selzvCCfVhU6Co8dm` | `fetchPracticeInvitations` |
 
-### Nine record types (the `Type` field)
+**Every read gates on `{Status}='Live'`. No exceptions** (post-audit fix to `fetchStoriesByIds` and `fetchFieldCommentsByIds`). The `Status` singleSelect has Draft / Live / Archived; only Live surfaces.
 
-1. **Story** — a Codex entry rendered as a narrative
-2. **Field Comment** — an archetype voice commenting on a Story
-3. **Ash Comment** — the physical user (Ash) commenting on a Story
-4. **Room** — one of 13 portals
-5. **Archetype** — one of the 8 field voices + Ash
-6. **Threshold Sentence** — single sentence shown at launch
-7. **Codex Entry** — raw source (pre-Story)
-8. **Seed** — generative prompt / sentence source
-9. **Bindu** — the dot; weight-1 sentence atoms
+### The blank-Status lesson (institutional knowledge — load-bearing)
 
-(The `Status` singleSelect — Draft | Live | Archived — gates every fetch with `{Status}='Live'`.)
+Records created without a Status fall through the Live gate **invisibly**. This caused four silent-blank cohorts during the Phase 9 session that all rendered as empty UI before being caught:
 
-### Field name → CodingKey mapping (Models.swift)
+- 30 Mirror Cards
+- 16 Signals
+- 15 Practice Invitations
+- 97 Resonance Voices
 
-| Airtable field        | Swift property        |
-|-----------------------|-----------------------|
-| `Name`                | `name`                |
-| `Type`                | `type`                |
-| `Status`              | `status`              |
-| `Sort Order`          | `sortOrder`           |
-| `Body`                | `body`                |
-| `Excerpt`             | `excerpt`             |
-| `Room`                | `room`                |
-| `Flairs`              | `flairs`              |
-| `Codex ID`            | `codexId`             |
-| `Source Date`         | `sourceDate`          |
-| `Last Activity Date`  | `lastActivityDate`    |
-| `Resonance`           | `resonance`           |
-| `Comment Body`        | `commentBody`         |
-| `Archetype`           | `archetype`           |
-| `Linked Story`        | `linkedStory`         |
-| `Parent Comment`      | `parentComment`       |
-| `Trigger Codex Entry` | `triggerCodexEntry`   |
-| `Comment Order`       | `commentOrder`        |
-| `Glyph`               | `glyph`               |
-| `Hex Color`           | `hexColor`            |
-| `Blurb`               | `blurb`               |
-| `Animation Name`      | `animationName`       |
-| `Glyph Size`          | `glyphSize`           |
-| `Operating Principle` | `operatingPrinciple`  |
-| `Archetype Role`      | `archetypeRole`       |
-| `Sentence Weight`     | `sentenceWeight`      |
-| `Last Shown`          | `lastShown`           |
-| `Sentence Source`     | `sentenceSource`      |
+All four cohorts have since been set to `Status='Live'`. The lesson generalizes:
+
+> **Any new record — authored manually, seeded via script, or written by the future Make.com pipeline — must set `Status='Live'` explicitly. Records without a Status are silently invisible to the app.**
+
+This is the single most important contract for anything that writes to The Feed.
+
+### The two body fields (easy to confuse)
+
+- **`Body`** (field ID `fldnN9WykhzLpVJQG`) — used by **Story**, **Mirror Card**, **Signal**, **Practice Invitation**
+- **`Comment Body`** (field ID `fldCVfisHaNtZmlTg`) — used by **Field Comment** and **Ash Comment** only
+
+`Signal` / `MirrorCard` / `PracticeInvitation` inits read defensively as `f.commentBody ?? f.body ?? ""` so the body loads regardless of which name the underlying field carries at any moment. The defensive pattern stays even now that the answer is known — it's a no-cost safety net.
+
+### Category is backstage-only
+
+The `Category` singleSelect (`fld4URzL9VQEQtXbd`; values Value / Mantra / Practice / Energy State / Role / Game / Tree of Life Panel / Belief) is **not read by any code**. It exists purely for data organization. The Mirror's render is driven entirely by `Card Register` (Vow / Koan).
+
+### Important field IDs
+
+```
+Name                flds1w07pNzbM2oKV
+Type                fldfFRjyasZWodvQC
+Status              fldWcw9noNlC2AqVf      Live: seliWi7fUkrRrgJMu
+Sort Order          fldKAIGO9RHV235go
+Body                fldnN9WykhzLpVJQG      Story/Mirror/Signal/Practice content
+Comment Body        fldCVfisHaNtZmlTg      Field/Ash Comments only
+Excerpt             fld6rcsZCkfFSyFvM
+Room                fld7SeHJhOY1DhkFh
+Codex ID            fldppvzE9vMuqOWvk
+Source Date         fldsN7G9zycsCyEFq
+Last Activity Date  fldELGULGmdbvFbTR      PATCHed by app after Ash post
+Resonance           fldahwpoNroxZS4Us      PATCHed by app on tap
+Closing Line        fldEEVROYCzxY4CW3      Resonance Depth phase
+Last Depth Date     ⟵ PATCHed by app on Resonance Depth dissolve (write path bypasses the Swift model)
+Archetype           fldVkGgEen9CpNZ1r      singleSelect of 11
+Linked Story        fldLLLvCdaRcXO03v
+Parent Comment      fldpMuXqXK7EWE62j      self-link; nested replies
+Comment Order       fldJJLGnJz9w0pDdD
+Glyph               fld2ALFjohcCi7bOM      archetype + room
+Hex Color           fld6lga55ups3j0ZZ      archetype + room
+Role                fldBLXPlcrbqLv0S8      archetype
+Operating Principle fldESDz3ULot4Aq2A      archetype — used by Make.com persona prompts
+Sentence Source     fld8AOcQL34A8pkb2      Bindu / Seed / Story / etc.
+Sentence Weight     fldyhpkuMJzvaHdjB
+Card Register       fldtDwumFF7HQU4DT      singleSelect: Vow / Koan
+Category            fld4URzL9VQEQtXbd      BACKSTAGE — not read by any code
+```
+
+### Linked-record filter caveat
+
+Airtable's `filterByFormula` cannot reliably match a linked-record field by record ID — `{Linked Story}` evaluates to the linked records' primary VALUES (story names), not IDs, so `FIND('recXXX', ARRAYJOIN({Linked Story}))` never matches. **All linked-record filtering is done client-side in Swift** (fetch by Type + Status server-side, filter by linked record ID in memory). See `fetchFieldComments(storyId:)`, `fetchAshComments(storyId:)`, `fetchResonanceVoice(storyId:)`.
 
 ---
 
-## 5. Key design decisions — do not undo
+## 7. Identity — Ash, arrival, the rename-safe split
 
-These are already settled. A new session that "improves" them will break what makes the app the app.
+The Airtable archetype row for the physical user is **`Ash`** (`rec9BUbHMuylYiVwH`), role "Physical Synthesis · the one who lives it". This is the **canonical authorship identity** — every Ash Comment posted via the app is written with `Archetype: "Ash"` (resolved dynamically via `FeedStore.postComment` → `archetype(named: "Ash")?.name`, not hardcoded at the service layer).
 
-- **Bulk comment fetch.** Archetype Profile and Ash's Voice fetch comments by `Archetype` filter, collect every distinct `Linked Story` ID, then bulk-fetch those stories with `fetchStoriesByIds`. Do not regress to N+1 per-comment lookups.
-- **Flood transition anchor.** The Story Detail "field gathers" reveal is anchored to a specific scroll offset and staggered one-by-one. The anchor and stagger order are load-bearing — they aren't decorative timing.
-- **Hold-to-Witness at 60fps.** The Archetype Profile hold gesture runs on a `CADisplayLink`-paced loop, not a SwiftUI animation. Don't replace it with `withAnimation` — the haptic + opacity arc has to be frame-locked.
-- **Cross-dissolve transitions everywhere.** Game View room switches are 0.28s dissolves. No `NavigationLink` push slides anywhere in the app.
-- **Archetype color comes from Airtable `Hex Color`, not constants.** Theme has fallbacks, but views must read the live field so a color tweak in Airtable propagates without a rebuild.
-- **All cross-references in `Models.swift`'s single `CodingKeys` enum.** Adding a new Airtable field means adding a new case here; don't fragment into per-type coding keys.
-- **No local persistence.** No Core Data, no SwiftData, no on-disk cache beyond the in-memory `FeedStore`. The Airtable is the spine.
-- **Exact wording is load-bearing.** See §6.
+The user's chosen name / glyph / color in Settings ("HOW YOU ARRIVE") is the **arrival identity** — device-local, display-only, stored as JSON in `UserDefaults` (key `bindu.arrival.settings`). It surfaces in:
+- `AshComposeView` — released entry card name, ember + ring color, glyph
+- `AshVoiceView` — header avatar (name, color, glyph) + comment row color
+- `StoryDetailView` — AshPostedCards below field comments use the arrival name
+- `SettingsView` — live preview
+
+**The two are independent.** Renaming yourself in Settings to "Mr. Ashrey" changes the display in those four places; the Airtable `Archetype` value stays `Ash` forever. Airtable reads (filters by `Archetype='Ash'`) and writes are untouched by the rename. **Renaming is safe and fully propagated.**
+
+The arrival-identity fallback (when Settings is empty) is the `ArrivalSettings` struct defaults: Lalita violet `#9B6BD6` + Bindu dot `·`. The display-name fallback specifically is `"Ash"` — the canonical identity, because the struct's default name is empty by intent (not a display value).
+
+The word "Ashram" appears only in design prose (handoff docs, prototypes); it is **not in the data and not in the code**. PlayersView and TheTurningView render `archetype.name` → "Ash".
 
 ---
 
-## 6. Design language — Slow. Intimate. Already there.
+## 8. The field-surfaces tier
 
-Three words, and each one shows up in code as constraints, not vibes.
+Three surfaces aren't story-rooms — they're the field facing you, not a space you enter.
 
-### Slow → motion
-- Every screen transition is a **cross-dissolve**, not a slide.
-- Comment reveals **stagger one-by-one** in Phase 5.
-- Glyph animations live in the `GlyphAnimation` enum (`Theme/GlyphAnimation.swift`); each of the 13 rooms is mapped to one. Cycles run 3–26s — built to be ignored, not noticed.
-- Room cross-dissolves in Game View = **0.28s**.
+### Mirror (`.mirror`)
+A single held card per day, terra `#C47A52`. Reads `Type='Mirror Card'`, deterministic by date-hash (FNV-1a 32-bit) over the local-time day. The `Card Register` field drives render:
+- **Vow** → upright Lora 500, label "A VOW · ARRIVED", closing `·`
+- **Koan** → italic Lora 400, label "STILL LIVING", closing `◌`
 
-### Intimate → typography & palette
+One **Bindu Draw** per day reveals one alternate; spends to a hollow ring. Per-day state in `UserDefaults` (`mirror.draw.<date>.drawn` / `.idx`). No tracking, no graduation; every card is Live from day one — only which surfaces today changes.
+
+### Signal Space (`.signal`)
+One ceremonial transmission per day, teal `#3AADA8`. Reads `Type='Signal'`, date-hash same as Mirror. Three phases: arriving (faint teal antenna point, "A SIGNAL IS ARRIVING") → received (lines resolve from the dark via a sentence + em-dash splitter) → gone ("The signal was received. The field is quiet now."). Signs **"— THE FIELD"** between lines and leave. One clean exit.
+
+The Signal room (✧ teal) and the Signal Space portal (⊙ teal) share teal **deliberately** — same current at two depths.
+
+### Practice Door (launch surface + `.practiceDoor`)
+The threshold every open. Five weighted kinds:
+
+| Kind | Weight | Source |
+|---|---|---|
+| threshold sentence | 40 | `Type=Threshold Sentence`, `Sentence Source ≠ Bindu` |
+| practice invitation | 23 | `Type=Practice Invitation` |
+| Gaia seed | 20 | `Type=Signal` (reused — the 16 transmissions ARE the field's second-person voice) |
+| story that found you | 12 | random Live `Type=Story` (unavailable on cold launch — stories aren't in bootstrap) |
+| Bindu dot | 5 | `Type=Threshold Sentence`, `Sentence Source = Bindu` |
+
+Rules: no kind repeats back-to-back; first-ever open (no `bindu.door.lastKind` saved) returns threshold; Bindu never doubles. Tap anywhere to cross — no countdown. Pre-dawn warm-gold (`#C9A07A`) atmosphere shifts to the chosen kind's accent color.
+
+The Mirror and Signal Space portals sit in `RoomSelectionView` beneath the divider **"AND THE FIELD TURNS TO YOU"** as two horizontal full-width cards (terra ◐ + teal ⊙).
+
+---
+
+## 9. Design language — Slow. Intimate. Already there.
+
+### Typography
 - **Lora** (serif) — every reading text. Registered by PostScript name on `Font` extension in `Theme.swift`. Fallback is `Georgia`, not `.system`.
 - **Space Mono** — metadata, labels, codex IDs, uppercase tags.
+
+### Palette
 - Background **`#0E0C12`** (near-black warm). Card `#171420`. Comment well `#121018`. Hairline = `Color.white.opacity(0.06)`.
-- Ink: `#EDE8E3` at 100/60/35% for primary/secondary/tertiary.
-- Archetype colors are read from the Airtable `Hex Color` field on the Archetype row, not hard-coded into views.
+- Ink: `#EDE8E3` at 100 / 60 / 35% for primary / secondary / tertiary.
+- **Archetype colors come from the Airtable `Hex Color` field on the Archetype row, not hard-coded.** Theme has fallback constants but views always read the live field.
 
-### Already there → wording (do not paraphrase)
-- Settings screen label: **"HOW YOU ARRIVE"** (Space Mono, uppercase). Not "Settings", not "Profile".
+### Motion
+- Every screen transition is a **cross-dissolve**. No slides.
+- Comment reveals **stagger one-by-one** in Story Detail.
+- Glyph animations live in the `GlyphAnimation` enum (13 cases). Each Room's `Animation Name` field maps to one via `init(name:)`.
+- Room cross-dissolves in Game View = **0.28s**.
+- The Turning's dawn-light + the Compose ember + the Resonance Depth hold all run a **60fps `Task.sleep(16ms)` loop** — frame-locked, not `withAnimation`. The fine progression of saturation / colorMultiply / opacity needs the per-frame loop.
+
+### Local time for per-day state
+Every "is this still today?" check uses **local time**, not UTC. Mirror's day-key, Signal Space's day-key, any future per-day surface — all local. The user's day is the day their phone shows them. `DateFormatter` with no `timeZone` set; format `yyyy-MM-dd`.
+
+### Wording canon (do not paraphrase)
+- Settings screen label: **"HOW YOU ARRIVE"** (Space Mono, uppercase)
 - Ash entry prompt in Story Detail: **"What arrived for you?"**
-- Post-Ash-comment confirmation: **"The room has changed."**
+- Compose post-release confirmation: **"The room has changed."**
+- Compose return link: **"RETURN TO THE STORY ›"**
 - Room Selection header tagline: **"Each one already alive when you arrive."**
-- Field threshold marker: **"The field gathers"** in italic Lora.
+- Room Selection field-surface divider: **"AND THE FIELD TURNS TO YOU"**
+- Field threshold marker (Story Detail): **"The field gathers"** in italic Lora
+- Signal Space sign-off: **"— THE FIELD"**
+- Signal Space gone state: **"The signal was received. The field is quiet now."** + **"ONE A DAY · RETURN TOMORROW"**
+- Mirror — Vow label: **"A VOW · ARRIVED"**; Koan label: **"STILL LIVING"**; Bindu Draw spent: **"DRAWN · RETURN TOMORROW"**; pre-draw hint: **"DRAW ONCE MORE"**
+- Practice Door kind labels: **"A THRESHOLD"**, **"A PRACTICE"**, **"A GAIA SEED"**, **"WHAT FOUND YOU"** (no label for Bindu dot — the dot is the whole thing). Cross hint: **"TAP TO CROSS"**.
+- Hub overlay: **"WHERE TO"** at top, **"TAP ANYWHERE TO STAY"** at bottom; rows: `The Rooms — thirteen ways in` · `The Players — the lenses that read` · `The Practice Door — cross the threshold` · `How You Arrive — name, colour, mark`.
+- Turning's trace captions: **"trace the loop — let the light in"** → **"stay with the turning…"** → **"witnessed · the light is up"**.
 
-### Room name styles (also exact)
-- "The Watcher" → uppercase, letter-tracked
+### Room name styles (exact)
+- "The Watcher" → uppercase, letter-tracked (Space Mono)
 - "The Descent" / "The Return" / "The Field" → italic Lora
 
-When adding or renaming UI elements, check the master spec for canonical wording before inventing your own.
+---
+
+## 10. Load-bearing decisions — do not undo
+
+- **No-tracking model for Mirror + Signal Space.** The old tracking model (`Last Shown` markers, `Koan Status` graduation sorting, comments on Signals) was retired in Phase 9. Reads `Type=Mirror Card` and `Type=Signal` (not "Reflection" — the spec proposed that name but the schema uses Mirror Card). Register lives in `Card Register`, not `Flairs`. Don't re-introduce tracking.
+- **Practice Door is every open, not once-per-day.** The old `bindu.practice.lastShownDate` gating was retired in step 6. Every launch surfaces a fresh kind.
+- **Bulk comment fetch on feed load.** The Turning and Ash's Voice fetch comments by `Archetype` filter, collect distinct `Linked Story` IDs, then bulk-fetch with `fetchStoriesByIds`. Do not regress to N+1 per-comment lookups.
+- **60fps loops, not `withAnimation`, for hold gestures.** Turning, Compose ember, Resonance Depth hold all use `Task.sleep(16ms)`. The dawn curve and the words' resolve-from-dark need the per-frame progression.
+- **Cross-dissolve transitions everywhere.** Game View room switches are 0.28s dissolves. No `NavigationLink` push slides anywhere.
+- **Archetype color from Airtable `Hex Color`, not constants.** Theme has fallback colors but views always read `archetype.color` (the live field).
+- **Single `CodingKeys` enum in `Models.swift`.** All Airtable fields share one decoder. Adding a new field = adding a case here. Don't fragment per-type.
+- **No local persistence beyond UserDefaults.** No Core Data, no SwiftData, no on-disk cache beyond `FeedStore`'s in-memory dicts + the Settings JSON + per-day Mirror/Door state in UserDefaults.
+- **`postAshComment` takes `archetypeName: String` dynamically.** The service layer is entity-agnostic; `FeedStore.postComment` resolves `archetype(named: "Ash")?.name` and passes it. Don't re-hardcode "Ash" at the service layer.
+- **Defensive body-field read.** `Signal` / `MirrorCard` / `PracticeInvitation` inits use `f.commentBody ?? f.body ?? ""`. Safety net against future Airtable field renames.
+- **Local-time day-keys** (not UTC) for per-day state. See §9.
+- **`Status='Live'` gate on every reader.** Including the two that Phase 9 added it to (`fetchStoriesByIds`, `fetchFieldCommentsByIds`). No exceptions.
+- **Hub on every screen except Practice Door.** PracticeDoor's tap-anywhere-to-cross gesture would conflict.
+- **Identity split.** Authorship = "Ash" (canonical, always). Display = arrival settings (device-local). See §7.
 
 ---
 
-## 7. What comes next
+## 11. Known-deferred (the polish list)
 
-- **117 Maya entries to process.** Raw Codex entries waiting to be transformed into Story rows in The Feed. Pipeline still being defined — likely Make.com → Airtable.
-- **Make.com pipeline for new Codex entries.** Automation that watches the Codex source, drafts a Story body + excerpt, and creates the Linked Story / triggers the first Field Comments. Not yet wired.
-- **Backward ripple mechanic.** When a new Codex entry lands, the field re-reads adjacent older Stories — past rooms quietly update their `Last Activity Date` and may receive a new Field Comment from an archetype who "remembered" something. Design exists; not yet implemented.
-- **Phase 8 finish.** Code signing identity + provisioning profile for iPhone "Neev", then first on-device install.
+Surfaced during the Phase 9 audit, intentionally postponed. None block anything; they're refinements waiting for the right moment.
+
+| Item | Surface | Notes |
+|---|---|---|
+| Per-presence breath cadences | PlayersView, TheTurningView | Prototype assigns each archetype a unique duration; iOS uses `glyphBreathe` for the lens group (with `glyphEmber` for Bindu, `glyphCircle` for Lalita). Costs new enum cases or a duration param |
+| Mirror body 22pt vs prototype 27pt | MirrorView | Tuned for iPhone width; judge on Neev before adjusting |
+| No scroll-to-words on Turning completion | TheTurningView | Prototype scrolls content to y=360 after 700ms when done; iOS uses opacity-only reveal |
+| Hub-from-hub-destination duplicate | Hub overlay | Tapping "Settings" while on Settings stacks a copy. NavigationPath has no public API for top-element comparison; refactor path to `[FeedRoute]` to fix cleanly |
+| Role label format | PlayersView, TheTurningView | Renders `archetype.role.uppercased()` → "NEED ARCHITECTURE"; prototype shows shorter "NEED". Lenses are "X Architecture" while substrates use "X · descriptor" — trim first-word in code to read consistently (don't edit Airtable role text — the formal ontological names belong in data). Ashrey's aesthetic call when polishing |
+| `onChange(of:perform:)` iOS 17 deprecation | ~10 sites | Widespread pre-existing pattern; modernize in one pass |
+| `terra` property name in AshVoiceView | AshVoiceView | Returns user's arrival color now, not necessarily terra. Cosmetic rename |
+| Resonance Depth phase timings (3s / 3s / 4s) | StoryDetailView | Hardcoded; configurable later if desired |
+| **iOS deploy target 17.6 vs spec 16+** | project.pbxproj | A real decision, but for before any public release, not before now |
+| Ash→Ash threading parent hint | AshVoiceView | `fetchFieldCommentsByIds` is now `Type='Field Comment'` only — Ash-as-parent chains lose the "↩ In reply to" hint. **Currently moot** (all Ash comments are top-level; no app path creates Ash-as-parent replies). If needed later, add a separate `fetchAshCommentsByIds` |
 
 ---
 
-*If you see a better way, take it. Never reduce. Always emerge.*
+## 12. The one runtime truth
+
+**Write path verified 2026-06-14**, via programmatic write-path test (MCP, exact `postAshComment` payload + parent-story PATCH) + data-side confirmation. Test artifact `recoVU4CRoUKqX3q3` retained as Draft (hidden from the Live-gated app; preserved as audit trail).
+
+The compose loop's data write is whole: the payload's `Status='Live'` carries through (no silent-blank fall-through), the `Linked Story` association resolves against the parent record, `Archetype='Ash'` is accepted (the step-2 archetype-resolution fix is closed), and the parent-story `Last Activity Date` PATCH succeeds. Zero Live Ash Comments in the base post-cleanup — first-encounter state pristine.
+
+**On-device walkthrough** (kept for future re-verification or first-encounter exploration; not required to validate the current build):
+1. On `phase-9` branch, ⌘R in Xcode targeting Neev
+2. Cross the Practice Door → Home Feed
+3. Tap any story card; scroll past "The field gathers"
+4. Tap "What arrived for you?" → AshComposeView opens, lit by arrival color
+5. Type a short line, press-and-hold the ember (~2.3s) until the ring fills
+6. Released card appears with arrival color / glyph / name, then "The room has changed." fades in
+7. Tap "RETURN TO THE STORY ›"
+8. Story Detail re-fetches; new card appears in the AshPostedCard section below field comments
+9. Verify in Airtable web: filter `Type='Ash Comment'` + `Status='Live'`, sort by Created Time desc
+
+---
+
+## 13. What comes next
+
+### The Make.com ambient field-gathering pipeline (backend, separate from iOS build)
+
+When a new Ash Comment lands (Status=Live), Make.com:
+1. Watches the Feed for new Ash Comments lacking a `processed` marker
+2. **Routes** the text to 2–3 archetypes whose stance fits (not all 8 — routing keeps each voice earned)
+3. **Generates** for each chosen archetype using their `Operating Principle` as the persona/system prompt, plus the Ash comment + parent Story as context
+4. **Writes** new `Field Comment` records (`Type=Field Comment`, `Linked Story` set, `Archetype` set, `Comment Order` after existing, **`Status='Live'`**)
+5. Marks the source Ash Comment processed (idempotent — generate once per entry, then stable forever)
+
+**Critical contract:** every record Make.com creates **must set `Status='Live'`**. See §6's blank-Status lesson — a pipeline that creates Field Comments without Status will produce invisible cohorts.
+
+Optional later: backward ripple (when a new Story lands, re-read adjacent older Stories and quietly add a Field Comment from an archetype who "remembered"; bump `Last Activity Date`). Designed; not built.
+
+### Content forward edge
+
+**117 Maya entries** to process — raw Codex entries waiting to be transformed into Story rows. Belief lane: first 18 belief stories complete (Sort 103–120); forward edge documented in the asg-airtable side notes.
+
+---
+
+## 14. Legacy notes
+
+These are inert, harmless, and documented here so a future audit doesn't re-flag them.
+
+- **57 orphan field comments** sit in the data linked only to Mirror / Signal / Practice records (residue from the retired tracking model). Inert from both ends: `fetchFieldComments(storyId:)` filters client-side by story id and excludes them; `fetchArchetypeComments` gates on Live and excludes them. No reader surfaces them. May be archived data-side; no code change needed either way.
+- **Retired UserDefaults keys** (`bindu.practice.lastShownDate`, `bindu.practice.lastShownId`) are removed on every launch by `ContentCoordinator.removeRetiredUserDefaultsKeys()`. Idempotent — `removeObject` is a no-op after the first call clears them; no migration-tracking key needed.
+- **Six retired `RecordFields` properties** (`triggerCodexEntry`, `sourceIdentity`, `sourceSeed`, `koanStatus`, `lastShown`, `typeWeight`) — Swift side dropped during audit reconciliation. **Airtable fields untouched.** `Source Identity` still carries the belief→Identity ledger link; `Last Depth Date` is still PATCHed by the app on Resonance Depth dissolve (the write uses the field name directly in the PATCH payload, not the now-removed Swift `Story.lastDepthDate` property).
+- **Two orphan `@Published`** (`currentRoomFilter`, `currentSort`) dropped from FeedStore during the same cleanup — they were set in `loadStories` but never read.
+
+---
+
+## 15. Related docs
+
+- [`BINDU_FEED_CLAUDE_CODE.md`](../BINDU_FEED_CLAUDE_CODE.md) — original master spec, Phases 1–8
+- [`bindu-feed-phase9-handoff/`](../bindu-feed-phase9-handoff/) — Phase 9 design handoff bundle (`00-START-HERE.md`, `DESIGN_HANDOFF.md`, `BINDU_FEED_PHASE_9_NEW_LAYER.md`, `AIRTABLE-DATA-TRUTH.md`, `BINDU_FEED_CONTENT_INVENTORY.md`, `DESIGN-WORKING-AGREEMENT.md`, prototypes/, soul/)
+- [`bindu-feed-phase9-audit.md`](../bindu-feed-phase9-audit.md) — the moment-of-truth structural audit; reconciled with the data-side inventory; punch list resolved
+- [`bindu-feed-snapshot.md`](../bindu-feed-snapshot.md) — point-in-time code dump pre-Phase-9; historical reference
+
+---
+
+*If you see a better way, take it. Never reduce. Always emerge. Slow. Intimate. Already there.*

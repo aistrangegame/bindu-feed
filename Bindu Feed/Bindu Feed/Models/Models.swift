@@ -36,7 +36,6 @@ struct RecordFields: Codable {
     var archetype: String?
     var linkedStory: [String]?
     var parentComment: [String]?
-    var triggerCodexEntry: [String]?
     var commentOrder: Int?
 
     var glyph: String?
@@ -48,8 +47,12 @@ struct RecordFields: Codable {
     var archetypeRole: String?
 
     var sentenceWeight: Int?
-    var lastShown: String?
     var sentenceSource: String?
+
+    var closingLine: String?
+    var lastDepthDate: String?
+    var sourceType: String?
+    var cardRegister: String?
 
     enum CodingKeys: String, CodingKey {
         case name              = "Name"
@@ -68,7 +71,6 @@ struct RecordFields: Codable {
         case archetype         = "Archetype"
         case linkedStory       = "Linked Story"
         case parentComment     = "Parent Comment"
-        case triggerCodexEntry = "Trigger Codex Entry"
         case commentOrder      = "Comment Order"
         case glyph             = "Glyph"
         case hexColor          = "Hex Color"
@@ -78,8 +80,11 @@ struct RecordFields: Codable {
         case operatingPrinciple = "Operating Principle"
         case archetypeRole     = "Archetype Role"
         case sentenceWeight    = "Sentence Weight"
-        case lastShown         = "Last Shown"
         case sentenceSource    = "Sentence Source"
+        case closingLine       = "Closing Line"
+        case lastDepthDate     = "Last Depth Date"
+        case sourceType        = "Source Type"
+        case cardRegister      = "Card Register"
     }
 }
 
@@ -96,6 +101,7 @@ struct Story: Identifiable, Hashable {
     let sourceDate: String
     let lastActivityDate: String
     let resonance: Int
+    let closingLine: String
 
     init(from record: AirtableRecord) {
         let f = record.fields
@@ -109,6 +115,7 @@ struct Story: Identifiable, Hashable {
         self.sourceDate = f.sourceDate ?? ""
         self.lastActivityDate = f.lastActivityDate ?? ""
         self.resonance = f.resonance ?? 0
+        self.closingLine = f.closingLine ?? ""
     }
 }
 
@@ -211,6 +218,70 @@ struct ThresholdSentence: Identifiable, Hashable {
     }
 }
 
+enum CardRegister: String, Hashable {
+    case vow  = "Vow"
+    case koan = "Koan"
+}
+
+struct MirrorCard: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let body: String
+    let sourceType: String
+    let sortOrder: Int
+    let register: CardRegister?
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        self.id = record.id
+        self.name = f.name ?? ""
+        // Defensive: the underlying field (fldnN9WykhzLpVJQG) carries the
+        // reflection text under either "Comment Body" or "Body" depending
+        // on its current Airtable name — read whichever lands.
+        self.body = f.commentBody ?? f.body ?? ""
+        self.sourceType = f.sourceType ?? ""
+        self.sortOrder = f.sortOrder ?? 0
+        self.register = f.cardRegister.flatMap(CardRegister.init(rawValue:))
+    }
+}
+
+struct Signal: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let body: String
+    let sortOrder: Int
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        self.id = record.id
+        self.name = f.name ?? ""
+        // Defensive: the underlying field (fldnN9WykhzLpVJQG) carries the
+        // transmission text under either "Comment Body" or "Body"
+        // depending on its current Airtable name — read whichever lands.
+        self.body = f.commentBody ?? f.body ?? ""
+        self.sortOrder = f.sortOrder ?? 0
+    }
+}
+
+struct PracticeInvitation: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let body: String
+    let sourceType: String
+    let sortOrder: Int
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        self.id = record.id
+        self.name = f.name ?? ""
+        // Defensive: see Signal/MirrorCard — fldnN9WykhzLpVJQG may surface
+        // under either "Comment Body" or "Body" depending on field name.
+        self.body = f.commentBody ?? f.body ?? ""
+        self.sourceType = f.sourceType ?? ""
+        self.sortOrder = f.sortOrder ?? 0
+    }
+}
+
 // MARK: - Story aggregates
 
 struct StoryStats: Hashable {
@@ -225,4 +296,42 @@ struct CommentNode: Identifiable {
     var children: [CommentNode]
     var depth: Int
     var id: String { comment.id }
+}
+
+// MARK: - Practice Door
+
+enum PracticeDoorKind: String, CaseIterable {
+    case threshold
+    case practice
+    case gaiaSeed
+    case story
+    case binduDot
+
+    var weight: Int {
+        switch self {
+        case .threshold: return 40
+        case .practice:  return 23
+        case .gaiaSeed:  return 20
+        case .story:     return 12
+        case .binduDot:  return 5
+        }
+    }
+}
+
+enum PracticeDoorContent {
+    case threshold(ThresholdSentence)
+    case practice(PracticeInvitation)
+    case gaiaSeed(Signal)
+    case story(Story)
+    case binduDot(ThresholdSentence)
+
+    var kind: PracticeDoorKind {
+        switch self {
+        case .threshold: return .threshold
+        case .practice:  return .practice
+        case .gaiaSeed:  return .gaiaSeed
+        case .story:     return .story
+        case .binduDot:  return .binduDot
+        }
+    }
 }

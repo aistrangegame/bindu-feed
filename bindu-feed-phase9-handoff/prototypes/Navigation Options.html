@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Navigation: Hub vs Tab Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+      --ash:   #C47A52;
+    }
+    @keyframes livePulse {
+      0%   { box-shadow: none; border-color: rgba(255,255,255,0.06); }
+      45%  { box-shadow: 0 0 28px rgba(155,107,214,0.13); border-color: rgba(155,107,214,0.26); }
+      100% { box-shadow: none; border-color: rgba(255,255,255,0.06); }
+    }
+    @keyframes hubIn   { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes hubRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="stage"><div id="root"></div></div>
+<script type="text/babel">
+
+function hexA(hex, a) {
+  return hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+}
+
+/* ─── Feed data (mirrors Home Feed) ───────────────────────────── */
+const ARCH = {
+  gaia:{color:'#4A9E6B',g:'◆'}, sakshi:{color:'#7B82D4',g:'◇'}, lalita:{color:'#9B6BD6',g:'✦'},
+  bindu:{color:'#E5533C',g:'·'}, sid:{color:'#C4923A',g:'△'}, arch:{color:'#D4607A',g:'◯'},
+  karishma:{color:'#D4AE4A',g:'✦'}, ashrey:{color:'#3AADA8',g:'⬡'},
+};
+const ASH = { color: '#C47A52', g: '◉' };
+
+const GAMES = [
+  { id:'maya',    name:'A Maya Game', color:'#D4AE4A', glyph:'◈' },
+  { id:'garden',  name:'The Garden',  color:'#4A9E6B', glyph:'◆' },
+  { id:'watcher', name:'The Watcher', color:'#7B82D4', glyph:'◇' },
+  { id:'descent', name:'The Descent', color:'#E5533C', glyph:'·'  },
+  { id:'return',  name:'The Return',  color:'#9B6BD6', glyph:'✦' },
+];
+
+const STORIES = [
+  { id:'c1052', game:'maya', community:{name:'A Maya Game',color:'#D4AE4A',glyph:'◈'}, codexId:'C-1052',
+    title:'The Two Who Were One',
+    excerpt:'He was watching a show about people who walked into an elevator and forgot. Down at the bottom, the doors opened onto a white floor.',
+    resonance:89, comments:14, archetypes:['sakshi','lalita','gaia'], pulse:true, href:'Story Detail.html' },
+  { id:'c1061', game:'maya', community:{name:'A Maya Game',color:'#D4AE4A',glyph:'◈'}, codexId:'C-1061',
+    title:'Still Life with Cold Coffee',
+    excerpt:'I noticed the cup before I noticed I was noticing it. It had been sitting there for an hour, going cold.',
+    resonance:34, comments:6, archetypes:['sakshi','sid','lalita'], pulse:false, href:'Story Detail.html' },
+  { id:'c1047', game:'garden', community:{name:'The Garden',color:'#4A9E6B',glyph:'◆'}, codexId:'C-1047',
+    title:'The Smile While Making Eggs',
+    excerpt:'It happened between the eggs and the butter, in the moment when I wasn\u2019t thinking. The smile arrived before the reason.',
+    resonance:52, comments:8, archetypes:['gaia','karishma','bindu'], pulse:false, href:'Story Detail.html' },
+];
+
+/* ─── Feed primitives ─────────────────────────────────────────── */
+function CommunityPill({ c }) {
+  return (
+    <div style={{ display:'inline-flex', alignItems:'center', gap:5, background:`${c.color}14`, border:`1px solid ${c.color}28`, borderRadius:100, padding:'3px 10px 3px 7px' }}>
+      <span style={{ fontSize:10, color:c.color, lineHeight:1 }}>{c.glyph}</span>
+      <span style={{ fontSize:11, color:c.color, fontFamily:'Lora, serif', letterSpacing:'0.02em' }}>{c.name}</span>
+    </div>
+  );
+}
+function AvatarStack({ archetypes }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center' }}>
+      {archetypes.map((key, i) => {
+        const d = ARCH[key];
+        return (
+          <div key={key} style={{ width:22, height:22, borderRadius:'50%', background:d.color, border:'2px solid var(--card)', boxShadow:`0 0 8px ${d.color}42`, display:'flex', alignItems:'center', justifyContent:'center', marginLeft:i>0?-7:0, zIndex:archetypes.length-i, flexShrink:0, position:'relative' }}>
+            <span style={{ fontSize:7, color:'rgba(255,255,255,0.88)', lineHeight:1 }}>{d.g}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+function StoryCard({ story }) {
+  const inner = (
+    <div style={{ background:'var(--card)', borderRadius:18, border:'1px solid var(--hair)', padding:'16px 16px 15px', cursor:'pointer', animation: story.pulse ? 'livePulse 4.5s ease-in-out 1.2s 1 forwards' : 'none' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
+        <CommunityPill c={story.community} />
+        <span style={{ fontFamily:'Space Mono, monospace', fontSize:10, color:'var(--ink35)', letterSpacing:'0.06em' }}>{story.codexId}</span>
+      </div>
+      <h2 style={{ fontFamily:'Lora, serif', fontWeight:500, fontSize:19, lineHeight:1.32, color:'var(--ink)', marginBottom:9, letterSpacing:'-0.012em', textWrap:'pretty' }}>{story.title}</h2>
+      <p style={{ fontFamily:'Lora, serif', fontSize:14, lineHeight:1.62, color:'var(--ink60)', display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', marginBottom:16, textWrap:'pretty' }}>{story.excerpt}</p>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+          <span style={{ fontFamily:'Space Mono, monospace', fontSize:10, color:'var(--ink35)' }}>♡ {story.resonance}</span>
+          <span style={{ fontFamily:'Space Mono, monospace', fontSize:10, color:'var(--ink35)' }}>↳ {story.comments}</span>
+        </div>
+        <AvatarStack archetypes={story.archetypes} />
+      </div>
+    </div>
+  );
+  return <a href={story.href} style={{ display:'block', margin:'0 16px', textDecoration:'none' }}>{inner}</a>;
+}
+function GamePill({ game, active, onTap }) {
+  return (
+    <button onClick={() => onTap(game.id)} style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'7px 14px', borderRadius:100, border: active?`1px solid ${game.color}38`:'1px solid transparent', background: active?`${game.color}16`:'none', cursor:'pointer', whiteSpace:'nowrap', boxShadow: active?`0 0 14px ${game.color}18`:'none', transition:'all 0.35s ease', WebkitTapHighlightColor:'transparent' }}>
+      <span style={{ fontSize:11, color: active?game.color:'var(--ink35)', lineHeight:1 }}>{game.glyph}</span>
+      <span style={{ fontFamily:'Lora, serif', fontSize:13, color: active?game.color:'var(--ink35)', opacity: active?1:0.55, letterSpacing:'0.01em' }}>{game.name}</span>
+    </button>
+  );
+}
+
+/* ─── Hub trigger — a small constellation of places ───────────── */
+function HubTrigger({ onTap }) {
+  const dot = { width:4, height:4, borderRadius:'50%', background:'var(--ink60)' };
+  return (
+    <button onClick={onTap} aria-label="open places" style={{
+      width:36, height:36, borderRadius:'50%', flexShrink:0,
+      background:'rgba(255,255,255,0.04)', border:'1px solid var(--hair)',
+      cursor:'pointer', display:'grid', gridTemplateColumns:'4px 4px', gap:4,
+      placeContent:'center', WebkitTapHighlightColor:'transparent',
+    }}>
+      <span style={dot} /><span style={dot} /><span style={dot} /><span style={dot} />
+    </button>
+  );
+}
+
+/* ─── The hub overlay (chrome-free model) ─────────────────────── */
+const HUB_ITEMS = [
+  { name:'The Rooms',         desc:'thirteen ways in',      color:'#9B6BD6', href:'Room Selection.html' },
+  { name:'The Players',       desc:'the lenses that read',  color:'#7B82D4', href:'Players View.html' },
+  { name:'The Practice Door', desc:'cross the threshold',   color:'#C9A07A', href:'Practice Door.html' },
+  { name:'How You Arrive',    desc:'name, colour, mark',    color:'#ABA7A2', href:'Settings.html' },
+];
+function HubOverlay({ onClose }) {
+  return (
+    <div onClick={onClose} style={{
+      position:'absolute', inset:0, zIndex:40, cursor:'pointer',
+      background:'rgba(8,7,12,0.86)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)',
+      display:'flex', flexDirection:'column', justifyContent:'center', padding:'0 26px',
+      animation:'hubIn 0.4s ease both',
+    }}>
+      <span style={{ fontFamily:'Space Mono, monospace', fontSize:10, color:'var(--ink35)', letterSpacing:'0.24em', textTransform:'uppercase', textAlign:'center', marginBottom:24, animation:'hubRise 0.5s ease 0.04s both' }}>where to</span>
+      <div style={{ display:'flex', flexDirection:'column', gap:11 }}>
+        {HUB_ITEMS.map((it, i) => (
+          <a key={it.name} href={it.href} onClick={e=>e.stopPropagation()} style={{
+            display:'flex', alignItems:'center', gap:15, textDecoration:'none',
+            background:'rgba(23,20,32,0.7)', border:`1px solid ${hexA(it.color,0.22)}`,
+            borderRadius:16, padding:'15px 17px',
+            animation:`hubRise 0.55s ease ${0.08 + i*0.06}s both`,
+          }}>
+            <span style={{ width:10, height:10, borderRadius:'50%', background:it.color, boxShadow:`0 0 12px ${hexA(it.color,0.6)}`, flexShrink:0 }} />
+            <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+              <span style={{ fontFamily:'Lora, serif', fontSize:16, color:'var(--ink)', letterSpacing:'0.005em' }}>{it.name}</span>
+              <span style={{ fontFamily:'Lora, serif', fontStyle:'italic', fontSize:12.5, color:'var(--ink60)' }}>{it.desc}</span>
+            </div>
+            <span style={{ marginLeft:'auto', color:hexA(it.color,0.7), fontSize:18, lineHeight:1, flexShrink:0 }}>›</span>
+          </a>
+        ))}
+      </div>
+      <span style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:'var(--ink35)', letterSpacing:'0.18em', textTransform:'uppercase', textAlign:'center', marginTop:26, animation:'hubRise 0.6s ease 0.34s both' }}>tap anywhere to stay</span>
+    </div>
+  );
+}
+
+/* ─── The bottom tab bar (chrome model) ───────────────────────── */
+const TABS = [
+  { id:'feed',    name:'Feed',    glyph:'≋', href:null },
+  { id:'rooms',   name:'Rooms',   glyph:'⊞', href:'Room Selection.html' },
+  { id:'players', name:'Players', glyph:'◈', href:'Players View.html' },
+  { id:'you',     name:'You',     glyph:'◌', href:'Settings.html' },
+];
+function TabBar() {
+  return (
+    <div style={{
+      position:'absolute', left:0, right:0, bottom:0, zIndex:30, height:74,
+      background:'rgba(11,9,16,0.86)', backdropFilter:'blur(18px)', WebkitBackdropFilter:'blur(18px)',
+      borderTop:'1px solid var(--hair)',
+      display:'flex', alignItems:'flex-start', justifyContent:'space-around', padding:'11px 14px 0',
+    }}>
+      {TABS.map(t => {
+        const active = t.id === 'feed';
+        const content = (
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, width:62 }}>
+            <span style={{ fontSize:17, lineHeight:1, color: active?'var(--ash)':'var(--ink35)', filter: active?`drop-shadow(0 0 10px ${hexA(ASH.color,0.5)})`:'none' }}>{t.glyph}</span>
+            <span style={{ fontFamily:'Space Mono, monospace', fontSize:8, letterSpacing:'0.1em', textTransform:'uppercase', color: active?'var(--ink60)':'var(--ink35)' }}>{t.name}</span>
+          </div>
+        );
+        return t.href
+          ? <a key={t.id} href={t.href} style={{ textDecoration:'none' }}>{content}</a>
+          : <div key={t.id} style={{ cursor:'default' }}>{content}</div>;
+      })}
+    </div>
+  );
+}
+
+/* ─── Status chrome ───────────────────────────────────────────── */
+function StatusBar() {
+  return (
+    <div style={{ position:'relative', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'15px 30px 0', flexShrink:0, zIndex:20 }}>
+      <span style={{ fontFamily:'-apple-system, system-ui', fontWeight:600, fontSize:15, color:'#fff', opacity:0.9 }}>9:41</span>
+      <div style={{ position:'absolute', top:12, left:'50%', transform:'translateX(-50%)', width:112, height:30, borderRadius:20, background:'#000' }} />
+      <span style={{ color:'#fff', fontSize:12, letterSpacing:'0.04em', opacity:0.9 }}>􀙇 􀛨 􀋦</span>
+    </div>
+  );
+}
+function HomeIndicator() {
+  return (
+    <div style={{ position:'absolute', bottom:0, left:0, right:0, zIndex:35, height:30, display:'flex', justifyContent:'center', alignItems:'flex-end', paddingBottom:9, pointerEvents:'none' }}>
+      <div style={{ width:134, height:5, borderRadius:100, background:'rgba(255,255,255,0.7)' }} />
+    </div>
+  );
+}
+
+/* ─── The feed, in either nav model ───────────────────────────── */
+function FeedScreen({ mode }) {
+  const [activeGame, setActiveGame] = React.useState('maya');
+  const [hubOpen, setHubOpen] = React.useState(false);
+  const visible = STORIES.filter(s => s.game === activeGame);
+  const isTab = mode === 'tabbar';
+
+  return (
+    <div style={{
+      position:'relative', width:393, height:852, borderRadius:46, overflow:'hidden',
+      background:'#0B0910', boxShadow:'0 30px 80px rgba(0,0,0,0.6)',
+      WebkitTapHighlightColor:'transparent',
+    }}>
+      <StatusBar />
+
+      {/* scrolling feed */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, overflowY:'auto', paddingTop:44, paddingBottom: isTab ? 92 : 40 }}>
+        {/* header */}
+        <div style={{ padding:'20px 20px 0', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:11, minWidth:0 }}>
+            {!isTab && <HubTrigger onTap={() => setHubOpen(true)} />}
+            <div style={{ minWidth:0 }}>
+              <h1 style={{ fontFamily:'Lora, serif', fontWeight:500, fontSize:22, lineHeight:1.2, color:'var(--ink)', marginBottom:5, letterSpacing:'-0.012em' }}>A Strange Feed</h1>
+              <p style={{ fontFamily:'Lora, serif', fontStyle:'italic', fontSize:13, color:'var(--ink60)' }}>the field reads the Codex back</p>
+            </div>
+          </div>
+          {/* Ash mark → Ash's Voice (both models) */}
+          <a href="Ash's Voice.html" aria-label="your voice" style={{ width:36, height:36, borderRadius:'50%', background:ASH.color, marginTop:2, boxShadow:`0 0 16px ${hexA(ASH.color,0.4)}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, textDecoration:'none' }}>
+            <span style={{ fontSize:14, color:'rgba(255,255,255,0.88)', lineHeight:1 }}>{ASH.g}</span>
+          </a>
+        </div>
+
+        {/* game filter */}
+        <div style={{ marginTop:22, marginBottom:22, display:'flex', overflowX:'auto', padding:'0 12px', gap:2 }}>
+          {GAMES.map(g => <GamePill key={g.id} game={g} active={activeGame===g.id} onTap={setActiveGame} />)}
+        </div>
+
+        <div style={{ height:'0.5px', background:'var(--hair)', margin:'0 16px 22px' }} />
+
+        {/* story cards */}
+        <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+          {visible.length > 0
+            ? visible.map(s => <StoryCard key={s.id} story={s} />)
+            : <div style={{ padding:'48px 20px', textAlign:'center', fontFamily:'Lora, serif', fontStyle:'italic', fontSize:14, color:'var(--ink35)' }}>The field is quiet here.</div>}
+        </div>
+      </div>
+
+      {/* nav chrome per model */}
+      {isTab && <TabBar />}
+      {!isTab && hubOpen && <HubOverlay onClose={() => setHubOpen(false)} />}
+
+      <HomeIndicator />
+    </div>
+  );
+}
+
+/* ─── The comparison shell — toggle + phone ───────────────────── */
+function Compare() {
+  const [mode, setMode] = React.useState(() => {
+    try { return localStorage.getItem('asf.navPreview') || 'hub'; } catch (e) { return 'hub'; }
+  });
+  const set = (m) => { setMode(m); try { localStorage.setItem('asf.navPreview', m); } catch (e) {} };
+
+  const seg = (m, label, sub) => {
+    const on = mode === m;
+    return (
+      <button onClick={() => set(m)} style={{
+        flex:1, padding:'9px 14px 8px', borderRadius:11, cursor:'pointer',
+        background: on ? 'rgba(196,122,82,0.14)' : 'transparent',
+        border: on ? '1px solid rgba(196,122,82,0.4)' : '1px solid transparent',
+        display:'flex', flexDirection:'column', alignItems:'center', gap:1,
+        transition:'all 0.25s ease',
+      }}>
+        <span style={{ fontFamily:'Lora, serif', fontSize:14, color: on ? 'var(--ash)' : 'var(--ink60)' }}>{label}</span>
+        <span style={{ fontFamily:'Space Mono, monospace', fontSize:8, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink35)' }}>{sub}</span>
+      </button>
+    );
+  };
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+      {/* prototype control — not part of the app */}
+      <div style={{ width:340, display:'flex', flexDirection:'column', gap:8 }}>
+        <span style={{ fontFamily:'Space Mono, monospace', fontSize:9, color:'var(--ink35)', letterSpacing:'0.2em', textTransform:'uppercase', textAlign:'center' }}>preview · pick a navigation</span>
+        <div style={{ display:'flex', gap:6, background:'rgba(23,20,32,0.7)', border:'1px solid var(--hair)', borderRadius:14, padding:5 }}>
+          {seg('hub', 'Chrome-free Hub', 'tap the ◢ dots')}
+          {seg('tabbar', 'Bottom Tab Bar', 'persistent chrome')}
+        </div>
+      </div>
+
+      <FeedScreen mode={mode} />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Compare />);
+
+(function fit() {
+  const stage = document.getElementById('stage');
+  const root = document.getElementById('root');
+  function apply() {
+    const h = root.offsetHeight || 980, w = root.offsetWidth || 393;
+    const s = Math.min(1, (window.innerHeight - 24) / h, (window.innerWidth - 24) / w);
+    stage.style.transform = `scale(${s})`;
+    stage.style.transformOrigin = 'center center';
+  }
+  apply();
+  window.addEventListener('resize', apply);
+  setTimeout(apply, 300);
+})();
+</script>
+</body>
+</html>

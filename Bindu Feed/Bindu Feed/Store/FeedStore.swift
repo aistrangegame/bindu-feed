@@ -11,12 +11,25 @@ final class FeedStore: ObservableObject {
     // Feed data
     @Published var stories: [Story] = []
     @Published var storyStats: [String: StoryStats] = [:]
-    @Published var currentRoomFilter: String? = nil
-    @Published var currentSort: StorySort = .mostActive
+
+    // Card surface data (Mirror, Signal, Practice Invitation).
+    // Comments dictionaries are keyed by the card's record ID — field
+    // comments link to a card via the same `Linked Story` field as Story
+    // comments, so the same grouping logic applies.
+    @Published var mirrorCards: [MirrorCard] = []
+
+    @Published var signals: [Signal] = []
+
+    @Published var practiceInvitations: [PracticeInvitation] = []
 
     @Published var isLoading = false
     @Published var foundationLoaded = false
     @Published var error: Error? = nil
+
+    // Story IDs that need a comment re-fetch. Set by AshComposeView
+    // after a successful post; consumed by StoryDetailView on appear.
+    // Set-based so repeated post attempts are idempotent.
+    @Published var pendingStoryRefreshes: Set<String> = []
 
     private let tokenKey = "airtable_token"
     private let service = AirtableService.shared
@@ -54,8 +67,6 @@ final class FeedStore: ObservableObject {
     // MARK: - Stories
 
     func loadStories(room: String? = nil, sort: StorySort = .mostActive) async {
-        currentRoomFilter = room
-        currentSort = sort
         do {
             let result = try await service.fetchStories(room: room, sort: sort)
             self.stories = result
@@ -163,13 +174,139 @@ final class FeedStore: ObservableObject {
         storyStats[storyId] ?? StoryStats(commentCount: 0, archetypes: [])
     }
 
+    // MARK: - Card surfaces (Mirror / Signal / Practice)
+
+    func loadMirrorCards() async {
+        do {
+            self.mirrorCards = try await service.fetchMirrorCards()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    func loadSignals() async {
+        do {
+            self.signals = try await service.fetchSignals()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    func loadPracticeInvitations() async {
+        do {
+            self.practiceInvitations = try await service.fetchPracticeInvitations()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    // Field Comments are stored with `Linked Story` pointing at their parent
+    // (which may be a Story, Mirror Card, Signal, or Practice Invitation —
+    // Airtable record IDs don't collide across types). Grouping by that ID
+    // lets every card surface look up its own comments without a per-card
+    // round trip.
+    private static func groupByLinkedStory(_ comments: [FieldComment]) -> [String: [FieldComment]] {
+        var grouped: [String: [FieldComment]] = [:]
+        for c in comments {
+            guard let sid = c.linkedStoryId else { continue }
+            grouped[sid, default: []].append(c)
+        }
+        for (key, value) in grouped {
+            grouped[key] = value.sorted { $0.commentOrder < $1.commentOrder }
+        }
+        return grouped
+    }
+
+    // MARK: - Practice Door (Phase 9 weighted selector)
+
+    private let doorLastKindKey = "bindu.door.lastKind"
+
+    // Picks today's door content per the 5-kind weighted distribution
+    // (threshold 40 / practice 23 / gaiaSeed 20 / story 12 / binduDot 5).
+    // First-ever open returns threshold; subsequent opens exclude the
+    // previous kind so no kind repeats back-to-back. Kinds whose data
+    // isn't loaded yet are filtered out — covers early launch when only
+    // foundation has arrived.
+    func selectPracticeDoorContent() -> PracticeDoorContent? {
+        let saved = UserDefaults.standard.string(forKey: doorLastKindKey)
+        let lastKind = saved.flatMap(PracticeDoorKind.init(rawValue:))
+
+        if lastKind == nil {
+            guard let chosen = pickThreshold() else { return nil }
+            commitDoorKind(.threshold)
+            return chosen
+        }
+
+        let pool = PracticeDoorKind.allCases
+            .filter { $0 != lastKind }
+            .filter { hasContent(for: $0) }
+        guard !pool.isEmpty else { return nil }
+
+        let totalWeight = pool.reduce(0) { $0 + $1.weight }
+        var roll = Int.random(in: 0..<totalWeight)
+        var chosenKind = pool[0]
+        for k in pool {
+            roll -= k.weight
+            if roll < 0 { chosenKind = k; break }
+        }
+
+        guard let content = pickContent(for: chosenKind) else { return nil }
+        commitDoorKind(chosenKind)
+        return content
+    }
+
+    private func commitDoorKind(_ kind: PracticeDoorKind) {
+        UserDefaults.standard.set(kind.rawValue, forKey: doorLastKindKey)
+    }
+
+    private func hasContent(for kind: PracticeDoorKind) -> Bool {
+        switch kind {
+        case .threshold: return thresholdSentences.contains { $0.source != "Bindu" }
+        case .practice:  return !practiceInvitations.isEmpty
+        case .gaiaSeed:  return !signals.isEmpty
+        case .story:     return !stories.isEmpty
+        case .binduDot:  return thresholdSentences.contains { $0.source == "Bindu" }
+        }
+    }
+
+    private func pickContent(for kind: PracticeDoorKind) -> PracticeDoorContent? {
+        switch kind {
+        case .threshold: return pickThreshold()
+        case .practice:
+            guard let chosen = practiceInvitations.randomElement() else { return nil }
+            return .practice(chosen)
+        case .gaiaSeed:
+            guard let chosen = signals.randomElement() else { return nil }
+            return .gaiaSeed(chosen)
+        case .story:
+            guard let chosen = stories.randomElement() else { return nil }
+            return .story(chosen)
+        case .binduDot:
+            let pool = thresholdSentences.filter { $0.source == "Bindu" }
+            guard let chosen = pool.randomElement() else { return nil }
+            return .binduDot(chosen)
+        }
+    }
+
+    private func pickThreshold() -> PracticeDoorContent? {
+        let pool = thresholdSentences.filter { $0.source != "Bindu" }
+        guard !pool.isEmpty else { return nil }
+        return .threshold(service.selectThresholdSentence(from: pool))
+    }
+
     // MARK: - Writes
 
     func postComment(storyId: String, body: String, parentId: String?) async throws {
+        // Resolved here so the service layer stays entity-agnostic.
+        let userArchetypeName = archetype(named: "Ash")?.name ?? "Ash"
         _ = try await service.postAshComment(
             storyId: storyId,
             body: body,
-            parentCommentId: parentId
+            parentCommentId: parentId,
+            archetypeName: userArchetypeName
         )
     }
 
@@ -178,6 +315,32 @@ final class FeedStore: ObservableObject {
             try await service.updateResonance(recordId: recordId, newResonance: current + 1)
         } catch {
             self.error = error
+        }
+    }
+
+    // MARK: - Refresh handoff
+
+    func flagStoryRefresh(storyId: String) {
+        pendingStoryRefreshes.insert(storyId)
+    }
+
+    func consumeStoryRefresh(storyId: String) -> Bool {
+        if pendingStoryRefreshes.contains(storyId) {
+            pendingStoryRefreshes.remove(storyId)
+            return true
+        }
+        return false
+    }
+
+    // Best-effort PATCH fired when a Resonance Depth overlay dissolves.
+    // Swallows errors — the depth experience already completed.
+    func markStoryDepth(storyId: String) async {
+        do {
+            try await service.updateStoryLastDepthDate(storyId: storyId)
+        } catch {
+            #if DEBUG
+            print("[FeedStore] markStoryDepth failed for \(storyId): \(error)")
+            #endif
         }
     }
 }

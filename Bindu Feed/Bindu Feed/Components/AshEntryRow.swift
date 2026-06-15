@@ -45,10 +45,14 @@ struct AshEntryRow: View {
     }
 }
 
-// Posted Ash comment confirmation card.
-// Optimistic UI — shown immediately after a successful post.
+// Renders an Ash Comment in Story Detail's "your voice has been here"
+// section below the field comments. The date defaults to "JUST NOW" so
+// fresh-post scenarios keep their meaning; refreshed comments pass a
+// formatted source date.
 struct AshPostedCard: View {
     let commentBody: String
+    var date: String = "JUST NOW"
+    var name: String = "Ash"
 
     private let terra = BinduTheme.colorAsh
 
@@ -70,10 +74,10 @@ struct AshPostedCard: View {
                 .frame(width: 36, height: 36)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Ash")
+                    Text(name)
                         .font(.lora(13, weight: .medium))
                         .foregroundColor(terra)
-                    Text("JUST NOW")
+                    Text(date)
                         .font(.spaceMono(10))
                         .tracking(0.6)
                         .foregroundColor(BinduTheme.inkTertiary)

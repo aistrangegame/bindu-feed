@@ -23,6 +23,8 @@ struct GameView: View {
     // Flood transition arriving from Room Selection.
     @State private var floodOpacity: Double = 1.0
 
+    @State private var showHub = false
+
     init(path: Binding<NavigationPath>, room: Room) {
         self._path = path
         self.initialRoom = room
@@ -99,11 +101,12 @@ struct GameView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
-            withAnimation(.easeOut(duration: 0.9)) { floodOpacity = 0 }
+            withAnimation(.easeInOut(duration: 0.9)) { floodOpacity = 0 }
         }
         .task(id: TaskKey(room: currentRoom.id, sort: sort)) {
             await loadStoriesForCurrentRoom()
         }
+        .hubOverlay(open: $showHub, path: $path)
     }
 
     // MARK: - Floating nav bar
@@ -111,6 +114,9 @@ struct GameView: View {
     private var floatingNavBar: some View {
         HStack(alignment: .center) {
             BackChevron { if !path.isEmpty { path.removeLast() } }
+
+            HubTrigger(open: $showHub)
+                .padding(.leading, 4)
 
             Spacer(minLength: BinduTheme.space12)
 

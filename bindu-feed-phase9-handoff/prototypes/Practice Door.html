@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — The Practice Door</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+    }
+    /* the door breathes — a dawn that approaches but never quite arrives */
+    @keyframes doorBreath {
+      0%,100% { opacity: 0.34; transform: scale(1); }
+      50%      { opacity: 0.78; transform: scale(1.04); }
+    }
+    @keyframes emberBreath {
+      0%,100% { opacity: 0.55; transform: scale(0.97); }
+      50%      { opacity: 1;    transform: scale(1.06); }
+    }
+    @keyframes hintFade { 0%,100% { opacity: 0.24; } 50% { opacity: 0.55; } }
+    @keyframes fieldIn  { from { opacity: 0; } to { opacity: 1; } }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="stage"><div id="root"></div></div>
+<script type="text/babel">
+
+function hexA(hex, a) {
+  return hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+}
+
+const DAWN = '#C9A07A';  // faint warm pre-dawn — the door's own light
+
+/* ─── What can wait at the door ───────────────────────────────── */
+/* Each open surfaces ONE. Here the loop rotates so you see the range. */
+
+const DOORS = [
+  {
+    kind: 'threshold', label: 'A Threshold', accent: DAWN,
+    body: 'You are not late.\nThe field kept your place.',
+    italic: true,
+  },
+  {
+    kind: 'practice', label: 'A Practice', accent: '#8C96B8',
+    body: 'Before you read — one breath.\nLet it be longer than you need.',
+    sub: 'in… and out.',
+  },
+  {
+    kind: 'seed', label: 'A Gaia Seed', accent: '#4A9E6B',
+    body: 'Your body knew the weather\nbefore you did.\nWhat is it today?',
+  },
+  {
+    kind: 'found', label: 'What Found You', accent: '#4A9E6B',
+    story: {
+      title: 'The Smile While Making Eggs',
+      line: 'It arrived before the reason for it. Then the reason never came.',
+      community: 'The Garden', color: '#4A9E6B', glyph: '◆', codex: 'C-1047',
+    },
+  },
+  {
+    kind: 'bindu', label: '', accent: '#E5533C', bindu: true,
+  },
+];
+
+const IN_MS = 1400, OUT_MS = 900;
+
+/* ─── Production weighting — which kind waits at the door ──────── */
+/* Mostly threshold sentences; occasionally a practice or a Gaia    */
+/* seed; now and then a story that found you; the Bindu dot is rare.*/
+/* Nothing repeats back-to-back, so the dot never doubles, and the  */
+/* first open of all is always a gentle threshold (DOORS[0]).        */
+const DOOR_WEIGHTS = [
+  { kind: 'threshold', w: 40 },   /* most opens — a sentence to cross on */
+  { kind: 'practice',  w: 23 },   /* a breath / invitation */
+  { kind: 'seed',      w: 20 },   /* a Gaia seed, the body's weather */
+  { kind: 'found',     w: 12 },   /* a story that found you */
+  { kind: 'bindu',     w: 5  },   /* rare — the dot, the undivided point */
+];
+function pickKind(prevKind) {
+  const pool = DOOR_WEIGHTS.filter(x => x.kind !== prevKind);
+  const total = pool.reduce((s, x) => s + x.w, 0);
+  let r = Math.random() * total;
+  for (const x of pool) { if ((r -= x.w) <= 0) return x.kind; }
+  return pool[pool.length - 1].kind;
+}
+function idxOfKind(kind) { return DOORS.findIndex(d => d.kind === kind); }
+
+/* ─── Door content renderers ──────────────────────────────────── */
+
+function DoorBody({ door }) {
+  if (door.bindu) {
+    return (
+      <span style={{
+        fontSize: 80, lineHeight: 1, color: '#E5533C',
+        filter: 'drop-shadow(0 0 34px rgba(229,83,60,0.7))',
+        animation: 'emberBreath 4s ease-in-out infinite', userSelect: 'none', display: 'block',
+      }}>·</span>
+    );
+  }
+
+  if (door.story) {
+    const s = door.story;
+    return (
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: hexA(s.color, 0.09), border: `1px solid ${hexA(s.color, 0.22)}`,
+          borderRadius: 100, padding: '4px 12px 4px 9px',
+        }}>
+          <span style={{ fontSize: 11, color: s.color }}>{s.glyph}</span>
+          <span style={{ fontFamily: 'Lora, serif', fontSize: 12, color: s.color, letterSpacing: '0.02em' }}>{s.community}</span>
+        </div>
+        <h2 style={{
+          fontFamily: 'Lora, serif', fontWeight: 500, fontSize: 25, lineHeight: 1.3,
+          color: 'var(--ink)', textAlign: 'center', letterSpacing: '-0.012em', textWrap: 'pretty',
+        }}>{s.title}</h2>
+        <p style={{
+          fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 15, lineHeight: 1.7,
+          color: 'var(--ink60)', textAlign: 'center', maxWidth: 290, textWrap: 'pretty',
+        }}>“{s.line}”</p>
+        <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)', letterSpacing: '0.06em' }}>{s.codex}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+      <p style={{
+        fontFamily: 'Lora, serif',
+        fontStyle: door.italic ? 'italic' : 'normal',
+        fontWeight: door.italic ? 400 : 500,
+        fontSize: 26, lineHeight: 1.5, color: 'var(--ink)',
+        textAlign: 'center', maxWidth: 300, textWrap: 'balance',
+        whiteSpace: 'pre-line', letterSpacing: '0.004em',
+      }}>{door.body}</p>
+      {door.sub && (
+        <span style={{
+          fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 14,
+          color: hexA(door.accent, 0.7), letterSpacing: '0.05em',
+        }}>{door.sub}</span>
+      )}
+    </div>
+  );
+}
+
+/* ─── The Practice Door ───────────────────────────────────────── */
+
+function PracticeDoor() {
+  const [idx, setIdx]   = React.useState(() => idxOfKind(pickKind(null)));
+  const [vis, setVis]   = React.useState(false);    // door content fade-in
+  const [crossed, setCrossed] = React.useState(false);
+  const busy = React.useRef(false);
+  const timers = React.useRef([]);
+
+  const door = DOORS[idx];
+  const accent = door.accent;
+
+  const clearTimers = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+
+  // fade the door content in whenever we land on a new one
+  React.useEffect(() => {
+    if (crossed) return;
+    busy.current = false;
+    setVis(false);
+    timers.current.push(setTimeout(() => setVis(true), 70));
+    return clearTimers;
+  }, [idx, crossed]);
+
+  React.useEffect(() => () => clearTimers(), []);
+
+  // tap the door → cross into the field
+  // tap the door → cross the threshold into the feed
+  function cross() {
+    if (busy.current) return;
+    busy.current = true;
+    clearTimers();
+    setVis(false);
+    timers.current.push(setTimeout(() => { setCrossed(true); }, OUT_MS));
+    timers.current.push(setTimeout(() => { window.location.href = 'Home Feed.html'; }, OUT_MS + 520));
+  }
+
+  // tap the field → return to the door (the next kind)
+  function returnToDoor() {
+    if (busy.current) return;
+    busy.current = true;
+    timers.current.push(setTimeout(() => {
+      setIdx(i => idxOfKind(pickKind(DOORS[i].kind)));
+      setCrossed(false);
+    }, 40));
+  }
+
+  return (
+    <div style={{
+      position: 'relative', width: 393, height: 852,
+      borderRadius: 46, overflow: 'hidden',
+      background: '#0B0910',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+      userSelect: 'none', WebkitTapHighlightColor: 'transparent', touchAction: 'none',
+    }}>
+
+      {/* the breathing pre-dawn — faint presence */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 120% 52% at 50% 22%, ${hexA(accent, 0.14)} 0%, ${hexA(accent, 0.035)} 46%, transparent 74%)`,
+        animation: crossed ? 'none' : 'doorBreath 10s ease-in-out infinite',
+        opacity: crossed ? 0 : 1, transition: 'opacity 0.9s ease',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 150% 36% at 50% 112%, ${hexA(accent, 0.08)} 0%, transparent 56%)`,
+        opacity: crossed ? 0 : 1, transition: 'opacity 0.9s ease',
+      }} />
+
+      {/* status bar */}
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 30px 0', zIndex: 6 }}>
+        <span style={{ fontFamily: '-apple-system, system-ui', fontWeight: 600, fontSize: 15, color: '#fff', opacity: 0.9 }}>9:41</span>
+        <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', width: 112, height: 30, borderRadius: 20, background: '#000' }} />
+        <span style={{ color: '#fff', fontSize: 12, letterSpacing: '0.04em', opacity: 0.9 }}>􀙇 􀛨 􀋦</span>
+      </div>
+
+      {/* ── the door ── */}
+      {!crossed && (
+        <div
+          onPointerDown={cross}
+          style={{
+            position: 'absolute', inset: 0, zIndex: 2, cursor: 'pointer',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            padding: '0 32px',
+          }}>
+          {door.label && (
+            <span style={{
+              fontFamily: 'Space Mono, monospace', fontSize: 10, color: hexA(accent, 0.66),
+              letterSpacing: '0.24em', textTransform: 'uppercase', marginBottom: 36,
+              opacity: vis ? 1 : 0, transition: `opacity ${IN_MS}ms ease`,
+            }}>{door.label}</span>
+          )}
+          <div style={{
+            opacity: vis ? 1 : 0,
+            transform: vis ? 'translateY(0)' : 'translateY(8px)',
+            transition: `opacity ${IN_MS}ms ease, transform ${IN_MS}ms ease`,
+          }}>
+            <DoorBody door={door} />
+          </div>
+        </div>
+      )}
+
+      {/* tap-to-cross hint */}
+      {!crossed && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 4, display: 'flex', justifyContent: 'center', paddingBottom: 34 }}>
+          <span style={{
+            fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'var(--ink35)',
+            letterSpacing: '0.18em', textTransform: 'uppercase',
+            animation: 'hintFade 4.5s ease-in-out infinite',
+            opacity: vis ? undefined : 0, transition: 'opacity 1s ease',
+          }}>tap to cross</span>
+        </div>
+      )}
+
+      {/* ── crossing — the screen settles to dark, then the feed loads ── */}
+
+      {/* home indicator */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 6, height: 30, display: 'flex', justifyContent: 'center', alignItems: 'flex-end', paddingBottom: 9, pointerEvents: 'none' }}>
+        <div style={{ width: 134, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.7)' }} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── The field the door opens onto (tap to return) ───────────── */
+
+function FieldGlimpse({ onReturn }) {
+  const cards = [
+    { community: 'A Maya Game', color: '#D4AE4A', glyph: '◈', codex: 'C-1052', title: 'The Two Who Were One', excerpt: 'He was watching a show about people who walked into an elevator and forgot.' },
+    { community: 'The Garden', color: '#4A9E6B', glyph: '◆', codex: 'C-1047', title: 'The Smile While Making Eggs', excerpt: 'It happened between the eggs and the butter, in the moment when I wasn\u2019t thinking.' },
+  ];
+  return (
+    <div onPointerDown={onReturn} style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'var(--bg)', cursor: 'pointer' }}>
+      <div style={{ position: 'absolute', inset: 0, opacity: 0, animation: 'fieldIn 1.5s ease 0.05s forwards' }}>
+        <div style={{ padding: '64px 20px 0' }}>
+          <h1 style={{ fontFamily: 'Lora, serif', fontWeight: 500, fontSize: 22, color: 'var(--ink)', marginBottom: 5, letterSpacing: '-0.012em' }}>A Strange Feed</h1>
+          <p style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--ink60)' }}>the field reads the Codex back</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '26px 16px' }}>
+          {cards.map((c, i) => (
+            <div key={i} style={{ background: 'var(--card)', borderRadius: 18, border: '1px solid var(--hair)', padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: hexA(c.color, 0.08), border: `1px solid ${hexA(c.color, 0.16)}`, borderRadius: 100, padding: '3px 10px 3px 7px' }}>
+                  <span style={{ fontSize: 10, color: c.color }}>{c.glyph}</span>
+                  <span style={{ fontSize: 11, color: c.color, fontFamily: 'Lora, serif' }}>{c.community}</span>
+                </div>
+                <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 10, color: 'var(--ink35)' }}>{c.codex}</span>
+              </div>
+              <h2 style={{ fontFamily: 'Lora, serif', fontWeight: 500, fontSize: 19, lineHeight: 1.32, color: 'var(--ink)', marginBottom: 9, letterSpacing: '-0.012em' }}>{c.title}</h2>
+              <p style={{ fontFamily: 'Lora, serif', fontSize: 14, lineHeight: 1.6, color: 'var(--ink60)' }}>{c.excerpt}</p>
+            </div>
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 38 }}>
+          <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'var(--ink35)', letterSpacing: '0.16em', textTransform: 'uppercase', animation: 'hintFade 4.5s ease-in-out infinite' }}>tap to return to the door</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<PracticeDoor />);
+
+(function fit() {
+  const stage = document.getElementById('stage');
+  function apply() {
+    const s = Math.min(1, (window.innerHeight - 36) / 852, (window.innerWidth - 36) / 393);
+    stage.style.transform = `scale(${s})`;
+    stage.style.transformOrigin = 'center center';
+  }
+  apply(); window.addEventListener('resize', apply);
+})();
+</script>
+</body>
+</html>

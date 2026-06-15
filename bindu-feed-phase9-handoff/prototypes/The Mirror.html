@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — The Mirror</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+      --terra: #C47A52;
+      --ember: #E5533C;
+    }
+    /* the terra surface breathes — a held warmth, barely moving */
+    @keyframes mirrorBreath {
+      0%,100% { opacity: 0.40; }
+      50%     { opacity: 0.72; }
+    }
+    @keyframes emberPulse {
+      0%,100% { opacity: 0.55; transform: scale(0.96); }
+      50%     { opacity: 1;    transform: scale(1.07); }
+    }
+    @keyframes hintFade  { 0%,100% { opacity: 0.26; } 50% { opacity: 0.58; } }
+    @keyframes reflRise  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="stage"><div id="root"></div></div>
+<script type="text/babel">
+
+function hexA(hex, a) {
+  return hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+}
+
+const TERRA = '#C47A52';   // his terra — the colour the reflection is held in
+const EMBER = '#E5533C';   // the Bindu ember — the single draw
+
+/* ─── The whole field of what is inside him ───────────────────── */
+/* Everything is present from day one. Nothing is gated or earned.  */
+/* Some land as arrived vow, some stay a living question — the       */
+/* Mirror reflects each in the register that is true to where it     */
+/* lives in him. It never pretends everything is finished.           */
+
+const REFLECTIONS = [
+  { kind: 'vow',  body: 'Trust is the variable.\nNot effort. Not control.\nTrust.' },
+  { kind: 'vow',  body: 'I witness the seeing itself.\nNot the seer, not the seen.' },
+  { kind: 'koan', body: 'What was the fire\ntrying to protect?' },
+  { kind: 'vow',  body: 'What this pattern gave, I honor.\nWhat this pattern is, I see.\nWhat this pattern becomes, I trust.' },
+  { kind: 'vow',  body: 'I honor what the fire built.\nI see it now.' },
+  { kind: 'koan', body: 'Who poured the cup,\nknowing it would be left\nto go cold?' },
+  { kind: 'vow',  body: 'I am the one who stays.\nEverything else was weather.' },
+  { kind: 'koan', body: 'If no one is watching,\nwhat is the watching?' },
+  { kind: 'vow',  body: 'The forgetting had a shape,\nand I am the one who built it.' },
+  { kind: 'koan', body: 'What would I do\nif I trusted the ground\nto hold?' },
+];
+
+/* register copy — quiet, honest about where each thing lives */
+const REGISTER = {
+  vow:  'a vow · arrived',
+  koan: 'still living',
+};
+
+/* ─── Day seeding — no tracking, only the date ────────────────── */
+/* One reflection holds for the whole day, tied to the date. Return  */
+/* the same day → the same face. A new day → a genuinely new one.    */
+
+function dayKey(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+}
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = (h * 16777619) >>> 0; } return h; }
+function seededIdx(key) { return hashStr(key) % REFLECTIONS.length; }
+/* the draw offers a different face, still off the date — never off behaviour */
+function drawIdx(key, base) { return (base + 3 + (hashStr(key + '·draw') % (REFLECTIONS.length - 3))) % REFLECTIONS.length; }
+
+function fmtDay(key) {
+  const [y, m, d] = key.split('-').map(Number);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[m - 1] + ' ' + d;
+}
+
+/* ─── The reflection, held alone in the dark ──────────────────── */
+
+function Reflection({ refl }) {
+  const isKoan = refl.kind === 'koan';
+  const [on, setOn] = React.useState(false);
+  React.useEffect(() => { const t = setTimeout(() => setOn(true), 40); return () => clearTimeout(t); }, []);
+  return (
+    <div style={{
+      position: 'relative', width: '100%',
+      borderRadius: 22,
+      background: '#15121C',
+      border: ' 1px solid rgba(196,122,82,0.28)',
+      boxShadow: '0 0 60px rgba(196,122,82,0.15), inset 0 1px 0 rgba(255,255,255,0.04)',
+      padding: '40px 30px 38px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      overflow: 'hidden',
+      opacity: on ? 1 : 0,
+      transform: on ? 'translateY(0)' : 'translateY(10px)',
+      transition: 'opacity 1.5s ease, transform 1.5s ease',
+    }}>
+      {/* a faint sheen across the glass — the surface you look into */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', borderRadius: 22,
+        background: 'linear-gradient(158deg, rgba(196,122,82,0.12) 0%, rgba(255,255,255,0.03) 22%, rgba(0,0,0,0) 52%)',
+      }} />
+
+      {/* register mark */}
+      <span style={{
+        position: 'relative',
+        fontFamily: 'Space Mono, monospace', fontSize: 9.5, color: hexA(TERRA, 0.72),
+        letterSpacing: '0.26em', textTransform: 'uppercase', marginBottom: 30,
+      }}>{REGISTER[refl.kind]}</span>
+
+      {/* the words — first person, in his own voice */}
+      <p style={{
+        position: 'relative',
+        fontFamily: 'Lora, serif',
+        fontStyle: isKoan ? 'italic' : 'normal',
+        fontWeight: isKoan ? 400 : 500,
+        fontSize: 27, lineHeight: 1.52, color: 'var(--ink)',
+        textAlign: 'center', whiteSpace: 'pre-line', textWrap: 'balance',
+        letterSpacing: isKoan ? '0.004em' : '-0.004em',
+      }}>{refl.body}</p>
+
+      {/* the closing mark — a vow lands with a filled point, a question stays open */}
+      <span style={{
+        position: 'relative', marginTop: 30, fontSize: 15, lineHeight: 1,
+        color: hexA(TERRA, 0.55),
+      }}>{isKoan ? '◌' : '·'}</span>
+    </div>
+  );
+}
+
+/* ─── The Mirror ──────────────────────────────────────────────── */
+
+function Mirror() {
+  const [dayOffset, setDayOffset] = React.useState(0);
+
+  const key  = dayKey(dayOffset);
+  const base = seededIdx(key);
+
+  // per-day state: whether the single draw was spent, and which face shows
+  const store = React.useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('asf.mirror.' + key) || 'null'); } catch (e) { return null; }
+  }, [key]);
+
+  const [drawn, setDrawn] = React.useState(store ? store.drawn : false);
+  const [idx, setIdx]     = React.useState(store ? store.idx : base);
+  const [shown, setShown] = React.useState(0);   // bump to re-trigger the resolve animation
+  const [leaving, setLeaving] = React.useState(false);
+
+  // when the day changes, reload that day's face + draw state
+  React.useEffect(() => {
+    const s = (() => { try { return JSON.parse(localStorage.getItem('asf.mirror.' + key) || 'null'); } catch (e) { return null; } })();
+    setDrawn(s ? s.drawn : false);
+    setIdx(s ? s.idx : base);
+    setShown(v => v + 1);
+  }, [key]);
+
+  const persist = (nextIdx, nextDrawn) => {
+    try { localStorage.setItem('asf.mirror.' + key, JSON.stringify({ idx: nextIdx, drawn: nextDrawn })); } catch (e) {}
+  };
+
+  // the one Bindu Draw — a single act of agency, then the ember is spent
+  function draw() {
+    if (drawn || leaving) return;
+    setLeaving(true);
+    setTimeout(() => {
+      const next = drawIdx(key, base);
+      setIdx(next); setDrawn(true); persist(next, true);
+      setShown(v => v + 1);
+      setLeaving(false);
+    }, 620);
+  }
+
+  // prototype affordance: pass a day to witness the Mirror change face
+  function passDay() {
+    setLeaving(true);
+    setTimeout(() => { setDayOffset(o => o + 1); setLeaving(false); }, 480);
+  }
+
+  const refl = REFLECTIONS[idx];
+
+  return (
+    <div style={{
+      position: 'relative', width: 393, height: 852,
+      borderRadius: 46, overflow: 'hidden',
+      background: '#0B0910',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+      userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+    }}>
+
+      {/* the held terra warmth — its own light, breathing slowly */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 116% 50% at 50% 30%, ${hexA(TERRA, 0.16)} 0%, ${hexA(TERRA, 0.04)} 44%, transparent 72%)`,
+        animation: 'mirrorBreath 12s ease-in-out infinite',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 150% 36% at 50% 110%, ${hexA(TERRA, 0.07)} 0%, transparent 56%)`,
+      }} />
+
+      {/* status bar */}
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 30px 0', zIndex: 6 }}>
+        <span style={{ fontFamily: '-apple-system, system-ui', fontWeight: 600, fontSize: 15, color: '#fff', opacity: 0.9 }}>9:41</span>
+        <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', width: 112, height: 30, borderRadius: 20, background: '#000' }} />
+        <span style={{ color: '#fff', fontSize: 12, letterSpacing: '0.04em', opacity: 0.9 }}>􀙇 􀛨 􀋦</span>
+      </div>
+
+      {/* back to the rooms */}
+      <a href="Room Selection.html" style={{
+        position: 'absolute', top: 52, left: 16, zIndex: 7,
+        width: 36, height: 36, borderRadius: '50%', textDecoration: 'none',
+        background: 'rgba(14,12,18,0.55)', backdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.10)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: 'var(--ink60)', fontSize: 20, lineHeight: 1,
+      }}>‹</a>
+
+      {/* portal title + the day */}
+      <div style={{ position: 'relative', zIndex: 5, paddingTop: 60, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9 }}>
+        <span style={{
+          fontFamily: 'Space Mono, monospace', fontSize: 11, color: hexA(TERRA, 0.78),
+          letterSpacing: '0.30em', textTransform: 'uppercase',
+        }}>The Mirror</span>
+        <button onClick={passDay} title="pass a day" style={{
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 13.5, color: 'var(--ink60)',
+          letterSpacing: '0.01em',
+        }}>what surfaces on {fmtDay(key)}</button>
+      </div>
+
+      {/* the reflection, held alone */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, zIndex: 4,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '0 28px',
+      }}>
+        <div style={{
+          width: '100%', maxWidth: 330,
+          opacity: leaving ? 0 : 1,
+          transform: leaving ? 'translateY(-6px)' : 'translateY(0)',
+          transition: 'opacity 0.55s ease, transform 0.55s ease',
+        }}>
+          <Reflection key={shown} refl={refl} />
+        </div>
+      </div>
+
+      {/* the Bindu Draw — one act of agency per day */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 46, zIndex: 5,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+      }}>
+        <button onClick={draw} disabled={drawn} style={{
+          background: 'transparent', border: 'none', padding: 8,
+          cursor: drawn ? 'default' : 'pointer', lineHeight: 0,
+        }}>
+          {drawn ? (
+            <span style={{
+              display: 'block', width: 13, height: 13, borderRadius: '50%',
+              border: `1px solid ${hexA(EMBER, 0.4)}`, opacity: 0.5,
+            }} />
+          ) : (
+            <span style={{
+              display: 'block', fontSize: 30, lineHeight: 0.4, color: EMBER,
+              filter: `drop-shadow(0 0 16px ${hexA(EMBER, 0.7)})`,
+              animation: 'emberPulse 3.6s ease-in-out infinite',
+            }}>·</span>
+          )}
+        </button>
+        <span style={{
+          fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: drawn ? 'var(--ink35)' : hexA(EMBER, 0.62),
+          animation: drawn ? 'none' : 'hintFade 5s ease-in-out infinite',
+        }}>{drawn ? 'drawn · return tomorrow' : 'draw once more'}</span>
+      </div>
+
+      {/* home indicator */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 6, height: 30, display: 'flex', justifyContent: 'center', alignItems: 'flex-end', paddingBottom: 9, pointerEvents: 'none' }}>
+        <div style={{ width: 134, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.7)' }} />
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Mirror />);
+
+(function fit() {
+  const stage = document.getElementById('stage');
+  function apply() {
+    const s = Math.min(1, (window.innerHeight - 36) / 852, (window.innerWidth - 36) / 393);
+    stage.style.transform = `scale(${s})`;
+    stage.style.transformOrigin = 'center center';
+  }
+  apply(); window.addEventListener('resize', apply);
+})();
+</script>
+</body>
+</html>

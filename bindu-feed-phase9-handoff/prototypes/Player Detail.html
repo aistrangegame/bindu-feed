@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Player Detail (Lalita)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; background: #06050A; }
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+    }
+    @keyframes lGlow {
+      0%,100% { box-shadow: 0 0 56px rgba(155,107,214,0.45), 0 0 20px rgba(155,107,214,0.30); }
+      50%      { box-shadow: 0 0 76px rgba(155,107,214,0.65), 0 0 34px rgba(155,107,214,0.45); }
+    }
+    @keyframes lTurn   { to { transform: rotate(360deg); } }
+    @keyframes lBreath { 0%,100% { opacity: 0.45; transform: scale(0.96);} 50% { opacity: 1; transform: scale(1.06);} }
+    @keyframes lRise   { from { opacity: 0; transform: translateY(10px);} to { opacity: 1; transform: translateY(0);} }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="lalita-profile-variants.jsx"></script>
+<script type="text/babel">
+  function App() {
+    return (
+      <DesignCanvas>
+        <DCSection
+          id="lalita-detail"
+          title="Player Detail · Lalita"
+          subtitle="Same identity-first profile. Three ways her words are earned. Hold / press any mechanic to try it; open an artboard fullscreen (↗) to interact.">
+          <DCArtboard id="turning" label="A · The Turning — trace the ∞" width={393} height={1180}>
+            <LalitaTurning />
+          </DCArtboard>
+          <DCArtboard id="descent" label="B · The Descent — words gather as you scroll" width={393} height={1180}>
+            <LalitaDescent />
+          </DCArtboard>
+          <DCArtboard id="dawn" label="C · The Dawn — press, the light comes up" width={393} height={1140}>
+            <LalitaDawn />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

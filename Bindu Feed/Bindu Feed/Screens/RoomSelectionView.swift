@@ -5,9 +5,10 @@ struct RoomSelectionView: View {
     @Binding var path: NavigationPath
 
     @State private var portalFrames: [String: CGRect] = [:]
-    @State private var floodRoom: Room?
+    @State private var floodColor: Color?
     @State private var floodAnchor: CGPoint = .zero
     @State private var floodPhase: FloodOverlay.Phase = .idle
+    @State private var showHub = false
 
     private let columns = [
         GridItem(.flexible(), spacing: BinduTheme.space12),
@@ -33,6 +34,8 @@ struct RoomSelectionView: View {
                         .padding(.horizontal, BinduTheme.space16)
                     }
 
+                    twoMoreDoorsSection
+
                     Color.clear.frame(height: BinduTheme.space24)
                 }
                 .padding(.top, BinduTheme.space24)
@@ -41,8 +44,8 @@ struct RoomSelectionView: View {
                 portalFrames = frames
             }
 
-            if let room = floodRoom {
-                FloodOverlay(color: room.color, anchor: floodAnchor, phase: $floodPhase)
+            if let floodColor {
+                FloodOverlay(color: floodColor, anchor: floodAnchor, phase: $floodPhase)
             }
         }
         .navigationTitle("")
@@ -51,7 +54,11 @@ struct RoomSelectionView: View {
             ToolbarItem(placement: .topBarLeading) {
                 BackChevron { path.removeLast(max(path.count - 0, 0)) }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                HubTrigger(open: $showHub)
+            }
         }
+        .hubOverlay(open: $showHub, path: $path)
     }
 
     // MARK: - Sections
@@ -86,12 +93,48 @@ struct RoomSelectionView: View {
         }
     }
 
+    // MARK: - Two more doors section
+
+    private var twoMoreDoorsSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Rectangle()
+                .fill(BinduTheme.hairline)
+                .frame(height: 0.5)
+                .padding(.vertical, BinduTheme.space24)
+
+            Text("AND THE FIELD TURNS TO YOU")
+                .font(.spaceMono(11))
+                .tracking(2.4)
+                .foregroundColor(BinduTheme.inkSecondary)
+                .padding(.horizontal, BinduTheme.space16)
+
+            VStack(spacing: BinduTheme.space12) {
+                FieldSurfacePortalCard(config: .mirror) { _ in
+                    triggerFlood(forSurface: .mirror, route: .mirror)
+                }
+                FieldSurfacePortalCard(config: .signal) { _ in
+                    triggerFlood(forSurface: .signal, route: .signal)
+                }
+            }
+            .padding(.horizontal, BinduTheme.space16)
+            .padding(.top, BinduTheme.space16)
+        }
+    }
+
     // MARK: - Flood + navigate
 
     private func triggerFlood(for room: Room) {
-        let frame = portalFrames[room.id] ?? .zero
+        performFlood(anchorId: room.id, color: room.color, route: .room(room))
+    }
+
+    private func triggerFlood(forSurface config: FieldSurfaceConfig, route: FeedRoute) {
+        performFlood(anchorId: config.id, color: config.color, route: route)
+    }
+
+    private func performFlood(anchorId: String, color: Color, route: FeedRoute) {
+        let frame = portalFrames[anchorId] ?? .zero
         floodAnchor = CGPoint(x: frame.midX, y: frame.midY)
-        floodRoom = room
+        floodColor = color
         floodPhase = .idle
 
         // Tick to ensure overlay is laid out at scale 0 before the expand animation runs.
@@ -101,13 +144,19 @@ struct RoomSelectionView: View {
             }
         }
 
-        // After flood fills the screen, push GameView with the same color.
+        // After flood fills the screen, mount the destination instantly
+        // behind it (no NavigationStack slide). The destination's own color
+        // overlay starts at opacity 1.0 and dissolves out, so the user sees
+        // the color lift like a curtain — not a page turn.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.60) {
-            path.append(FeedRoute.room(room))
-            // Reset behind the now-covered RoomSelectionView for next time.
+            var t = Transaction()
+            t.disablesAnimations = true
+            withTransaction(t) {
+                path.append(route)
+            }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 floodPhase = .idle
-                floodRoom = nil
+                floodColor = nil
             }
         }
     }

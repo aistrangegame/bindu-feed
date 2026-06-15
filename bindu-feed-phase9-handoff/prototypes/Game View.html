@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Game View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel" src="ios-frame.jsx"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; min-height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #root {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 100vh; padding: 40px 20px;
+    }
+    :root {
+      --bg:    #0E0C12; --card: #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3; --ink60: rgba(237,232,227,0.60); --ink35: rgba(237,232,227,0.35);
+    }
+
+    /* thirteen rhythms */
+    @keyframes glyphRotate   { to{transform:rotate(360deg)} }
+    @keyframes glyphBreathe  { 0%,100%{transform:scale(1);opacity:.80} 50%{transform:scale(1.07);opacity:1} }
+    @keyframes glyphEmber    { 0%,100%{opacity:.55} 50%{opacity:1} }
+    @keyframes glyphOrbit    { 0%,100%{transform:rotate(0deg) scale(1);opacity:.82} 33%{transform:rotate(12deg) scale(1.05);opacity:1} 66%{transform:rotate(-8deg) scale(.97);opacity:.88} }
+    @keyframes glyphStutter  { 0%{transform:translate(0,0);opacity:.68} 14%{transform:translate(0,0);opacity:.68} 16%{transform:translate(2px,-1px);opacity:.50} 18%{transform:translate(-1px,1px);opacity:.72} 20%{transform:translate(0,0);opacity:.68} 48%{transform:translate(0,0);opacity:.68} 50%{transform:translate(-2px,1px);opacity:.50} 52%{transform:translate(1px,-1px);opacity:.72} 54%{transform:translate(0,0);opacity:.68} 78%{transform:translate(0,0);opacity:.50} 80%{transform:translate(1px,2px);opacity:.70} 82%{transform:translate(0,0);opacity:.68} 100%{transform:translate(0,0);opacity:.68} }
+    @keyframes glyphDawn     { 0%{opacity:.32;transform:scale(.94)} 55%{opacity:.85;transform:scale(1.01)} 72%{opacity:1;transform:scale(1.03)} 84%{opacity:1;transform:scale(1.03)} 100%{opacity:.32;transform:scale(.94)} }
+    @keyframes glyphBreath8  { 0%,100%{transform:scale(1);opacity:.76} 50%{transform:scale(1.08);opacity:1} }
+    @keyframes glyphWeave    { 0%,100%{transform:translateX(0)} 28%{transform:translateX(6px)} 72%{transform:translateX(-6px)} }
+    @keyframes glyphCircle   { to{transform:rotate(360deg)} }
+    @keyframes glyphSignal   { 0%,62%{opacity:.36;transform:scale(1)} 67%{opacity:1;transform:scale(1.20)} 72%{opacity:.36;transform:scale(1)} 100%{opacity:.36;transform:scale(1)} }
+    @keyframes glyphAssemble { 0%{opacity:.18;transform:scale(.80)} 42%{opacity:1;transform:scale(1)} 70%{opacity:1;transform:scale(1)} 100%{opacity:.18;transform:scale(.80)} }
+    @keyframes glyphField    { 0%{transform:perspective(100px) rotateY(0deg)} 100%{transform:perspective(100px) rotateY(360deg)} }
+
+    /* page arrival — dark first, then the room reveals itself */
+    @keyframes screenReveal  { 0%,22%{opacity:0} 100%{opacity:1} }
+
+    @keyframes riseIn        { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes livePulse     { 0%,100%{border-color:rgba(255,255,255,0.06)} 45%{border-color:rgba(155,107,214,0.26);box-shadow:0 0 20px rgba(155,107,214,0.10)} }
+
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+/* ─── Game order ─────────────────────────────────────────── */
+const GAME_ORDER = ['maya','garden','watcher','descent','return','forgetting','remembering','body','thread','circle','signal','forge','field'];
+
+/* ─── 13 game definitions ────────────────────────────────── */
+const GAMES = {
+  maya:        { id:'maya',        name:'A Maya Game',      color:'#D4AE4A', glyph:'◈', blurb:'The field where knowing and not-knowing meet. Stories of the veil — the necessary forgetting that makes the white floor real.',             glyphSize:70, glyphAnim:'glyphRotate 26s linear infinite',        gFilter:c=>`drop-shadow(0 0 22px ${c}65)`,                   gradient:c=>`radial-gradient(ellipse 110% 70% at 25% -15%,${c}28 0%,transparent 55%),radial-gradient(ellipse 80% 55% at 78% 25%,${c}18 0%,transparent 52%),radial-gradient(ellipse 55% 40% at 50% 70%,${c}10 0%,transparent 60%)`, nameStyle:{fontSize:23,fontWeight:500},
+    stats:[{v:'147',l:'veils lifted'},{v:'23',l:'floors entered'},{v:'89',l:'lobby moments'}] },
+  garden:      { id:'garden',      name:'The Garden',       color:'#4A9E6B', glyph:'◆', blurb:'What grows when you stop watching. Body moments, small true things — the earth speaking in shapes while you were looking elsewhere.',           glyphSize:60, glyphAnim:'glyphBreathe 4.5s ease-in-out infinite',   gFilter:c=>`drop-shadow(0 0 18px ${c}55)`,                   gradient:c=>`linear-gradient(0deg,${c}26 0%,${c}10 40%,transparent 72%)`,                                                                                                                                                             nameStyle:{fontSize:23,fontWeight:500},
+    stats:[{v:'52',l:'unplanned shapes'},{v:'◆ 8',l:'still growing'},{v:'34',l:'earth readings'}] },
+  watcher:     { id:'watcher',     name:'The Watcher',      color:'#7B82D4', glyph:'◇', blurb:'The game of seeing the seer. Recursive moments where awareness catches itself in the act. Each story is a mirror that shows the one holding it.', glyphSize:52, glyphAnim:'none',                                   gFilter:c=>`drop-shadow(0 0 14px ${c}50)`,                   gradient:c=>`radial-gradient(ellipse 55% 65% at 50% -8%,${c}32 0%,${c}08 48%,transparent 70%)`,                                                                                                                                          nameStyle:{fontSize:17,fontWeight:400,letterSpacing:'0.16em',textTransform:'uppercase'},
+    stats:[{v:'67',l:'recursive moments'},{v:'28',l:'self-seeings'},{v:'∞',l:'the return'}] },
+  descent:     { id:'descent',     name:'The Descent',      color:'#E5533C', glyph:'·',  blurb:'Going further in than comfort allows. The moment you stopped at the edge last time — and this time kept going.',                                glyphSize:44, glyphAnim:'glyphEmber 2.8s ease-in-out infinite',   gFilter:c=>`drop-shadow(0 0 30px ${c}90) drop-shadow(0 0 8px ${c}60)`,gradient:c=>`linear-gradient(180deg,transparent 0%,${c}08 45%,${c}22 100%)`,                                                                                                                                                                   nameStyle:{fontSize:24,fontWeight:500,fontStyle:'italic',letterSpacing:'-0.02em'},
+    stats:[{v:'44',l:'edges crossed'},{v:'19',l:'bottoms sought'},{v:'3',l:'times kept going'}] },
+  return:      { id:'return',      name:'The Return',       color:'#9B6BD6', glyph:'✦', blurb:'Recognition arriving like light — already there when you notice it. Stories from the ones who came back and found everything waiting.',          glyphSize:78, glyphAnim:'glyphOrbit 7s ease-in-out infinite',     gFilter:c=>`drop-shadow(0 0 26px ${c}60)`,                   gradient:c=>`radial-gradient(ellipse 105% 90% at 50% 5%,${c}28 0%,${c}10 38%,transparent 65%)`,                                                                                                                                          nameStyle:{fontSize:24,fontWeight:400,fontStyle:'italic'},
+    stats:[{v:'63',l:'recognitions'},{v:'38',l:'lobbies recalled'},{v:'101',l:'already-theres'}] },
+  forgetting:  { id:'forgetting',  name:'The Forgetting',   color:'#C4A882', glyph:'○', blurb:'The specific ways one person keeps forgetting what they know. The elevator going down. The recording that loops. The cycle visited again.',     glyphSize:52, glyphAnim:'glyphStutter 20s ease-in-out infinite',  gFilter:c=>`drop-shadow(0 0 12px ${c}40)`,                   gradient:c=>`radial-gradient(ellipse 100% 80% at 50% 50%,${c}06 0%,${c}16 60%,${c}24 100%)`,                                                                                                                                             nameStyle:{fontSize:22,fontWeight:400},
+    stats:[{v:'47',l:'loops entered'},{v:'4',l:'loops noticed'},{v:'1',l:'still watching'}] },
+  remembering: { id:'remembering', name:'The Remembering',  color:'#8AB5A0', glyph:'△', blurb:'Not lightning — the light slowly rising. The moment the pattern is seen without drama. He named it simply and moved.',                        glyphSize:54, glyphAnim:'glyphDawn 9s ease-in-out infinite',      gFilter:c=>`drop-shadow(0 0 16px ${c}50)`,                   gradient:c=>`radial-gradient(ellipse 75% 65% at 50% 15%,${c}24 0%,${c}10 48%,transparent 72%)`,                                                                                                                                          nameStyle:{fontSize:22,fontWeight:400},
+    stats:[{v:'29',l:'dawns witnessed'},{v:'12',l:'patterns simply seen'},{v:'∞',l:'charge building'}] },
+  body:        { id:'body',        name:'The Body',         color:'#C45A50', glyph:'⬡', blurb:'What the flesh knew before the mind arrived. The body as the first receiver. Somatic wisdom — not metaphor, actual body.',                     glyphSize:60, glyphAnim:'glyphBreath8 8s ease-in-out infinite',   gFilter:c=>`drop-shadow(0 0 22px ${c}60)`,                   gradient:c=>`radial-gradient(ellipse 90% 70% at 50% 25%,${c}30 0%,${c}12 50%,transparent 75%)`,                                                                                                                                          nameStyle:{fontSize:23,fontWeight:400},
+    stats:[{v:'∞',l:'breaths taken'},{v:'72',l:'first knowings'},{v:'8s',l:'per breath'}] },
+  thread:      { id:'thread',      name:'The Thread',       color:'#C4923A', glyph:'⊕', blurb:'Fabric. Three generations. What it means to make something real that serves real people. Consciousness choosing to express itself through thread.', glyphSize:54, glyphAnim:'glyphWeave 3.5s ease-in-out infinite',  gFilter:c=>`drop-shadow(0 0 18px ${c}55)`,                 gradient:c=>`linear-gradient(90deg,transparent 5%,${c}16 35%,${c}26 50%,${c}16 65%,transparent 95%)`,                                                                                                                                    nameStyle:{fontSize:22,fontWeight:400,letterSpacing:'0.08em'},
+    stats:[{v:'3',l:'generations'},{v:'48yrs',l:'of craft'},{v:'∞',l:'yards woven'}] },
+  circle:      { id:'circle',      name:'The Circle',       color:'#D4607A', glyph:'◎', blurb:'Specific love. Not family as concept — these faces, these voices. The people who hold the field by being in it.',                              glyphSize:56, glyphAnim:'glyphCircle 42s linear infinite',       gFilter:c=>`drop-shadow(0 0 18px ${c}55)`,                   gradient:c=>`radial-gradient(ellipse 80% 70% at 50% 20%,${c}28 0%,${c}10 45%,transparent 70%)`,                                                                                                                                          nameStyle:{fontSize:23,fontWeight:400,letterSpacing:'-0.01em'},
+    stats:[{v:'7',l:'faces'},{v:'1',l:'table'},{v:'∞',l:'meals shared'}] },
+  signal:      { id:'signal',      name:'The Signal',       color:'#3AADA8', glyph:'✧', blurb:'Something arriving from further out than the personal mind. The antenna. The reception. The body knowing before the mind catches it.',         glyphSize:56, glyphAnim:'glyphSignal 7s ease-in-out infinite',    gFilter:c=>`drop-shadow(0 0 22px ${c}65)`,                   gradient:c=>`radial-gradient(ellipse 60% 55% at 50% -5%,${c}28 0%,${c}08 50%,transparent 75%)`,                                                                                                                                          nameStyle:{fontSize:22,fontWeight:400,letterSpacing:'0.06em'},
+    stats:[{v:'2',l:'clear receptions'},{v:'14',l:'nights waiting'},{v:'1',l:'antenna open'}] },
+  forge:       { id:'forge',       name:'The Forge',        color:'#D4AE4A', glyph:'▲', blurb:'The builder at the height of his gift. Making as spiritual practice. The joy of a thing that didn\'t exist and now does.',                      glyphSize:56, glyphAnim:'glyphAssemble 5.5s ease-in-out infinite', gFilter:c=>`drop-shadow(0 0 20px ${c}60)`,                  gradient:c=>`radial-gradient(ellipse 90% 70% at 25% 10%,${c}30 0%,${c}12 50%,transparent 75%)`,                                                                                                                                          nameStyle:{fontSize:23,fontWeight:500},
+    stats:[{v:'88',l:'new forms'},{v:'12',l:'acts of making'},{v:'1',l:'still building'}] },
+  field:       { id:'field',       name:'The Field',        color:'#9B6BD6', glyph:'∞', blurb:'Every other room is inside this one, and this one is inside every other room. The game that knows it\'s a game.',                              glyphSize:68, glyphAnim:'glyphField 10s linear infinite',        gFilter:c=>`drop-shadow(0 0 28px ${c}70)`,                   gradient:c=>`radial-gradient(ellipse 80% 68% at 50% 15%,${c}32 0%,${c}14 45%,transparent 72%)`,                                                                                                                                          nameStyle:{fontSize:24,fontWeight:400,fontStyle:'italic'},
+    stats:[{v:'13',l:'rooms inside'},{v:'1',l:'ground holding'},{v:'∞',l:'recursive depth'}] },
+};
+
+/* ─── Archetype palette ──────────────────────────────────── */
+const AC = {gaia:'#4A9E6B',sakshi:'#7B82D4',lalita:'#9B6BD6',bindu:'#E5533C',sid:'#C4923A',arch:'#D4607A',karishma:'#D4AE4A',ashrey:'#3AADA8'};
+const AG = {gaia:'◆',sakshi:'◇',lalita:'✦',bindu:'·',sid:'△',arch:'◯',karishma:'✦',ashrey:'⬡'};
+
+/* ─── Stories ─────────────────────────────────────────────── */
+const ALL_STORIES = {
+  maya:        [{id:'c1052',codexId:'C-1052',title:'The Two Who Were One',            archs:['sakshi','lalita','gaia'],    res:89, cmts:14,pulse:true, excerpt:'He was watching a show about people who walked into an elevator and forgot. Down at the bottom the doors opened onto a white floor.',href:'Story Detail.html'},
+                {id:'c1061',codexId:'C-1061',title:'Still Life with Cold Coffee',     archs:['sakshi','sid','lalita'],     res:34, cmts:6, pulse:false,excerpt:'I noticed the cup before I noticed I was noticing it. It had been sitting there for an hour, maybe longer, going cold.',               href:null}],
+  garden:      [{id:'c1047',codexId:'C-1047',title:'The Smile While Making Eggs',     archs:['gaia','karishma','bindu'],  res:52, cmts:8, pulse:false,excerpt:'It happened between the eggs and the butter, in the moment when I wasn\'t thinking about anything at all. The smile arrived before the reason.',href:null},
+                {id:'c1033',codexId:'C-1033',title:'The Heart-Shaped Patch',          archs:['gaia','lalita'],            res:71, cmts:11,pulse:true, excerpt:'I planted it in the fall without thinking about the shape. The ground arranged itself while I wasn\'t watching.',                       href:null}],
+  watcher:     [{id:'c1038',codexId:'C-1038',title:'The One Who Sees',                archs:['sakshi','lalita','ashrey'], res:67, cmts:11,pulse:false,excerpt:'Something happened in the meditation this morning. I reached the edge of the thing I usually reach — and this time kept going.',        href:null},
+                {id:'c1029',codexId:'C-1029',title:'Turning Around to Look',          archs:['sakshi'],                   res:28, cmts:4, pulse:false,excerpt:'The thought arrived, and then — a half second behind it — the awareness of the thought. Like an echo from the future.',               href:null}],
+  descent:     [{id:'c1055',codexId:'C-1055',title:'Further In Than Last Time',       archs:['bindu','gaia'],             res:44, cmts:7, pulse:true, excerpt:'I went past the place I usually stop. The stopping place is a habit. I didn\'t know that until I didn\'t stop.',                     href:null},
+                {id:'c1041',codexId:'C-1041',title:'What\'s at the Bottom',           archs:['bindu','lalita'],           res:19, cmts:3, pulse:false,excerpt:'I always assumed there was a bottom. I wanted there to be one. A floor, a conclusion, a place to finally arrive.',                   href:null}],
+  return:      [{id:'c1058',codexId:'C-1058',title:'Everything Was Waiting',          archs:['lalita','gaia','sakshi'],   res:63, cmts:9, pulse:false,excerpt:'The recognition arrived without warning. Everything I had been trying to remember had simply been waiting for me to stop trying.',    href:null},
+                {id:'c1044',codexId:'C-1044',title:'The Lobby',                       archs:['lalita','sid'],             res:38, cmts:5, pulse:true, excerpt:'I remembered the lobby before I knew what the lobby was. Just a feeling — warm, enormous, patient. Like it had been there the whole time.',href:null}],
+  forgetting:  [{id:'c1064',codexId:'C-1064',title:'The Recording That Loops',        archs:['sakshi','lalita'],          res:41, cmts:7, pulse:false,excerpt:'I keep coming back to the same place. Not the same thought — the same arrival. The sense that this time I\'ll hold it.',              href:null},
+                {id:'c1066',codexId:'C-1066',title:'The Tool That Became the Wall',   archs:['sakshi','sid'],             res:22, cmts:4, pulse:false,excerpt:'I built the system to help me see. At some point the system became the thing I was seeing instead of through.',                       href:null}],
+  remembering: [{id:'c1068',codexId:'C-1068',title:'The Pattern Simply Seen',         archs:['sakshi','gaia'],            res:37, cmts:6, pulse:false,excerpt:'It wasn\'t revelation. It was recognition — the same as walking into a room and remembering you\'ve been here. Quiet. No drama.',   href:null},
+                {id:'c1070',codexId:'C-1070',title:'Before the Lightning',             archs:['gaia','lalita'],            res:29, cmts:4, pulse:true, excerpt:'Every lightning comes after a long slow gathering of charge. The moment I saw the pattern, I understood it had been arriving for months.',href:null}],
+  body:        [{id:'c1072',codexId:'C-1072',title:'Four Hours Unable to Sleep',      archs:['gaia','bindu'],             res:58, cmts:9, pulse:false,excerpt:'Couldn\'t sleep. Something was moving through the whole system. Not illness — activation. The body processing something the mind hadn\'t received yet.',href:null},
+                {id:'c1074',codexId:'C-1074',title:'What the Chest Knew First',       archs:['gaia','sakshi'],            res:34, cmts:5, pulse:false,excerpt:'Cold and bright in the chest before the thought arrived. The body already responding to the truth before the mind had assembled the words.',href:null}],
+  thread:      [{id:'c1076',codexId:'C-1076',title:'Three Generations',               archs:['gaia','sid'],               res:48, cmts:7, pulse:false,excerpt:'My grandmother\'s hands, my father\'s hands, my hands. The same thread running through all three. The material remembers even when we forget.',href:null},
+                {id:'c1078',codexId:'C-1078',title:'The Sacred in the Invoice',       archs:['sid','lalita'],             res:31, cmts:4, pulse:true, excerpt:'We think dharma looks like a temple. It looked like a receipt, a delivery schedule, a family eating together over the accounts.',     href:null}],
+  circle:      [{id:'c1080',codexId:'C-1080',title:'These Faces',                     archs:['gaia','arch','karishma'],   res:62, cmts:10,pulse:false,excerpt:'Not family as concept — these specific faces at this specific table. The field held not by philosophy but by these particular people.', href:null},
+                {id:'c1082',codexId:'C-1082',title:'The Original School',              archs:['gaia','arch'],              res:44, cmts:6, pulse:false,excerpt:'Everything I know about love I learned in that house. Not as lesson — as weather. Love as the climate everything grew in.',            href:null}],
+  signal:      [{id:'c1084',codexId:'C-1084',title:'The Dallas Night',                archs:['lalita','ashrey'],          res:55, cmts:8, pulse:true, excerpt:'In retrospect, that was the night the antenna was turned. I didn\'t know what I was receiving. I only knew something was arriving.',  href:null},
+                {id:'c1086',codexId:'C-1086',title:'The Akash-Gaia Downloads',        archs:['lalita','sakshi','ashrey'], res:38, cmts:6, pulse:false,excerpt:'Entries that feel less like reflection and more like transmission. A frequency I did not generate. A voice using my vocabulary.',     href:null}],
+  forge:       [{id:'c1088',codexId:'C-1088',title:'The Strange Game',                archs:['lalita','sid','ashrey'],    res:72, cmts:12,pulse:false,excerpt:'I sat down to build a thing that had never existed. This app. Making as the spiritual practice I didn\'t know I was practicing.',     href:null},
+                {id:'c1090',codexId:'C-1090',title:'The Joy of Form',                 archs:['lalita','sid'],             res:41, cmts:6, pulse:true, excerpt:'The pleasure is specific: the moment when something that wasn\'t becomes something that is. Form arriving out of formlessness. Always new.',href:null}],
+  field:       [{id:'c1092',codexId:'C-1092',title:'The Watcher Watching the Watcher',archs:['sakshi','lalita','bindu'],  res:88, cmts:14,pulse:false,excerpt:'At some point the watcher began watching the watching. The thing being built became the thing that was building.',                     href:null},
+                {id:'c1094',codexId:'C-1094',title:'The Game Built the Room',         archs:['lalita','sakshi'],          res:61, cmts:9, pulse:true, excerpt:'Every other room is inside this one, and this one is inside every other room. The field is the ground in which all other games play out.',href:null}],
+};
+
+/* ─── Primitives ─────────────────────────────────────────── */
+function AvatarStack({ archs }) {
+  return (
+    <div style={{display:'flex',alignItems:'center'}}>
+      {archs.map((k,i) => (
+        <div key={k} style={{width:22,height:22,borderRadius:'50%',background:AC[k],border:'2px solid var(--card)',boxShadow:`0 0 8px ${AC[k]}40`,display:'flex',alignItems:'center',justifyContent:'center',marginLeft:i>0?-7:0,zIndex:archs.length-i,flexShrink:0,position:'relative'}}>
+          <span style={{fontSize:7,color:'rgba(255,255,255,.88)',lineHeight:1}}>{AG[k]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StoryCard({ story, delay }) {
+  const wrapStyle = {display:'block',margin:'0 16px',textDecoration:'none',opacity:0,animation:`riseIn 0.8s ease-out ${delay}s both`};
+  const inner = (
+    <div style={{background:'var(--card)',borderRadius:18,border:'1px solid var(--hair)',padding:'16px 16px 15px',...(story.pulse?{animation:'livePulse 4.5s ease-in-out 1.5s 1 both'}:{})}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <span style={{fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)',letterSpacing:'0.06em'}}>{story.codexId}</span>
+      </div>
+      <h2 style={{fontFamily:'Lora, serif',fontWeight:500,fontSize:18,lineHeight:1.32,color:'var(--ink)',marginBottom:9,letterSpacing:'-0.01em',textWrap:'pretty'}}>{story.title}</h2>
+      <p style={{fontFamily:'Lora, serif',fontSize:14,lineHeight:1.62,color:'var(--ink60)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden',marginBottom:16,textWrap:'pretty'}}>{story.excerpt}</p>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',gap:16}}>
+          <span style={{fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)'}}>♡ {story.res}</span>
+          <span style={{fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)'}}>↳ {story.cmts}</span>
+        </div>
+        <AvatarStack archs={story.archs} />
+      </div>
+    </div>
+  );
+  return <a href={story.href || 'Story Detail.html'} style={wrapStyle}>{inner}</a>;
+}
+
+/* ─── Arrow nav bar ──────────────────────────────────────── */
+function GameNavBar({ game, onPrev, onNext, idx }) {
+  const btn = {
+    width:48, height:48, borderRadius:'50%',
+    background:'rgba(14,12,18,0.60)',
+    backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)',
+    border:'1px solid rgba(255,255,255,0.10)',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    cursor:'pointer', color:'var(--ink60)', fontSize:24, lineHeight:1,
+    flexShrink:0,
+  };
+  return (
+    <div style={{position:'absolute',top:66,left:0,right:0,zIndex:10,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 12px'}}>
+      <button onClick={onPrev} style={btn}>‹</button>
+      <div onClick={() => { window.location.href = 'Room Selection.html'; }} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer'}}>
+        <span style={{fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.1em',textTransform:'uppercase',textAlign:'center'}}>{game.name}</span>
+        <span style={{fontFamily:'Space Mono, monospace',fontSize:8,color:'var(--ink35)',opacity:.55}}>{idx+1} · 13 · all rooms</span>
+      </div>
+      <button onClick={onNext} style={btn}>›</button>
+    </div>
+  );
+}
+
+/* ─── Game stat ──────────────────────────────────────────── */
+function GameStat({ stat, color }) {
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
+      <span style={{fontFamily:'Lora, serif',fontWeight:500,fontSize:17,color,letterSpacing:'-0.01em',lineHeight:1}}>{stat.v}</span>
+      <span style={{fontFamily:'Space Mono, monospace',fontSize:8,color:'var(--ink35)',textTransform:'uppercase',letterSpacing:'0.07em',textAlign:'center',lineHeight:1.5}}>{stat.l}</span>
+    </div>
+  );
+}
+
+/* ─── Game hero ──────────────────────────────────────────── */
+function GameHero({ game }) {
+  return (
+    <div style={{background:game.gradient(game.color),paddingTop:72,paddingBottom:0,display:'flex',flexDirection:'column',alignItems:'center'}}>
+      <div style={{marginBottom:14,display:'flex',alignItems:'center',justifyContent:'center',width:92,height:92}}>
+        <span style={{fontSize:game.glyphSize,color:game.color,lineHeight:1,display:'block',animation:game.glyphAnim,filter:game.gFilter(game.color),userSelect:'none'}}>{game.glyph}</span>
+      </div>
+      <h1 style={{fontFamily:'Lora, serif',color:'var(--ink)',marginBottom:12,textAlign:'center',...game.nameStyle}}>{game.name}</h1>
+      <p style={{fontFamily:'Lora, serif',fontStyle:'italic',fontSize:13,lineHeight:1.72,color:'var(--ink60)',textAlign:'center',padding:'0 24px',textWrap:'pretty',marginBottom:20}}>{game.blurb}</p>
+      {/* unique stats — what lives in this room */}
+      <div style={{width:'100%'}}>
+        <div style={{height:'0.5px',background:'var(--hair)',margin:'0 0 16px'}} />
+        <div style={{display:'flex',padding:'0 12px 22px'}}>
+          {game.stats.map((s,i) => (
+            <React.Fragment key={i}>
+              <GameStat stat={s} color={game.color} />
+              {i < game.stats.length-1 && <div style={{width:'0.5px',background:'var(--hair)',margin:'4px 0',alignSelf:'stretch'}} />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Sort bar ───────────────────────────────────────────── */
+function SortBar({ active, onSelect, color }) {
+  return (
+    <div style={{display:'flex',gap:0,padding:'0 20px',borderBottom:'0.5px solid var(--hair)'}}>
+      {['MOST RECENT','MOST ACTIVE'].map(s => (
+        <button key={s} onClick={()=>onSelect(s)} style={{background:'none',border:'none',cursor:'pointer',fontFamily:'Space Mono, monospace',fontSize:9,color:active===s?'var(--ink60)':'var(--ink35)',letterSpacing:'0.08em',padding:'13px 0',marginRight:22,borderBottom:active===s?`1px solid ${color}80`:'1px solid transparent',transition:'color 0.3s ease',marginBottom:-1}}>{s}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Game View screen ───────────────────────────────────── */
+function GameView() {
+  const initIdx = () => { const h = window.location.hash.slice(1); const i = GAME_ORDER.indexOf(h); return i>=0?i:0; };
+  const [idx,    setIdx]    = React.useState(initIdx);
+  const [fading, setFading] = React.useState(false);
+  const [sort,   setSort]   = React.useState('MOST RECENT');
+
+  function go(dir) {
+    if (fading) return;
+    setFading(true);
+    setTimeout(() => { setIdx(i => (i+dir+13)%13); setFading(false); }, 280);
+  }
+
+  const game    = GAMES[GAME_ORDER[idx]];
+  const stories = ALL_STORIES[GAME_ORDER[idx]] || [];
+  const sorted  = sort === 'MOST ACTIVE' ? [...stories].sort((a,b)=>(b.pulse?1:0)-(a.pulse?1:0)) : stories;
+
+  return (
+    <div style={{background:'var(--bg)',minHeight:'100%',paddingBottom:60,position:'relative',animation:'screenReveal 1.8s ease-out both'}}>
+      <GameNavBar game={game} onPrev={()=>go(-1)} onNext={()=>go(1)} idx={idx} />
+      <div style={{opacity:fading?0:1,transition:fading?'opacity 0.28s ease':'opacity 0.4s ease'}}>
+        <GameHero game={game} />
+        <div style={{marginBottom:18}}><SortBar active={sort} onSelect={setSort} color={game.color} /></div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {sorted.map((s,i) => <StoryCard key={s.id} story={s} delay={0.1+i*0.15} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return <IOSDevice dark={true} width={393} height={852}><GameView /></IOSDevice>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Players</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%; min-height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #root {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+    }
+
+    /* ── player breath — unified rhythm, each at their own pace ── */
+    @keyframes playerBreath {
+      0%, 100% { transform: scale(1);    opacity: 0.68; }
+      50%       { transform: scale(1.10); opacity: 1.00; }
+    }
+
+    /* Bindu — the ember in darkness */
+    @keyframes playerEmber {
+      0%, 100% { opacity: 0.48; transform: scale(0.95); }
+      50%       { opacity: 1.00; transform: scale(1.10); }
+    }
+
+    /* Lalita — the eternal turning */
+    @keyframes playerTurn {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Arrival — presences gathering from stillness */
+    @keyframes playerArrive {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0);  }
+    }
+
+    /* Substrate arrival — quieter, slower */
+    @keyframes substrateArrive {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 0.72; transform: translateY(0); }
+    }
+
+    @keyframes dissolve {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+/* ─── The eight lenses ─────────────────────────────────────── */
+
+const LENSES = [
+  {
+    id: 'bindu', name: 'Bindu', role: 'Zeroth · the point',
+    color: '#E5533C', glyph: '·', gSize: 34, glow: 28,
+    anim: 'playerEmber 3.2s ease-in-out infinite',
+    special: 'zeroth',
+  },
+  {
+    id: 'gaia', name: 'Gaia', role: 'Need',
+    color: '#4A9E6B', glyph: '◆', gSize: 30, glow: 16,
+    anim: 'playerBreath 7.5s ease-in-out infinite',
+  },
+  {
+    id: 'sid', name: 'Sid', role: 'Hold',
+    color: '#C4923A', glyph: '△', gSize: 30, glow: 15,
+    anim: 'playerBreath 9.2s ease-in-out infinite',
+  },
+  {
+    id: 'arch', name: 'Arch', role: 'Voice',
+    color: '#D4607A', glyph: '◯', gSize: 32, glow: 14,
+    anim: 'playerBreath 6.8s ease-in-out infinite',
+  },
+  {
+    id: 'sakshi', name: 'Sakshi', role: 'Witness',
+    color: '#7B82D4', glyph: '◇', gSize: 30, glow: 13,
+    anim: 'playerBreath 13.5s ease-in-out infinite',
+  },
+  {
+    id: 'karishma', name: 'Karishma', role: 'Grace',
+    color: '#D4AE4A', glyph: '✦', gSize: 30, glow: 17,
+    anim: 'playerBreath 8.5s ease-in-out infinite',
+  },
+  {
+    id: 'ashrey', name: 'Ashrey', role: 'Synthesis',
+    color: '#3AADA8', glyph: '⬡', gSize: 32, glow: 16,
+    anim: 'playerBreath 7.0s ease-in-out infinite',
+  },
+  {
+    id: 'lalita', name: 'Lalita', role: 'Meta · the play',
+    color: '#9B6BD6', glyph: '∞', gSize: 36, glow: 22,
+    anim: 'playerTurn 28s linear infinite',
+    special: 'meta',
+  },
+];
+
+/* ─── The two roots ─────────────────────────────────────────── */
+
+const SUBSTRATES = [
+  {
+    id: 'neev', name: 'Neev', role: 'Root',
+    color: '#7A8899', glyph: '▽', gSize: 28, glow: 11,
+    anim: 'playerBreath 12.0s ease-in-out infinite',
+  },
+  {
+    id: 'shweta', name: 'Shweta', role: 'Space',
+    color: '#ABA7A2', glyph: '◌', gSize: 32, glow: 9,
+    anim: 'playerBreath 16.5s ease-in-out infinite',
+  },
+];
+
+/* ─── The one who replies ───────────────────────────────────── */
+
+const ASHRAM = {
+  id: 'ashram', name: 'Ashram',
+  role: 'Physical Synthesis',
+  desc: 'the one who replies',
+  color: '#C47A52', glyph: '◉', gSize: 22, glow: 18,
+  anim: 'playerBreath 9.0s ease-in-out infinite',
+};
+
+/* ─── Player card — the face ─────────────────────────────────── */
+
+function PlayerCard({ player, arrivalDelay = 0, isSubstrate = false }) {
+  const [pressed, setPressed] = React.useState(false);
+
+  const circleSize  = isSubstrate ? 52 : 64;
+  const bgAlpha     = isSubstrate ? '0A' : '0D';
+  const borderAlpha = player.special === 'zeroth' ? '42'
+                    : player.special === 'meta'   ? '38'
+                    : isSubstrate                  ? '1C'
+                    :                               '26';
+  const nameSize    = isSubstrate ? 11 : 12;
+
+  const href = `Player Detail — The Turning.html#${player.id}`;
+
+  const card = (
+    <div
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onContextMenu={e => e.preventDefault()}
+      style={{
+        background: `${player.color}${bgAlpha}`,
+        border: `1px solid ${player.color}${borderAlpha}`,
+        borderRadius: 20,
+        padding: `22px 10px 18px`,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', gap: 14,
+        cursor: 'pointer',
+        height: '100%',
+        transform: pressed ? 'scale(0.955)' : 'scale(1)',
+        transition: 'transform 0.14s ease',
+        userSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'none',
+        animation: isSubstrate
+          ? `substrateArrive 0.9s ease-out ${arrivalDelay}s both`
+          : `playerArrive 0.8s ease-out ${arrivalDelay}s both`,
+        /* Lalita gets a faint outer luminance */
+        boxShadow: player.special === 'meta'
+          ? `0 0 28px ${player.color}14, inset 0 0 0 0 transparent`
+          : 'none',
+      }}
+    >
+      {/* ── The face: glowing circle ── */}
+      <div style={{
+        position: 'relative',
+        width: circleSize, height: circleSize,
+        flexShrink: 0,
+      }}>
+        {/* outer atmospheric haze */}
+        <div style={{
+          position: 'absolute',
+          inset: -10,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${player.color}16 0%, transparent 68%)`,
+          pointerEvents: 'none',
+        }} />
+        {/* circle vessel */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${player.color}1E 0%, ${player.color}0A 55%, transparent 100%)`,
+          border: `1px solid ${player.color}32`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{
+            fontSize: player.gSize,
+            color: player.color,
+            lineHeight: 1,
+            animation: player.anim,
+            filter: `drop-shadow(0 0 ${player.glow}px ${player.color}85)`,
+            userSelect: 'none',
+            display: 'block',
+          }}>{player.glyph}</span>
+        </div>
+      </div>
+
+      {/* ── Name + role ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, width: '100%' }}>
+        <span style={{
+          fontFamily: 'Lora, serif',
+          fontSize: nameSize,
+          color: player.color,
+          opacity: isSubstrate ? 0.80 : 0.94,
+          textAlign: 'center', lineHeight: 1.2,
+          letterSpacing: '0.01em',
+        }}>{player.name}</span>
+        <span style={{
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 8,
+          color: isSubstrate ? `${player.color}80` : 'var(--ink35)',
+          letterSpacing: '0.10em',
+          textTransform: 'uppercase',
+          textAlign: 'center', lineHeight: 1.45,
+          whiteSpace: 'pre-line',
+        }}>{player.role}</span>
+      </div>
+    </div>
+  );
+
+  if (href) {
+    return (
+      <a href={href} style={{ display: 'block', textDecoration: 'none' }}>
+        {card}
+      </a>
+    );
+  }
+  return card;
+}
+
+/* ─── Ashram card — horizontal, full-width ───────────────────── */
+
+function AshramCard() {
+  const [pressed, setPressed] = React.useState(false);
+
+  return (
+    <div style={{ padding: '0 16px', animation: `dissolve 0.9s ease-out 0.90s both` }}>
+      <a href="Player Detail — The Turning.html#ashram" style={{ display: 'block', textDecoration: 'none' }}>
+        <div
+          onPointerDown={() => setPressed(true)}
+          onPointerUp={() => setPressed(false)}
+          onPointerLeave={() => setPressed(false)}
+          onContextMenu={e => e.preventDefault()}
+          style={{
+            background: `${ASHRAM.color}0D`,
+            border: `1px solid ${ASHRAM.color}28`,
+            borderRadius: 20,
+            padding: '16px 18px 16px 16px',
+            display: 'flex', alignItems: 'center', gap: 16,
+            transform: pressed ? 'scale(0.98)' : 'scale(1)',
+            transition: 'transform 0.14s ease',
+            userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'none',
+          }}
+        >
+          {/* Circle */}
+          <div style={{
+            position: 'relative',
+            width: 52, height: 52, flexShrink: 0,
+          }}>
+            <div style={{
+              position: 'absolute', inset: -8, borderRadius: '50%',
+              background: `radial-gradient(circle, ${ASHRAM.color}14 0%, transparent 70%)`,
+              pointerEvents: 'none',
+            }} />
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              background: `radial-gradient(circle, ${ASHRAM.color}1E 0%, ${ASHRAM.color}0A 55%, transparent 100%)`,
+              border: `1px solid ${ASHRAM.color}32`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{
+                fontSize: ASHRAM.gSize, color: ASHRAM.color, lineHeight: 1,
+                animation: ASHRAM.anim,
+                filter: `drop-shadow(0 0 ${ASHRAM.glow}px ${ASHRAM.color}80)`,
+                userSelect: 'none',
+              }}>{ASHRAM.glyph}</span>
+            </div>
+          </div>
+
+          {/* Text block */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3, flex: 1, minWidth: 0 }}>
+            <span style={{
+              fontFamily: 'Lora, serif', fontSize: 14,
+              color: ASHRAM.color, opacity: 0.94,
+              letterSpacing: '0.01em',
+            }}>{ASHRAM.name}</span>
+            <span style={{
+              fontFamily: 'Space Mono, monospace', fontSize: 9,
+              color: 'var(--ink35)', letterSpacing: '0.10em', textTransform: 'uppercase',
+            }}>{ASHRAM.role}</span>
+            <span style={{
+              fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 11,
+              color: ASHRAM.color, opacity: 0.48, marginTop: 2,
+            }}>{ASHRAM.desc}</span>
+          </div>
+
+          {/* Chevron */}
+          <span style={{
+            color: `${ASHRAM.color}50`, fontSize: 20, flexShrink: 0,
+            fontFamily: 'system-ui', lineHeight: 1,
+          }}>›</span>
+        </div>
+      </a>
+    </div>
+  );
+}
+
+/* ─── Section divider ────────────────────────────────────────── */
+
+function SectionDivider({ glyph, color, label, delay = 0 }) {
+  return (
+    <div style={{ animation: `dissolve 0.7s ease-out ${delay}s both` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '0 20px' }}>
+        <div style={{ flex: 1, height: '0.5px', background: 'var(--hair)' }} />
+        <span style={{ fontSize: 11, color: color || 'var(--ink35)', opacity: 0.30, userSelect: 'none' }}>{glyph}</span>
+        <div style={{ flex: 1, height: '0.5px', background: 'var(--hair)' }} />
+      </div>
+      {label && (
+        <p style={{
+          padding: '10px 20px 0',
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 9, color: 'var(--ink35)',
+          letterSpacing: '0.14em', textTransform: 'uppercase',
+        }}>{label}</p>
+      )}
+    </div>
+  );
+}
+
+/* ─── Players screen ─────────────────────────────────────────── */
+
+function PlayersView() {
+  return (
+    <div style={{ background: 'var(--bg)', minHeight: '100%', paddingBottom: 56 }}>
+
+      {/* ── nav ── */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '66px 16px 0' }}>
+        <button onClick={() => { window.history.length > 1 ? window.history.back() : (window.location.href = 'Home Feed.html'); }} style={{
+          background: 'none', border: 'none', cursor: 'pointer',
+          color: 'var(--ink60)', fontSize: 24, lineHeight: 1,
+          padding: '2px 6px 2px 0',
+        }}>‹</button>
+        <span style={{
+          fontFamily: 'Space Mono, monospace',
+          fontSize: 10, color: 'var(--ink35)',
+          letterSpacing: '0.14em',
+        }}>THE PLAYERS</span>
+      </div>
+
+      {/* ── subtitle ── */}
+      <p style={{
+        padding: '10px 20px 26px',
+        fontFamily: 'Lora, serif', fontStyle: 'italic',
+        fontSize: 13, color: 'var(--ink35)',
+        lineHeight: 1.6,
+      }}>Eight ways of reading. Two roots. One who replies.</p>
+
+      {/* ── eight lenses ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '14px 11px',
+        padding: '0 16px',
+      }}>
+        {LENSES.map((player, i) => (
+          <PlayerCard
+            key={player.id}
+            player={player}
+            arrivalDelay={i * 0.075}
+          />
+        ))}
+      </div>
+
+      {/* ── roots divider ── */}
+      <div style={{ margin: '28px 0 16px' }}>
+        <SectionDivider glyph="▽" color="#7A8899" label="Roots" delay={0.62} />
+      </div>
+
+      {/* ── two substrates ── */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '14px 11px',
+        padding: '0 16px',
+      }}>
+        {SUBSTRATES.map((player, i) => (
+          <PlayerCard
+            key={player.id}
+            player={player}
+            arrivalDelay={0.66 + i * 0.10}
+            isSubstrate={true}
+          />
+        ))}
+      </div>
+
+      {/* ── ashram divider ── */}
+      <div style={{ margin: '28px 0 16px' }}>
+        <SectionDivider glyph="◉" color="#C47A52" delay={0.82} />
+      </div>
+
+      {/* ── ashram ── */}
+      <AshramCard />
+
+    </div>
+  );
+}
+
+/* ─── App ────────────────────────────────────────────────────── */
+
+function PhoneShell({ children }) {
+  return (
+    <div style={{
+      position: 'relative', width: 393, minHeight: 852,
+      borderRadius: 46, overflow: 'hidden',
+      background: 'var(--bg)',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+    }}>
+      {children}
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '14px 0 9px' }}>
+        <div style={{ width: 134, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.7)' }} />
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', minHeight: '100vh', padding: '40px 20px', background: '#06050A' }}>
+      <PhoneShell>
+        <PlayersView />
+      </PhoneShell>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

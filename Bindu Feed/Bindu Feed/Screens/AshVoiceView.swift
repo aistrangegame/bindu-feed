@@ -13,17 +13,25 @@ struct AshVoiceView: View {
     @State private var parentCommentById: [String: FieldComment] = [:]
     @State private var loaded: Bool = false
     @State private var settings: ArrivalSettings = .init()
+    @State private var showHub = false
 
+    // Arrival-identity fallback per ArrivalSettings — Lalita violet +
+    // Bindu dot, never terra/◉. Same rule as AshComposeView so the user's
+    // identity surfaces uniformly across compose and voice. (The property
+    // name `terra` is now slightly misleading — kept for minimal churn.)
     private var terra: Color {
-        settings.colorHex.isEmpty ? BinduTheme.colorAsh : Color(hex: settings.colorHex)
-    }
-
-    private var displayName: String {
-        settings.name.isEmpty ? "Ash" : settings.name
+        let hex = settings.colorHex.isEmpty ? ArrivalSettings().colorHex : settings.colorHex
+        return Color(hex: hex)
     }
 
     private var displayGlyph: String {
-        settings.glyph.isEmpty ? "◉" : settings.glyph
+        settings.glyph.isEmpty ? ArrivalSettings().glyph : settings.glyph
+    }
+
+    // Name falls back to "Ash" — the canonical Airtable identity.
+    // ArrivalSettings's default name is "" by intent (not a display value).
+    private var displayName: String {
+        settings.name.isEmpty ? "Ash" : settings.name
     }
 
     var body: some View {
@@ -75,10 +83,14 @@ struct AshVoiceView: View {
             ToolbarItem(placement: .topBarLeading) {
                 BackChevron { if !path.isEmpty { path.removeLast() } }
             }
+            ToolbarItem(placement: .topBarLeading) {
+                HubTrigger(open: $showHub)
+            }
         }
         .task {
             await load()
         }
+        .hubOverlay(open: $showHub, path: $path)
     }
 
     // MARK: - Header

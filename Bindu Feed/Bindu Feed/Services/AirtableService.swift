@@ -126,6 +126,33 @@ final class AirtableService {
         return records.map(ThresholdSentence.init(from:))
     }
 
+    func fetchMirrorCards() async throws -> [MirrorCard] {
+        let records = try await fetch(
+            filter: "AND({Type}='Mirror Card',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(MirrorCard.init(from:))
+    }
+
+    // Server-side sort is Sort Order asc only. The "Approaching Graduation
+    // before Active" priority sort runs client-side at the call site —
+    // Airtable's sort can't honour a custom singleSelect ordering.
+    func fetchSignals() async throws -> [Signal] {
+        let records = try await fetch(
+            filter: "AND({Type}='Signal',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(Signal.init(from:))
+    }
+
+    func fetchPracticeInvitations() async throws -> [PracticeInvitation] {
+        let records = try await fetch(
+            filter: "AND({Type}='Practice Invitation',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(PracticeInvitation.init(from:))
+    }
+
     func fetchStories(room: String? = nil, sort: StorySort = .mostActive) async throws -> [Story] {
         let filter: String
         if let room, !room.isEmpty {
@@ -160,6 +187,21 @@ final class AirtableService {
             .sorted { $0.commentOrder < $1.commentOrder }
     }
 
+    // Same linked-record constraint as fetchFieldComments(storyId:) —
+    // server-side FIND/ARRAYJOIN against {Linked Story} can't match by
+    // record ID, so we pull all Resonance Voices and filter in Swift.
+    func fetchResonanceVoice(storyId: String) async throws -> FieldComment? {
+        let all = try await fetchAllResonanceVoices()
+        return all.first { $0.linkedStoryId == storyId }
+    }
+
+    private func fetchAllResonanceVoices() async throws -> [FieldComment] {
+        let records = try await fetch(
+            filter: "AND({Type}='Resonance Voice',{Status}='Live')"
+        )
+        return records.map(FieldComment.init(from:))
+    }
+
     func fetchAllFieldComments() async throws -> [FieldComment] {
         let records = try await fetch(
             filter: "AND({Type}='Field Comment',{Status}='Live')",
@@ -188,24 +230,30 @@ final class AirtableService {
 
     // Fetch a set of stories by Airtable record ID. Used by screens that
     // surface a comment list and need to link each comment back to its
-    // story (Archetype Profile, Ash's Voice).
+    // story (The Turning, Ash's Voice). Status='Live' gate matches every
+    // other reader; without it, a Draft/Archived story would silently
+    // surface in a word card or row.
     func fetchStoriesByIds(_ ids: [String]) async throws -> [Story] {
         let unique = Array(Set(ids)).filter { !$0.isEmpty }
         guard !unique.isEmpty else { return [] }
         let clauses = unique.map { "RECORD_ID()='\($0)'" }.joined(separator: ",")
-        let filter = "AND({Type}='Story',OR(\(clauses)))"
+        let filter = "AND({Type}='Story',{Status}='Live',OR(\(clauses)))"
         let records = try await fetch(filter: filter)
         return records.map(Story.init(from:))
     }
 
-    // Fetch arbitrary Field/Ash comments by record ID. Used by Ash's Voice
-    // to look up the parent comment so the "↩ In reply to ___" hint can
-    // surface the archetype Ash was answering.
+    // Fetch Field Comments by record ID. Used by Ash's Voice to look up
+    // the parent comment so the "↩ In reply to ___" hint can surface the
+    // archetype Ash was answering. Type='Field Comment' + Status='Live'
+    // match every other reader; the dominant Ash-reply pattern is reply-
+    // to-field-voice, so restricting to Field Comments is correct.
+    // (Ash→Ash chains, where one Ash comment replies to another, would
+    // lose their parent hint here — uncommon today; defer until needed.)
     func fetchFieldCommentsByIds(_ ids: [String]) async throws -> [FieldComment] {
         let unique = Array(Set(ids)).filter { !$0.isEmpty }
         guard !unique.isEmpty else { return [] }
         let clauses = unique.map { "RECORD_ID()='\($0)'" }.joined(separator: ",")
-        let filter = "OR(\(clauses))"
+        let filter = "AND({Type}='Field Comment',{Status}='Live',OR(\(clauses)))"
         let records = try await fetch(filter: filter)
         return records.map(FieldComment.init(from:))
     }
@@ -216,7 +264,8 @@ final class AirtableService {
     func postAshComment(
         storyId: String,
         body: String,
-        parentCommentId: String?
+        parentCommentId: String?,
+        archetypeName: String
     ) async throws -> AirtableRecord {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
@@ -228,7 +277,7 @@ final class AirtableService {
             "Type": "Ash Comment",
             "Status": "Live",
             "Comment Body": body,
-            "Archetype": "Ash",
+            "Archetype": archetypeName,
             "Linked Story": [storyId],
             "Comment Order": 999,
             "Resonance": 0
@@ -305,6 +354,32 @@ final class AirtableService {
 
         let payload: [String: Any] = [
             "fields": ["Resonance": newResonance]
+        ]
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "PATCH"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
+    }
+
+    // Best-effort PATCH that marks when a Story's depth was last witnessed.
+    // Fires from Resonance Depth dissolve; failures should be swallowed by
+    // the caller — see the comment above updateStoryLastActivityDate.
+    func updateStoryLastDepthDate(storyId: String) async throws {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: "\(baseURLString)/\(storyId)") else { throw AirtableError.badURL }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        let today = formatter.string(from: Date())
+
+        let payload: [String: Any] = [
+            "fields": ["Last Depth Date": today]
         ]
 
         var req = URLRequest(url: url)
