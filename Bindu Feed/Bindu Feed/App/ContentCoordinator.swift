@@ -44,6 +44,19 @@ struct ContentCoordinator: View {
         .onChange(of: scenePhase) { phase in
             handleScenePhase(phase)
         }
+        .onChange(of: store.hasToken) { hasToken in
+            // Sign-out path: when the user clears the token from Settings,
+            // unmount everything behind the gate and route back to
+            // TokenEntryView. Resetting doorCrossed means re-entry will
+            // pass through the Practice Door again with the new token.
+            // The audio engine stops cleanly; on re-entry, startSoundEngine
+            // re-acquires the session and spawns a fresh Breath.
+            if !hasToken {
+                soundEngine.stop()
+                doorCrossed = false
+                showTokenEntry = true
+            }
+        }
         .onChange(of: store.fieldSounds) { _ in
             // When field sounds load (or change after a re-fetch),
             // refresh the engine's .base Breath snapshot. Per the

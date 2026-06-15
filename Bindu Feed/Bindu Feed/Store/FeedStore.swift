@@ -36,15 +36,43 @@ final class FeedStore: ObservableObject {
     // Set-based so repeated post attempts are idempotent.
     @Published var pendingStoryRefreshes: Set<String> = []
 
-    private let tokenKey = "airtable_token"
+    private static let tokenKey = "airtable_token"
     private let service = AirtableService.shared
 
     // MARK: - Token
+    //
+    // `hasToken` is @Published so ContentCoordinator can route back to
+    // TokenEntryView when the user signs out (clearToken) — a computed
+    // property reading the Keychain wouldn't notify observers.
 
-    var hasToken: Bool { KeychainService.load(tokenKey) != nil }
+    @Published private(set) var hasToken: Bool = KeychainService.load(FeedStore.tokenKey) != nil
 
     func saveToken(_ token: String) {
-        KeychainService.save(tokenKey, value: token)
+        KeychainService.save(Self.tokenKey, value: token)
+        hasToken = true
+    }
+
+    // Sign-out / change-token path. Deletes the Keychain item (the real
+    // SecItemDelete, not just clearing memory — confirmed in
+    // KeychainService.delete) so the next launch starts at TokenEntry,
+    // and resets the in-memory caches so a re-entered token doesn't see
+    // stale data flash behind the gate.
+    func clearToken() {
+        KeychainService.delete(Self.tokenKey)
+        hasToken = false
+
+        rooms = []
+        archetypes = []
+        thresholdSentences = []
+        stories = []
+        storyStats = [:]
+        mirrorCards = []
+        signals = []
+        practiceInvitations = []
+        fieldSounds = []
+        pendingStoryRefreshes = []
+        foundationLoaded = false
+        error = nil
     }
 
     // MARK: - Foundation

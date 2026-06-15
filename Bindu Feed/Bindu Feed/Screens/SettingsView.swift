@@ -4,6 +4,7 @@ import SwiftUI
 // Personal to the device. Stored in UserDefaults, not Airtable.
 // Live preview at the top updates as the user picks a glyph, color, name.
 struct SettingsView: View {
+    @EnvironmentObject private var store: FeedStore
     @Binding var path: NavigationPath
 
     @State private var name: String = ""
@@ -11,6 +12,7 @@ struct SettingsView: View {
     @State private var colorHex: String = ""
     @State private var savedSnapshot: ArrivalSettings = .init()
     @State private var showHub = false
+    @State private var showClearConfirm = false
 
     @FocusState private var nameFocused: Bool
 
@@ -42,6 +44,8 @@ struct SettingsView: View {
                     if hasChanges { saveButton }
 
                     voiceLink
+
+                    changeTokenLink
 
                     Color.clear.frame(height: 80)
                 }
@@ -247,6 +251,53 @@ struct SettingsView: View {
         }
         .buttonStyle(.plain)
         .transition(.opacity)
+    }
+
+    // MARK: - Change token
+
+    private var changeTokenLink: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Rectangle()
+                .fill(BinduTheme.hairline)
+                .frame(height: 0.5)
+                .padding(.vertical, 4)
+
+            Button {
+                showClearConfirm = true
+            } label: {
+                HStack(spacing: 8) {
+                    Text("CHANGE TOKEN")
+                        .font(.spaceMono(11))
+                        .tracking(2.4)
+                        .foregroundColor(BinduTheme.inkSecondary)
+                    Spacer()
+                }
+                .padding(BinduTheme.space16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(BinduTheme.bgInset)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(BinduTheme.hairline, lineWidth: 0.5)
+                )
+            }
+            .buttonStyle(.plain)
+
+            Text("if Airtable issued you a new one")
+                .font(.loraItalic(11))
+                .foregroundColor(BinduTheme.inkTertiary)
+                .padding(.horizontal, BinduTheme.space16)
+                .padding(.top, 2)
+        }
+        .alert("Change the token?", isPresented: $showClearConfirm) {
+            Button("Keep", role: .cancel) {}
+            Button("Clear", role: .destructive) {
+                store.clearToken()
+            }
+        } message: {
+            Text("You'll return to the token entry screen. Your name, glyph, and color stay.")
+        }
     }
 
     // MARK: - Voice link
