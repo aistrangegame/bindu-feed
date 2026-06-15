@@ -54,6 +54,18 @@ struct RecordFields: Codable {
     var sourceType: String?
     var cardRegister: String?
 
+    // Sound Layer (post-Phase-9). Sparse — empty on every non-sound
+    // record (the ~900 stories/comments). Optional by design; the
+    // FieldSound init falls back per field to the seeded Breath.
+    var soundRole: String?
+    var rootHz: Double?
+    var binauralHz: Double?
+    var soundTexture: String?
+    var brightness: Double?
+    var soundLevel: Double?
+    var attackSeconds: Double?
+    var releaseSeconds: Double?
+
     enum CodingKeys: String, CodingKey {
         case name              = "Name"
         case type              = "Type"
@@ -85,6 +97,18 @@ struct RecordFields: Codable {
         case lastDepthDate     = "Last Depth Date"
         case sourceType        = "Source Type"
         case cardRegister      = "Card Register"
+
+        // Sound Layer — exact field names from the live schema.
+        // Parentheticals and spaces matter; decode is by name (the
+        // AirtableService fetch does not pass returnFieldsByFieldId).
+        case soundRole         = "Sound Role"
+        case rootHz            = "Root Hz"
+        case binauralHz        = "Binaural Hz"
+        case soundTexture      = "Sound Texture"
+        case brightness        = "Brightness"
+        case soundLevel        = "Sound Level"
+        case attackSeconds     = "Attack (s)"
+        case releaseSeconds    = "Release (s)"
     }
 }
 
@@ -160,6 +184,17 @@ struct Room: Identifiable, Hashable {
     let glyphSize: CGFloat
     let sortOrder: Int
 
+    // Sound coloration (post-Phase-9). Optional — Rooms predate the
+    // Sound Layer, so absence means "no coloration, stay at the bare
+    // Breath base." All 13 live rooms are populated today; defensive
+    // nil handling covers transient gaps or a new room before sound
+    // params are set.
+    let rootHz: Double?
+    let binauralHz: Double?
+    let soundTexture: SoundTexture?
+    let brightness: Double?
+    let soundLevel: Double?
+
     var color: Color { Color(hex: hexColor) }
     var animation: GlyphAnimation { GlyphAnimation(name: animationName) }
 
@@ -173,6 +208,11 @@ struct Room: Identifiable, Hashable {
         self.animationName = f.animationName ?? ""
         self.glyphSize = CGFloat(f.glyphSize ?? 40)
         self.sortOrder = f.sortOrder ?? 0
+        self.rootHz = f.rootHz
+        self.binauralHz = f.binauralHz
+        self.soundTexture = f.soundTexture.flatMap(SoundTexture.init(rawValue:))
+        self.brightness = f.brightness
+        self.soundLevel = f.soundLevel
     }
 }
 
@@ -334,4 +374,100 @@ enum PracticeDoorContent {
         case .binduDot:  return .binduDot
         }
     }
+}
+
+// MARK: - Sound Layer
+
+enum SoundRole: String, Hashable {
+    case breath       = "Breath"
+    case arrival      = "Arrival"
+    case practiceDoor = "Practice Door"
+}
+
+enum SoundTexture: String, Hashable {
+    case sine     = "Sine"
+    case triangle = "Triangle"
+    case softSaw  = "Soft Saw"
+    case noiseBed = "Noise Bed"
+    case bowl     = "Bowl"
+    case shimmer  = "Shimmer"
+}
+
+// One of three Field Sound records (Type=Field Sound, Status=Live):
+// Breath (continuous), Arrival (cold-launch threshold), Practice Door
+// (hub-route threshold). Field-by-field fallback to the seeded Breath
+// covers transient gaps; FeedStore.breath also falls back at the
+// collection level if no Live Breath exists at all. Per spec: the
+// Breath must never go silent.
+struct FieldSound: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let role: SoundRole?
+    let rootHz: Double
+    let binauralHz: Double
+    let texture: SoundTexture
+    let brightness: Double
+    let level: Double
+    let attackSeconds: Double
+    let releaseSeconds: Double
+
+    init(
+        id: String,
+        name: String,
+        role: SoundRole?,
+        rootHz: Double,
+        binauralHz: Double,
+        texture: SoundTexture,
+        brightness: Double,
+        level: Double,
+        attackSeconds: Double,
+        releaseSeconds: Double
+    ) {
+        self.id = id
+        self.name = name
+        self.role = role
+        self.rootHz = rootHz
+        self.binauralHz = binauralHz
+        self.texture = texture
+        self.brightness = brightness
+        self.level = level
+        self.attackSeconds = attackSeconds
+        self.releaseSeconds = releaseSeconds
+    }
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        let b = Self.fallbackBreath
+        self.init(
+            id: record.id,
+            name: f.name ?? "",
+            role: f.soundRole.flatMap(SoundRole.init(rawValue:)),
+            rootHz: f.rootHz ?? b.rootHz,
+            binauralHz: f.binauralHz ?? b.binauralHz,
+            texture: f.soundTexture.flatMap(SoundTexture.init(rawValue:)) ?? b.texture,
+            brightness: f.brightness ?? b.brightness,
+            level: f.soundLevel ?? b.level,
+            attackSeconds: f.attackSeconds ?? b.attackSeconds,
+            releaseSeconds: f.releaseSeconds ?? b.releaseSeconds
+        )
+    }
+
+    // The seeded Breath, hard-coded as the never-silent fallback. Used
+    // both per-field (when a Live record has a specific field missing)
+    // and as FeedStore.breath's default when no Live Breath record
+    // exists at all (transient: fetch failed or mid-edit in Airtable).
+    // The inverse of the blank-Status gate: gate on Live, but never let
+    // the field go silent on a transient miss.
+    static let fallbackBreath = FieldSound(
+        id: "fallback-breath",
+        name: "Fallback Breath",
+        role: .breath,
+        rootHz: 110,
+        binauralHz: 4,
+        texture: .sine,
+        brightness: 0.30,
+        level: 0.12,
+        attackSeconds: 12,
+        releaseSeconds: 8
+    )
 }

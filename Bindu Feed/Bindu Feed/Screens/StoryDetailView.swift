@@ -132,6 +132,7 @@ struct StoryDetailView: View {
             depthHoldTask?.cancel()
             depthAutoAdvanceTask?.cancel()
         }
+        .sonicContext(storySonicContext)
         .hubOverlay(open: $showHub, path: $path)
     }
 
@@ -307,6 +308,17 @@ struct StoryDetailView: View {
     // in .onAppear so a name change in Settings surfaces on next return.
     private var arrivalName: String {
         arrivalSettings.name.isEmpty ? "Ash" : arrivalSettings.name
+    }
+
+    // The story's own room — the story carries the room's weather
+    // whether the user reached it from the room or the open feed.
+    // Falls back to .base if the room lookup fails (shouldn't happen
+    // for a well-formed story, but defensive).
+    private var storySonicContext: SonicContext {
+        if let room = store.room(named: story.room) {
+            return .room(room)
+        }
+        return .base
     }
 
     private func formattedAshDate(_ raw: String) -> String {

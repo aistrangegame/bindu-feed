@@ -58,6 +58,7 @@ struct RootView: View {
             .scrollIndicators(.hidden)
         }
         .navigationBarHidden(true)
+        .sonicContext(homeFeedSonicContext)
         .hubOverlay(open: $showHub, path: $path)
     }
 
@@ -181,6 +182,17 @@ struct RootView: View {
     private func archetypes(for storyId: String) -> [Archetype] {
         let names = store.stats(for: storyId).archetypes
         return names.compactMap { name in store.archetype(named: name) }
+    }
+
+    // Sonic context for the home feed: the Breath morphs to the
+    // selected room when the user filters, reverts to .base when they
+    // unfilter. The SonicContext modifier observes this computed value
+    // and pushes changes to the engine.
+    private var homeFeedSonicContext: SonicContext {
+        if let selectedRoom, let room = store.room(named: selectedRoom) {
+            return .room(room)
+        }
+        return .base
     }
 
     private func reloadFeed() async {

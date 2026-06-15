@@ -11,6 +11,7 @@ import SwiftUI
 // the home feed dissolves up underneath via ContentCoordinator.
 struct PracticeDoorView: View {
     @EnvironmentObject private var store: FeedStore
+    @EnvironmentObject private var soundEngine: SoundEngine
     var onComplete: () -> Void
 
     @State private var content: PracticeDoorContent?
@@ -47,6 +48,7 @@ struct PracticeDoorView: View {
         // gesture this surface offers, in both launch and route contexts.
         .navigationBarBackButtonHidden(true)
         .toolbar(.hidden, for: .navigationBar)
+        .sonicContext(.base)
     }
 
     // MARK: - Pre-foundation state
@@ -251,6 +253,15 @@ struct PracticeDoorView: View {
     private func cross() {
         guard hasStarted, !hasCrossed, content != nil else { return }
         hasCrossed = true
+
+        // Practice Door tone — fires every door cross (cold launch +
+        // hub-pushed). Per Model B in the Sound Layer: Practice Door
+        // owns the launch threshold; Arrival fires on foreground
+        // resume (handled in ContentCoordinator's scene-phase change).
+        if let tone = store.practiceDoorTone {
+            soundEngine.playPracticeDoorTone(tone)
+        }
+
         // Door content fades out; coordinator's own dissolve takes over
         // for the Root swap. Notify after the content has visibly settled
         // so the home feed dissolves up "underneath."

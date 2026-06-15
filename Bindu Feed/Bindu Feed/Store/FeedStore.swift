@@ -22,6 +22,11 @@ final class FeedStore: ObservableObject {
 
     @Published var practiceInvitations: [PracticeInvitation] = []
 
+    // Sound Layer — up to 3 records (Breath / Arrival / Practice Door).
+    // Consumed by SoundEngine via the breath / arrivalTone /
+    // practiceDoorTone accessors below.
+    @Published var fieldSounds: [FieldSound] = []
+
     @Published var isLoading = false
     @Published var foundationLoaded = false
     @Published var error: Error? = nil
@@ -201,6 +206,34 @@ final class FeedStore: ObservableObject {
         } catch {
             self.error = error
         }
+    }
+
+    func loadFieldSounds() async {
+        do {
+            self.fieldSounds = try await service.fetchFieldSounds()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    // MARK: - Sound Layer accessors
+    //
+    // The Breath ALWAYS falls back to FieldSound.fallbackBreath — per
+    // the locked decision, the Breath must never go silent (the inverse
+    // of the blank-Status gate). Arrival / Practice Door missing = that
+    // threshold tone is skipped (a silent threshold is fine).
+
+    var breath: FieldSound {
+        fieldSounds.first { $0.role == .breath } ?? .fallbackBreath
+    }
+
+    var arrivalTone: FieldSound? {
+        fieldSounds.first { $0.role == .arrival }
+    }
+
+    var practiceDoorTone: FieldSound? {
+        fieldSounds.first { $0.role == .practiceDoor }
     }
 
     // Field Comments are stored with `Linked Story` pointing at their parent

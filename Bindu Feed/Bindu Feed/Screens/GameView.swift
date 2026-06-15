@@ -106,6 +106,7 @@ struct GameView: View {
         .task(id: TaskKey(room: currentRoom.id, sort: sort)) {
             await loadStoriesForCurrentRoom()
         }
+        .sonicContext(.room(currentRoom))
         .hubOverlay(open: $showHub, path: $path)
     }
 

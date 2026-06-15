@@ -58,6 +58,7 @@ struct RoomSelectionView: View {
                 HubTrigger(open: $showHub)
             }
         }
+        .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }
 

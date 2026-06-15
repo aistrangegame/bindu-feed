@@ -104,6 +104,7 @@ struct TheTurningView: View {
             traceTask?.cancel()
             releaseTask?.cancel()
         }
+        .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }
 

@@ -1,11 +1,12 @@
 import SwiftUI
 
-// Drives token gate → Practice Door → home feed. Phase 9: the Practice
-// Door is the launch surface on every open — it replaced the old
-// auto-dissolving LaunchView and the once-per-day gated door. No date
-// tracking; the door fires every time.
+// Drives token gate → Practice Door → home feed, plus the Sound Layer's
+// lifecycle (engine start post-token, scene-phase fades + Arrival tone
+// on foreground resume per Model B).
 struct ContentCoordinator: View {
     @EnvironmentObject private var store: FeedStore
+    @EnvironmentObject private var soundEngine: SoundEngine
+    @Environment(\.scenePhase) private var scenePhase
 
     @State private var showTokenEntry = false
     @State private var doorCrossed = false
@@ -18,6 +19,7 @@ struct ContentCoordinator: View {
                 TokenEntryView(onSaved: {
                     showTokenEntry = false
                     bootstrap()
+                    startSoundEngine()
                 })
                 .transition(.opacity)
             } else if !doorCrossed {
@@ -36,25 +38,86 @@ struct ContentCoordinator: View {
                 showTokenEntry = true
             } else {
                 bootstrap()
+                startSoundEngine()
+            }
+        }
+        .onChange(of: scenePhase) { phase in
+            handleScenePhase(phase)
+        }
+        .onChange(of: store.fieldSounds) { _ in
+            // When field sounds load (or change after a re-fetch),
+            // refresh the engine's .base Breath snapshot. Per the
+            // locked fallback decision: values normally match the
+            // seeded Breath (silent no-op); if Airtable has been tuned
+            // since launch, the engine crossfades to the new Breath
+            // when currently at .base context.
+            if soundEngine.isRunning {
+                soundEngine.setBaseBreathSnapshot(
+                    VoiceSnapshot(from: store.breath)
+                )
             }
         }
     }
 
-    // Foundation + the three door-content collections (practice, signals,
-    // stories isn't here — adding it would bloat launch by a ~100-record
-    // fetch; the "story that found you" kind is just unavailable until
-    // the home feed loads, and the selector skips kinds with no data).
+    // Foundation + the three door-content collections + Sound Layer.
+    // Stories isn't in bootstrap — see the loadFieldSounds comment in
+    // the data layer commit.
     private func bootstrap() {
         Task { await store.loadFoundation() }
         Task { await store.loadPracticeInvitations() }
         Task { await store.loadSignals() }
+        Task { await store.loadFieldSounds() }
     }
 
-    // Phase 9 retired the once-per-day Practice Door tracking; these keys
-    // were last written by the old gated-door logic and have no current
-    // readers. removeObject is idempotent, so running this every launch
-    // is a no-op after the first call clears them — no migration flag
-    // needed.
+    // The Breath arrives the moment the field is reachable (per
+    // decision D — quiet until token). The first Breath fade-in
+    // coincides with the Practice Door tone bloom — the app's first
+    // breath is its first arrival (Model B framing).
+    //
+    // Field sounds load asynchronously via bootstrap(); the engine
+    // starts with whatever store.breath returns NOW. Fallback if not
+    // loaded yet, real if loaded. Per the locked fallback decision,
+    // fallback values match seeded Breath exactly, so any race is
+    // silent — the onChange handler above picks up the real values
+    // if/when they arrive different.
+    private func startSoundEngine() {
+        soundEngine.start()
+        let breath = store.breath
+        soundEngine.startBreath(
+            snapshot: VoiceSnapshot(from: breath),
+            attackSeconds: breath.attackSeconds
+        )
+    }
+
+    // Per Model B: Arrival fires on becomeActive (welcome back, not
+    // first arrival — that's Practice Door's job). The Breath fades
+    // out on background/inactive and back in on active over a shorter
+    // ramp than the cold-launch attack (~2.5s vs 12s — a return
+    // shouldn't re-stage the ceremony).
+    //
+    // onChange of scenePhase only fires on actual changes — the cold-
+    // launch initial .active state doesn't trigger this handler, so
+    // there's no risk of Arrival firing alongside Practice Door at
+    // launch.
+    private func handleScenePhase(_ phase: ScenePhase) {
+        switch phase {
+        case .background, .inactive:
+            soundEngine.fadeOutBreath()
+        case .active:
+            soundEngine.fadeInBreath()
+            if let arrival = store.arrivalTone {
+                soundEngine.playArrivalTone(arrival)
+            }
+        @unknown default:
+            break
+        }
+    }
+
+    // Phase 9 retired the once-per-day Practice Door tracking; these
+    // keys were last written by the old gated-door logic and have no
+    // current readers. removeObject is idempotent, so running this
+    // every launch is a no-op after the first call clears them — no
+    // migration flag needed.
     private static func removeRetiredUserDefaultsKeys() {
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: "bindu.practice.lastShownDate")

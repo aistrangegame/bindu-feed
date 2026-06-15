@@ -92,6 +92,7 @@ struct PlayersView: View {
                     .foregroundColor(BinduTheme.inkTertiary)
             }
         }
+        .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }
 

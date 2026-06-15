@@ -14,7 +14,7 @@ Bindu Feed is a living consciousness feed — an iOS SwiftUI app that renders on
 
 ## 2. Current build state
 
-**Phases 1–9 complete** as of 2026-06-14. The branch `phase-9` carries all of Phase 9; `main` holds the pre-Phase-9 baseline. After the §12 device verification, the branch merges.
+**Phases 1–9 complete** as of 2026-06-14. **Sound Layer landed 2026-06-15** on branch `sound-layer` (cut off `phase-9`). Merge order: `phase-9` → `main` → `sound-layer` → `main` — timing is Ashrey's call.
 
 - iOS 17.6 deployment target (project.pbxproj); spec/intent is iOS 16+ — see §11
 - iPhone only, portrait only, dark mode only
@@ -63,6 +63,9 @@ Shared SwiftUI subviews. All reachable; nothing orphaned. Notable: `HubTrigger` 
 
 ### `Screens/` (13 files)
 One file per screen — see §5 for the full screen↔route map.
+
+### `Sound/` (5 files)
+The audio engine — continuous Breath voice that morphs across rooms via equal-power crossfade, transient threshold blooms over the Breath, no recorded audio anywhere. `SoundEngine.swift` (control plane) · `SoundSnapshot.swift` (lock-free-in-practice holders) · `BreathVoice.swift` (Voice A — 6 textures, 0.1Hz LFO, binaural dual-osc or single centered tone) · `ThresholdTone.swift` (Voice B — Bowl bloom-and-decay) · `SonicContext.swift` (resolver + view modifier). See §15.
 
 ---
 
@@ -379,7 +382,111 @@ These are inert, harmless, and documented here so a future audit doesn't re-flag
 
 ---
 
-## 15. Related docs
+## 15. The Sound Layer
+
+Three generated audio layers (no recorded audio anywhere), all synthesized live from Airtable parameters. **Slow. Intimate. Already there.** for sound means: nothing percussive, earbud-close and quiet, fades in below conscious notice — as if it was always humming.
+
+### The two-voice principle
+
+This is **not** four sources playing together. It is **one continuous voice** that morphs, plus **one transient voice** that blooms occasionally over it.
+
+- **Voice A — the Breath** (continuous). One synth voice, always running while the app is foregrounded. Room transitions = spawn a new BreathVoice with the room's parameters; equal-power crossfade between the two over 4s (sin/cos curves); old voice releases when its level reaches zero. **At most two BreathVoices coexist** — coalescing in `crossfadeTo` detaches any prior outgoing so rapid tapping through rooms never stacks.
+- **Voice B — threshold tones** (transient). Bowl-tone blooms over the Breath at natural level (0.30–0.35, above Breath's 0.12 — no ducking needed). Two occasions: Practice Door crossing (every cross) and foreground resume (Arrival). Never two threshold tones stacked.
+
+A future voice / Resonance-bloom layer would duck Voice A on hold (`SoundEngine.duckBreath()` stub is in place — currently empty, the locked scope is only the three generated layers).
+
+### Data — 8 fields on `The Feed`
+
+| Field | Field ID | Type | Range / values |
+|---|---|---|---|
+| Sound Role | `fldQKW12Hu7yFslap` | singleSelect | Breath / Arrival / Practice Door |
+| Root Hz | `fldqqFJYKKaRicDQ8` | number(2) | fundamental drone (Hz) |
+| Binaural Hz | `fld1evT7LZmbTawSz` | number(2) | L/R offset (Hz); 0 = none |
+| Sound Texture | `fldEoXKvjHsnJGeBH` | singleSelect | Sine / Triangle / Soft Saw / Noise Bed / Bowl / Shimmer |
+| Brightness | `fldZKuz38klXDPnmg` | number(2) | 0–1 (log-mapped low-pass cutoff: ~200 Hz → ~6 kHz) |
+| Sound Level | `fldV2RRfX0KCLEuNV` | number(2) | 0–1 amplitude (kept low — Breath ~0.12) |
+| Attack (s) | `fldGgTI7WBOeA0HcU` | number(1) | fade-in seconds |
+| Release (s) | `fld0PupsmwLC7Ty4r` | number(1) | fade-out / decay seconds |
+
+A new `Type` option `Field Sound` (`sel2RjHKVzWfBbWr9`) discriminates the audio records. Field Sound records carry all 8 fields. Room records carry the middle 5 (no Sound Role / Attack / Release — room transitions use the global 4s crossfade, not per-room timings).
+
+**`Status='Live'` applies to sound too** — the blank-Status lesson (§6) extends here. A Field Sound record without `Status='Live'` is silent. `FieldSound.fallbackBreath` is the never-silent safety net: hard-coded values matching the seeded Breath exactly, used when fetch fails, no Live Breath exists yet, or per-field gaps in a Live record. The Breath must never go silent — this is the inverse of the gate.
+
+### Seeded records (data-side sign-off 2026-06-15)
+
+3 Field Sound records (`Type=Field Sound`, `Status=Live`):
+- **Breath** `recH0qRgSGB9OP28c` — 110 Hz, 4 Hz binaural, Sine, brightness 0.30, level 0.12, attack 12, release 8
+- **Arrival** `recCg24pJamAthNwv` — 220 Hz, 4 Hz binaural, Bowl, brightness 0.55, level 0.35, attack 0.5, release 7
+- **Practice Door** `recZQzYxCHiloON4X` — 164.81 Hz, 4 Hz binaural, Bowl, brightness 0.45, level 0.30, attack 0.8, release 8
+
+13 Room records carry their own sound coloration (G2–G3 range, consonant intervals around A2/110 Hz). Design logic: pitch maps to weight (Descent lowest 98 Hz → Signal highest 196 Hz); brightness to clarity (Forgetting darkest 0.18 → Signal brightest 0.80); texture to quality (Shimmer = luminous rooms, Noise Bed = embodied/hazy, Triangle = structured/forged, Sine = the rest); binaural sits in theta/low-alpha (3–5 Hz) for inward rooms, higher (6–7) for alert ones. All levels ~0.10–0.13 — everything barely there.
+
+**Every value is tunable from Airtable with no rebuild.** Pickup is on next app launch (`bootstrap()` re-fetches via `loadFieldSounds`). If field values change while the app is running, `.onChange(of: store.fieldSounds)` in `ContentCoordinator` calls `engine.setBaseBreathSnapshot(...)` and the engine crossfades if the new values differ from the in-flight Breath.
+
+### SonicContext resolver + precedence
+
+Each surface reports its sonic context via the `.sonicContext(...)` view modifier; the engine's `setContext(_:)` resolves "context → target snapshot" and crossfades. **Single source of truth — no scattered set/restore hooks, no "leave" calls, no SwiftUI lifecycle race.** Latest report wins; coalescing absorbs rapid changes.
+
+| Surface | Sonic context |
+|---|---|
+| Home feed (all rooms) | `.base` |
+| Home feed (room filtered) | `.room(filtered room)` |
+| RoomSelectionView | `.base` |
+| GameView | `.room(currentRoom)` — morphs as arrow chevrons cycle through the 13 rooms |
+| Story Detail | `.room(story's own room)` — **always**; the story carries its room's weather regardless of how the user reached it (resolved via the existing story↔room association, no new tracking) |
+| Mirror, Signal Space, The Turning, Players, Ash's Voice, Settings | `.base` — places you meet the field directly, no room's weather over them |
+| Practice Door | `.base` (and the Practice Door tone blooms over the Breath on cross) |
+| Hub overlay | **no change** — transient overlay, leaves context underneath alone (no `.sonicContext(...)` call) |
+
+Per-surface coloration for Mirror / Signal Space is a trivial future add (same 8 fields apply, those records already live on the same table); deliberately deferred to hold the locked three-layer scope.
+
+### Model B — Practice Door owns the launch threshold
+
+Two threshold-tone occasions:
+
+1. **Practice Door crossing** — fires the Practice Door tone (0.8s attack / 8s release). Every door cross: cold launch AND hub-pushed. Wired in `PracticeDoorView.cross()`.
+2. **Foreground resume** — fires the Arrival tone (0.5s / 7s) alongside the Breath fade-in (~2.5s ramp; not the full 12s cold-launch attack — a return isn't a first arrival, doesn't re-stage the ceremony). Wired in `ContentCoordinator.handleScenePhase(.active)`. **Does not fire on cold launch** — `.onChange(of: scenePhase)` doesn't trigger for the initial `.active` state, so Arrival and Practice Door can never stack.
+
+The engine starts post-token in `ContentCoordinator.startSoundEngine()` (per the locked decision: quiet until the field is reachable). The first Breath fade-in coincides with the Practice Door tone bloom — the app's first breath is its first arrival.
+
+### Speaker fallback
+
+When not on headphones (built-in speaker, receiver), both BreathVoice and ThresholdTone collapse to a single centered tone at Root Hz (no binaural offset). Honest about what a speaker can deliver — no fake LFO at the binaural rate pretending to be binaural.
+
+Route detection observes `AVAudioSession.routeChangeNotification` and publishes to a lock-free `RouteStateHolder` the audio thread reads each render. Headphone-equivalent ports: wired headphones, Bluetooth (A2DP / HFP / LE), AirPlay, USB audio. All else falls back to centered tone.
+
+### AVAudioSession contract
+
+`.ambient` + `.mixWithOthers`:
+- **Honors the silent switch.** The field never imposes.
+- **Mixes with the user's own audio.** Their music keeps playing under the Breath; we never hijack the device's audio.
+- **Foreground only.** No background mode — the Breath stops on backgrounding (faded out gracefully).
+- **Yields on interruption.** Calls / alarms / Siri pause the engine; resume only if the system signals `.shouldResume`.
+
+### Render-path discipline
+
+The AVAudioSourceNode blocks (BreathVoice, ThresholdTone) run on the audio thread and read parameters from `OSAllocatedUnfairLock`-backed holders. They never await the actor and never block on contention — writes only on room change (~once per minutes); reads per audio buffer (~few ms); lock acquisition completes in nanoseconds. Apple's recommended fast primitive for this profile.
+
+### Verification status
+
+**Sim-verified (2026-06-15):** engine starts post-token, Breath fades in, room crossfades (rapid cycling stays capped at two voices), Practice Door bloom on cross, Arrival bloom on foreground resume, scene-phase fades, `mainMixerNode` auto-create / engine-running-before-attach, AVAudioSession honors the silent switch, `.mixWithOthers` doesn't hijack other audio.
+
+**Deploy-verified (pending):** the binaural dual-oscillator path itself. The iOS Simulator reports as built-in / no-headphones, so the sim runs the single-centered-tone fallback — the actual binaural beat is on-device-first, by design. Coincides with Ashrey's first hearing on Neev at deploy.
+
+### Sound Layer deferred
+
+| Item | Notes |
+|---|---|
+| Lock → true lock-free upgrade | `OSAllocatedUnfairLock` is Apple's recommended fast primitive; this profile (writes only on room change, reads per audio buffer) has effectively zero contention and the render thread never blocks. True lock-free via Swift Atomics SPM dep is the upgrade path if audio glitches ever appear at this layer |
+| `onChange(of:perform:)` modernization | `SonicContextModifier` and `ContentCoordinator`'s scene-phase / fieldSounds observers use the deprecated single-param signature to match the existing codebase pattern (already ~10 sites in §11). One sweep modernizes all together |
+| Binaural-on-headphones path | Deploy-first, not sim-verified. First hearing on Neev |
+| Per-surface coloration for Mirror / Signal Space | Trivial future add (same 8 fields apply); deferred to hold the locked three-layer scope |
+| Voice / Resonance ducking | `duckBreath()` stub is empty — the Sound Layer's scope is the three generated layers only |
+| Bootstrap fetch order | If a future audio behavior needs Field Sounds *before* engine starts (rather than after, with fallback), tighten the sequencing. Not needed today because fallbackBreath values exactly match the seeded Breath |
+
+---
+
+## 16. Related docs
 
 - [`BINDU_FEED_CLAUDE_CODE.md`](../BINDU_FEED_CLAUDE_CODE.md) — original master spec, Phases 1–8
 - [`bindu-feed-phase9-handoff/`](../bindu-feed-phase9-handoff/) — Phase 9 design handoff bundle (`00-START-HERE.md`, `DESIGN_HANDOFF.md`, `BINDU_FEED_PHASE_9_NEW_LAYER.md`, `AIRTABLE-DATA-TRUTH.md`, `BINDU_FEED_CONTENT_INVENTORY.md`, `DESIGN-WORKING-AGREEMENT.md`, prototypes/, soul/)

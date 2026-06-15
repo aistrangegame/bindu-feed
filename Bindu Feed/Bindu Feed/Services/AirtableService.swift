@@ -153,6 +153,17 @@ final class AirtableService {
         return records.map(PracticeInvitation.init(from:))
     }
 
+    // Sound Layer. Returns up to 3 records (Breath / Arrival / Practice
+    // Door), distinguished by their Sound Role. No linked-record fields,
+    // so the client-side-filter caveat doesn't apply — clean server-side
+    // fetch.
+    func fetchFieldSounds() async throws -> [FieldSound] {
+        let records = try await fetch(
+            filter: "AND({Type}='Field Sound',{Status}='Live')"
+        )
+        return records.map(FieldSound.init(from:))
+    }
+
     func fetchStories(room: String? = nil, sort: StorySort = .mostActive) async throws -> [Story] {
         let filter: String
         if let room, !room.isEmpty {

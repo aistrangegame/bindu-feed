@@ -90,6 +90,7 @@ struct AshVoiceView: View {
         .task {
             await load()
         }
+        .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }
 

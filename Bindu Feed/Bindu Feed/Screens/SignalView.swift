@@ -63,6 +63,7 @@ struct SignalView: View {
         .task(id: store.foundationLoaded) {
             await loadIfNeeded()
         }
+        .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }
 

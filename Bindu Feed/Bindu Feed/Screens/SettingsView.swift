@@ -60,6 +60,7 @@ struct SettingsView: View {
             }
         }
         .onAppear(perform: loadSavedSettings)
+        .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }
 
