@@ -4,6 +4,11 @@
 
 This file is the persistent memory for Bindu Feed. A fresh Claude Code session reading this should know what the app is, what's already decided, and what cannot be undone. **Phase 9 landed 2026-06-14**; this document is its true record — written after a code-side structural audit ([`bindu-feed-phase9-audit.md`](../bindu-feed-phase9-audit.md)) and a data-side inventory were reconciled, the punch list was resolved, and both halves saw the thing whole.
 
+**The Instrument era (Aug 2026) builds on top of this** — the `phase-9` + `sound-layer` frontier is now merged into `main`. Its sources of truth:
+- The design bundle: `Claude Design Round 1/` (`The Instrument v3.html` at its center) + `~/Downloads/a-strange-feed-CLAUDE-CODE-HANDOFF.md` (read with its branch-reality correction — the frontier the handoff missed is this merge).
+- Extracted canon, do not paraphrase: `canon/` — `spine-light.js` (the Light's six scenes), `spine-sound.js` (the 9 travel/stillness calls), `point-content.js` (the 66 Point stars).
+- The old `BINDU_FEED_CLAUDE_CODE.md` and the `A Strange Feed/` comps are retired to `archive/` (Phase 1–7 history only).
+
 ---
 
 ## 1. What this app is
