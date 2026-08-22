@@ -551,6 +551,58 @@ final class FeedStore: ObservableObject {
         return voices.isEmpty ? RiteVoices.all : voices
     }
 
+    // Today's Return — a story the user has actually SEALED (their own words on it),
+    // picked deterministically per local day (a DIFFERENT hash than the Rite, so the
+    // Return and the Rite never land on the same story on the same day) and standing
+    // alone. The sealedSelf is the user's real prior words — NEVER generated; the anew
+    // voices are the real field comments that spoke on it. Returns nil (→ canon) when
+    // the feed isn't reachable or nothing has been sealed yet.
+    func returnData() async -> ReturnStoryData? {
+        guard !stories.isEmpty else { return nil }
+        let ash: [FieldComment]
+        do { ash = try await service.fetchAllAshComments() } catch { return nil }
+        // the most recent own-words per story — the self he sealed there
+        var sealedByStory: [String: FieldComment] = [:]
+        for c in ash {
+            guard let sid = c.linkedStoryId, !c.body.isEmpty else { continue }
+            if let existing = sealedByStory[sid] {
+                if c.sourceDate > existing.sourceDate { sealedByStory[sid] = c }
+            } else {
+                sealedByStory[sid] = c
+            }
+        }
+        let candidates = stories.filter { sealedByStory[$0.id] != nil }
+        guard !candidates.isEmpty else { return nil }
+        let key = "return." + AirtableService.localDayString()
+        var h: UInt32 = 2166136261
+        for b in key.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
+        let story = candidates[Int(h % UInt32(candidates.count))]
+        guard let sealed = sealedByStory[story.id] else { return nil }
+        // the voices that kept sitting with it — real field comments (never the past self)
+        let field = await loadComments(for: story.id).field
+        var anew: [ReturnCanon.AnewVoice] = []
+        var seen = Set<String>()
+        for c in field {
+            let k = c.archetype.lowercased()
+            guard !k.isEmpty, k != "ash", !seen.contains(k), !c.body.isEmpty, !c.isBinduSilence else { continue }
+            seen.insert(k)
+            anew.append(ReturnCanon.AnewVoice(name: c.archetype, line: c.body))
+            if anew.count >= 2 { break }
+        }
+        let room = room(named: story.room)
+        let paras = story.body
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        return ReturnStoryData(
+            title: story.title, roomName: story.room, roomColor: room?.color ?? RiteCanon.roomColor,
+            codexId: story.codexId, date: story.sourceDate,
+            body: paras.isEmpty ? [story.body] : paras,
+            sealedWhen: ReturnCanon.sealedWhenPhrase(fromDay: sealed.sourceDate),
+            sealedSelf: sealed.body,
+            anew: anew.isEmpty ? ReturnCanon.anew : anew)
+    }
+
     /// The Door's weather read: is today already met? True if the local same-day cache is
     /// set (a Rite completed on this device today) OR App Activity has today's Story Met.
     /// Fail-safe to `false` (unmet).

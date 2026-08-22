@@ -187,7 +187,9 @@ struct RootView: View {
         case .light:
             LightView(path: $path)
         case .returnCeremony:
-            ReturnView(path: $path)
+            // ReturnRoute loads today's real sealed story (rotating, standing alone)
+            // before showing the Return; falls back to canon when nothing's sealed yet.
+            ReturnRoute(path: $path)
         case .instrument(let z):
             InstrumentView(path: $path, startZ: z)
         }
@@ -245,6 +247,35 @@ private struct RiteRoute: View {
                 data = RiteStoryData(story: s, room: store.room(named: s.room))
                 voices = await store.riteVoices(for: s)
             }
+            loaded = true
+        }
+    }
+}
+
+// Loads today's real sealed story (rotating day over day, standing alone), then shows
+// the Return. Falls back to canon when the feed isn't reachable or nothing is sealed yet.
+private struct ReturnRoute: View {
+    @Binding var path: NavigationPath
+    @EnvironmentObject private var store: FeedStore
+    @State private var data: ReturnStoryData = .canon
+    @State private var loaded = false
+
+    var body: some View {
+        Group {
+            if loaded {
+                ReturnView(path: $path, storyData: data)
+            } else {
+                ZStack {
+                    BinduTheme.bgDeep.ignoresSafeArea()
+                    Text("a story is returning to you…")
+                        .font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
+                }
+            }
+        }
+        .task {
+            guard !loaded else { return }
+            if store.stories.isEmpty { await store.loadStories() }
+            if let d = await store.returnData() { data = d }
             loaded = true
         }
     }

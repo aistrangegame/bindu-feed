@@ -17,6 +17,7 @@ private enum ReturnStage { case summons, fall, room, story, record, field, rings
 
 struct ReturnView: View {
     @Binding var path: NavigationPath
+    var storyData: ReturnStoryData = .canon        // TODAY's sealed story (rotating), or canon
     @EnvironmentObject private var soundEngine: SoundEngine
 
     @State private var stage: ReturnStage = .summons
@@ -25,7 +26,8 @@ struct ReturnView: View {
     @State private var replyText = ""
     @State private var sealPhase = 0
 
-    private let prompt = ReturnCanon.replyPrompt(prior: ReturnCanon.sealedSelf)
+    // The Reply quotes his real prior words (never generated) — from THIS story's sealed self.
+    private var prompt: ReturnCanon.ReplyPrompt { ReturnCanon.replyPrompt(prior: storyData.sealedSelf) }
 
     var body: some View {
         ZStack {
@@ -77,9 +79,9 @@ struct ReturnView: View {
         centered {
             Text(ReturnCanon.summonsKicker).font(.spaceMono(9)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
             Text(ReturnCanon.summonsLine).font(.lora(14)).italic().foregroundStyle(BinduTheme.inkSecondary)
-            Text(RiteCanon.title).font(.lora(26, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
+            Text(storyData.title).font(.lora(26, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
                 .multilineTextAlignment(.center).padding(.top, 6)
-            Text("\(RiteCanon.codexId) · sealed \(ReturnCanon.sealedWhen)")
+            Text("\(storyData.codexId) · sealed \(storyData.sealedWhen)")
                 .font(.spaceMono(9)).tracking(1).foregroundStyle(BinduTheme.inkTertiary)
             hint(ReturnCanon.summonsHint)
         }
@@ -90,7 +92,7 @@ struct ReturnView: View {
     // (the fall — a fade; the axis fall ships Wave 6)
     private var fall: some View {
         centered {
-            Text("\(RiteCanon.codexId)")
+            Text("\(storyData.codexId)")
                 .font(.spaceMono(10)).tracking(2).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
                 .modifier(RiteBreathe())
         }
@@ -105,8 +107,8 @@ struct ReturnView: View {
     // II · Aged Room
     private var room: some View {
         centered {
-            Text(ReturnCanon.roomRemembers).font(.spaceMono(9)).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
-            Text(ReturnCanon.roomLine).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
+            Text(ReturnCanon.roomRemembers(room: storyData.roomName)).font(.spaceMono(9)).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
+            Text(ReturnCanon.roomLine(when: storyData.sealedWhen)).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center).padding(.top, 10)
             hint(ReturnCanon.roomHint)
         }
@@ -118,9 +120,9 @@ struct ReturnView: View {
     private var storyAgain: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                Text(RiteCanon.title).font(.lora(23, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary).padding(.top, 56)
+                Text(storyData.title).font(.lora(23, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary).padding(.top, 56)
                 Text(ReturnCanon.storyUnchanged).font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-                ForEach(Array(RiteCanon.body.enumerated()), id: \.offset) { _, p in
+                ForEach(Array(storyData.body.enumerated()), id: \.offset) { _, p in
                     Text(p).font(.lora(16)).lineSpacing(7).foregroundStyle(BinduTheme.inkPrimary)
                 }
                 Button { cross(168, .record) } label: {
@@ -145,8 +147,8 @@ struct ReturnView: View {
                     }
                     .saturation(0.5).brightness(-0.04)     // .pressed — the aged gathering
                 }
-                Text(ReturnCanon.recordSealedYou).font(.spaceMono(9)).tracking(0.5).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
-                Text(ReturnCanon.sealedSelf)
+                Text(ReturnCanon.recordSealedYou(when: storyData.sealedWhen)).font(.spaceMono(9)).tracking(0.5).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
+                Text(storyData.sealedSelf)
                     .font(.loraItalic(15)).lineSpacing(6)
                     .foregroundStyle(ReturnCanon.ashColor)
                     .saturation(0.85)                       // .dried — the past self, ash terracotta
@@ -166,20 +168,20 @@ struct ReturnView: View {
     private var fieldAnew: some View {
         centered {
             Text(ReturnCanon.fieldAnewTitle).font(.spaceMono(9)).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
-            ForEach(Array(ReturnCanon.anew.prefix(max(1, anewShown)).enumerated()), id: \.offset) { _, v in
+            ForEach(Array(storyData.anew.prefix(max(1, anewShown)).enumerated()), id: \.offset) { _, v in
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(v.name) · now").font(.spaceMono(9)).tracking(0.5).foregroundStyle(BinduTheme.inkTertiary)
                     Text(v.line).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkPrimary)
                 }
                 .transition(.opacity).padding(.top, 8)
             }
-            Text("\(min(max(1, anewShown), ReturnCanon.anew.count)) / \(ReturnCanon.anew.count) · the rest keep their record")
+            Text("\(min(max(1, anewShown), storyData.anew.count)) / \(storyData.anew.count) · the rest keep their record")
                 .font(.spaceMono(8)).tracking(1).foregroundStyle(BinduTheme.inkTertiary).padding(.top, 10)
         }
         .contentShape(Rectangle())
         .onAppear { if anewShown == 0 { anewShown = 1; soundEngine.riteVoice(hz: 285, dur: 7) } }
         .onTapGesture {
-            if anewShown < ReturnCanon.anew.count {
+            if anewShown < storyData.anew.count {
                 withAnimation(.easeInOut(duration: 1.2)) { anewShown += 1 }
                 soundEngine.riteVoice(hz: 396, dur: 7)
             } else {
@@ -205,7 +207,7 @@ struct ReturnView: View {
     private var reply: some View {
         VStack(spacing: 16) {
             Spacer()
-            Text("◉ you, now · in reply to you, \(ReturnCanon.sealedWhen)")
+            Text("◉ you, now · in reply to you, \(storyData.sealedWhen)")
                 .font(.spaceMono(9)).tracking(0.5).foregroundStyle(ReturnCanon.ashColor)
             if let frame = prompt.frame, let quote = prompt.quote {
                 Text(frame).font(.spaceMono(9)).tracking(1).foregroundStyle(BinduTheme.inkTertiary)

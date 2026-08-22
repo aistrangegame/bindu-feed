@@ -26,13 +26,16 @@ enum ReturnCanon {
     static let summonsKicker  = "a story has returned to you"
     static let summonsLine    = "You did not go looking for it."
     static let summonsHint    = "touch to return"
-    static let roomRemembers  = "the room remembers you · \(RiteCanon.roomName)"
-    static let roomLine       = "You sealed this one \(sealedWhen). The field kept breathing while you were gone — slower now, warmer, like a room lit by what\u{2019}s left of a fire."
+    // Story-dependent lines are functions now — the Return rotates day over day and
+    // stands alone, so its room and its "how long ago" come from the sealed story, not
+    // a single baked-in canon story.
+    static func roomRemembers(room: String) -> String { "the room remembers you · \(room)" }
+    static func roomLine(when: String) -> String { "You sealed this one \(when). The field kept breathing while you were gone — slower now, warmer, like a room lit by what\u{2019}s left of a fire." }
     static let roomHint       = "the same story · a changed self"
     static let storyUnchanged = "Nothing here has changed. Not one word has settled."
     static let storyButton    = "everything that was already here →"
     static let recordIntro    = "Everything that was already here, kept exactly as it was sealed."
-    static let recordSealedYou = "◉ and then you sealed yours · \(sealedWhen)"
+    static func recordSealedYou(when: String) -> String { "◉ and then you sealed yours · \(when)" }
     static let recordSettled  = "The ink has settled. This is what you knew, before you knew what you know now."
     static let recordButton   = "the field kept speaking after you left →"
     static let fieldAnewTitle = "who kept sitting with it"
@@ -104,4 +107,46 @@ enum ReturnCanon {
         }
         return ReplyPrompt(frame: nil, quote: nil, ask: "What arrived for you?")
     }
+
+    // "N days ago" / "yesterday" / "today" from a yyyy-MM-dd Source Date — local,
+    // POSIX/Gregorian-fixed (the day-key discipline, §9). Falls back to the canon
+    // phrase when the date is missing or unparseable.
+    static func sealedWhenPhrase(fromDay day: String) -> String {
+        let key = String(day.prefix(10))
+        guard !key.isEmpty else { return sealedWhen }
+        let df = DateFormatter()
+        df.calendar = Calendar(identifier: .gregorian)
+        df.locale = Locale(identifier: "en_US_POSIX")
+        df.timeZone = .current
+        df.dateFormat = "yyyy-MM-dd"
+        guard let then = df.date(from: key) else { return sealedWhen }
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = .current
+        let start = cal.startOfDay(for: then), now = cal.startOfDay(for: Date())
+        let days = cal.dateComponents([.day], from: start, to: now).day ?? 0
+        if days <= 0 { return "today" }
+        if days == 1 { return "yesterday" }
+        return "\(days) days ago"
+    }
+}
+
+// A Return's story — a story the user has SEALED (has their own words on), rotating
+// day over day and standing alone, or the canon fallback when the feed isn't reachable
+// or nothing has been sealed yet. The sealedSelf is ALWAYS the user's real prior words
+// (never generated); anew are real field voices that spoke after.
+struct ReturnStoryData {
+    let title: String
+    let roomName: String
+    let roomColor: Color
+    let codexId: String
+    let date: String
+    let body: [String]
+    let sealedWhen: String
+    let sealedSelf: String
+    let anew: [ReturnCanon.AnewVoice]
+
+    static let canon = ReturnStoryData(
+        title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
+        codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body,
+        sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew)
 }
