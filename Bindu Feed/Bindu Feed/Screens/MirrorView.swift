@@ -228,11 +228,7 @@ struct MirrorView: View {
 
     // Local time on purpose — "today" should match what the user reads on
     // their phone, not UTC. Crossing midnight locally rolls to a new card.
-    private static var dayKey: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: Date())
-    }
+    private static var dayKey: String { AirtableService.localDayString() }   // POSIX/Gregorian/local
 
     private var prettyDayLabel: String {
         let f = DateFormatter()

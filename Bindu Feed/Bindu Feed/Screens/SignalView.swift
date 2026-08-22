@@ -260,11 +260,7 @@ struct SignalView: View {
 
     // Local time — "today's signal" matches the user's day, not a UTC
     // server's day. See feedback-local-time-day-keys.
-    private static var dayKey: String {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: Date())
-    }
+    private static var dayKey: String { AirtableService.localDayString() }   // POSIX/Gregorian/local
 
     private static func fnv1a(_ s: String) -> UInt32 {
         var h: UInt32 = 2166136261

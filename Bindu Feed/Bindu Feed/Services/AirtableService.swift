@@ -49,6 +49,38 @@ final class AirtableService {
 
     private var token: String { KeychainService.load(tokenKey) ?? "" }
 
+    /// The local Gregorian day-key ("yyyy-MM-dd"), POSIX- and Gregorian-fixed so a
+    /// non-Gregorian device calendar/locale can't corrupt the string, and pinned to the
+    /// device's own timezone (CLAUDE.md §9: the user's day is the day their phone shows
+    /// them). Every date the app WRITES and every day-key it COMPARES flows through this,
+    /// so writes and reads can never disagree on which day it is.
+    static func localDayString(_ date: Date = Date()) -> String {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = .current
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
+    }
+
+    /// A page decode that never fails on one bad record — each record is decoded through a
+    /// Failable wrapper (which always succeeds, capturing nil on a malformed row), so a
+    /// single decimal-in-an-Int-field can't take down the whole fetch.
+    private struct ResilientPage: Decodable {
+        let records: [AirtableRecord]
+        let offset: String?
+        private struct FailableRecord: Decodable {
+            let value: AirtableRecord?
+            init(from decoder: Decoder) throws { value = try? AirtableRecord(from: decoder) }
+        }
+        enum CodingKeys: String, CodingKey { case records, offset }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            offset = try c.decodeIfPresent(String.self, forKey: .offset)
+            records = try c.decode([FailableRecord].self, forKey: .records).compactMap { $0.value }
+        }
+    }
+
     private let session: URLSession = {
         let cfg = URLSessionConfiguration.default
         cfg.timeoutIntervalForRequest = 20
@@ -102,7 +134,11 @@ final class AirtableService {
             try Self.validate(response: response, data: data)
 
             do {
-                let page = try decoder.decode(AirtableResponse.self, from: data)
+                // Resilient decode: drop (not throw on) any single malformed record — one
+                // stray decimal in an Int field (Sort Order, Resonance, …) used to fail the
+                // ENTIRE page, blanking every room/story/comment. Now the bad row is skipped
+                // and the rest of the surface still loads.
+                let page = try decoder.decode(ResilientPage.self, from: data)
                 collected.append(contentsOf: page.records)
                 offset = page.offset
             } catch {
@@ -243,7 +279,10 @@ final class AirtableService {
 
     func fetchArchetypeComments(archetypeName: String) async throws -> [FieldComment] {
         let escaped = archetypeName.replacingOccurrences(of: "'", with: "\\'")
-        let filter = "AND({Type}='Field Comment',{Status}='Live',{Archetype}='\(escaped)')"
+        // Ash's own words are Type='Ash Comment', not 'Field Comment' — filtering on
+        // Field Comment made Ash's Turning render permanently empty ("No words yet.").
+        let commentType = archetypeName == "Ash" ? "Ash Comment" : "Field Comment"
+        let filter = "AND({Type}='\(commentType)',{Status}='Live',{Archetype}='\(escaped)')"
         let records = try await fetch(
             filter: filter,
             sort: [(field: "Comment Order", direction: "desc")]
@@ -303,7 +342,10 @@ final class AirtableService {
             "Archetype": archetypeName,
             "Linked Story": [storyId],
             "Comment Order": 999,
-            "Resonance": 0
+            "Resonance": 0,
+            // Source Date is what Ash's Voice sorts by (desc). Without it, Airtable sorts
+            // the blank to the BOTTOM, so a just-posted comment sank below the old ones.
+            "Source Date": Self.localDayString()
         ]
         if let parentCommentId {
             fields["Parent Comment"] = [parentCommentId]
@@ -352,10 +394,7 @@ final class AirtableService {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: "\(baseURLString)/\(storyId)") else { throw AirtableError.badURL }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "UTC")
-        let today = formatter.string(from: Date())
+        let today = Self.localDayString()   // local day-key (was UTC — contradicted §9)
 
         let payload: [String: Any] = [
             "fields": ["Last Activity Date": today]
@@ -448,9 +487,7 @@ final class AirtableService {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: appActivityURLString) else { throw AirtableError.badURL }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"   // local time — matches the day-key convention
-        let today = formatter.string(from: Date())
+        let today = Self.localDayString()   // local, POSIX/Gregorian-fixed day-key
 
         var fieldsDict: [String: Any] = [
             "Activity Name": activityName,
@@ -499,10 +536,7 @@ final class AirtableService {
     /// the Rite rather than wrongly skipping it.
     func isTodayMet() async -> Bool {
         guard !token.isEmpty else { return false }
-        let fmt = DateFormatter()
-        fmt.dateFormat = "yyyy-MM-dd"
-        fmt.timeZone = .current                          // local day-key, matching the write
-        let today = fmt.string(from: Date())
+        let today = Self.localDayString()                // same helper the write uses
 
         // BUG FIX (2026-08-22): the old query wrapped the date match in
         // DATETIME_FORMAT({Activity Date},'YYYY-MM-DD')='today' — verified against the
@@ -561,10 +595,7 @@ final class AirtableService {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: "\(baseURLString)/\(storyId)") else { throw AirtableError.badURL }
 
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.timeZone = TimeZone(identifier: "UTC")
-        let today = formatter.string(from: Date())
+        let today = Self.localDayString()   // local day-key (was UTC — contradicted §9)
 
         let payload: [String: Any] = [
             "fields": ["Last Depth Date": today]
@@ -586,8 +617,10 @@ final class AirtableService {
     /// Sentence Weight (1–5) is used directly as the probability weight.
     /// The most recently shown sentence is excluded so consecutive repeats can't happen
     /// (unless the pool collapses to a single sentence).
-    func selectThresholdSentence(from sentences: [ThresholdSentence]) -> ThresholdSentence {
-        precondition(!sentences.isEmpty, "Threshold sentence pool is empty")
+    func selectThresholdSentence(from sentences: [ThresholdSentence]) -> ThresholdSentence? {
+        // Non-fatal on an empty pool — a data-dependent emptiness must never crash the app
+        // (was a precondition trap). Callers already handle nil.
+        guard !sentences.isEmpty else { return nil }
 
         let lastShownId = UserDefaults.standard.string(forKey: lastShownDefaultsKey)
         let pool = sentences.filter { $0.id != lastShownId }

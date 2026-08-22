@@ -170,7 +170,7 @@ final class FeedStore: ObservableObject {
 
     // MARK: - Threshold sentence
 
-    func selectThresholdSentence(from sentences: [ThresholdSentence]) -> ThresholdSentence {
+    func selectThresholdSentence(from sentences: [ThresholdSentence]) -> ThresholdSentence? {
         service.selectThresholdSentence(from: sentences)
     }
 
@@ -362,8 +362,8 @@ final class FeedStore: ObservableObject {
 
     private func pickThreshold() -> PracticeDoorContent? {
         let pool = thresholdSentences.filter { $0.source != "Bindu" }
-        guard !pool.isEmpty else { return nil }
-        return .threshold(service.selectThresholdSentence(from: pool))
+        guard let chosen = service.selectThresholdSentence(from: pool) else { return nil }
+        return .threshold(chosen)
     }
 
     // MARK: - Writes
