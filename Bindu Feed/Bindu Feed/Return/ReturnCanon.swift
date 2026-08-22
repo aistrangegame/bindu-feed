@@ -70,20 +70,33 @@ enum ReturnCanon {
         guard let prior, !prior.isEmpty else {
             return ReplyPrompt(frame: nil, quote: nil, ask: "What arrived for you?")
         }
-        // Split into sentences (after . ! ?).
-        let sentences = prior
-            .split(whereSeparator: { $0 == "." || $0 == "!" || $0 == "?" })
-            .map { String($0).trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty }
+        // Split into sentences, RETAINING each terminal . ! ? — the prototype quotes
+        // the split sentence WITH its terminator, and a punctuation-anchored cue
+        // (the `\?\s*$` "ends on a question" pattern) can only match the isolated
+        // sentence if that sentence still carries its `?`. Discarding terminators
+        // (the old `split(whereSeparator:)`) made every `?`-only forward cue match the
+        // whole string but then fail to isolate any sentence, silently dropping the
+        // verbatim quote to the four native words.
+        var sentences: [String] = []
+        var buffer = ""
+        for ch in prior {
+            buffer.append(ch)
+            if ch == "." || ch == "!" || ch == "?" {
+                let s = buffer.trimmingCharacters(in: .whitespaces)
+                if !s.isEmpty { sentences.append(s) }
+                buffer = ""
+            }
+        }
+        let tail = buffer.trimmingCharacters(in: .whitespaces)
+        if !tail.isEmpty { sentences.append(tail) }
 
         for pattern in forwardPatterns {
             guard prior.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil else { continue }
-            // Find the specific sentence that matched — his verbatim words.
+            // Find the specific sentence that matched — his verbatim words, terminator
+            // intact so the quote reads exactly as he wrote it.
             if let found = sentences.first(where: {
                 $0.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
             }) {
-                // Re-attach the sentence's terminal punctuation feel is not needed;
-                // the prototype quotes the split sentence trimmed.
                 return ReplyPrompt(frame: "You wrote:", quote: found, ask: "It is later.")
             }
             // Matched the whole but no single sentence isolable → fall through to

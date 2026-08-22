@@ -389,10 +389,14 @@ final class AirtableService {
         try Self.validate(response: response, data: data)
     }
 
-    /// The Vow loop: a carved Declaration in the Light writes a `Reflection` row
-    /// (Flairs = Vow) to The Feed, so it later surfaces in the Mirror by date-hash.
-    /// First-person crystallized words, authored as Ash. `typecast: true` brings the
-    /// `Reflection` Type and `Vow` Flair into being on first write. Best-effort.
+    /// The Vow loop: a carved Declaration in the Light writes a **Mirror Card** row
+    /// with `Card Register = Vow` to The Feed, so it joins the Mirror's date-seeded
+    /// pool and later surfaces as the reflection-of-the-day ("handed back some
+    /// ordinary morning", Brief §6.4). Written as a Mirror Card — not a `Reflection`
+    /// — because the Phase-9 Mirror reader gates on `Type='Mirror Card'` and drives
+    /// its render off `Card Register` (Vow/Koan), the schema that retired the old
+    /// Reflection/Flairs tracking (CLAUDE.md §10). First-person, authored as Ash.
+    /// `typecast: true` is harmless here (all options already exist). Best-effort.
     @discardableResult
     func writeVow(text: String) async throws -> AirtableRecord {
         guard !token.isEmpty else { throw AirtableError.missingToken }
@@ -401,11 +405,11 @@ final class AirtableService {
         let timestamp = ISO8601DateFormatter().string(from: Date())
         let fields: [String: Any] = [
             "Name": "vow-\(timestamp)",
-            "Type": "Reflection",
+            "Type": "Mirror Card",
             "Status": "Live",
             "Body": text,
             "Archetype": "Ash",
-            "Flairs": ["Vow"],
+            "Card Register": "Vow",
         ]
         let payload: [String: Any] = [
             "records": [["fields": fields]],
