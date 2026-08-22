@@ -501,14 +501,25 @@ final class AirtableService {
         guard !token.isEmpty else { return false }
         let fmt = DateFormatter()
         fmt.dateFormat = "yyyy-MM-dd"
+        fmt.timeZone = .current                          // local day-key, matching the write
         let today = fmt.string(from: Date())
-        let formula = "AND({Activity Type}='Story Met',DATETIME_FORMAT({Activity Date},'YYYY-MM-DD')='\(today)')"
 
+        // BUG FIX (2026-08-22): the old query wrapped the date match in
+        // DATETIME_FORMAT({Activity Date},'YYYY-MM-DD')='today' — verified against the
+        // live base, that formula NEVER matched even when today's `Story Met` record
+        // exists (a real `date` field), so the Door read unmet forever and the Rite
+        // replayed on EVERY open. We now match CLIENT-SIDE (CLAUDE.md §6's discipline:
+        // don't trust filterByFormula it can't do): keep only the reliable singleSelect
+        // equality server-side, fetch the date, and compare the date string in Swift —
+        // and re-check the type in Swift too, so a wrong server filter can't produce a
+        // false positive.
+        let formula = "{Activity Type}='Story Met'"
         var comps = URLComponents(string: appActivityURLString)
         comps?.queryItems = [
             URLQueryItem(name: "filterByFormula", value: formula),
-            URLQueryItem(name: "pageSize", value: "1"),
+            URLQueryItem(name: "pageSize", value: "50"),
             URLQueryItem(name: "fields[]", value: "Activity Type"),
+            URLQueryItem(name: "fields[]", value: "Activity Date"),
         ]
         guard let url = comps?.url else { return false }
         var req = URLRequest(url: url)
@@ -516,13 +527,30 @@ final class AirtableService {
         do {
             let (data, response) = try await session.data(for: req)
             try Self.validate(response: response, data: data)
-            let page = try decoder.decode(AirtableResponse.self, from: data)
-            return !page.records.isEmpty
+            let page = try decoder.decode(ActivityMetPage.self, from: data)
+            return page.records.contains {
+                $0.fields.type == "Story Met" && ($0.fields.date ?? "").hasPrefix(today)
+            }
         } catch {
             #if DEBUG
             print("[AirtableService] isTodayMet failed (defaulting unmet): \(error)")
             #endif
             return false
+        }
+    }
+
+    // Lightweight decode for the met-state read — App Activity rows expose the singleSelect
+    // (name string) and the date (ISO "yyyy-MM-dd" for a date-only field).
+    private struct ActivityMetPage: Decodable {
+        let records: [Row]
+        struct Row: Decodable { let fields: Fields }
+        struct Fields: Decodable {
+            let type: String?
+            let date: String?
+            enum CodingKeys: String, CodingKey {
+                case type = "Activity Type"
+                case date = "Activity Date"
+            }
         }
     }
 
