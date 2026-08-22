@@ -56,11 +56,11 @@ struct LightView: View {
             // Always a quiet way out — never trapped in the Light.
             VStack {
                 HStack {
-                    Spacer()
                     Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                        Text("leave ›").font(.spaceMono(9)).tracking(2)
+                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
                             .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.4)).padding(16)
                     }
+                    Spacer()
                 }
                 Spacer()
             }

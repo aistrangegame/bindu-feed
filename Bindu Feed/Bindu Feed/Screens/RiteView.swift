@@ -63,13 +63,13 @@ struct RiteView: View {
             if movement != .sealed {
                 VStack {
                     HStack {
-                        Spacer()
                         Button(action: leave) {
-                            Text("leave ›")
+                            Text("‹ leave")
                                 .font(.spaceMono(9)).tracking(2)
                                 .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
                                 .padding(16)
                         }
+                        Spacer()
                     }
                     Spacer()
                 }

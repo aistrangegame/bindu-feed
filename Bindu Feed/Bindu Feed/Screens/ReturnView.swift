@@ -42,11 +42,11 @@ struct ReturnView: View {
             // Always a quiet way out — never trapped in the Return.
             VStack {
                 HStack {
-                    Spacer()
                     Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                        Text("leave ›").font(.spaceMono(9)).tracking(2)
+                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
                             .foregroundStyle(ReturnCanon.ashColor.opacity(0.5)).padding(16)
                     }
+                    Spacer()
                 }
                 Spacer()
             }
