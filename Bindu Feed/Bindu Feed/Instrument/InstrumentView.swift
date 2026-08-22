@@ -92,6 +92,7 @@ struct InstrumentView: View {
         .onAppear {
             travel.onCross = { reg in
                 soundEngine.riteThreshold(hz: reg.hz, dur: 4)   // the crossing, struck
+                if reg.key == "gate" { PointJourney.reachedGate = true }
             }
             soundEngine.setContext(.base)
             travel.start()

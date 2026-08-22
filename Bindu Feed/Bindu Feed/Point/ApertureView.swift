@@ -127,6 +127,7 @@ struct ApertureView: View {
                 (block["type"] as? String) == "text" ? block["text"] as? String : nil
             }.joined(separator: "\n\n")
             response = text.isEmpty ? "…" : text
+            PointJourney.visitors += 1               // a visitor arrived that he did not choose
             withAnimation(.easeInOut(duration: 1.0)) { phase = .answered }
         } catch {
             phase = .failed

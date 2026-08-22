@@ -31,6 +31,7 @@ struct PointWorldView: View {
                 // The dimension as its own distinct world (Amendment §7.3).
                 PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(dim), hue: hue) { s in
                     soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 6)
+                    PointJourney.openedStars.append(s.t)
                     withAnimation(.easeInOut(duration: 0.8)) { openStar = s }
                 }
                 .ignoresSafeArea()
@@ -73,6 +74,7 @@ struct PointWorldView: View {
             }
         }
         .onAppear {
+            if let dim { PointJourney.enteredDims.append(dim.name) }
             if !PointGoodnight.shown.contains(dimensionN) {
                 PointGoodnight.shown.insert(dimensionN)
                 withAnimation(.easeIn(duration: 1.2)) { goodnight = true }
@@ -123,6 +125,11 @@ private struct PointStarDescent: View {
         }
         .scrollIndicators(.hidden)
         .contentShape(Rectangle())
-        .onTapGesture { if beat < 3 { withAnimation(.easeInOut(duration: 1.0)) { beat += 1 } } }
+        .onTapGesture {
+            if beat < 3 {
+                withAnimation(.easeInOut(duration: 1.0)) { beat += 1 }
+                if beat == 3 { PointJourney.descended.append(star.t) }   // walked to the OPEN — the descent
+            }
+        }
     }
 }

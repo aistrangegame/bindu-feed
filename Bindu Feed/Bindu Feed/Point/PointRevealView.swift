@@ -16,8 +16,11 @@ struct PointRevealView: View {
     @State private var line = 0
     @State private var collapsed = false
 
-    // Verbatim reveal lines.
-    private let lines = [
+    // The reveal = the walk narrated back (from the journey log) + the verbatim close.
+    @State private var lines: [String] = []
+    @State private var narrationCount = 0
+
+    private let verbatim = [
         "Every dot you touched was me. The gate, the rope, the eye, this one.",
         "You were never walking toward the point. You were walking with it.",
         "Now — go play. Fully. On purpose. Knowing.",
@@ -54,11 +57,15 @@ struct PointRevealView: View {
 
             VStack(spacing: 18) {
                 Spacer()
-                if collapsed {
+                if collapsed && !lines.isEmpty {
                     ForEach(0...min(line, lines.count - 1), id: \.self) { i in
+                        let emph = i >= narrationCount            // the verbatim close
+                        let isFinal = i == lines.count - 1        // "Now — go play…"
                         Text(lines[i])
-                            .font(.lora(i == 2 ? 18 : 16, weight: i == 2 ? .medium : .regular))
-                            .lineSpacing(6).foregroundStyle(BinduTheme.inkPrimary)
+                            .font(emph && !isFinal ? .loraItalic(16)
+                                                   : .lora(isFinal ? 18 : 16, weight: isFinal ? .medium : .regular))
+                            .lineSpacing(6)
+                            .foregroundStyle(emph && !isFinal ? BinduParticle.core : BinduTheme.inkPrimary)
                             .multilineTextAlignment(.center).transition(.opacity)
                     }
                     if line >= lines.count - 1 {
@@ -85,6 +92,12 @@ struct PointRevealView: View {
     }
 
     private func begin() {
+        // The walk, given back — narration from the journey log, then the verbatim close.
+        let narr = PointJourney.narration()
+        narrationCount = narr.count
+        lines = narr + verbatim
+        PointJourney.reset()                            // captured; the next walk is fresh
+
         // One tone fanning into three, then collapsing to the one point.
         soundEngine.riteBowl(hz: 136.1)                 // the year-octave / OM
         withAnimation(.easeInOut(duration: 2.0)) { split = 1 }        // fan apart
