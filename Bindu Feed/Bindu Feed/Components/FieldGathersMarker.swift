@@ -7,7 +7,7 @@ import SwiftUI
 struct FieldGathersMarker: View {
     let onArrive: () -> Void
 
-    @State private var breathing = false
+    @EnvironmentObject private var breath: Breath   // the one master breath
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -27,16 +27,11 @@ struct FieldGathersMarker: View {
                     .tracking(0.7)
             }
             .padding(.top, 15)
-            .opacity(breathing ? 1.0 : 0.65)
+            .opacity(0.65 + 0.35 * breath.value)      // the one master breath
         }
         .padding(.horizontal, BinduTheme.space20)
         .padding(.top, 22)
         .padding(.bottom, 12)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 6).repeatForever(autoreverses: true)) {
-                breathing = true
-            }
-            onArrive()
-        }
+        .onAppear { onArrive() }
     }
 }
