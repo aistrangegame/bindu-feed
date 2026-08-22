@@ -252,7 +252,7 @@ private struct DoorTurnOverlay: View {
                                     .font(.system(size: 16))
                                     .foregroundStyle(row.color)
                                     .frame(width: 22)
-                                    .modifier(SlowBreathe(cycle: row.cycle))
+                                    .modifier(SlowBreathe(offset: Double(i) * 0.09))
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(row.name).font(.lora(16)).foregroundStyle(BinduTheme.inkPrimary)
                                     Text(row.sub).font(.loraItalic(12.5)).foregroundStyle(BinduTheme.inkSecondary)
@@ -297,7 +297,7 @@ private struct DoorRopeOverlay: View {
                 ZStack {
                     Circle().stroke(BinduTheme.colorBindu.opacity(0.16), lineWidth: 1)
                         .frame(width: 110, height: 110)
-                        .modifier(SlowBreathe(cycle: 10))
+                        .modifier(SlowBreathe())
                     Circle().fill(BinduTheme.colorBindu)
                         .frame(width: 9, height: 9)
                         .shadow(color: BinduTheme.colorBindu.opacity(0.8), radius: 15)
@@ -343,19 +343,20 @@ private struct DoorRopeOverlay: View {
 
 // MARK: - Small breathing modifiers
 
+// Both read the ONE master breath (no local repeatForever). `offset` shifts the
+// phase so surfaces breathe at different points of the SAME 0.1 Hz cycle — variety
+// without a second clock, honoring the one-phase contract.
 private struct SlowBreathe: ViewModifier {
-    let cycle: Double
-    @State private var on = false
+    var offset: Double = 0
+    @EnvironmentObject private var breath: Breath
     func body(content: Content) -> some View {
-        content.opacity(on ? 0.95 : 0.5)
-            .onAppear { withAnimation(.easeInOut(duration: cycle).repeatForever(autoreverses: true)) { on = true } }
+        content.opacity(0.5 + 0.45 * breath.eased(offset: offset))
     }
 }
 
 private struct EmberBreathe10: ViewModifier {
-    @State private var on = false
+    @EnvironmentObject private var breath: Breath
     func body(content: Content) -> some View {
-        content.opacity(on ? 1 : 0.6).scaleEffect(on ? 1.1 : 0.95)
-            .onAppear { withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) { on = true } }
+        content.opacity(0.6 + 0.4 * breath.value).scaleEffect(0.95 + 0.15 * breath.value)
     }
 }

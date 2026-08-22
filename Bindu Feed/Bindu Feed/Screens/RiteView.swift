@@ -13,18 +13,13 @@ import SwiftUI
 
 enum RiteMovement { case arrival, reading, gathering, recognition, sealed }
 
-/// A slow breathing opacity for quiet ceremony hints. Local to the Rite so it
-/// carries no cross-file dependency. (Reads a fixed 5.6s to match the prototype's
-/// scene breath; the master Breath clock governs continuous surfaces, not this
-/// one-off hint.)
+/// A quiet breathing-opacity hint that reads the ONE master breath (never a local
+/// `repeatForever` — that's the one-phase-contract anti-pattern). Phase-locked to
+/// the app's single 0.1 Hz origin via the injected `Breath`.
 struct RiteBreathe: ViewModifier {
-    @State private var on = false
+    @EnvironmentObject private var breath: Breath
     func body(content: Content) -> some View {
-        content
-            .opacity(on ? 0.7 : 0.28)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 5.6).repeatForever(autoreverses: true)) { on = true }
-            }
+        content.opacity(0.28 + 0.42 * breath.value)
     }
 }
 

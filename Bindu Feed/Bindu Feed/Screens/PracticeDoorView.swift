@@ -12,14 +12,13 @@ import SwiftUI
 struct PracticeDoorView: View {
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var soundEngine: SoundEngine
+    @EnvironmentObject private var breath: Breath      // the one master breath
     var onComplete: () -> Void
 
     @State private var content: PracticeDoorContent?
     @State private var visible = false
     @State private var hasStarted = false
     @State private var hasCrossed = false
-    @State private var hintBreath = false
-    @State private var bgBreath: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -133,7 +132,7 @@ struct PracticeDoorView: View {
                 startRadius: 0,
                 endRadius: 480
             )
-            .opacity(0.34 + 0.44 * Double(bgBreath))
+            .opacity(0.34 + 0.44 * breath.value)   // the one master breath
 
             RadialGradient(
                 colors: [accent.opacity(0.08), .clear],
@@ -144,11 +143,6 @@ struct PracticeDoorView: View {
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 10).repeatForever(autoreverses: true)) {
-                bgBreath = 1
-            }
-        }
     }
 
     @ViewBuilder
@@ -231,12 +225,7 @@ struct PracticeDoorView: View {
             .font(.spaceMono(9))
             .tracking(1.6)
             .foregroundColor(BinduTheme.inkTertiary)
-            .opacity(hintBreath ? 0.55 : 0.24)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 4.5).repeatForever(autoreverses: true)) {
-                    hintBreath = true
-                }
-            }
+            .opacity(0.24 + 0.31 * breath.value)   // the one master breath
     }
 
     private func centeredItalic(_ text: String, color: Color, maxWidth: CGFloat? = nil) -> some View {
@@ -314,16 +303,11 @@ struct PracticeDoorView: View {
 // MARK: - Ember breath modifier
 
 private struct EmberBreathe: ViewModifier {
-    @State private var breath = false
-
+    @EnvironmentObject private var masterBreath: Breath   // the one 0.1 Hz origin
     func body(content: Content) -> some View {
-        content
-            .opacity(breath ? 1.0 : 0.55)
-            .scaleEffect(breath ? 1.06 : 0.97)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 4).repeatForever(autoreverses: true)) {
-                    breath = true
-                }
-            }
+        let v = masterBreath.value
+        return content
+            .opacity(0.55 + 0.45 * v)
+            .scaleEffect(0.97 + 0.09 * v)
     }
 }
