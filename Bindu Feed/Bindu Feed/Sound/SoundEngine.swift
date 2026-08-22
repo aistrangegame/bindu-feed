@@ -527,6 +527,88 @@ final class SoundEngine: ObservableObject {
         }
     }
 
+    // MARK: - Axis tones (Wave 6) — the sound of travelling the Instrument (README §7)
+
+    private var glideVoice: AxisGlideVoice?
+
+    /// The continuous glide — one voice = the camera. Held while the axis is on screen.
+    func startAxisGlide() {
+        guard isRunning, glideVoice == nil else { return }
+        let g = AxisGlideVoice()
+        engine.attach(g.sourceNode)
+        engine.connect(g.sourceNode, to: engine.mainMixerNode, format: g.sourceNode.outputFormat(forBus: 0))
+        glideVoice = g
+    }
+    func setAxisGlide(hz: Double, level: Double) { glideVoice?.set(hz: hz, level: min(0.03, level)) }
+    func stopAxisGlide() {
+        guard let g = glideVoice else { return }
+        glideVoice = nil
+        g.set(hz: 136.1, level: 0)
+        let node = g.sourceNode
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard let self else { return }
+            self.engine.disconnectNodeInput(node); self.engine.detach(node)
+        }
+    }
+
+    private func playAxis(_ voice: AxisVoice, maxWait: Double) {
+        guard isRunning else { return }
+        engine.attach(voice.sourceNode)
+        engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: voice.sourceNode.outputFormat(forBus: 0))
+        let deadline = Date().addingTimeInterval(maxWait)
+        Task { @MainActor [weak self] in
+            while !voice.isDone && Date() < deadline { try? await Task.sleep(nanoseconds: 100_000_000) }
+            guard let self else { return }
+            self.engine.disconnectNodeInput(voice.sourceNode); self.engine.detach(voice.sourceNode)
+        }
+    }
+
+    func axisTrail(hz: Double) {                       // the register left behind, detuning away
+        playAxis(AxisVoice(hzStart: hz, hzEnd: hz * 0.985, glideSeconds: 3.5, twinRatio: 2.0,
+                           peak: 0.026, attackSeconds: 0.4, releaseSeconds: 7.5, mode: .twin), maxWait: 8)
+    }
+    func axisStrain(_ f: Double) {                     // the surface under load
+        guard f > 0.04 else { return }
+        playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
+                           peak: f * f * 0.030, attackSeconds: 0.2, releaseSeconds: 0.5,
+                           mode: .noise, noiseCentre: 300 + f * 1500), maxWait: 1)
+    }
+    func axisGive(hz: Double) {                        // it breaks — noise + the destination threshold
+        playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
+                           peak: 0.03, attackSeconds: 0.02, releaseSeconds: 0.5,
+                           mode: .noise, noiseCentre: 1600), maxWait: 1)
+    }
+    func axisRush(dir: Double) {                       // the passage — noise sweeping through the throat
+        let from = dir > 0 ? 260.0 : 2600.0, to = dir > 0 ? 2860.0 : 400.0
+        playAxis(AxisVoice(hzStart: from, hzEnd: to, glideSeconds: 2.9,
+                           peak: 0.042, attackSeconds: 0.6, releaseSeconds: 2.4,
+                           mode: .noise, noiseCentre: from), maxWait: 3.5)
+    }
+    func axisGate(hz: Double) {                        // a gate passing — hz×3 → hz×1.5
+        playAxis(AxisVoice(hzStart: hz * 3, hzEnd: hz * 1.5, glideSeconds: 0.9,
+                           peak: 0.03, attackSeconds: 0.1, releaseSeconds: 1.6, mode: .tone), maxWait: 2)
+    }
+    func axisCarry(hz: Double) {                       // a perspective taken up — three rising steps
+        for (i, r) in [1.0, 1.5, 2.0].enumerated() {
+            let delay = Double(i) * 0.30
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1e9))
+                self?.playAxis(AxisVoice(hzStart: hz * r, hzEnd: hz * r, glideSeconds: 0.1,
+                                         peak: 0.03, attackSeconds: 0.05, releaseSeconds: 6.5, mode: .tone), maxWait: 7)
+            }
+        }
+    }
+    func axisThin(_ f: Double) {                       // the stillness gate — a companion sweeping 261→348
+        guard f > 0.04 else { return }
+        playAxis(AxisVoice(hzStart: 261, hzEnd: 348, glideSeconds: 0.35,
+                           peak: f * f * 0.026, attackSeconds: 0.2, releaseSeconds: 0.4, mode: .tone), maxWait: 1)
+    }
+    func axisUngrip() {                                // the field answering an opened hand — 174→232
+        playAxis(AxisVoice(hzStart: 174, hzEnd: 232, glideSeconds: 1.2,
+                           peak: 0.03, attackSeconds: 0.3, releaseSeconds: 3.4, mode: .tone), maxWait: 4)
+    }
+
     // MARK: - Resonance Depth hook (silent stub)
 
     // Reserved for the future voice layer. The Sound Layer's locked

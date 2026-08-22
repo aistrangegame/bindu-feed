@@ -234,6 +234,7 @@ struct LightView: View {
         guard stage == .scene, !carved, shownAnchors < scene.anchors.count else { return }
         if scene.ungripOnly {
             ungrips += 1
+            soundEngine.axisUngrip()              // the field answers the opened hand
             revealAnchor()                        // the dawn brightens each time the hand lifts
         } else {
             pendingAnchor = true                  // wait for the breath to turn

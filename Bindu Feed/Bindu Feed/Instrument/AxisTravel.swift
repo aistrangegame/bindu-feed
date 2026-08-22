@@ -25,6 +25,7 @@ final class AxisTravel: ObservableObject {
     @Published private(set) var crossing = false        // inside a passage — the camera is out of the hand
     @Published private(set) var passageT: Double = 0     // 0…1 through the passage
     @Published private(set) var passageDir: Double = 1   // +1 inward (wormhole) · −1 outward (whitehole)
+    @Published private(set) var speed: Double = 0        // |velocity| — feeds the glide's level
 
     var onCross: ((AxisRegister) -> Void)?
 
@@ -122,6 +123,7 @@ final class AxisTravel: ObservableObject {
         zv += back * f
         z = Swift.min(Swift.max(z + zv * f, MINZ), MAXZ)
         zv *= pow(DAMP, f)
+        speed = abs(zv)
 
         if gave >= 0 { beginPassage(surface: gave, dir: dir); gave = -1; zv = 0 }
 

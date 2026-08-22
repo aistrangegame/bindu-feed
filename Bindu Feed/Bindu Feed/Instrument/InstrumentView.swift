@@ -26,6 +26,18 @@ struct InstrumentView: View {
     @StateObject private var travel: AxisTravel
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
+    @State private var thinSounded = false
+
+    // The travelling pitch — log-interpolated between adjacent registers (hzAt(Z)).
+    private func hzAt(_ z: Double) -> Double {
+        let i = z + 5
+        let lo = max(0, min(14, Int(i.rounded(.down))))
+        let hi = max(0, min(14, Int(i.rounded(.up))))
+        let f = i - Double(lo)
+        let a = Axis.registers[lo].hz, b = Axis.registers[hi].hz
+        guard a > 0, b > 0 else { return 136.1 }
+        return exp(log(a) + (log(b) - log(a)) * f)
+    }
 
     init(path: Binding<NavigationPath>, startZ: Int) {
         self._path = path
@@ -110,15 +122,34 @@ struct InstrumentView: View {
                 .transition(.opacity)
             }
         }
+        .onChange(of: travel.z) { _ in
+            soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
+        }
+        .onChange(of: travel.crossing) { crossing in
+            if crossing {                                       // a give / the passage fires
+                soundEngine.axisRush(dir: travel.passageDir)
+                soundEngine.axisGive(hz: here.hz)
+            }
+        }
+        .onChange(of: travel.thin) { thin in
+            if thin > 0.1 && !thinSounded { thinSounded = true; soundEngine.axisThin(thin) }
+            else if thin <= 0.01 { thinSounded = false }
+        }
         .onAppear {
             travel.onCross = { reg in
-                soundEngine.riteThreshold(hz: reg.hz, dur: 4)   // the crossing, struck
-                if reg.key == "gate" { PointJourney.reachedGate = true }
+                soundEngine.axisTrail(hz: reg.hz)               // the register forming / left behind
+                if reg.key == "gate" {
+                    soundEngine.axisGate(hz: reg.hz)
+                    PointJourney.reachedGate = true
+                } else {
+                    soundEngine.riteThreshold(hz: reg.hz, dur: 3)   // the crossing, struck
+                }
             }
             soundEngine.setContext(.base)
             travel.start()
+            soundEngine.startAxisGlide()
         }
-        .onDisappear { travel.stop() }
+        .onDisappear { travel.stop(); soundEngine.stopAxisGlide() }
     }
 
     // MARK: - Travel (the hand feeds AxisTravel; the engine owns the physics)
