@@ -435,17 +435,9 @@ struct AshComposeView: View {
 
 private struct EmberWake: ViewModifier {
     let active: Bool
-    @State private var phase = false
-
+    @EnvironmentObject private var breath: Breath   // the one master breath
     func body(content: Content) -> some View {
-        content
-            .scaleEffect(active ? (phase ? 1.045 : 0.97) : 1)
-            .onAppear {
-                guard active else { return }
-                withAnimation(.easeInOut(duration: 3.6).repeatForever(autoreverses: true)) {
-                    phase = true
-                }
-            }
+        content.scaleEffect(active ? (0.97 + 0.075 * breath.value) : 1)
     }
 }
 
@@ -453,16 +445,8 @@ private struct EmberWake: ViewModifier {
 
 private struct HintFade: ViewModifier {
     let active: Bool
-    @State private var phase = false
-
+    @EnvironmentObject private var breath: Breath   // the one master breath
     func body(content: Content) -> some View {
-        content
-            .opacity(active ? (phase ? 0.55 : 0.26) : 1)
-            .onAppear {
-                guard active else { return }
-                withAnimation(.easeInOut(duration: 4.8).repeatForever(autoreverses: true)) {
-                    phase = true
-                }
-            }
+        content.opacity(active ? (0.26 + 0.29 * breath.value) : 1)
     }
 }

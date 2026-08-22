@@ -384,15 +384,8 @@ private struct AntennaDot: View {
 // MARK: - Breathing hint (caption + leave button)
 
 private struct BreathingOpacityHint: ViewModifier {
-    @State private var phase = false
-
+    @EnvironmentObject private var breath: Breath   // the one master breath
     func body(content: Content) -> some View {
-        content
-            .opacity(phase ? 0.52 : 0.24)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 3.4).repeatForever(autoreverses: true)) {
-                    phase = true
-                }
-            }
+        content.opacity(0.24 + 0.28 * breath.value)
     }
 }

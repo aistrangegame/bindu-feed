@@ -66,7 +66,7 @@ struct PlayersView: View {
 
                     if let ash {
                         AshramCard(archetype: ash) {
-                            path.append(FeedRoute.archetype(ash))
+                            path.append(FeedRoute.turning(ash))
                         }
                         .padding(.horizontal, BinduTheme.space16)
                     }
@@ -113,7 +113,7 @@ struct PlayersView: View {
         LazyVGrid(columns: columns, spacing: 14) {
             ForEach(lenses) { archetype in
                 PlayerCard(archetype: archetype, isSubstrate: false) {
-                    path.append(FeedRoute.archetype(archetype))
+                    path.append(FeedRoute.turning(archetype))
                 }
             }
         }
@@ -123,7 +123,7 @@ struct PlayersView: View {
         LazyVGrid(columns: columns, spacing: 14) {
             ForEach(roots) { archetype in
                 PlayerCard(archetype: archetype, isSubstrate: true) {
-                    path.append(FeedRoute.archetype(archetype))
+                    path.append(FeedRoute.turning(archetype))
                 }
             }
         }

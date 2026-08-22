@@ -317,57 +317,40 @@ private struct ReflectionCard: View {
 
 // MARK: - Atmosphere
 
+// All three read the ONE master breath (Wave 4 Era-A reconciliation) — no local
+// repeatForever. `duration` is kept on BreathingOpacity for call-site compat but
+// the single 0.1 Hz period now governs.
 private struct TerraAtmosphere: View {
-    @State private var breath: CGFloat = 0
-
+    @EnvironmentObject private var breath: Breath
     var body: some View {
         ZStack {
             RadialGradient(
-                colors: [
-                    BinduTheme.colorAsh.opacity(0.16),
-                    BinduTheme.colorAsh.opacity(0.04),
-                    .clear
-                ],
-                center: UnitPoint(x: 0.5, y: 0.3),
-                startRadius: 0,
-                endRadius: 500
+                colors: [BinduTheme.colorAsh.opacity(0.16), BinduTheme.colorAsh.opacity(0.04), .clear],
+                center: UnitPoint(x: 0.5, y: 0.3), startRadius: 0, endRadius: 500
             )
-            .opacity(0.40 + 0.32 * Double(breath))
+            .opacity(0.40 + 0.32 * breath.value)
 
             RadialGradient(
                 colors: [BinduTheme.colorAsh.opacity(0.07), .clear],
-                center: UnitPoint(x: 0.5, y: 1.05),
-                startRadius: 0,
-                endRadius: 460
+                center: UnitPoint(x: 0.5, y: 1.05), startRadius: 0, endRadius: 460
             )
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 12).repeatForever(autoreverses: true)) {
-                breath = 1
-            }
-        }
     }
 }
 
 // MARK: - Ember dot
 
 private struct EmberDot: View {
-    @State private var pulse = false
-
+    @EnvironmentObject private var breath: Breath
     var body: some View {
         Text("·")
             .font(.system(size: 30))
             .foregroundColor(BinduTheme.colorBindu)
             .shadow(color: BinduTheme.colorBindu.opacity(0.7), radius: 8)
-            .opacity(pulse ? 1.0 : 0.55)
-            .scaleEffect(pulse ? 1.07 : 0.96)
-            .onAppear {
-                withAnimation(.easeInOut(duration: 3.6).repeatForever(autoreverses: true)) {
-                    pulse = true
-                }
-            }
+            .opacity(0.55 + 0.45 * breath.value)
+            .scaleEffect(0.96 + 0.11 * breath.value)
     }
 }
 
@@ -377,18 +360,10 @@ private struct BreathingOpacity: ViewModifier {
     let active: Bool
     let lo: Double
     let hi: Double
-    let duration: Double
-
-    @State private var phase = false
+    let duration: Double        // kept for call-site compat; the master period governs
+    @EnvironmentObject private var breath: Breath
 
     func body(content: Content) -> some View {
-        content
-            .opacity(active ? (phase ? hi : lo) : 1)
-            .onAppear {
-                guard active else { return }
-                withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
-                    phase = true
-                }
-            }
+        content.opacity(active ? (lo + (hi - lo) * breath.value) : 1)
     }
 }

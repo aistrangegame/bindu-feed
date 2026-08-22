@@ -492,17 +492,9 @@ private struct InfinityPath: Shape {
 
 private struct HintPulse: ViewModifier {
     let active: Bool
-    @State private var phase = false
-
+    @EnvironmentObject private var breath: Breath   // the one master breath
     func body(content: Content) -> some View {
-        content
-            .opacity(active ? (phase ? 0.85 : 0.4) : 1)
-            .onAppear {
-                guard active else { return }
-                withAnimation(.easeInOut(duration: 3.4).repeatForever(autoreverses: true)) {
-                    phase = true
-                }
-            }
+        content.opacity(active ? (0.4 + 0.45 * breath.value) : 1)
     }
 }
 

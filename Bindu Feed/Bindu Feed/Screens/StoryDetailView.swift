@@ -288,7 +288,7 @@ struct StoryDetailView: View {
     }
 
     private func navigateToArchetype(_ archetype: Archetype) {
-        path.append(FeedRoute.archetype(archetype))
+        path.append(FeedRoute.turning(archetype))
     }
 
     // MARK: - Ash refresh

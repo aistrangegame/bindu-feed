@@ -155,7 +155,7 @@ struct RootView: View {
             GameView(path: $path, room: room)
         case .story(let story):
             StoryDetailView(path: $path, story: story)
-        case .archetype(let archetype):
+        case .turning(let archetype):
             TheTurningView(path: $path, archetype: archetype)
         case .ash:
             AshVoiceView(path: $path)
