@@ -148,12 +148,37 @@ private extension View {
 
 /// Records Ash's spoken reflection to an m4a while listening. Every step is
 /// best-effort: permission denial, a session refusal, or a recorder failure are
-/// swallowed — the Recognition flow proceeds without kept audio. The audio file
-/// URL (when captured) is where a future surface could play it back.
+/// swallowed — the Recognition flow proceeds without kept audio.
+///
+/// The audio is genuinely KEPT: it records into Application Support (which iOS does
+/// not auto-purge, unlike the temporary directory the earlier pass used — so a note
+/// spoken today survives), and every finished recording is indexed by local day in
+/// `RiteRecorder.kept`, where a future surface can list and play them back.
 @MainActor
 final class RiteRecorder: ObservableObject {
     private var recorder: AVAudioRecorder?
     private(set) var lastURL: URL?
+
+    // The durable store for kept voices — Application Support, created on demand.
+    static func recordingsDirectory() -> URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
+        let dir = base.appendingPathComponent("RiteRecordings", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    // The index of kept voices: [ "yyyy-MM-dd" : [filename, …] ], newest last.
+    private static let keptIndexKey = "bindu.rite.recordings"
+    static var kept: [String: [String]] {
+        (UserDefaults.standard.dictionary(forKey: keptIndexKey) as? [String: [String]]) ?? [:]
+    }
+    private static func remember(_ filename: String) {
+        var idx = kept
+        let day = AirtableService.localDayString()
+        idx[day, default: []].append(filename)
+        UserDefaults.standard.set(idx, forKey: keptIndexKey)
+    }
 
     func start() {
         AVAudioApplication.requestRecordPermission { [weak self] granted in
@@ -168,7 +193,7 @@ final class RiteRecorder: ObservableObject {
             // Allow record while the bed keeps playing; restored on stop.
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
-            let url = FileManager.default.temporaryDirectory
+            let url = Self.recordingsDirectory()
                 .appendingPathComponent("rite-\(Int(Date().timeIntervalSince1970)).m4a")
             let settings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
@@ -190,6 +215,10 @@ final class RiteRecorder: ObservableObject {
     func stop() {
         recorder?.stop()
         recorder = nil
+        // Keep it: index the finished file (only if it actually landed on disk).
+        if let url = lastURL, FileManager.default.fileExists(atPath: url.path) {
+            Self.remember(url.lastPathComponent)
+        }
         // Restore the field's ambient, mix-with-others session.
         try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
     }
