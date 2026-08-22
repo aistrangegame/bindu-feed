@@ -37,6 +37,7 @@ struct LightView: View {
     @State private var beatDrew: Double = 0     // beat draw-in 0…1
     @State private var carved = false
     @State private var ungrips = 0
+    @State private var pendingAnchor = false      // a touch asked; the next exhale answers
 
     private let gateMs: Double = 4600
     private let idleMs: Double = 340
@@ -186,6 +187,7 @@ struct LightView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .gesture(sceneGesture)
+        .onChange(of: breath.value) { _ in deliverOnExhale() }
     }
 
     // A touch reveals the next anchor (for `release`, the ungrip = the lift). Once
@@ -226,12 +228,29 @@ struct LightView: View {
         // The beat draws in once the anchors are done (see advanceAnchor).
     }
 
+    // A touch ASKS; the next exhale answers (the interior's core law). Except `release`,
+    // which answers only the hand leaving the glass — each ungrip advances it directly.
     private func advanceAnchor() {
-        guard stage == .scene, !carved else { return }
-        if shownAnchors < scene.anchors.count {
-            withAnimation(.easeInOut(duration: 1.4)) { shownAnchors += 1 }
-            if shownAnchors == scene.anchors.count { startBeatDraw() }
+        guard stage == .scene, !carved, shownAnchors < scene.anchors.count else { return }
+        if scene.ungripOnly {
+            ungrips += 1
+            revealAnchor()                        // the dawn brightens each time the hand lifts
+        } else {
+            pendingAnchor = true                  // wait for the breath to turn
         }
+    }
+
+    private func revealAnchor() {
+        guard shownAnchors < scene.anchors.count else { return }
+        withAnimation(.easeInOut(duration: 1.4)) { shownAnchors += 1 }
+        if shownAnchors == scene.anchors.count { startBeatDraw() }
+    }
+
+    // The exhale answers what the touch asked (delivered near the breath's turn).
+    private func deliverOnExhale() {
+        guard pendingAnchor, breath.value > 0.9 else { return }
+        pendingAnchor = false
+        revealAnchor()
     }
 
     private func startBeatDraw() {
