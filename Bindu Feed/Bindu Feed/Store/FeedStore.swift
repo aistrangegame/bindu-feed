@@ -1,6 +1,14 @@
 import SwiftUI
 import Combine
 
+/// Minimal story identity threaded into `incrementResonance` so a first-resonance
+/// crossing can be logged to App Activity without a re-fetch. Only the story-level
+/// call sites (StoryCard, StoryDetailView) supply it; they already hold the Story.
+struct ResonanceStoryContext {
+    let title: String
+    let excerpt: String
+}
+
 @MainActor
 final class FeedStore: ObservableObject {
     // Foundation data
@@ -369,13 +377,54 @@ final class FeedStore: ObservableObject {
             parentCommentId: parentId,
             archetypeName: userArchetypeName
         )
+
+        // Report the crossing into the shared App Activity feed. Every Ash reply
+        // is a deliberate authored act, so each one logs. Fire-and-forget: the
+        // comment already posted; a failed activity row is an acceptable loss.
+        let story = stories.first { $0.id == storyId }
+        let title = (story?.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let activityName = title.isEmpty ? "Ash spoke in the field" : "\(title) — Ash spoke"
+        let snippet = story?.excerpt ?? String(body.prefix(140))
+        Task {
+            try? await service.logActivity(
+                type: .ashReplied,
+                feedRecordId: storyId,
+                activityName: activityName,
+                detail: "Ash spoke on this story.",
+                excerpt: snippet
+            )
+        }
     }
 
-    func incrementResonance(recordId: String, current: Int) async {
+    func incrementResonance(
+        recordId: String,
+        current: Int,
+        storyContext: ResonanceStoryContext? = nil
+    ) async {
         do {
             try await service.updateResonance(recordId: recordId, newResonance: current + 1)
         } catch {
             self.error = error
+            return
+        }
+
+        // First resonance a Story ever receives (0 → 1) is the threshold worth
+        // reporting. `current == 0` is per-story (it read this story's own
+        // Resonance), so each fresh story crosses on its own first tap. Only the
+        // story-level call sites pass a context; comment/reply resonance passes
+        // nil and never logs. Fire-and-forget off the critical path.
+        if current == 0, let ctx = storyContext {
+            let title = ctx.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            let activityName = title.isEmpty ? "First resonance in the field" : "\(title) — first resonance"
+            Task {
+                try? await service.logActivity(
+                    type: .storyResonated,
+                    feedRecordId: recordId,
+                    activityName: activityName,
+                    detail: "First resonance on this story.",
+                    excerpt: ctx.excerpt
+                )
+            }
         }
     }
 

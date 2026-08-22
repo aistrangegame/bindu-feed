@@ -444,7 +444,11 @@ struct StoryDetailView: View {
         resonancePressed = true
 
         Task { @MainActor in
-            await store.incrementResonance(recordId: story.id, current: current)
+            await store.incrementResonance(
+                recordId: story.id,
+                current: current,
+                storyContext: ResonanceStoryContext(title: story.title, excerpt: story.excerpt)
+            )
             resonanceInFlight = false
         }
 

@@ -28,10 +28,19 @@ enum AirtableError: LocalizedError {
     }
 }
 
+/// The cross-app activity crossings the Feed reports into the shared
+/// `App Activity` table (`Source App` = "Feed").
+enum FeedActivityType: String {
+    case ashReplied     = "Ash Replied"
+    case storyResonated = "Story Resonated"
+}
+
 final class AirtableService {
     static let shared = AirtableService()
 
     private let baseURLString = "https://api.airtable.com/v0/app248ZTWhYJlvQj2/tbl7vzODMMJUgeX0b"
+    // Shared cross-app activity feed, same base as The Feed but a different table.
+    private let appActivityURLString = "https://api.airtable.com/v0/app248ZTWhYJlvQj2/tblJlBeiHnqGpYrL7"
     private let tokenKey = "airtable_token"
     private let lastShownDefaultsKey = "bindu.threshold.lastShownId"
 
@@ -375,6 +384,67 @@ final class AirtableService {
 
         let (data, response) = try await session.data(for: req)
         try Self.validate(response: response, data: data)
+    }
+
+    // MARK: - App Activity (cross-app feed)
+
+    /// Writes a single row into the shared `App Activity` table so a Feed
+    /// crossing surfaces across the Bindu ecosystem. `typecast: true` lets
+    /// Airtable auto-create the `Activity Type` option on first write (the two
+    /// Feed options — Ash Replied / Story Resonated — arrive this way). Callers
+    /// treat this as best-effort — see call sites.
+    @discardableResult
+    func logActivity(
+        type: FeedActivityType,
+        feedRecordId: String,
+        activityName: String,
+        detail: String,
+        excerpt: String?
+    ) async throws -> AirtableRecord {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: appActivityURLString) else { throw AirtableError.badURL }
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"   // local time — matches the day-key convention
+        let today = formatter.string(from: Date())
+
+        var fieldsDict: [String: Any] = [
+            "Activity Name": activityName,
+            "Source App":    "Feed",
+            "Activity Type": type.rawValue,
+            "Activity Date": today,
+            "Detail":        detail,
+            "Link to Feed":  [feedRecordId]
+        ]
+        if let excerpt, !excerpt.isEmpty {
+            fieldsDict["Excerpt"] = excerpt
+        }
+
+        let payload: [String: Any] = [
+            "records": [["fields": fieldsDict]],
+            "typecast": true
+        ]
+
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
+
+        do {
+            let result = try decoder.decode(AirtableCreateResponse.self, from: data)
+            guard let first = result.records.first else {
+                throw AirtableError.http(200, "Empty response from Airtable")
+            }
+            return first
+        } catch let err as AirtableError {
+            throw err
+        } catch {
+            throw AirtableError.decoding(error)
+        }
     }
 
     // Best-effort PATCH that marks when a Story's depth was last witnessed.
