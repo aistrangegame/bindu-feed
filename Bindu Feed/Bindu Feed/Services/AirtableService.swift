@@ -547,10 +547,19 @@ final class AirtableService {
         // equality server-side, fetch the date, and compare the date string in Swift —
         // and re-check the type in Swift too, so a wrong server filter can't produce a
         // false positive.
+        // Sort by Activity Date DESCENDING so today's record — if it exists — is always
+        // in the first page, regardless of how many hundreds of past `Story Met` rows have
+        // accumulated. (The old query took an unsorted 50-row page with no offset follow, so
+        // once history exceeded 50 days, today's row could fall past the window on any device
+        // without the local same-day cache — a fresh install or a second device — and the
+        // Door wrongly re-offered a finished ceremony. Sorting on a real date field is
+        // reliable in Airtable, unlike the DATETIME_FORMAT match we already abandoned.)
         let formula = "{Activity Type}='Story Met'"
         var comps = URLComponents(string: appActivityURLString)
         comps?.queryItems = [
             URLQueryItem(name: "filterByFormula", value: formula),
+            URLQueryItem(name: "sort[0][field]", value: "Activity Date"),
+            URLQueryItem(name: "sort[0][direction]", value: "desc"),
             URLQueryItem(name: "pageSize", value: "50"),
             URLQueryItem(name: "fields[]", value: "Activity Type"),
             URLQueryItem(name: "fields[]", value: "Activity Date"),

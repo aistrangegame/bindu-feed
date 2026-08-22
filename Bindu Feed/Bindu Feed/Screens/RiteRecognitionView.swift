@@ -180,7 +180,14 @@ final class RiteRecorder: ObservableObject {
         UserDefaults.standard.set(idx, forKey: keptIndexKey)
     }
 
+    // Guards a start-after-stop race: the permission callback lands off the main thread
+    // and hops back via a Task, so stop() can run BEFORE beginRecording(). Without this,
+    // a quick stop would let the mic start after stop and never be stopped again, leaving
+    // the Breath's session stuck in .playAndRecord. stop() clears it; beginRecording bails.
+    private var shouldRecord = false
+
     func start() {
+        shouldRecord = true
         AVAudioApplication.requestRecordPermission { [weak self] granted in
             guard granted else { return }
             Task { @MainActor [weak self] in self?.beginRecording() }
@@ -188,13 +195,15 @@ final class RiteRecorder: ObservableObject {
     }
 
     private func beginRecording() {
+        guard shouldRecord else { return }        // stop() already ran — don't orphan the mic
         let session = AVAudioSession.sharedInstance()
         do {
             // Allow record while the bed keeps playing; restored on stop.
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
-            let url = Self.recordingsDirectory()
-                .appendingPathComponent("rite-\(Int(Date().timeIntervalSince1970)).m4a")
+            // A UUID suffix keeps two takes started in the same wall-clock second distinct.
+            let stamp = "\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(8))"
+            let url = Self.recordingsDirectory().appendingPathComponent("rite-\(stamp).m4a")
             let settings: [String: Any] = [
                 AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
                 AVSampleRateKey: 44100,
@@ -213,13 +222,18 @@ final class RiteRecorder: ObservableObject {
     }
 
     func stop() {
+        shouldRecord = false
+        let wasRecording = recorder != nil
         recorder?.stop()
         recorder = nil
         // Keep it: index the finished file (only if it actually landed on disk).
         if let url = lastURL, FileManager.default.fileExists(atPath: url.path) {
             Self.remember(url.lastPathComponent)
         }
-        // Restore the field's ambient, mix-with-others session.
-        try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        // Restore the field's ambient, mix-with-others session — but only if we actually
+        // took the record session. If recording never started, we never changed it.
+        if wasRecording {
+            try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
+        }
     }
 }
