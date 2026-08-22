@@ -37,6 +37,10 @@ struct RiteView: View {
     /// Activity is deferred.
     var depth: Int = 0
 
+    /// When set, the Rite is running standalone (e.g. from the unmet Door, outside
+    /// the nav stack); finishing calls this instead of popping the path.
+    var onFinish: (() -> Void)? = nil
+
     @State private var movement: RiteMovement = .arrival
     @State private var keptText: String = ""
 
@@ -92,7 +96,11 @@ struct RiteView: View {
         Task { await store.logStoryMet(codexId: RiteCanon.codexId, title: RiteCanon.title) }
     }
     private func finish() {
-        if !path.isEmpty { path.removeLast(path.count) }
+        if let onFinish {
+            onFinish()
+        } else if !path.isEmpty {
+            path.removeLast(path.count)
+        }
     }
 }
 

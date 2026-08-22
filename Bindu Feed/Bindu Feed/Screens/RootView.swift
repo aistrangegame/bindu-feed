@@ -20,6 +20,12 @@ struct RootView: View {
             guard !hasLoaded else { return }
             hasLoaded = true
             await reloadFeed()
+            // A destination chosen from the launch Door's turn — push it now that
+            // the feed is reachable.
+            if let route = store.pendingLaunchRoute {
+                store.pendingLaunchRoute = nil
+                path.append(route)
+            }
         }
         .onChange(of: selectedRoom) { _ in
             Task { await store.loadStories(room: selectedRoom, sort: sort) }

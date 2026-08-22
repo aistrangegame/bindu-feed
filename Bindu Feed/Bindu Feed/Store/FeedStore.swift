@@ -443,6 +443,17 @@ final class FeedStore: ObservableObject {
         )
     }
 
+    /// The Door's weather read: is today already met? Derived from App Activity,
+    /// never a stored flag. Fail-safe to `false` (unmet).
+    func checkTodayMet() async -> Bool {
+        await service.isTodayMet()
+    }
+
+    /// A destination chosen from the launch Door's turn — the Door lives before
+    /// the NavigationStack, so it parks the route here; RootView consumes it on
+    /// appear and pushes it once the feed is reachable. Nil clears it.
+    @Published var pendingLaunchRoute: FeedRoute?
+
     // MARK: - Refresh handoff
 
     func flagStoryRefresh(storyId: String) {

@@ -24,7 +24,7 @@ struct ContentCoordinator: View {
                 })
                 .transition(.opacity)
             } else if !doorCrossed {
-                PracticeDoorView(onComplete: { doorCrossed = true })
+                DoorView(onComplete: { doorCrossed = true })
                     .transition(.opacity)
             } else {
                 RootView()

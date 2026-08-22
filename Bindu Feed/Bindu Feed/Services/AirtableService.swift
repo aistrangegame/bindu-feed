@@ -450,6 +450,39 @@ final class AirtableService {
         }
     }
 
+    /// Is today "met"? A day is met when a `Story Met` activity record exists
+    /// dated today — a derived read of lived activity, never a stored local flag
+    /// (Law 2). Fail-safe: any error returns `false` (unmet), so the Door offers
+    /// the Rite rather than wrongly skipping it.
+    func isTodayMet() async -> Bool {
+        guard !token.isEmpty else { return false }
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM-dd"
+        let today = fmt.string(from: Date())
+        let formula = "AND({Activity Type}='Story Met',DATETIME_FORMAT({Activity Date},'YYYY-MM-DD')='\(today)')"
+
+        var comps = URLComponents(string: appActivityURLString)
+        comps?.queryItems = [
+            URLQueryItem(name: "filterByFormula", value: formula),
+            URLQueryItem(name: "pageSize", value: "1"),
+            URLQueryItem(name: "fields[]", value: "Activity Type"),
+        ]
+        guard let url = comps?.url else { return false }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, response) = try await session.data(for: req)
+            try Self.validate(response: response, data: data)
+            let page = try decoder.decode(AirtableResponse.self, from: data)
+            return !page.records.isEmpty
+        } catch {
+            #if DEBUG
+            print("[AirtableService] isTodayMet failed (defaulting unmet): \(error)")
+            #endif
+            return false
+        }
+    }
+
     // Best-effort PATCH that marks when a Story's depth was last witnessed.
     // Fires from Resonance Depth dissolve; failures should be swallowed by
     // the caller — see the comment above updateStoryLastActivityDate.
