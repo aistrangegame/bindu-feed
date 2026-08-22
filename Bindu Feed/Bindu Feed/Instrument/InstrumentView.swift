@@ -1,17 +1,19 @@
 import SwiftUI
 
-// THE INSTRUMENT — the continuous axis, one space, not screens. Vertical travel
-// moves Z; the fifteen registers' shells breathe as atmosphere (nothing created or
-// destroyed); the one particle rides the whole axis. Each register renders its own
-// content when he settles into it: the Universe outward (−4…−1), the Point inward
-// (+2…+8), the gate (+1), the centre's reveal (+9). Reached from the turn's axis
-// rows at a target Z; a firm pull travels, a settle lands.
+// THE INSTRUMENT — the continuous axis, one space, not screens. Vertical travel moves
+// Z through fourteen membranes (AxisTravel): a register is separated from its neighbour
+// by a surface that must be MEANT — push through it and it gives, once, and stands open;
+// the sky's edge opens instead to STILLNESS, delivering you to the Light. Crossing is a
+// passage, not a snap: the camera leaves the hand and glides across. The one particle
+// rides the whole axis and, at the centre, BLOOMS to fill the frame — it stops being a
+// dot in a world and becomes the world ("every dot you touched was me"). Each register
+// renders its own content when he settles into it.
 //
-// Wave-6 scope, stated for the completeness pass: this is a SwiftUI-Canvas port of
-// the axis — travel + shells + particle + per-register content are here and
-// walkable end to end. The full passage DSP (wormhole/whitehole with two gates)
-// and the membrane meniscus are rendered as a zoom-cross flash (≈); the physics is
-// a settle-to-register spring rather than the prototype's force/brake model (≈).
+// Wave-6 rebuild (built to spine-travel.js / spine-passage.js verbatim): the membrane
+// physics, the stillness gate, the passage, the opened-surface memory, and the centre
+// bloom are here. Still ahead in this surface's own passes: the wormhole/whitehole throat
+// visuals, the seven distinct Point worlds, the four-scale Universe, the Light rendered
+// in-axis. The hand-feel constants are the design's own; the felt tuning is the Neev walk.
 
 struct InstrumentView: View {
     @Binding var path: NavigationPath
@@ -21,12 +23,18 @@ struct InstrumentView: View {
     @EnvironmentObject private var breath: Breath
     @EnvironmentObject private var soundEngine: SoundEngine
 
-    @State private var z: Double = 0
-    @State private var dragZ: Double = 0          // z at drag start
-    @State private var crossFlash: Double = 0     // the passage flash 0…1
-    @State private var lastRegister = 5
+    @StateObject private var travel: AxisTravel
+    @State private var lastDragY: CGFloat = 0
 
+    init(path: Binding<NavigationPath>, startZ: Int) {
+        self._path = path
+        self.startZ = startZ
+        self._travel = StateObject(wrappedValue: AxisTravel(startZ: Double(startZ)))
+    }
+
+    private var z: Double { travel.z }
     private var here: AxisRegister { Axis.nearest(z) }
+    private var atSky: Bool { abs(z + 4) < 0.45 }
 
     var body: some View {
         ZStack {
@@ -39,16 +47,21 @@ struct InstrumentView: View {
             // The register content, brightening as he settles into it.
             content
                 .opacity(Axis.presence(here.i, z))
-                .allowsHitTesting(Axis.presence(here.i, z) > 0.6)
+                .allowsHitTesting(Axis.presence(here.i, z) > 0.6 && !travel.crossing)
 
-            // The one particle — rides centre → crown as he goes inward.
+            // The stillness gate — at the sky, the way on thins with stillness, not force.
+            if travel.thin > 0.01 {
+                stillnessGate
+            }
+
+            // The one particle — rides centre → crown, and blooms into the world at +9.
             particle
 
             // The passage flash on crossing.
-            if crossFlash > 0.01 {
+            if travel.flash > 0.01 {
                 Circle().fill(RadialGradient(
-                    colors: [here.color.opacity(0.5 * crossFlash), .clear],
-                    center: .center, startRadius: 0, endRadius: 400 * (1 + crossFlash)))
+                    colors: [here.color.opacity(0.5 * travel.flash), .clear],
+                    center: .center, startRadius: 0, endRadius: 400 * (1 + travel.flash)))
                     .ignoresSafeArea().allowsHitTesting(false)
             }
 
@@ -67,7 +80,7 @@ struct InstrumentView: View {
                 }
                 .padding(.horizontal, 20).padding(.top, 8)
                 Spacer()
-                Text("pull to travel")
+                Text(atSky && !travel.crossing ? "be still — the way opens" : "pull to travel")
                     .font(.spaceMono(8)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.3 + 0.3 * breath.value))
                     .padding(.bottom, 20)
@@ -75,41 +88,31 @@ struct InstrumentView: View {
         }
         .navigationBarBackButtonHidden(true)
         .contentShape(Rectangle())
-        .gesture(travel)
+        .gesture(travelGesture)
         .onAppear {
-            z = Double(startZ)
-            lastRegister = here.i
+            travel.onCross = { reg in
+                soundEngine.riteThreshold(hz: reg.hz, dur: 4)   // the crossing, struck
+            }
             soundEngine.setContext(.base)
+            travel.start()
         }
+        .onDisappear { travel.stop() }
     }
 
-    // MARK: - Travel
+    // MARK: - Travel (the hand feeds AxisTravel; the engine owns the physics)
 
-    private var travel: some Gesture {
-        DragGesture(minimumDistance: 6)
+    private var travelGesture: some Gesture {
+        DragGesture(minimumDistance: 4)
             .onChanged { v in
-                // Up = inward (+Z), down = outward (−Z). Scaled to design points.
-                let delta = -v.translation.height / 150
-                z = Axis.clampZ(dragZ + delta)
-                checkCrossing()
+                let delta = v.translation.height - lastDragY
+                lastDragY = v.translation.height
+                travel.setDown(true)
+                travel.applyDrag(Double(delta))
             }
             .onEnded { _ in
-                // Settle into the nearest register.
-                let target = Double(Axis.nearest(z).z + 5 - 5)
-                withAnimation(.spring(response: 0.7, dampingFraction: 0.85)) { z = target }
-                dragZ = z
+                lastDragY = 0
+                travel.setDown(false)
             }
-    }
-
-    private func checkCrossing() {
-        let r = Axis.nearest(z)
-        if r.i != lastRegister {
-            lastRegister = r.i
-            dragZ = z   // keep the drag anchored so it doesn't fight the new register
-            soundEngine.riteThreshold(hz: r.hz, dur: 4)   // a gate passing (≈ the travel calls)
-            crossFlash = 1
-            withAnimation(.easeOut(duration: 0.9)) { crossFlash = 0 }
-        }
     }
 
     // MARK: - Shells (the atmosphere)
@@ -129,24 +132,60 @@ struct InstrumentView: View {
                 ctx.stroke(Path(ellipseIn: CGRect(x: cx - rim, y: cy - rim, width: rim * 2, height: rim * 2)),
                            with: .color(reg.color.opacity(op)), lineWidth: 0.8)
             }
+            // The near membrane, felt as a meniscus that tightens as he leans into it.
+            let ten = travel.tension
+            if ten > 0.02 {
+                let rim = R0 * (1.62 - 0.92 * ten)
+                ctx.stroke(Path(ellipseIn: CGRect(x: cx - rim, y: cy - rim, width: rim * 2, height: rim * 2)),
+                           with: .color(here.color.opacity(0.10 + 0.34 * ten)), lineWidth: 0.7 + 1.5 * ten)
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
     }
 
-    // MARK: - The one particle (rides centre → crown inward)
+    // MARK: - The stillness gate (the sky thins with stillness)
+
+    private var stillnessGate: some View {
+        GeometryReader { geo in
+            let R0 = min(geo.size.width, geo.size.height) * 0.5
+            let still = travel.thin
+            let rim = R0 * (1.10 + still * 1.30)
+            ZStack {
+                Circle()
+                    .stroke(Color(hex: "#EDE3CE").opacity(0.12 + 0.55 * still), lineWidth: 0.8 + still)
+                    .frame(width: rim * 2, height: rim * 2)
+                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                Text("it holds until you stop meaning it")
+                    .font(.loraItalic(12)).foregroundStyle(Color(hex: "#EDE3CE").opacity(0.25 + 0.5 * still))
+                    .position(x: geo.size.width / 2, y: geo.size.height * 0.30)
+                    .opacity(still > 0.12 ? 1 : 0)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    // MARK: - The one particle (rides centre → crown, blooms into the world at the centre)
 
     private var particle: some View {
-        let inward = max(0, min(1, z / 9))          // 0 at feed, 1 at centre
-        let cy = 0.5 - 0.368 * inward                // H/2 → H*0.132
-        let r = 12 * (1 - inward * 0.30) + 6 * breath.value
+        let inward = max(0, min(1, z / 9))                    // 0 at feed, 1 at centre
+        let grow = max(0, min(1, (z - 8.4) / 1.1))            // begins to swell near the centre
+        let fill = max(0, min(1, (z - 8.6) / 0.95))           // paints the whole frame red at the centre
+        let cy = 0.5 - 0.368 * inward                         // H/2 → H*0.132
+        let base = 5.0 + 4.0 * breath.value                   // the only fixed thing — small, constant
+        let r = base * (1 + grow * grow * 9)                  // then it balloons
         return GeometryReader { geo in
-            Circle()
-                .fill(RadialGradient(colors: [BinduParticle.core, BinduParticle.deep.opacity(0)],
-                                     center: .center, startRadius: 0, endRadius: r))
-                .frame(width: r * 2, height: r * 2)
-                .position(x: geo.size.width / 2, y: geo.size.height * cy)
-                .shadow(color: BinduParticle.core.opacity(0.5 * breath.value), radius: r)
+            ZStack {
+                if fill > 0.001 {                             // it becomes the world
+                    Rectangle().fill(BinduParticle.core.opacity(fill)).ignoresSafeArea()
+                }
+                Circle()
+                    .fill(RadialGradient(colors: [BinduParticle.core, BinduParticle.deep.opacity(0)],
+                                         center: .center, startRadius: 0, endRadius: r))
+                    .frame(width: r * 2, height: r * 2)
+                    .position(x: geo.size.width / 2, y: geo.size.height * cy)
+                    .shadow(color: BinduParticle.core.opacity(0.5 * breath.value), radius: min(r, 40))
+            }
         }
         .allowsHitTesting(false)
     }

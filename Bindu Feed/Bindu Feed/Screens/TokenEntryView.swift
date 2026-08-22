@@ -7,6 +7,13 @@ struct TokenEntryView: View {
     @State private var token: String = ""
     @FocusState private var fieldFocused: Bool
 
+    #if DEBUG
+    // Dev-only door straight into the Instrument, so the axis can be walked without a
+    // live PAT (the axis itself needs no Airtable data). Never ships — DEBUG only.
+    @State private var showInstrument = false
+    @State private var demoPath = NavigationPath()
+    #endif
+
     private var canBegin: Bool {
         !token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -63,11 +70,32 @@ struct TokenEntryView: View {
                 }
                 .disabled(!canBegin)
 
+                #if DEBUG
+                Button { showInstrument = true } label: {
+                    Text("⟿ walk the Instrument")
+                        .font(.spaceMono(10)).tracking(2)
+                        .foregroundColor(BinduTheme.inkTertiary)
+                        .padding(.top, BinduTheme.space16)
+                }
+                #endif
+
                 Spacer()
             }
             .padding(.vertical, BinduTheme.space24)
         }
         .onAppear { fieldFocused = true }
+        #if DEBUG
+        .fullScreenCover(isPresented: $showInstrument) {
+            ZStack(alignment: .topTrailing) {
+                InstrumentView(path: $demoPath, startZ: 0)
+                Button { showInstrument = false } label: {
+                    Text("✕").font(.spaceMono(15))
+                        .foregroundColor(BinduTheme.inkSecondary)
+                        .padding(16)
+                }
+            }
+        }
+        #endif
     }
 
     private func begin() {
