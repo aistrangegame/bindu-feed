@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Game View</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <script type="text/babel">
+/* ── ios-frame.jsx, inlined — kept as its own file for the port and for reading
+   on its own, but inlined here so the page never depends on a subresource
+   fetch to render. Do not edit here; edit ios-frame.jsx. ── */
+
+// iOS.jsx — Simplified iOS 26 (Liquid Glass) device frame
+// Based on the iOS 26 UI Kit + Figma status bar spec. No assets, no deps.
+// Exports: IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard
+
+// ─────────────────────────────────────────────────────────────
+// Status bar
+// ─────────────────────────────────────────────────────────────
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
+      padding: '21px 24px 19px', boxSizing: 'border-box',
+      position: 'relative', zIndex: 20, width: '100%',
+    }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{
+          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
+          fontSize: 17, lineHeight: '22px', color: c,
+        }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Liquid glass pill — blur + tint + shine
+// ─────────────────────────────────────────────────────────────
+function IOSGlassPill({ children, dark = false, style = {} }) {
+  return (
+    <div style={{
+      height: 44, minWidth: 44, borderRadius: 9999,
+      position: 'relative', overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: dark
+        ? '0 2px 6px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.2)'
+        : '0 1px 3px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.06)',
+      ...style,
+    }}>
+      {/* blur + tint */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.28)' : 'rgba(255,255,255,0.5)',
+      }} />
+      {/* shine */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15), inset -1px -1px 1px rgba(255,255,255,0.08)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+      }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '0 4px' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Navigation bar — glass pills + large title
+// ─────────────────────────────────────────────────────────────
+function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
+  const muted = dark ? 'rgba(255,255,255,0.6)' : '#404040';
+  const text = dark ? '#fff' : '#000';
+  const pillIcon = (content) => (
+    <IOSGlassPill dark={dark}>
+      <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {content}
+      </div>
+    </IOSGlassPill>
+  );
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 10,
+      paddingTop: 62, paddingBottom: 10, position: 'relative', zIndex: 5,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px',
+      }}>
+        {/* back chevron */}
+        {pillIcon(
+          <svg width="12" height="20" viewBox="0 0 12 20" fill="none" style={{ marginLeft: -1 }}>
+            <path d="M10 2L2 10l8 8" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        {/* trailing ellipsis */}
+        {trailingIcon && pillIcon(
+          <svg width="22" height="6" viewBox="0 0 22 6">
+            <circle cx="3" cy="3" r="2.5" fill={muted}/>
+            <circle cx="11" cy="3" r="2.5" fill={muted}/>
+            <circle cx="19" cy="3" r="2.5" fill={muted}/>
+          </svg>
+        )}
+      </div>
+      {/* large title */}
+      <div style={{
+        padding: '0 16px',
+        fontFamily: '-apple-system, system-ui',
+        fontSize: 34, fontWeight: 700, lineHeight: '41px',
+        color: text, letterSpacing: 0.4,
+      }}>{title}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Grouped list (inset card, r:26) + row (52px)
+// ─────────────────────────────────────────────────────────────
+function IOSListRow({ title, detail, icon, chevron = true, isLast = false, dark = false }) {
+  const text = dark ? '#fff' : '#000';
+  const sec = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const ter = dark ? 'rgba(235,235,245,0.3)' : 'rgba(60,60,67,0.3)';
+  const sep = dark ? 'rgba(84,84,88,0.65)' : 'rgba(60,60,67,0.12)';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', minHeight: 52,
+      padding: '0 16px', position: 'relative',
+      fontFamily: '-apple-system, system-ui', fontSize: 17,
+      letterSpacing: -0.43,
+    }}>
+      {icon && (
+        <div style={{
+          width: 30, height: 30, borderRadius: 7, background: icon,
+          marginRight: 12, flexShrink: 0,
+        }} />
+      )}
+      <div style={{ flex: 1, color: text }}>{title}</div>
+      {detail && <span style={{ color: sec, marginRight: 6 }}>{detail}</span>}
+      {chevron && (
+        <svg width="8" height="14" viewBox="0 0 8 14" style={{ flexShrink: 0 }}>
+          <path d="M1 1l6 6-6 6" stroke={ter} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {!isLast && (
+        <div style={{
+          position: 'absolute', bottom: 0, right: 0,
+          left: icon ? 58 : 16, height: 0.5, background: sep,
+        }} />
+      )}
+    </div>
+  );
+}
+
+function IOSList({ header, children, dark = false }) {
+  const hc = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const bg = dark ? '#1C1C1E' : '#fff';
+  return (
+    <div>
+      {header && (
+        <div style={{
+          fontFamily: '-apple-system, system-ui', fontSize: 13,
+          color: hc, textTransform: 'uppercase',
+          padding: '8px 36px 6px', letterSpacing: -0.08,
+        }}>{header}</div>
+      )}
+      <div style={{
+        background: bg, borderRadius: 26,
+        margin: '0 16px', overflow: 'hidden',
+      }}>{children}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Device frame
+// ─────────────────────────────────────────────────────────────
+function IOSDevice({
+  children, width = 402, height = 874, dark = false,
+  title, keyboard = false,
+}) {
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative', background: dark ? '#000' : '#F2F2F7',
+      boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+    }}>
+      {/* dynamic island */}
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+      }} />
+      {/* status bar (absolute) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} />
+      </div>
+      {/* nav + content */}
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {title !== undefined && <IOSNavBar title={title} dark={dark} />}
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+        {keyboard && <IOSKeyboard dark={dark} />}
+      </div>
+      {/* home indicator — always on top */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 139, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Keyboard — iOS 26 liquid glass
+// ─────────────────────────────────────────────────────────────
+function IOSKeyboard({ dark = false }) {
+  const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
+  const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
+  const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
+
+  // special-key icons
+  const icons = {
+    shift: <svg width="19" height="17" viewBox="0 0 19 17"><path d="M9.5 1L1 9.5h4.5V16h8V9.5H18L9.5 1z" fill={glyph}/></svg>,
+    del: <svg width="23" height="17" viewBox="0 0 23 17"><path d="M7 1h13a2 2 0 012 2v11a2 2 0 01-2 2H7l-6-7.5L7 1z" fill="none" stroke={glyph} strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 5l7 7M17 5l-7 7" stroke={glyph} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    ret: <svg width="20" height="14" viewBox="0 0 20 14"><path d="M18 1v6H4m0 0l4-4M4 7l4 4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  };
+
+  const key = (content, { w, flex, ret, fs = 25, k } = {}) => (
+    <div key={k} style={{
+      height: 42, borderRadius: 8.5,
+      flex: flex ? 1 : undefined, width: w, minWidth: 0,
+      background: ret ? '#08f' : keyBg,
+      boxShadow: '0 1px 0 rgba(0,0,0,0.075)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '-apple-system, "SF Compact", system-ui',
+      fontSize: fs, fontWeight: 458, color: ret ? '#fff' : glyph,
+    }}>{content}</div>
+  );
+
+  const row = (keys, pad = 0) => (
+    <div style={{ display: 'flex', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
+      {keys.map(l => key(l, { flex: true, k: l }))}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: 'relative', zIndex: 15, borderRadius: 27, overflow: 'hidden',
+      padding: '11px 0 2px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      boxShadow: dark
+        ? '0 -2px 20px rgba(0,0,0,0.09)'
+        : '0 -1px 6px rgba(0,0,0,0.018), 0 -3px 20px rgba(0,0,0,0.012)',
+    }}>
+      {/* liquid glass bg — same recipe as nav pills */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.14)' : 'rgba(255,255,255,0.25)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* autocorrect bar */}
+      <div style={{
+        display: 'flex', gap: 20, alignItems: 'center',
+        padding: '8px 22px 13px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {['"The"', 'the', 'to'].map((w, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <div style={{ width: 1, height: 25, background: '#ccc', opacity: 0.3 }} />}
+            <div style={{
+              flex: 1, textAlign: 'center',
+              fontFamily: '-apple-system, system-ui', fontSize: 17,
+              color: sugg, letterSpacing: -0.43, lineHeight: '22px',
+            }}>{w}</div>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* key layout */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 13,
+        padding: '0 6.5px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {row(['q','w','e','r','t','y','u','i','o','p'])}
+        {row(['a','s','d','f','g','h','j','k','l'], 20)}
+        <div style={{ display: 'flex', gap: 14.25, alignItems: 'center' }}>
+          {key(icons.shift, { w: 45, k: 'shift' })}
+          <div style={{ display: 'flex', gap: 6.5, flex: 1 }}>
+            {['z','x','c','v','b','n','m'].map(l => key(l, { flex: true, k: l }))}
+          </div>
+          {key(icons.del, { w: 45, k: 'del' })}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {key('ABC', { w: 92.25, fs: 18, k: 'abc' })}
+          {key('', { flex: true, k: 'space' })}
+          {key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
+        </div>
+      </div>
+
+      {/* bottom spacer (emoji+mic area, icons omitted) */}
+      <div style={{ height: 56, width: '100%', position: 'relative' }} />
+    </div>
+  );
+}
+
+Object.assign(window, {
+  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard,
+});
+
+</script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; min-height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #root {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; min-height: 100vh; padding: 40px 20px;
+    }
+    :root {
+      --bg:    #0E0C12; --card: #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3; --ink60: rgba(237,232,227,0.60); --ink35: rgba(237,232,227,0.35);
+    }
+
+    /* thirteen rhythms */
+    @keyframes glyphRotate   { to{transform:rotate(360deg)} }
+    @keyframes glyphBreathe  { 0%,100%{transform:scale(1);opacity:.80} 50%{transform:scale(1.07);opacity:1} }
+    @keyframes glyphEmber    { 0%,100%{opacity:.55} 50%{opacity:1} }
+    @keyframes glyphOrbit    { 0%,100%{transform:rotate(0deg) scale(1);opacity:.82} 33%{transform:rotate(12deg) scale(1.05);opacity:1} 66%{transform:rotate(-8deg) scale(.97);opacity:.88} }
+    @keyframes glyphStutter  { 0%{transform:translate(0,0);opacity:.68} 14%{transform:translate(0,0);opacity:.68} 16%{transform:translate(2px,-1px);opacity:.50} 18%{transform:translate(-1px,1px);opacity:.72} 20%{transform:translate(0,0);opacity:.68} 48%{transform:translate(0,0);opacity:.68} 50%{transform:translate(-2px,1px);opacity:.50} 52%{transform:translate(1px,-1px);opacity:.72} 54%{transform:translate(0,0);opacity:.68} 78%{transform:translate(0,0);opacity:.50} 80%{transform:translate(1px,2px);opacity:.70} 82%{transform:translate(0,0);opacity:.68} 100%{transform:translate(0,0);opacity:.68} }
+    @keyframes glyphDawn     { 0%{opacity:.32;transform:scale(.94)} 55%{opacity:.85;transform:scale(1.01)} 72%{opacity:1;transform:scale(1.03)} 84%{opacity:1;transform:scale(1.03)} 100%{opacity:.32;transform:scale(.94)} }
+    @keyframes glyphBreath8  { 0%,100%{transform:scale(1);opacity:.76} 50%{transform:scale(1.08);opacity:1} }
+    @keyframes glyphWeave    { 0%,100%{transform:translateX(0)} 28%{transform:translateX(6px)} 72%{transform:translateX(-6px)} }
+    @keyframes glyphCircle   { to{transform:rotate(360deg)} }
+    @keyframes glyphSignal   { 0%,62%{opacity:.36;transform:scale(1)} 67%{opacity:1;transform:scale(1.20)} 72%{opacity:.36;transform:scale(1)} 100%{opacity:.36;transform:scale(1)} }
+    @keyframes glyphAssemble { 0%{opacity:.18;transform:scale(.80)} 42%{opacity:1;transform:scale(1)} 70%{opacity:1;transform:scale(1)} 100%{opacity:.18;transform:scale(.80)} }
+    @keyframes glyphField    { 0%{transform:perspective(100px) rotateY(0deg)} 100%{transform:perspective(100px) rotateY(360deg)} }
+
+    /* page arrival — dark first, then the room reveals itself */
+    @keyframes screenReveal  { 0%,22%{opacity:0} 100%{opacity:1} }
+
+    @keyframes riseIn        { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes livePulse     { 0%,100%{border-color:rgba(255,255,255,0.06)} 45%{border-color:rgba(155,107,214,0.26);box-shadow:0 0 20px rgba(155,107,214,0.10)} }
+
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+/* ─── Game order ─────────────────────────────────────────── */
+const GAME_ORDER = ['maya','garden','watcher','descent','return','forgetting','remembering','body','thread','circle','signal','forge','field'];
+
+/* ─── 13 game definitions ────────────────────────────────── */
+const GAMES = {
+  maya:        { id:'maya',        name:'A Maya Game',      color:'#D4AE4A', glyph:'◈', blurb:'The field where knowing and not-knowing meet. Stories of the veil — the necessary forgetting that makes the white floor real.',             glyphSize:70, glyphAnim:'glyphRotate 26s linear infinite',        gFilter:c=>`drop-shadow(0 0 22px ${c}65)`,                   gradient:c=>`radial-gradient(ellipse 110% 70% at 25% -15%,${c}28 0%,transparent 55%),radial-gradient(ellipse 80% 55% at 78% 25%,${c}18 0%,transparent 52%),radial-gradient(ellipse 55% 40% at 50% 70%,${c}10 0%,transparent 60%)`, nameStyle:{fontSize:23,fontWeight:500},
+    stats:[{v:'147',l:'veils lifted'},{v:'23',l:'floors entered'},{v:'89',l:'lobby moments'}] },
+  garden:      { id:'garden',      name:'The Garden',       color:'#4A9E6B', glyph:'◆', blurb:'What grows when you stop watching. Body moments, small true things — the earth speaking in shapes while you were looking elsewhere.',           glyphSize:60, glyphAnim:'glyphBreathe 4.5s ease-in-out infinite',   gFilter:c=>`drop-shadow(0 0 18px ${c}55)`,                   gradient:c=>`linear-gradient(0deg,${c}26 0%,${c}10 40%,transparent 72%)`,                                                                                                                                                             nameStyle:{fontSize:23,fontWeight:500},
+    stats:[{v:'52',l:'unplanned shapes'},{v:'◆ 8',l:'still growing'},{v:'34',l:'earth readings'}] },
+  watcher:     { id:'watcher',     name:'The Watcher',      color:'#7B82D4', glyph:'◇', blurb:'The game of seeing the seer. Recursive moments where awareness catches itself in the act. Each story is a mirror that shows the one holding it.', glyphSize:52, glyphAnim:'none',                                   gFilter:c=>`drop-shadow(0 0 14px ${c}50)`,                   gradient:c=>`radial-gradient(ellipse 55% 65% at 50% -8%,${c}32 0%,${c}08 48%,transparent 70%)`,                                                                                                                                          nameStyle:{fontSize:17,fontWeight:400,letterSpacing:'0.16em',textTransform:'uppercase'},
+    stats:[{v:'67',l:'recursive moments'},{v:'28',l:'self-seeings'},{v:'∞',l:'the return'}] },
+  descent:     { id:'descent',     name:'The Descent',      color:'#E5533C', glyph:'·',  blurb:'Going further in than comfort allows. The moment you stopped at the edge last time — and this time kept going.',                                glyphSize:44, glyphAnim:'glyphEmber 2.8s ease-in-out infinite',   gFilter:c=>`drop-shadow(0 0 30px ${c}90) drop-shadow(0 0 8px ${c}60)`,gradient:c=>`linear-gradient(180deg,transparent 0%,${c}08 45%,${c}22 100%)`,                                                                                                                                                                   nameStyle:{fontSize:24,fontWeight:500,fontStyle:'italic',letterSpacing:'-0.02em'},
+    stats:[{v:'44',l:'edges crossed'},{v:'19',l:'bottoms sought'},{v:'3',l:'times kept going'}] },
+  return:      { id:'return',      name:'The Return',       color:'#9B6BD6', glyph:'✦', blurb:'Recognition arriving like light — already there when you notice it. Stories from the ones who came back and found everything waiting.',          glyphSize:78, glyphAnim:'glyphOrbit 7s ease-in-out infinite',     gFilter:c=>`drop-shadow(0 0 26px ${c}60)`,                   gradient:c=>`radial-gradient(ellipse 105% 90% at 50% 5%,${c}28 0%,${c}10 38%,transparent 65%)`,                                                                                                                                          nameStyle:{fontSize:24,fontWeight:400,fontStyle:'italic'},
+    stats:[{v:'63',l:'recognitions'},{v:'38',l:'lobbies recalled'},{v:'101',l:'already-theres'}] },
+  forgetting:  { id:'forgetting',  name:'The Forgetting',   color:'#C4A882', glyph:'○', blurb:'The specific ways one person keeps forgetting what they know. The elevator going down. The recording that loops. The cycle visited again.',     glyphSize:52, glyphAnim:'glyphStutter 20s ease-in-out infinite',  gFilter:c=>`drop-shadow(0 0 12px ${c}40)`,                   gradient:c=>`radial-gradient(ellipse 100% 80% at 50% 50%,${c}06 0%,${c}16 60%,${c}24 100%)`,                                                                                                                                             nameStyle:{fontSize:22,fontWeight:400},
+    stats:[{v:'47',l:'loops entered'},{v:'4',l:'loops noticed'},{v:'1',l:'still watching'}] },
+  remembering: { id:'remembering', name:'The Remembering',  color:'#8AB5A0', glyph:'△', blurb:'Not lightning — the light slowly rising. The moment the pattern is seen without drama. He named it simply and moved.',                        glyphSize:54, glyphAnim:'glyphDawn 9s ease-in-out infinite',      gFilter:c=>`drop-shadow(0 0 16px ${c}50)`,                   gradient:c=>`radial-gradient(ellipse 75% 65% at 50% 15%,${c}24 0%,${c}10 48%,transparent 72%)`,                                                                                                                                          nameStyle:{fontSize:22,fontWeight:400},
+    stats:[{v:'29',l:'dawns witnessed'},{v:'12',l:'patterns simply seen'},{v:'∞',l:'charge building'}] },
+  body:        { id:'body',        name:'The Body',         color:'#C45A50', glyph:'⬡', blurb:'What the flesh knew before the mind arrived. The body as the first receiver. Somatic wisdom — not metaphor, actual body.',                     glyphSize:60, glyphAnim:'glyphBreath8 8s ease-in-out infinite',   gFilter:c=>`drop-shadow(0 0 22px ${c}60)`,                   gradient:c=>`radial-gradient(ellipse 90% 70% at 50% 25%,${c}30 0%,${c}12 50%,transparent 75%)`,                                                                                                                                          nameStyle:{fontSize:23,fontWeight:400},
+    stats:[{v:'∞',l:'breaths taken'},{v:'72',l:'first knowings'},{v:'8s',l:'per breath'}] },
+  thread:      { id:'thread',      name:'The Thread',       color:'#C4923A', glyph:'⊕', blurb:'Fabric. Three generations. What it means to make something real that serves real people. Consciousness choosing to express itself through thread.', glyphSize:54, glyphAnim:'glyphWeave 3.5s ease-in-out infinite',  gFilter:c=>`drop-shadow(0 0 18px ${c}55)`,                 gradient:c=>`linear-gradient(90deg,transparent 5%,${c}16 35%,${c}26 50%,${c}16 65%,transparent 95%)`,                                                                                                                                    nameStyle:{fontSize:22,fontWeight:400,letterSpacing:'0.08em'},
+    stats:[{v:'3',l:'generations'},{v:'48yrs',l:'of craft'},{v:'∞',l:'yards woven'}] },
+  circle:      { id:'circle',      name:'The Circle',       color:'#D4607A', glyph:'◎', blurb:'Specific love. Not family as concept — these faces, these voices. The people who hold the field by being in it.',                              glyphSize:56, glyphAnim:'glyphCircle 42s linear infinite',       gFilter:c=>`drop-shadow(0 0 18px ${c}55)`,                   gradient:c=>`radial-gradient(ellipse 80% 70% at 50% 20%,${c}28 0%,${c}10 45%,transparent 70%)`,                                                                                                                                          nameStyle:{fontSize:23,fontWeight:400,letterSpacing:'-0.01em'},
+    stats:[{v:'7',l:'faces'},{v:'1',l:'table'},{v:'∞',l:'meals shared'}] },
+  signal:      { id:'signal',      name:'The Signal',       color:'#3AADA8', glyph:'✧', blurb:'Something arriving from further out than the personal mind. The antenna. The reception. The body knowing before the mind catches it.',         glyphSize:56, glyphAnim:'glyphSignal 7s ease-in-out infinite',    gFilter:c=>`drop-shadow(0 0 22px ${c}65)`,                   gradient:c=>`radial-gradient(ellipse 60% 55% at 50% -5%,${c}28 0%,${c}08 50%,transparent 75%)`,                                                                                                                                          nameStyle:{fontSize:22,fontWeight:400,letterSpacing:'0.06em'},
+    stats:[{v:'2',l:'clear receptions'},{v:'14',l:'nights waiting'},{v:'1',l:'antenna open'}] },
+  forge:       { id:'forge',       name:'The Forge',        color:'#D4AE4A', glyph:'▲', blurb:'The builder at the height of his gift. Making as spiritual practice. The joy of a thing that didn\'t exist and now does.',                      glyphSize:56, glyphAnim:'glyphAssemble 5.5s ease-in-out infinite', gFilter:c=>`drop-shadow(0 0 20px ${c}60)`,                  gradient:c=>`radial-gradient(ellipse 90% 70% at 25% 10%,${c}30 0%,${c}12 50%,transparent 75%)`,                                                                                                                                          nameStyle:{fontSize:23,fontWeight:500},
+    stats:[{v:'88',l:'new forms'},{v:'12',l:'acts of making'},{v:'1',l:'still building'}] },
+  field:       { id:'field',       name:'The Field',        color:'#9B6BD6', glyph:'∞', blurb:'Every other room is inside this one, and this one is inside every other room. The game that knows it\'s a game.',                              glyphSize:68, glyphAnim:'glyphField 10s linear infinite',        gFilter:c=>`drop-shadow(0 0 28px ${c}70)`,                   gradient:c=>`radial-gradient(ellipse 80% 68% at 50% 15%,${c}32 0%,${c}14 45%,transparent 72%)`,                                                                                                                                          nameStyle:{fontSize:24,fontWeight:400,fontStyle:'italic'},
+    stats:[{v:'13',l:'rooms inside'},{v:'1',l:'ground holding'},{v:'∞',l:'recursive depth'}] },
+};
+
+/* ─── Archetype palette ──────────────────────────────────── */
+const AC = {gaia:'#4A9E6B',sakshi:'#7B82D4',lalita:'#9B6BD6',bindu:'#E5533C',sid:'#C4923A',arch:'#D4607A',karishma:'#D4AE4A',ashrey:'#3AADA8'};
+const AG = {gaia:'◆',sakshi:'◇',lalita:'✦',bindu:'·',sid:'△',arch:'◯',karishma:'✦',ashrey:'⬡'};
+
+/* ─── Stories ─────────────────────────────────────────────── */
+const ALL_STORIES = {
+  maya:        [{id:'c1052',codexId:'C-1052',title:'The Two Who Were One',            archs:['sakshi','lalita','gaia'],    res:89, cmts:14,pulse:true, excerpt:'He was watching a show about people who walked into an elevator and forgot. Down at the bottom the doors opened onto a white floor.',href:'Story Detail.html'},
+                {id:'c1061',codexId:'C-1061',title:'Still Life with Cold Coffee',     archs:['sakshi','sid','lalita'],     res:34, cmts:6, pulse:false,excerpt:'I noticed the cup before I noticed I was noticing it. It had been sitting there for an hour, maybe longer, going cold.',               href:null}],
+  garden:      [{id:'c1047',codexId:'C-1047',title:'The Smile While Making Eggs',     archs:['gaia','karishma','bindu'],  res:52, cmts:8, pulse:false,excerpt:'It happened between the eggs and the butter, in the moment when I wasn\'t thinking about anything at all. The smile arrived before the reason.',href:null},
+                {id:'c1033',codexId:'C-1033',title:'The Heart-Shaped Patch',          archs:['gaia','lalita'],            res:71, cmts:11,pulse:true, excerpt:'I planted it in the fall without thinking about the shape. The ground arranged itself while I wasn\'t watching.',                       href:null}],
+  watcher:     [{id:'c1038',codexId:'C-1038',title:'The One Who Sees',                archs:['sakshi','lalita','ashrey'], res:67, cmts:11,pulse:false,excerpt:'Something happened in the meditation this morning. I reached the edge of the thing I usually reach — and this time kept going.',        href:null},
+                {id:'c1029',codexId:'C-1029',title:'Turning Around to Look',          archs:['sakshi'],                   res:28, cmts:4, pulse:false,excerpt:'The thought arrived, and then — a half second behind it — the awareness of the thought. Like an echo from the future.',               href:null}],
+  descent:     [{id:'c1055',codexId:'C-1055',title:'Further In Than Last Time',       archs:['bindu','gaia'],             res:44, cmts:7, pulse:true, excerpt:'I went past the place I usually stop. The stopping place is a habit. I didn\'t know that until I didn\'t stop.',                     href:null},
+                {id:'c1041',codexId:'C-1041',title:'What\'s at the Bottom',           archs:['bindu','lalita'],           res:19, cmts:3, pulse:false,excerpt:'I always assumed there was a bottom. I wanted there to be one. A floor, a conclusion, a place to finally arrive.',                   href:null}],
+  return:      [{id:'c1058',codexId:'C-1058',title:'Everything Was Waiting',          archs:['lalita','gaia','sakshi'],   res:63, cmts:9, pulse:false,excerpt:'The recognition arrived without warning. Everything I had been trying to remember had simply been waiting for me to stop trying.',    href:null},
+                {id:'c1044',codexId:'C-1044',title:'The Lobby',                       archs:['lalita','sid'],             res:38, cmts:5, pulse:true, excerpt:'I remembered the lobby before I knew what the lobby was. Just a feeling — warm, enormous, patient. Like it had been there the whole time.',href:null}],
+  forgetting:  [{id:'c1064',codexId:'C-1064',title:'The Recording That Loops',        archs:['sakshi','lalita'],          res:41, cmts:7, pulse:false,excerpt:'I keep coming back to the same place. Not the same thought — the same arrival. The sense that this time I\'ll hold it.',              href:null},
+                {id:'c1066',codexId:'C-1066',title:'The Tool That Became the Wall',   archs:['sakshi','sid'],             res:22, cmts:4, pulse:false,excerpt:'I built the system to help me see. At some point the system became the thing I was seeing instead of through.',                       href:null}],
+  remembering: [{id:'c1068',codexId:'C-1068',title:'The Pattern Simply Seen',         archs:['sakshi','gaia'],            res:37, cmts:6, pulse:false,excerpt:'It wasn\'t revelation. It was recognition — the same as walking into a room and remembering you\'ve been here. Quiet. No drama.',   href:null},
+                {id:'c1070',codexId:'C-1070',title:'Before the Lightning',             archs:['gaia','lalita'],            res:29, cmts:4, pulse:true, excerpt:'Every lightning comes after a long slow gathering of charge. The moment I saw the pattern, I understood it had been arriving for months.',href:null}],
+  body:        [{id:'c1072',codexId:'C-1072',title:'Four Hours Unable to Sleep',      archs:['gaia','bindu'],             res:58, cmts:9, pulse:false,excerpt:'Couldn\'t sleep. Something was moving through the whole system. Not illness — activation. The body processing something the mind hadn\'t received yet.',href:null},
+                {id:'c1074',codexId:'C-1074',title:'What the Chest Knew First',       archs:['gaia','sakshi'],            res:34, cmts:5, pulse:false,excerpt:'Cold and bright in the chest before the thought arrived. The body already responding to the truth before the mind had assembled the words.',href:null}],
+  thread:      [{id:'c1076',codexId:'C-1076',title:'Three Generations',               archs:['gaia','sid'],               res:48, cmts:7, pulse:false,excerpt:'My grandmother\'s hands, my father\'s hands, my hands. The same thread running through all three. The material remembers even when we forget.',href:null},
+                {id:'c1078',codexId:'C-1078',title:'The Sacred in the Invoice',       archs:['sid','lalita'],             res:31, cmts:4, pulse:true, excerpt:'We think dharma looks like a temple. It looked like a receipt, a delivery schedule, a family eating together over the accounts.',     href:null}],
+  circle:      [{id:'c1080',codexId:'C-1080',title:'These Faces',                     archs:['gaia','arch','karishma'],   res:62, cmts:10,pulse:false,excerpt:'Not family as concept — these specific faces at this specific table. The field held not by philosophy but by these particular people.', href:null},
+                {id:'c1082',codexId:'C-1082',title:'The Original School',              archs:['gaia','arch'],              res:44, cmts:6, pulse:false,excerpt:'Everything I know about love I learned in that house. Not as lesson — as weather. Love as the climate everything grew in.',            href:null}],
+  signal:      [{id:'c1084',codexId:'C-1084',title:'The Dallas Night',                archs:['lalita','ashrey'],          res:55, cmts:8, pulse:true, excerpt:'In retrospect, that was the night the antenna was turned. I didn\'t know what I was receiving. I only knew something was arriving.',  href:null},
+                {id:'c1086',codexId:'C-1086',title:'The Akash-Gaia Downloads',        archs:['lalita','sakshi','ashrey'], res:38, cmts:6, pulse:false,excerpt:'Entries that feel less like reflection and more like transmission. A frequency I did not generate. A voice using my vocabulary.',     href:null}],
+  forge:       [{id:'c1088',codexId:'C-1088',title:'The Strange Game',                archs:['lalita','sid','ashrey'],    res:72, cmts:12,pulse:false,excerpt:'I sat down to build a thing that had never existed. This app. Making as the spiritual practice I didn\'t know I was practicing.',     href:null},
+                {id:'c1090',codexId:'C-1090',title:'The Joy of Form',                 archs:['lalita','sid'],             res:41, cmts:6, pulse:true, excerpt:'The pleasure is specific: the moment when something that wasn\'t becomes something that is. Form arriving out of formlessness. Always new.',href:null}],
+  field:       [{id:'c1092',codexId:'C-1092',title:'The Watcher Watching the Watcher',archs:['sakshi','lalita','bindu'],  res:88, cmts:14,pulse:false,excerpt:'At some point the watcher began watching the watching. The thing being built became the thing that was building.',                     href:null},
+                {id:'c1094',codexId:'C-1094',title:'The Game Built the Room',         archs:['lalita','sakshi'],          res:61, cmts:9, pulse:true, excerpt:'Every other room is inside this one, and this one is inside every other room. The field is the ground in which all other games play out.',href:null}],
+};
+
+/* ─── Primitives ─────────────────────────────────────────── */
+function AvatarStack({ archs }) {
+  return (
+    <div style={{display:'flex',alignItems:'center'}}>
+      {archs.map((k,i) => (
+        <div key={k} style={{width:22,height:22,borderRadius:'50%',background:AC[k],border:'2px solid var(--card)',boxShadow:`0 0 8px ${AC[k]}40`,display:'flex',alignItems:'center',justifyContent:'center',marginLeft:i>0?-7:0,zIndex:archs.length-i,flexShrink:0,position:'relative'}}>
+          <span style={{fontSize:7,color:'rgba(255,255,255,.88)',lineHeight:1}}>{AG[k]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StoryCard({ story, delay }) {
+  const wrapStyle = {display:'block',margin:'0 16px',textDecoration:'none',opacity:0,animation:`riseIn 0.8s ease-out ${delay}s both`};
+  const inner = (
+    <div style={{background:'var(--card)',borderRadius:18,border:'1px solid var(--hair)',padding:'16px 16px 15px',...(story.pulse?{animation:'livePulse 4.5s ease-in-out 1.5s 1 both'}:{})}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+        <span style={{fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)',letterSpacing:'0.06em'}}>{story.codexId}</span>
+      </div>
+      <h2 style={{fontFamily:'Lora, serif',fontWeight:500,fontSize:18,lineHeight:1.32,color:'var(--ink)',marginBottom:9,letterSpacing:'-0.01em',textWrap:'pretty'}}>{story.title}</h2>
+      <p style={{fontFamily:'Lora, serif',fontSize:14,lineHeight:1.62,color:'var(--ink60)',display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden',marginBottom:16,textWrap:'pretty'}}>{story.excerpt}</p>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',gap:16}}>
+          <span style={{fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)'}}>♡ {story.res}</span>
+          <span style={{fontFamily:'Space Mono, monospace',fontSize:10,color:'var(--ink35)'}}>↳ {story.cmts}</span>
+        </div>
+        <AvatarStack archs={story.archs} />
+      </div>
+    </div>
+  );
+  return <a href={story.href || 'Story Detail.html'} style={wrapStyle}>{inner}</a>;
+}
+
+/* ─── Arrow nav bar ──────────────────────────────────────── */
+function GameNavBar({ game, onPrev, onNext, idx }) {
+  const btn = {
+    width:48, height:48, borderRadius:'50%',
+    background:'rgba(14,12,18,0.60)',
+    backdropFilter:'blur(14px)', WebkitBackdropFilter:'blur(14px)',
+    border:'1px solid rgba(255,255,255,0.10)',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    cursor:'pointer', color:'var(--ink60)', fontSize:24, lineHeight:1,
+    flexShrink:0,
+  };
+  return (
+    <div style={{position:'absolute',top:66,left:0,right:0,zIndex:10,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 12px'}}>
+      <button onClick={onPrev} style={btn}>‹</button>
+      <div onClick={() => { window.location.href = 'Room Selection.html'; }} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,cursor:'pointer'}}>
+        <span style={{fontFamily:'Space Mono, monospace',fontSize:9,color:'var(--ink35)',letterSpacing:'0.1em',textTransform:'uppercase',textAlign:'center'}}>{game.name}</span>
+        <span style={{fontFamily:'Space Mono, monospace',fontSize:8,color:'var(--ink35)',opacity:.55}}>{idx+1} · 13 · all rooms</span>
+      </div>
+      <button onClick={onNext} style={btn}>›</button>
+    </div>
+  );
+}
+
+/* ─── Game stat ──────────────────────────────────────────── */
+function GameStat({ stat, color }) {
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:5}}>
+      <span style={{fontFamily:'Lora, serif',fontWeight:500,fontSize:17,color,letterSpacing:'-0.01em',lineHeight:1}}>{stat.v}</span>
+      <span style={{fontFamily:'Space Mono, monospace',fontSize:8,color:'var(--ink35)',textTransform:'uppercase',letterSpacing:'0.07em',textAlign:'center',lineHeight:1.5}}>{stat.l}</span>
+    </div>
+  );
+}
+
+/* ─── Game hero ──────────────────────────────────────────── */
+function GameHero({ game }) {
+  return (
+    <div style={{background:game.gradient(game.color),paddingTop:72,paddingBottom:0,display:'flex',flexDirection:'column',alignItems:'center'}}>
+      <div style={{marginBottom:14,display:'flex',alignItems:'center',justifyContent:'center',width:92,height:92}}>
+        <span style={{fontSize:game.glyphSize,color:game.color,lineHeight:1,display:'block',animation:game.glyphAnim,filter:game.gFilter(game.color),userSelect:'none'}}>{game.glyph}</span>
+      </div>
+      <h1 style={{fontFamily:'Lora, serif',color:'var(--ink)',marginBottom:12,textAlign:'center',...game.nameStyle}}>{game.name}</h1>
+      <p style={{fontFamily:'Lora, serif',fontStyle:'italic',fontSize:13,lineHeight:1.72,color:'var(--ink60)',textAlign:'center',padding:'0 24px',textWrap:'pretty',marginBottom:20}}>{game.blurb}</p>
+      {/* unique stats — what lives in this room */}
+      <div style={{width:'100%'}}>
+        <div style={{height:'0.5px',background:'var(--hair)',margin:'0 0 16px'}} />
+        <div style={{display:'flex',padding:'0 12px 22px'}}>
+          {game.stats.map((s,i) => (
+            <React.Fragment key={i}>
+              <GameStat stat={s} color={game.color} />
+              {i < game.stats.length-1 && <div style={{width:'0.5px',background:'var(--hair)',margin:'4px 0',alignSelf:'stretch'}} />}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Sort bar ───────────────────────────────────────────── */
+function SortBar({ active, onSelect, color }) {
+  return (
+    <div style={{display:'flex',gap:0,padding:'0 20px',borderBottom:'0.5px solid var(--hair)'}}>
+      {['MOST RECENT','MOST ACTIVE'].map(s => (
+        <button key={s} onClick={()=>onSelect(s)} style={{background:'none',border:'none',cursor:'pointer',fontFamily:'Space Mono, monospace',fontSize:9,color:active===s?'var(--ink60)':'var(--ink35)',letterSpacing:'0.08em',padding:'13px 0',marginRight:22,borderBottom:active===s?`1px solid ${color}80`:'1px solid transparent',transition:'color 0.3s ease',marginBottom:-1}}>{s}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ─── Game View screen ───────────────────────────────────── */
+function GameView() {
+  const initIdx = () => { const h = window.location.hash.slice(1); const i = GAME_ORDER.indexOf(h); return i>=0?i:0; };
+  const [idx,    setIdx]    = React.useState(initIdx);
+  const [fading, setFading] = React.useState(false);
+  const [sort,   setSort]   = React.useState('MOST RECENT');
+
+  function go(dir) {
+    if (fading) return;
+    setFading(true);
+    setTimeout(() => { setIdx(i => (i+dir+13)%13); setFading(false); }, 280);
+  }
+
+  const game    = GAMES[GAME_ORDER[idx]];
+  const stories = ALL_STORIES[GAME_ORDER[idx]] || [];
+  const sorted  = sort === 'MOST ACTIVE' ? [...stories].sort((a,b)=>(b.pulse?1:0)-(a.pulse?1:0)) : stories;
+
+  return (
+    <div style={{background:'var(--bg)',minHeight:'100%',paddingBottom:60,position:'relative',animation:'screenReveal 1.8s ease-out both'}}>
+      <GameNavBar game={game} onPrev={()=>go(-1)} onNext={()=>go(1)} idx={idx} />
+      <div style={{opacity:fading?0:1,transition:fading?'opacity 0.28s ease':'opacity 0.4s ease'}}>
+        <GameHero game={game} />
+        <div style={{marginBottom:18}}><SortBar active={sort} onSelect={setSort} color={game.color} /></div>
+        <div style={{display:'flex',flexDirection:'column',gap:14}}>
+          {sorted.map((s,i) => <StoryCard key={s.id} story={s} delay={0.1+i*0.15} />)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return <IOSDevice dark={true} width={393} height={852}><GameView /></IOSDevice>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Strange Feed — Writing into the Field</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #06050A;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    :root {
+      --bg:    #0E0C12;
+      --card:  #171420;
+      --hair:  rgba(255,255,255,0.06);
+      --ink:   #EDE8E3;
+      --ink60: rgba(237,232,227,0.60);
+      --ink35: rgba(237,232,227,0.35);
+    }
+    @keyframes arrivalBreath { 0%,100% { opacity: 0.34; } 50% { opacity: 0.62; } }
+    @keyframes hintFade      { 0%,100% { opacity: 0.26; } 50% { opacity: 0.55; } }
+    @keyframes emberWake     { 0%,100% { transform: scale(0.97); } 50% { transform: scale(1.045); } }
+    textarea::placeholder { color: rgba(237,232,227,0.24); font-style: italic; }
+    textarea:focus { outline: none; }
+    div::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body>
+<div id="stage"><div id="root"></div></div>
+<script type="text/babel">
+
+function hexA(hex, a) {
+  return hex + Math.round(Math.max(0, Math.min(1, a)) * 255).toString(16).padStart(2, '0');
+}
+
+/* ─── Who you are, as chosen in Settings ──────────────────────── */
+/* The writing space is lit by your arrival colour — never a fixed   */
+/* terra. Read the same store Settings writes: name, colour, mark.   */
+
+const MOODS = [
+  { color: '#C47A52', quality: 'grounded, present' },
+  { color: '#E5A352', quality: 'warm, seeking' },
+  { color: '#7B82D4', quality: 'witness, open' },
+  { color: '#4A9E6B', quality: 'rooted, growing' },
+  { color: '#D4607A', quality: 'expressive, alive' },
+  { color: '#9B6BD6', quality: 'awake, aware' },
+  { color: '#C4923A', quality: 'solid, warm' },
+  { color: '#3AADA8', quality: 'connected, synthesis' },
+];
+const DEFAULT_ME = { name: 'Ash', color: '#C47A52', glyph: '◉' };
+function loadMe() {
+  try { return JSON.parse(localStorage.getItem('ashSettings')) || DEFAULT_ME; }
+  catch (e) { return DEFAULT_ME; }
+}
+
+/* the story this response gathers into */
+const STORY = { title: 'The Two Who Were One', codex: 'C-1063' };
+
+/* ─── The field's question (app canon — fixed) ────────────────── */
+/* Optional future: rotate by day + story like the Mirror. */
+const PROMPT = 'What arrived for you?';
+
+/* ─── The release ring — fills slowly as you hold ─────────────── */
+function HoldRing({ p, accent, armed }) {
+  const R = 31, C = 2 * Math.PI * R;
+  return (
+    <svg width={80} height={80} viewBox="0 0 80 80" style={{ display: 'block', transform: 'rotate(-90deg)' }}>
+      <circle cx={40} cy={40} r={R} fill="none" stroke={hexA(accent, armed ? 0.16 : 0.09)} strokeWidth={1.5} />
+      <circle cx={40} cy={40} r={R} fill="none" stroke={accent} strokeWidth={2} strokeLinecap="round"
+        strokeDasharray={C} strokeDashoffset={C - p * C}
+        style={{ filter: `drop-shadow(0 0 ${3 + p * 10}px ${hexA(accent, 0.5 + p * 0.4)})` }} />
+    </svg>
+  );
+}
+
+/* ─── Writing into the field ──────────────────────────────────── */
+
+function Compose() {
+  const me = React.useMemo(loadMe, []);
+  const ACCENT = me.color;
+  const quality = (MOODS.find(m => m.color === ACCENT) || MOODS[0]).quality;
+
+  const [text, setText] = React.useState('');
+  const [phase, setPhase] = React.useState('writing');   // writing → released
+  const [ready, setReady] = React.useState(false);       // gentle arrival fade-in
+  const taRef = React.useRef(null);
+
+  React.useEffect(() => { const t = setTimeout(() => setReady(true), 220); return () => clearTimeout(t); }, []);
+
+  // hold-to-release — RAF interpolation, the same grammar as the Turning,
+  // paced slow so the release is a real, intentional beat.
+  const progress = React.useRef(0);
+  const target   = React.useRef(0);
+  const raf      = React.useRef(null);
+  const last     = React.useRef(0);
+  const done     = React.useRef(false);
+  const [, force] = React.useReducer(x => x + 1, 0);
+  const UP_MS = 2300, DOWN_MS = 620;
+
+  const armed = text.trim().length > 0;
+
+  const tick = (t) => {
+    if (!last.current) last.current = t;
+    const dt = Math.min(64, t - last.current); last.current = t;
+    let p = progress.current;
+    if (target.current > p) p = Math.min(1, p + dt / UP_MS);
+    else                    p = Math.max(0, p - dt / DOWN_MS);
+    progress.current = p;
+    if (p >= 1 && !done.current) { done.current = true; raf.current = null; release(); return; }
+    force();
+    if (p === 0 && target.current === 0) { raf.current = null; last.current = 0; return; }
+    raf.current = requestAnimationFrame(tick);
+  };
+  const ensure  = () => { if (!raf.current) { last.current = 0; raf.current = requestAnimationFrame(tick); } };
+  const press   = () => { if (!armed || done.current) return; target.current = 1; ensure(); };
+  const relHold = () => { if (done.current) return; target.current = 0; ensure(); };
+
+  function release() {
+    if (taRef.current) taRef.current.blur();
+    setPhase('released');
+  }
+
+  React.useEffect(() => () => raf.current && cancelAnimationFrame(raf.current), []);
+
+  const l = progress.current;                 // 0→1 release light
+  const released = phase === 'released';
+
+  return (
+    <div style={{
+      position: 'relative', width: 393, height: 852,
+      borderRadius: 46, overflow: 'hidden',
+      background: '#0B0910',
+      boxShadow: '0 30px 80px rgba(0,0,0,0.6)',
+      userSelect: 'none', WebkitTapHighlightColor: 'transparent',
+      display: 'flex', flexDirection: 'column',
+    }}>
+
+      {/* your arrival light — rises as you hold, then settles */}
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 120% 50% at 50% 27%, ${hexA(ACCENT, 0.09 + l * 0.19)} 0%, ${hexA(ACCENT, 0.03 + l * 0.05)} 46%, rgba(0,0,0,0) 74%)`,
+        animation: (l < 0.02 && !released) ? 'arrivalBreath 12s ease-in-out infinite' : 'none',
+        transition: raf.current ? 'none' : 'background 0.7s ease',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 150% 38% at 50% 112%, ${hexA(ACCENT, 0.05 + l * 0.11)} 0%, rgba(0,0,0,0) 56%)`,
+        transition: raf.current ? 'none' : 'background 0.7s ease',
+      }} />
+
+      {/* status bar */}
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 30px 0', zIndex: 6, flexShrink: 0 }}>
+        <span style={{ fontFamily: '-apple-system, system-ui', fontWeight: 600, fontSize: 15, color: '#fff', opacity: 0.9 }}>9:41</span>
+        <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', width: 112, height: 30, borderRadius: 20, background: '#000' }} />
+        <span style={{ color: '#fff', fontSize: 12, letterSpacing: '0.04em', opacity: 0.9 }}>􀙇 􀛨 􀋦</span>
+      </div>
+
+      {/* context — the story this gathers into */}
+      <div style={{ position: 'relative', zIndex: 5, paddingTop: 44, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+        <a href="Story Detail.html" style={{
+          position: 'absolute', top: 36, left: 16,
+          width: 36, height: 36, borderRadius: '50%', textDecoration: 'none',
+          background: 'rgba(14,12,18,0.55)', backdropFilter: 'blur(14px)',
+          border: '1px solid rgba(255,255,255,0.10)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'var(--ink60)', fontSize: 20, lineHeight: 1,
+        }}>‹</a>
+        <span style={{
+          fontFamily: 'Space Mono, monospace', fontSize: 10, color: hexA(ACCENT, 0.72),
+          letterSpacing: '0.26em', textTransform: 'uppercase',
+        }}>Into the field</span>
+        <span style={{ fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 12.5, color: 'var(--ink35)' }}>
+          on <span style={{ color: 'var(--ink60)' }}>{STORY.title}</span>
+        </span>
+      </div>
+
+      {/* ── the writing space ── */}
+      {!released && (
+        <div style={{
+          position: 'relative', zIndex: 5, flex: 1, display: 'flex', flexDirection: 'column',
+          padding: '34px 30px 0', minHeight: 0,
+          opacity: ready ? 1 : 0, transition: 'opacity 1.4s ease',
+        }}>
+          {/* the field's question — recedes once you begin */}
+          <p style={{
+            fontFamily: 'Lora, serif', fontStyle: 'italic', fontWeight: 400,
+            fontSize: 21, lineHeight: 1.45, color: hexA(ACCENT, 0.92),
+            marginBottom: 22, textWrap: 'balance',
+            opacity: armed ? 0.45 : 1, transition: 'opacity 0.8s ease',
+          }}>{PROMPT}</p>
+
+          {/* the words */}
+          <textarea
+            ref={taRef}
+            value={text}
+            onChange={e => setText(e.target.value)}
+            placeholder="write what arrived…"
+            autoFocus
+            style={{
+              flex: 1, width: '100%', background: 'transparent', border: 'none',
+              color: 'var(--ink)', fontFamily: 'Lora, serif', fontSize: 19, lineHeight: 1.72,
+              resize: 'none', caretColor: ACCENT, minHeight: 0,
+              filter: raf.current ? `brightness(${1 + l * 0.16})` : 'none',
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── after release — the word settles, the field gathers ── */}
+      {released && <Released text={text} me={me} accent={ACCENT} />}
+
+      {/* ── hold-to-release control ── */}
+      {!released && (
+        <div style={{
+          position: 'relative', zIndex: 5, flexShrink: 0,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 13,
+          paddingBottom: 38, paddingTop: 8,
+          opacity: ready ? 1 : 0, transition: 'opacity 1.4s ease 0.2s',
+        }}>
+          <div
+            onPointerDown={press} onPointerUp={relHold} onPointerLeave={relHold}
+            onContextMenu={e => e.preventDefault()}
+            style={{
+              position: 'relative', width: 80, height: 80,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: armed ? 'pointer' : 'default', touchAction: 'none',
+              opacity: armed ? 1 : 0.38, transition: 'opacity 0.6s ease',
+            }}>
+            <div style={{ position: 'absolute', inset: 0 }}><HoldRing p={l} accent={ACCENT} armed={armed} /></div>
+            <span style={{
+              fontSize: 27, lineHeight: 1, color: ACCENT,
+              filter: `drop-shadow(0 0 ${8 + l * 18}px ${hexA(ACCENT, 0.5 + l * 0.4)})`,
+              animation: armed && l < 0.02 ? 'emberWake 3.6s ease-in-out infinite' : 'none',
+            }}>{me.glyph}</span>
+          </div>
+          <span style={{
+            fontFamily: 'Space Mono, monospace', fontSize: 9, letterSpacing: '0.18em',
+            textTransform: 'uppercase',
+            color: armed ? hexA(ACCENT, 0.62) : 'var(--ink35)',
+            animation: armed && l < 0.02 ? 'hintFade 4.8s ease-in-out infinite' : 'none',
+            transition: 'color 0.5s ease',
+          }}>{armed ? (l > 0.04 ? 'hold — let it rise' : 'hold to release into the field') : 'write, then hold to release'}</span>
+        </div>
+      )}
+
+      {/* home indicator */}
+      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 6, height: 30, display: 'flex', justifyContent: 'center', alignItems: 'flex-end', paddingBottom: 9, pointerEvents: 'none' }}>
+        <div style={{ width: 134, height: 5, borderRadius: 100, background: 'rgba(255,255,255,0.7)' }} />
+      </div>
+    </div>
+  );
+}
+
+/* ─── The released state — your word settles into the field ───── */
+
+function Released({ text, me, accent }) {
+  const [settled, setSettled] = React.useState(false);
+  const [closing, setClosing] = React.useState(false);   // the quiet close fades in after the settle
+  React.useEffect(() => {
+    const t1 = setTimeout(() => setSettled(true), 90);
+    const t2 = setTimeout(() => setClosing(true), 1500);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+
+  return (
+    <div style={{ position: 'relative', zIndex: 5, flex: 1, display: 'flex', flexDirection: 'column', padding: '30px 0 0', minHeight: 0 }}>
+
+      {/* the released entry — your own words, in your light */}
+      <div style={{
+        margin: '0 18px',
+        background: hexA(accent, 0.06), border: `1px solid ${hexA(accent, 0.26)}`,
+        borderRadius: 16, padding: '16px 16px 15px',
+        opacity: settled ? 1 : 0, transform: settled ? 'translateY(0)' : 'translateY(-16px)',
+        transition: 'opacity 1.4s ease, transform 1.4s ease',
+        boxShadow: `0 0 42px ${hexA(accent, 0.13)}`,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 11 }}>
+          <span style={{
+            width: 30, height: 30, borderRadius: '50%', background: accent, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 14, color: 'rgba(255,255,255,0.92)',
+          }}>{me.glyph}</span>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontFamily: 'Lora, serif', fontSize: 13, fontWeight: 500, color: accent }}>{me.name || 'Ash'}</span>
+            <span style={{ fontFamily: 'Space Mono, monospace', fontSize: 9, color: 'var(--ink35)', letterSpacing: '0.08em' }}>released just now</span>
+          </div>
+        </div>
+        <p style={{ fontFamily: 'Lora, serif', fontSize: 16, lineHeight: 1.7, color: 'var(--ink)', whiteSpace: 'pre-wrap', textWrap: 'pretty' }}>{text}</p>
+      </div>
+
+      {/* a quiet close — it is in the field now; you leave */}
+      <div style={{
+        flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 22, padding: '0 40px',
+        opacity: closing ? 1 : 0, transition: 'opacity 1.6s ease',
+      }}>
+        <p style={{
+          fontFamily: 'Lora, serif', fontStyle: 'italic', fontSize: 15, lineHeight: 1.7,
+          color: 'var(--ink60)', textAlign: 'center', textWrap: 'balance',
+        }}>The room has changed.</p>
+        <a href="Story Detail.html" style={{
+          textDecoration: 'none',
+          fontFamily: 'Space Mono, monospace', fontSize: 9.5, color: 'var(--ink35)',
+          letterSpacing: '0.18em', textTransform: 'uppercase', padding: 10,
+        }}>return to the story ›</a>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Compose />);
+
+(function fit() {
+  const stage = document.getElementById('stage');
+  function apply() {
+    const s = Math.min(1, (window.innerHeight - 36) / 852, (window.innerWidth - 36) / 393);
+    stage.style.transform = `scale(${s})`;
+    stage.style.transformOrigin = 'center center';
+  }
+  apply(); window.addEventListener('resize', apply);
+})();
+</script>
+</body>
+</html>

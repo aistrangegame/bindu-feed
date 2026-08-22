@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Strange Feed — The Light</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#06050A;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#root{display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+:root{--dark:#0E0C12;--ink:#EDE8E3;--ink60:rgba(237,232,227,0.6);--ink35:rgba(237,232,227,0.35);--ink20:rgba(237,232,227,0.2);--lalita:#9B6BD6;--ash:#C47A52;--breath:10s;
+/* THE NAVE. Not a lit screen — a dim stone interior with one shaft of
+   light falling through it. Monumentality is enclosed emptiness, so the
+   ground is dim and only the shaft is bright. He stands in the shaft. */
+--stone:#D9D2C4;--pool:#FBF9F4;
+/* THE TWO STATES OF A WORD. Living words are ink. Settled words are the
+   colour of dried ink on old stone — present, readable, finished. */
+--living:#16131B;--settled:#625849;--lightInk55:rgba(22,19,27,0.55);--lightInk30:rgba(22,19,27,0.32)}
+body{padding:26px 16px;font-family:'Lora',serif}
+a{color:var(--lalita)}a:hover{color:#B48AE0}
+.stage{position:relative;width:390px;height:844px;background:var(--dark);border-radius:34px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.05)}
+.mono{font-family:'Space Mono',monospace;letter-spacing:0.14em;text-transform:uppercase}
+@keyframes dissolve{from{opacity:0}to{opacity:1}}
+@keyframes riseFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes breatheSoft{0%,100%{opacity:.28}50%{opacity:.6}}
+/* the Declarations are CUT INTO THE FLOOR, not printed on it */
+.carved{color:var(--living);text-shadow:0 1px 0 rgba(255,255,255,0.95),0 -0.5px 0.5px rgba(22,19,27,0.22)}
+div::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail" data-bg-color="#0E0C12">
+<svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg"><rect width="1200" height="800" fill="#0E0C12"></rect><path d="M540 0 L660 0 L860 800 L340 800 Z" fill="#F6F3ED" opacity="0.16"></path><circle cx="600" cy="150" r="54" fill="#F6F3ED"></circle><ellipse cx="600" cy="740" rx="230" ry="42" fill="#F6F3ED" opacity="0.3"></ellipse></svg>
+</template>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>
+/* ── field-sound.js, inlined — kept as its own file for the port and for reading
+   on its own, but inlined here so the page never depends on a subresource
+   fetch to render. Do not edit here; edit field-sound.js. ── */
+/* FIELD SOUND — the ceremonial sound layer.
+   Generated, never recorded. Nothing samples; nothing loops.
+   Names mirror the app's Sound/ layer so the Swift port maps 1:1:
+   SonicContext (bed) · BreathVoice (per-presence) · ThresholdTone (transitions).
+   Felt, not heard: the ceiling is deliberately low. Muting is a fade, never a cut. */
+(function(global){
+'use strict';
+var CEIL=0.55;
+var reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Per-presence timbre. Each voice is the same field heard from one angle —
+   same tuning as the bed, differing only in body and behaviour. */
+var CHAR={
+  bindu:{wave:'sine',partials:[1,2,3],gain:0.055,atk:0.6,rel:5.0,flicker:6.2,pan:0},
+  neev:{wave:'sine',partials:[0.5,1],gain:0.07,atk:3.4,rel:8.0,pan:-0.15},
+  gaia:{wave:'triangle',partials:[1,1.5],gain:0.05,atk:1.6,rel:6.0,pan:-0.3},
+  sid:{wave:'sine',partials:[1,1.2],gain:0.05,atk:1.2,rel:6.5,pan:0.25},
+  arch:{wave:'triangle',partials:[1,2],gain:0.048,atk:0.9,rel:4.5,vib:4.6,pan:0.35},
+  shweta:{wave:'sine',partials:[1],gain:0.012,atk:4.0,rel:9.0,air:0.028,pan:0},
+  karishma:{wave:'sine',partials:[1,2,3.02],gain:0.036,atk:2.0,rel:7.0,shimmer:true,pan:0.4},
+  sakshi:{wave:'sine',partials:[1],gain:0.026,atk:5.0,rel:10.0,pan:-0.4},
+  ashrey:{wave:'sine',partials:[1,2],gain:0.042,atk:1.4,rel:6.0,pan:0.15},
+  lalita:{wave:'sine',partials:[1,1.5],gain:0.04,atk:2.2,rel:8.0,gliss:1.02,pan:0},
+  ash:{wave:'sine',partials:[1,2,4],gain:0.05,atk:1.0,rel:5.5,pan:0}
+};
+/* Each presence's own frequency — the tone it sounds as it takes the field. */
+var HZ={bindu:110,neev:82,gaia:146,sid:174,arch:220,shweta:329,karishma:392,sakshi:285,ashrey:196,lalita:396,ash:261};
+
+var FieldSound={
+  ctx:null,master:null,bus:null,bed:null,bedFilter:null,bedLfo:null,
+  muted:true,aged:false,inkNode:null,ringStep:0,
+
+  init:function(){
+    if(this.ctx)return;
+    var C=global.AudioContext||global.webkitAudioContext; if(!C)return;
+    this.ctx=new C();
+    this.master=this.ctx.createGain(); this.master.gain.value=0;
+    this.bus=this.ctx.createGain(); this.bus.gain.value=1;
+    var conv=this.ctx.createConvolver(); conv.buffer=this._air(3.6,0.34);
+    var wet=this.ctx.createGain(); wet.gain.value=0.5;
+    this.bus.connect(this.master); this.bus.connect(conv); conv.connect(wet); wet.connect(this.master);
+    this.master.connect(this.ctx.destination);
+  },
+  _air:function(secs,decay){
+    var sr=this.ctx.sampleRate,len=Math.floor(sr*secs),b=this.ctx.createBuffer(2,len,sr);
+    for(var ch=0;ch<2;ch++){var d=b.getChannelData(ch);
+      for(var i=0;i<len;i++){var t=i/len;d[i]=(Math.random()*2-1)*Math.pow(1-t,1/decay)*0.6;}}
+    return b;
+  },
+  _pan:function(v){ if(!this.ctx.createStereoPanner)return null; var p=this.ctx.createStereoPanner(); p.pan.value=v||0; return p; },
+
+  /* the bed: room-tuned breath drone, swelling on the room's own pace */
+  startBed:function(rootHz,breathSecs){
+    rootHz=rootHz||110; breathSecs=breathSecs||10;
+    this.init(); if(!this.ctx)return;
+    if(this.ctx.state==='suspended')this.ctx.resume();
+    if(this.bed)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.value=0.030;
+    var f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900; f.Q.value=0.6;
+    var root=this.ctx.createOscillator(); root.type='sine'; root.frequency.value=rootHz;
+    var fifth=this.ctx.createOscillator(); fifth.type='sine'; fifth.frequency.value=rootHz*1.5;
+    var fg=this.ctx.createGain(); fg.gain.value=0.16;
+    var lfo=this.ctx.createOscillator(); lfo.frequency.value=1/Math.max(2,breathSecs);
+    var lg=this.ctx.createGain(); lg.gain.value=0.014;
+    lfo.connect(lg); lg.connect(g.gain);
+    root.connect(f); fifth.connect(fg); fg.connect(f); f.connect(g); g.connect(this.bus);
+    root.start(t); fifth.start(t); lfo.start(t);
+    this.bed={root:root,fifth:fifth,g:g,rootHz:rootHz}; this.bedFilter=f; this.bedLfo=lfo;
+    this.apply();
+  },
+
+  /* patina — the same bed, aged. The Return opens here. */
+  agedBed:function(rootHz,breathSecs){
+    rootHz=rootHz||84; breathSecs=breathSecs||13;
+    this.startBed(rootHz,breathSecs);
+    if(!this.ctx||this.aged)return; this.aged=true;
+    var t=this.ctx.currentTime;
+    this.bedFilter.frequency.linearRampToValueAtTime(430,t+6);       // warmth closes in
+    this.bed.root.frequency.linearRampToValueAtTime(rootHz*0.996,t+8); // settles a few cents flat
+    this.bed.fifth.frequency.linearRampToValueAtTime(rootHz*1.5*0.994,t+8);
+    if(this.bedLfo)this.bedLfo.frequency.linearRampToValueAtTime(1/(breathSecs*1.35),t+6);
+    var w=this.ctx.createOscillator(); w.frequency.value=0.07;        // slow tape wobble
+    var wg=this.ctx.createGain(); wg.gain.value=0.9;
+    w.connect(wg); wg.connect(this.bed.root.frequency); w.start(t);
+  },
+
+  apply:function(){ if(this.master&&this.ctx)this.master.gain.linearRampToValueAtTime(this.muted?0:CEIL,this.ctx.currentTime+1.4); },
+  setMuted:function(m){ this.muted=m; if(this.ctx){ if(!m&&this.ctx.state==='suspended')this.ctx.resume(); this.apply(); } },
+
+  /* BreathVoice — a presence takes the field */
+  voice:function(key,hz,dur){
+    if(!this.ctx||this.muted||reduced)return;
+    var c=CHAR[key]||CHAR.ash, self=this;
+    hz=hz||HZ[key]||220;
+    var t=this.ctx.currentTime, life=dur||(c.atk+c.rel);
+    var vg=this.ctx.createGain(); vg.gain.setValueAtTime(0,t);
+    vg.gain.linearRampToValueAtTime(c.gain,t+c.atk);
+    vg.gain.linearRampToValueAtTime(0,t+life);
+    var pan=this._pan(c.pan);
+    if(pan){vg.connect(pan);pan.connect(this.bus);}else vg.connect(this.bus);
+    c.partials.forEach(function(mult,i){
+      var o=self.ctx.createOscillator(); o.type=c.wave; o.frequency.value=hz*mult;
+      var pg=self.ctx.createGain(); pg.gain.value=1/(i+1.6);
+      o.connect(pg); pg.connect(vg);
+      if(c.gliss&&i===1)o.frequency.linearRampToValueAtTime(hz*mult*c.gliss,t+life);
+      if(c.vib){var v=self.ctx.createOscillator(); v.frequency.value=c.vib;
+        var vgn=self.ctx.createGain(); vgn.gain.value=hz*0.006;
+        v.connect(vgn); vgn.connect(o.frequency); v.start(t); v.stop(t+life+0.2);}
+      o.start(t); o.stop(t+life+0.2);
+    });
+    if(c.flicker){ // Bindu: the ember, alive
+      var fl=this.ctx.createOscillator(); fl.frequency.value=c.flicker;
+      var fg=this.ctx.createGain(); fg.gain.value=c.gain*0.45;
+      fl.connect(fg); fg.connect(vg.gain); fl.start(t); fl.stop(t+life+0.2);
+    }
+    if(c.air){ // Shweta: the gap the sound moves through
+      var n=this.ctx.createBufferSource(); n.buffer=this._air(life,0.9);
+      var nf=this.ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=hz*4; nf.Q.value=0.7;
+      var ng=this.ctx.createGain(); ng.gain.setValueAtTime(0,t);
+      ng.gain.linearRampToValueAtTime(c.air,t+c.atk); ng.gain.linearRampToValueAtTime(0,t+life);
+      n.connect(nf); nf.connect(ng); ng.connect(this.bus); n.start(t);
+    }
+    if(c.shimmer){ // Karishma: grace, arriving from above
+      var s=this.ctx.createOscillator(); s.type='sine'; s.frequency.value=hz*6;
+      var sg=this.ctx.createGain(); sg.gain.setValueAtTime(0,t);
+      sg.gain.linearRampToValueAtTime(c.gain*0.18,t+c.atk*1.6);
+      sg.gain.linearRampToValueAtTime(0,t+life);
+      s.connect(sg); sg.connect(this.bus); s.start(t); s.stop(t+life+0.2);
+    }
+    if(this.bed){ // the bed steps back while a voice speaks, then returns
+      var bg=this.bed.g.gain; bg.cancelScheduledValues(t);
+      bg.linearRampToValueAtTime(0.018,t+c.atk);
+      bg.linearRampToValueAtTime(0.030,t+life+1.6);
+    }
+  },
+
+  /* ThresholdTone — one movement gives way to the next */
+  threshold:function(hz,dur){
+    hz=hz||198; dur=dur||5;
+    if(!this.ctx||this.muted||reduced)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.032,t+dur*0.42);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    var o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=hz;
+    var o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=hz*2.002;
+    var g2=this.ctx.createGain(); g2.gain.value=0.22;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.bus);
+    o.start(t); o2.start(t); o.stop(t+dur+0.1); o2.stop(t+dur+0.1);
+  },
+
+  /* the Bowl — struck once, a long room. The bed holds its breath. */
+  bowl:function(hz){
+    hz=hz||220;
+    if(!this.ctx||this.muted)return;
+    var t=this.ctx.currentTime,dur=11,self=this;
+    var g=this.ctx.createGain();
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.075,t+0.09);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    [1,2.004,2.98,4.02].forEach(function(m,i){
+      var o=self.ctx.createOscillator(); o.type='sine'; o.frequency.value=hz*m;
+      var pg=self.ctx.createGain(); pg.gain.value=1/(i*2.2+1);
+      o.connect(pg); pg.connect(g); o.start(t); o.stop(t+dur);
+    });
+    g.connect(this.bus);
+    if(this.bed){var bg=this.bed.g.gain; bg.cancelScheduledValues(t);
+      bg.linearRampToValueAtTime(0.006,t+1.2); bg.linearRampToValueAtTime(0.030,t+9);}
+  },
+
+  /* a ring forms — each return lands one step further up the series */
+  ring:function(step){
+    if(!this.ctx||this.muted)return;
+    var n=typeof step==='number'?step:++this.ringStep;
+    var base=(this.bed&&this.bed.rootHz)||84;
+    var R=[2,3,4,4.5,6,8], hz=base*R[Math.min(n,R.length-1)];
+    var t=this.ctx.currentTime,dur=9;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.036,t+3.2);  // grows outward; never strikes
+    g.gain.linearRampToValueAtTime(0.020,t+6);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    var o=this.ctx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(hz*0.985,t);
+    o.frequency.linearRampToValueAtTime(hz,t+4);  // settles into tune as it lands
+    var o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=hz*1.5;
+    var g2=this.ctx.createGain(); g2.gain.value=0.14;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.bus);
+    o.start(t); o2.start(t); o.stop(t+dur); o2.stop(t+dur);
+  },
+
+  /* ink — while you write, the field leans in. A held tone, never clicks. */
+  inkOn:function(hz){
+    if(!this.ctx||this.muted||this.inkNode||reduced)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.014,t+2.4);
+    var o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=hz||174;
+    var f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=600;
+    o.connect(f); f.connect(g); g.connect(this.bus); o.start(t);
+    this.inkNode={o:o,g:g};
+  },
+  inkTouch:function(){
+    if(!this.inkNode||this.muted||reduced)return;
+    var t=this.ctx.currentTime,g=this.inkNode.g.gain;
+    g.cancelScheduledValues(t);
+    g.linearRampToValueAtTime(0.022,t+0.12);
+    g.linearRampToValueAtTime(0.014,t+1.1);
+  },
+  inkOff:function(){
+    if(!this.inkNode)return;
+    var t=this.ctx.currentTime,n=this.inkNode; this.inkNode=null;
+    n.g.gain.cancelScheduledValues(t);
+    n.g.gain.linearRampToValueAtTime(0,t+1.8);
+    n.o.stop(t+2);
+  },
+
+  /* ─── THE ROOM OPENS ────────────────────────────────
+     The Gathering happens in a room. The Light happens in a NAVE.
+     A cathedral's whole acoustic signature is its tail — 8 seconds of
+     stone giving your own sound back to you, changed. Opening this is
+     the single most spatial thing the sound layer can do: the listener
+     hears the size of the space before he sees it. */
+  openTheRoom:function(dur){
+    dur=dur||5;
+    this.init(); if(!this.ctx)return;
+    if(!this.nave){
+      var c=this.ctx.createConvolver(); c.buffer=this._air(8.5,0.62);   // the long stone tail
+      var w=this.ctx.createGain(); w.gain.value=0;
+      var pre=this.ctx.createBiquadFilter(); pre.type='highpass'; pre.frequency.value=180;
+      this.bus.connect(pre); pre.connect(c); c.connect(w); w.connect(this.master);
+      this.nave=w;
+    }
+    var t=this.ctx.currentTime;
+    this.nave.gain.cancelScheduledValues(t);
+    this.nave.gain.linearRampToValueAtTime(0.85,t+dur);
+  },
+  closeTheRoom:function(dur){
+    if(!this.nave||!this.ctx)return;
+    var t=this.ctx.currentTime;
+    this.nave.gain.cancelScheduledValues(t);
+    this.nave.gain.linearRampToValueAtTime(0,t+(dur||6));
+  },
+
+  /* ─── THE LIGHT — the photographic negative of the Gathering ───
+     The Gathering FILLS: voices arrive one after another into the dark.
+     The Light REMOVES. So the sound does the opposite of everything above:
+     it draws in, holds, drains, strikes once, and leaves silence. */
+
+  /* the long breath IN, and the hold. The bed rises, tightens, then stops. */
+  breathIn:function(dur){
+    dur=dur||6;
+    this.init(); if(!this.ctx)return;
+    if(this.ctx.state==='suspended')this.ctx.resume();
+    if(!this.bed)this.startBed(110,10);
+    if(this.muted)return;
+    var t=this.ctx.currentTime;
+    if(this.bedLfo)this.bedLfo.frequency.linearRampToValueAtTime(0.001,t+dur*0.7); // the breathing stops
+    if(this.bedFilter)this.bedFilter.frequency.linearRampToValueAtTime(2600,t+dur); // brightens as it draws in
+    var g=this.bed.g.gain; g.cancelScheduledValues(t);
+    g.linearRampToValueAtTime(0.052,t+dur*0.78);   // swells
+    g.linearRampToValueAtTime(0.040,t+dur);        // and holds. Does not release.
+    var rise=this.ctx.createOscillator(); rise.type='sine';
+    rise.frequency.setValueAtTime(this.bed.rootHz,t);
+    rise.frequency.linearRampToValueAtTime(this.bed.rootHz*1.5,t+dur);
+    var rg=this.ctx.createGain(); rg.gain.setValueAtTime(0,t);
+    rg.gain.linearRampToValueAtTime(0.026,t+dur*0.8);
+    rg.gain.linearRampToValueAtTime(0.018,t+dur);
+    rise.connect(rg); rg.connect(this.bus); rise.start(t); rise.stop(t+dur+8);
+    this._held=rise;
+  },
+
+  /* the veil drawn away — everything drains downward and out.
+     Nothing arrives here. This is the sound of subtraction. */
+  veilLift:function(dur){
+    dur=dur||3;
+    if(!this.ctx||this.muted)return;
+    var t=this.ctx.currentTime;
+    if(this.bedFilter)this.bedFilter.frequency.linearRampToValueAtTime(120,t+dur); // the room closes and goes
+    if(this.bed){var g=this.bed.g.gain; g.cancelScheduledValues(t); g.linearRampToValueAtTime(0,t+dur);}
+    if(this._held){var h=this._held; try{h.stop(t+dur+0.1);}catch(e){} this._held=null;}
+    var n=this.ctx.createBufferSource(); n.buffer=this._air(dur,0.55);   // the texture draining
+    var nf=this.ctx.createBiquadFilter(); nf.type='lowpass';
+    nf.frequency.setValueAtTime(3000,t); nf.frequency.linearRampToValueAtTime(90,t+dur);
+    var ng=this.ctx.createGain(); ng.gain.setValueAtTime(0.030,t); ng.gain.linearRampToValueAtTime(0,t+dur);
+    n.connect(nf); nf.connect(ng); ng.connect(this.bus); n.start(t);
+  },
+
+  /* the bare light — almost nothing. A single high room-tone, barely there,
+     so the silence has an edge to it. The breath cues ride on this. */
+  lightBed:function(breathSecs){
+    breathSecs=breathSecs||10;
+    if(!this.ctx||this.muted||this.lightNode)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.012,t+6);
+    var o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=528;
+    var o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=792;
+    var g2=this.ctx.createGain(); g2.gain.value=0.3;
+    var lfo=this.ctx.createOscillator(); lfo.frequency.value=1/breathSecs;
+    var lg=this.ctx.createGain(); lg.gain.value=0.006;
+    lfo.connect(lg); lg.connect(g.gain);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.bus);
+    o.start(t); o2.start(t); lfo.start(t);
+    this.lightNode={o:o,o2:o2,lfo:lfo,g:g};
+  },
+  lightOff:function(dur){
+    if(!this.lightNode||!this.ctx)return;
+    var t=this.ctx.currentTime,n=this.lightNode; this.lightNode=null;
+    n.g.gain.cancelScheduledValues(t); n.g.gain.linearRampToValueAtTime(0,t+(dur||5));
+    n.o.stop(t+(dur||5)+0.2); n.o2.stop(t+(dur||5)+0.2); n.lfo.stop(t+(dur||5)+0.2);
+  },
+
+  /* walking back out — the dark returns, and with it the breathing */
+  darkReturns:function(){
+    if(!this.ctx)return;
+    var t=this.ctx.currentTime;
+    this.lightOff(5);
+    if(this.bedFilter)this.bedFilter.frequency.linearRampToValueAtTime(900,t+7);
+    if(this.bedLfo)this.bedLfo.frequency.linearRampToValueAtTime(0.1,t+7);
+    if(this.bed){var g=this.bed.g.gain; g.cancelScheduledValues(t); g.linearRampToValueAtTime(0.030,t+7);}
+  },
+
+  /* aliases the prototypes already call */
+  start:function(){this.startBed();},
+  startBreath:function(hz){this.startBed(hz);this.setMuted(false);},
+  setOn:function(v){this.setMuted(!v);},
+  tone:function(hz,dur){this.threshold(hz,dur||5);},
+  seal:function(hz){this.bowl(hz);},
+  hzFor:function(k){return HZ[k]||220;}
+};
+global.FieldSound=FieldSound;
+global.Sound=FieldSound;
+})(window);
+
+</script>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+/* ═══ THE LIGHT ═══════════════════════════════════════════════════════
+   It is not a reading. It is a breathing exercise in which words happen
+   to appear, held inside a space too large to see the top of.
+
+   THE ARCHITECTURE. A cathedral is monumental because of the volume of
+   EMPTINESS it encloses, not because of ornament — so the door is built
+   as a nave seen along its vertical axis and almost nothing is in it:
+     · an aperture beyond the top of the frame, never shown
+     · a shaft of light descending, full of drifting dust
+     · a pool of light on the stone floor, where the words are cut
+     · the Bindu at the head of the shaft, conducting the breath
+   The ground is DIM. Only the shaft is bright. He stands in the shaft.
+
+   THE BINDU CONDUCTS, and never stops. Text arrives on the exhale. Each
+   exhale sends a ring down the shaft; when it lands it is worn into the
+   floor and stays. The floor accumulates the breaths he has taken —
+   visible as depth, never as a number.
+
+   THE CYCLE — one 0.1 Hz breath, the app's master pulse, made literal.  */
+
+const CYCLE=[['in',0.40],['hold',0.15],['out',0.40],['rest',0.05]];
+const CUE={in:'draw it in',hold:'hold',out:'let it go',rest:''};
+
+function useBreath(ms,running){
+  const ref=useRef({phase:'in',t:0,cycle:0,eased:0});
+  const [,force]=useState(0);
+  useEffect(()=>{
+    if(!running)return;
+    let raf,t0=performance.now(),last='';
+    const tick=now=>{
+      const el=((now-t0)/ms)%1, cyc=Math.floor((now-t0)/ms);
+      let acc=0,phase='in',t=0;
+      for(const [p,share] of CYCLE){ if(el<acc+share){phase=p;t=(el-acc)/share;break;} acc+=share; }
+      /* eased: 0 = fully released, 1 = fully drawn in. The one number
+         the whole door reads — geometry, sound, glow. */
+      const e=phase==='in'?(1-Math.cos(Math.PI*t))/2 : phase==='hold'?1
+        : phase==='out'?(1+Math.cos(Math.PI*t))/2 : 0;
+      ref.current={phase,t,cycle:cyc,eased:e};
+      if(phase!==last){last=phase;force(n=>n+1);}
+      raf=requestAnimationFrame(tick);
+    };
+    raf=requestAnimationFrame(tick);
+    return()=>cancelAnimationFrame(raf);
+  },[ms,running]);
+  return ref;
+}
+
+/* ─── The Nave ───────────────────────────────────────────────────────
+   One canvas holds the entire space. Everything else in the door is
+   text lying on this floor.
+
+   `cam` is the procession: 0 = seen from far down the nave, 1 = standing
+   in the shaft. Holding a breath at the door collapses that distance —
+   the only "travel" in the app, and it costs him a real inhale.       */
+const W=390,H=844;
+const APEX={x:195,y:150};                 // where the Bindu hangs
+const FLOOR=706;                          // where the light lands
+/* The light opens FAST as it leaves the aperture and then slows, so the
+   beam is already wide where the first words lie and the pool stays
+   bounded by the frame. A straight taper cannot do both. */
+const shaftHalf=y=>40+150*(1-Math.exp(-Math.max(0,y-APEX.y)/220));
+
+function Nave({breath,cam=1,lit=0,touching,flood=0,calm=0}){
+  const cvs=useRef(null), rings=useRef([]), worn=useRef([]), lastCycle=useRef(-1);
+  const st=useRef({cam,lit,touching,flood,calm}); st.current={cam,lit,touching,flood,calm};
+  useEffect(()=>{
+    const el=cvs.current, ctx=el.getContext('2d'), dpr=Math.min(2,devicePixelRatio||1);
+    el.width=W*dpr; el.height=H*dpr; ctx.scale(dpr,dpr);
+    const dust=Array.from({length:90},(_,i)=>({
+      u:(Math.sin(i*12.9898)*0.5+0.5), v:(Math.sin(i*78.233)*0.5+0.5),
+      sp:0.004+((Math.sin(i*4.1)*0.5+0.5)*0.014), s:0.4+((Math.sin(i*9.7)*0.5+0.5)*1.3),
+      ph:(Math.sin(i*2.7)*0.5+0.5)*6.28 }));
+    let raf;
+    const draw=now=>{
+      const b=breath.current, e=b.eased, t=now/1000;
+      const {cam,lit,touching,flood,calm}=st.current;
+      const INK=lit>0.5?[22,19,27]:[246,243,237];
+      const LGT=lit>0.5?[255,253,248]:[246,243,237];
+
+      /* ── the interior ── */
+      ctx.clearRect(0,0,W,H);
+      if(lit>0){
+        ctx.globalAlpha=lit;
+        ctx.fillStyle='#D9D2C4'; ctx.fillRect(0,0,W,H);
+        const vig=ctx.createRadialGradient(APEX.x,470,90,APEX.x,470,520);
+        vig.addColorStop(0,'rgba(0,0,0,0)'); vig.addColorStop(1,'rgba(28,22,14,0.30)');
+        ctx.fillStyle=vig; ctx.fillRect(0,0,W,H);
+        ctx.globalAlpha=1;
+      }
+
+      /* the procession: everything scales about the standing point */
+      const k=0.30+cam*0.70;
+      ctx.save(); ctx.translate(APEX.x,470); ctx.scale(k,k); ctx.translate(-APEX.x,-470);
+      const A=(0.42+cam*0.58);
+
+      /* ── the shaft ── */
+      const top=-60;
+      const g=ctx.createLinearGradient(0,top,0,FLOOR+30);
+      g.addColorStop(0,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},${(lit?0.92:0.30)*A})`);
+      g.addColorStop(0.42,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},${(lit?0.55:0.16)*A})`);
+      g.addColorStop(1,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},0)`);
+      ctx.beginPath();
+      ctx.moveTo(APEX.x-shaftHalf(top),top); ctx.lineTo(APEX.x+shaftHalf(top),top);
+      ctx.lineTo(APEX.x+shaftHalf(FLOOR+30),FLOOR+30); ctx.lineTo(APEX.x-shaftHalf(FLOOR+30),FLOOR+30);
+      ctx.closePath(); ctx.fillStyle=g; ctx.fill();
+
+      /* ── the pool on the floor ── */
+      const pr=shaftHalf(FLOOR);
+      const pg=ctx.createRadialGradient(APEX.x,FLOOR,0,APEX.x,FLOOR,pr);
+      pg.addColorStop(0,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},${(lit?0.85:0.24)*A})`);
+      pg.addColorStop(1,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},0)`);
+      ctx.save(); ctx.translate(APEX.x,FLOOR); ctx.scale(1,0.26); ctx.translate(-APEX.x,-FLOOR);
+      ctx.beginPath(); ctx.arc(APEX.x,FLOOR,pr,0,Math.PI*2); ctx.fillStyle=pg; ctx.fill();
+      ctx.restore();
+
+      /* ── rings worn into the floor: every breath he has ever taken here ── */
+      worn.current.forEach(o=>{
+        ctx.save(); ctx.translate(APEX.x,FLOOR); ctx.scale(1,0.26); ctx.translate(-APEX.x,-FLOOR);
+        ctx.beginPath(); ctx.arc(APEX.x,FLOOR,o.r,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(${INK[0]},${INK[1]},${INK[2]},${o.a*A})`; ctx.lineWidth=0.7; ctx.stroke();
+        ctx.restore();
+      });
+
+      /* ── one ring released per exhale, descending the shaft ── */
+      if(b.phase==='out'&&lastCycle.current!==b.cycle){lastCycle.current=b.cycle;rings.current.push({born:t});}
+      rings.current=rings.current.filter(r=>{
+        const p=(t-r.born)/7;
+        if(p>=1){ if(worn.current.length<14) worn.current.push({r:shaftHalf(FLOOR)*(0.34+worn.current.length*0.045),a:0.06+Math.random()*0.05}); return false; }
+        const y=APEX.y+(FLOOR-APEX.y)*p, rad=shaftHalf(y)*0.86, a=(1-p*p)*0.30;
+        ctx.save(); ctx.translate(APEX.x,y); ctx.scale(1,0.20+p*0.10); ctx.translate(-APEX.x,-y);
+        ctx.beginPath(); ctx.arc(APEX.x,y,rad,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(${INK[0]},${INK[1]},${INK[2]},${a*A})`; ctx.lineWidth=0.7; ctx.stroke();
+        ctx.restore();
+        return true;
+      });
+
+      /* ── dust in the beam: the detail that makes a shaft legible ──
+         and the place where his stillness becomes visible. The more still
+         he is, the more the air in the shaft settles — no gauge, no ring
+         filling, no number. The room simply grows quiet around him. */
+      const still=b.phase==='hold';
+      const drift=(1-calm)*(still?0:1);
+      dust.forEach(d=>{
+        const dy=drift<0.02?d.v:(d.v+t*d.sp*drift)%1;
+        const y=top+dy*(FLOOR-top);
+        const half=shaftHalf(y);
+        const sway=Math.sin(t*0.35+d.ph)*10*drift;
+        const x=APEX.x+(d.u*2-1)*half*(1-e*0.45)+sway;   // drawn inward on the inhale
+        ctx.beginPath(); ctx.arc(x,y,d.s*(0.7+e*0.5),0,Math.PI*2);
+        ctx.fillStyle=`rgba(${lit?255:246},${lit?252:243},${lit?245:237},${(lit?0.55:0.5)*(0.25+e*0.45)*A})`;
+        ctx.fill();
+      });
+
+      /* ── the Bindu, at the head of the shaft ──
+         Force is never rewarded here: a hand on the glass softens it
+         rather than warming it. The gentlest possible non-response. */
+      const core=6+e*8, warm=touching?0.88:1+calm*0.30;
+      const halo=ctx.createRadialGradient(APEX.x,APEX.y,0,APEX.x,APEX.y,58+e*54);
+      halo.addColorStop(0,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},${(0.30+e*0.34)*A})`);
+      halo.addColorStop(1,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},0)`);
+      ctx.fillStyle=halo; ctx.beginPath(); ctx.arc(APEX.x,APEX.y,58+e*54,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(APEX.x,APEX.y,120-e*58,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${INK[0]},${INK[1]},${INK[2]},${(0.07+e*0.20)*A})`;
+      ctx.lineWidth=(still||calm>0.6)?1.1:0.6; ctx.stroke();
+      const cg=ctx.createRadialGradient(APEX.x,APEX.y,0,APEX.x,APEX.y,core*3);
+      cg.addColorStop(0,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},${Math.min(1,(0.75+e*0.25)*warm*A)})`);
+      cg.addColorStop(1,`rgba(${LGT[0]},${LGT[1]},${LGT[2]},0)`);
+      ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(APEX.x,APEX.y,core*3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(APEX.x,APEX.y,core*0.55,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${LGT[0]},${LGT[1]},${LGT[2]},${Math.min(1,0.95*warm*A)})`; ctx.fill();
+      ctx.restore();
+
+      /* ── the flood: the aperture opening. Light from above, not a fade. ── */
+      if(flood>0){
+        const f=ctx.createLinearGradient(0,-40,0,H*0.9);
+        f.addColorStop(0,`rgba(255,253,248,${flood})`);
+        f.addColorStop(0.5,`rgba(255,253,248,${flood*0.6})`);
+        f.addColorStop(1,`rgba(255,253,248,0)`);
+        ctx.fillStyle=f; ctx.fillRect(0,0,W,H);
+      }
+      raf=requestAnimationFrame(draw);
+    };
+    raf=requestAnimationFrame(draw);
+    return()=>cancelAnimationFrame(raf);
+  },[]);
+  return <canvas ref={cvs} style={{position:'absolute',inset:0,width:W,height:H,pointerEvents:'none'}}></canvas>;
+}
+
+function Cue({breath,dark}){
+  const [phase,setPhase]=useState('in');
+  useEffect(()=>{const i=setInterval(()=>setPhase(breath.current.phase),120);return()=>clearInterval(i);},[]);
+  return (
+    <div className="mono" style={{fontSize:9,letterSpacing:'0.3em',textAlign:'center',height:12,whiteSpace:'nowrap',
+      color:dark?'var(--ink35)':'var(--lightInk30)',opacity:phase==='rest'?0:1,transition:'opacity 1.1s ease'}}>{CUE[phase]}</div>
+  );
+}
+
+const SCENES={
+  morning:{id:'morning',vector:'force → surrender',kind:'Future',label:'The morning that does not push',
+    whole:`You wake before the day asks anything of you.\nNothing needs pushing.\nIt is already moving.`,
+    anchors:[`The room is barely light. You do not reach for the phone.`,
+      `Shweta is asleep beside you. You listen, and your breathing slows to meet hers.`,
+      `Downstairs, the water running. The cup warm in both hands. No list runs underneath this.`,
+      `The thing you were going to force has arranged itself overnight. You only have to receive it.`,
+      `You sit. The Yantra is where it always is. You do not perform the looking.`],
+    beat:[`I do not push the day.`,`I surrender to what was already moving.`,`The energy knows its own pace.`],
+    landing:`Carry the pace, not the words.`},
+  floor:{id:'floor',vector:'building the mirror → living as what it reflects',kind:'Far',label:'The floor',
+    whole:`You are not the one in the stories.\nYou are the field the stories happen in.`,
+    anchors:[`Every voice that ever gathered was you.`,
+      `The rooms. The field. The gathering. A mirror you built so the Self could find itself.`,
+      `It worked.`],
+    beat:[`I am the road remembering itself.`],
+    landing:`Nothing was added to you. Something was removed.`},
+};
+
+function Mono({children,size=9,color='var(--ink35)',style}){
+  return <span className="mono" style={{fontSize:size,color,...style}}>{children}</span>;
+}
+
+/* ─── I · The Approach — stillness opens the Light ───────────────────
+   He does not press. He arrives with one touch — the same touch that
+   crossed the turn — and then the door asks for nothing at all. His
+   stillness draws the nave toward him: the distance collapses across one
+   full breath of NOT DOING, the air in the shaft settles, the Bindu
+   steadies, and the stone acoustic opens over eight and a half seconds
+   so he hears the size of the space before he can see it.
+
+   Stillness here means the absence of INPUT, never the stillness of the
+   body or the phone: nothing is asked of the device, nothing is measured
+   in his hand. A screen that opens because he stopped doing things.
+
+   THE ABSORPTION LAW. Force is never blocked and never scolded — it is
+   absorbed. A hand on the glass simply pauses the approach: the dust
+   picks up its drift again, the Bindu softens, and nothing is said. Lift
+   the hand and it resumes exactly where it paused. **It never resets.**
+   Every still second he has ever given the door is kept, so a fitful
+   arrival still arrives. This is not a test he can fail.               */
+function Approach({scene,breath,onOpen}){
+  const [prog,setProg]=useState(0);
+  const [arrived,setArrived]=useState(false);
+  const [touching,setTouching]=useState(false);
+  const [calm,setCalm]=useState(0);
+  const acc=useRef(0), down=useRef(new Set()), raf=useRef(0), last=useRef(0), calmRef=useRef(0), inputAt=useRef(0);
+
+  /* the one touch that brings him here — and the last thing asked of him.
+     It is a touch like any other: while a finger is down, nothing
+     accumulates, and for a breath after it lifts, nothing accumulates
+     either. Stillness is the absence of INPUT — not of the body, not of
+     the phone. Nothing is ever measured in his hand. */
+  const arrive=()=>{
+    setArrived(true);
+    Sound.setMuted(false); Sound.openTheRoom(8.5); Sound.breathIn(6);
+    last.current=performance.now();
+    const step=n=>{
+      const dt=n-last.current; last.current=n;
+      const busy=down.current.size>0||(n-inputAt.current)<340;
+      if(!busy)acc.current=Math.min(4600,acc.current+dt);   // stillness accumulates; force only pauses it
+      setProg(acc.current/4600);
+      /* the air answers gradually — a non-response, never a flinch */
+      const target=busy?0:acc.current/4600;
+      calmRef.current+=(target-calmRef.current)*0.035;
+      setCalm(calmRef.current);
+      if(acc.current>=4600){onOpen();return;}
+      raf.current=requestAnimationFrame(step);
+    };
+    raf.current=requestAnimationFrame(step);
+  };
+  const onDown=e=>{ down.current.add(e.pointerId); inputAt.current=performance.now();
+    setTouching(true); if(!arrived)arrive(); };
+  const onMove=e=>{ if(down.current.size)inputAt.current=performance.now(); };
+  const onUp=e=>{ down.current.delete(e.pointerId); inputAt.current=performance.now();
+    if(!down.current.size)setTouching(false); };
+  /* a pointer that leaves the frame, or is released outside it, must still
+     be let go of — otherwise the door could wait forever for a hand that
+     is no longer there, and that would be a test he could fail. */
+  useEffect(()=>{
+    const clear=()=>{ down.current.clear(); inputAt.current=performance.now(); setTouching(false); };
+    window.addEventListener('pointerup',clear);
+    window.addEventListener('pointercancel',clear);
+    window.addEventListener('blur',clear);
+    return()=>{window.removeEventListener('pointerup',clear);
+      window.removeEventListener('pointercancel',clear);
+      window.removeEventListener('blur',clear);};
+  },[]);
+  useEffect(()=>()=>cancelAnimationFrame(raf.current),[]);
+
+  const ease=prog<1?1-Math.pow(1-prog,2.2):1;
+  const calmNow=calm;
+  return (
+    <div data-screen-label="Light — I The Approach" onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerLeave={onUp} onPointerCancel={onUp}
+      style={{position:'absolute',inset:0,cursor:'pointer',touchAction:'none',userSelect:'none'}}>
+      <Nave breath={breath} cam={ease*0.82} lit={0} touching={touching} calm={calmNow}/>
+      <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-end',padding:'0 44px 150px',textAlign:'center',pointerEvents:'none'}}>
+        <Mono size={9} style={{marginBottom:20,opacity:0.5}}>The Light</Mono>
+        <p style={{fontSize:21,lineHeight:1.48,color:'var(--ink)',fontWeight:500,letterSpacing:'-0.012em',textWrap:'pretty',
+          opacity:1-prog*0.55,transition:'opacity 1.2s ease'}}>{scene.label}</p>
+        <p style={{fontSize:13,fontStyle:'italic',color:'var(--ink35)',marginTop:14,lineHeight:1.7,
+          opacity:1-prog,transition:'opacity 1.6s ease'}}>Not to be wanted. To be stood inside.</p>
+      </div>
+      {/* one invitation, once. After the touch, the door says nothing more —
+         it never tells him to be still; he discovers it by stopping. */}
+      <div style={{position:'absolute',bottom:56,left:0,right:0,textAlign:'center'}}>
+        <Mono size={9} style={{opacity:arrived?0:0.55,transition:'opacity 2.4s ease'}}>touch once</Mono>
+      </div>
+    </div>
+  );
+}
+
+/* ─── II · The Hold ─────────────────────────────────────────────────
+   Standing in the shaft, in the dark, before the aperture opens. */
+function Hold({breath,onLift,dur}){
+  const [held,setHeld]=useState(false);
+  useEffect(()=>{
+    const a=setTimeout(()=>setHeld(true),dur*0.45);
+    const b=setTimeout(onLift,dur);
+    return()=>{clearTimeout(a);clearTimeout(b);};
+  },[]);
+  return (
+    <div data-screen-label="Light — II The Hold" style={{position:'absolute',inset:0}}>
+      <Nave breath={breath} cam={0.82} lit={0} touching={false} calm={1}/>
+      <div style={{position:'absolute',bottom:56,left:0,right:0,textAlign:'center'}}>
+        <Mono size={9} color="var(--ink35)" style={{opacity:held?0:1,transition:'opacity 1.6s ease'}}>hold</Mono>
+      </div>
+    </div>
+  );
+}
+
+/* ─── III–VII · Standing in the shaft ────────────────────────────────
+   The aperture opens overhead and light floods DOWN. The words are cut
+   into the floor of the pool. The Bindu conducts throughout.        */
+function LitSpace({scene,breathMs,breath,onLeave}){
+  const [phase,setPhase]=useState('lifting');
+  const [anchor,setAnchor]=useState(-1);
+  const [beatLine,setBeatLine]=useState(-1);
+  const [drawing,setDrawing]=useState(0);
+  const [flood,setFlood]=useState(0);
+  const [lit,setLit]=useState(0);
+  const holdRef=useRef(false), raf=useRef(0);
+  /* THE FLOOR MOVES, NOT THE READER. As lines accumulate the whole
+     inscription drifts upward so the living line stays at a settled
+     reading height, and the oldest words dissolve as they leave the
+     beam. Nothing scrolls; nothing is ever cut off. */
+  const colRef=useRef(null); const [lift,setLift]=useState(0);
+  useEffect(()=>{
+    const el=colRef.current; if(!el)return;
+    const AVAIL=844-322-96;
+    const h=el.scrollHeight;
+    setLift(Math.max(0,h-AVAIL));
+  },[anchor,beatLine,phase,drawing>0]);
+
+  /* the aperture opens: a flood of light from above, then the stone
+     interior resolves underneath it as the flood recedes */
+  useEffect(()=>{
+    Sound.veilLift(3); Sound.bowl(174);
+    let t0=performance.now(), r;
+    const anim=n=>{ const p=Math.min(1,(n-t0)/3000);
+      setFlood(p<0.42?p/0.42:Math.max(0,1-(p-0.42)/0.58));
+      setLit(Math.min(1,Math.max(0,(p-0.2)/0.4)));
+      if(p<1)r=requestAnimationFrame(anim); };
+    r=requestAnimationFrame(anim);
+    const a=setTimeout(()=>setPhase('whole'),2400);
+    const b=setTimeout(()=>Sound.lightBed(breathMs/1000),5200);
+    return()=>{cancelAnimationFrame(r);[a,b].forEach(clearTimeout);};
+  },[]);
+
+  /* ── HIS PACE, ON THE BREATH ───────────────────────────────────
+     Two laws met here rather than one beating the other. From the Rite:
+     *nothing surfaces until he asks for it.* From the nave (§6.2): *text
+     arrives on the exhale, never a bare timer.* So a touch does not
+     deliver a line — it ASKS for one, and the next exhale answers. Ask
+     mid-inhale and the line still waits for the breath to turn. He sets
+     the pace; the breath keeps the time. Unasked, the space just breathes. */
+  const wants=useRef(0);
+  const ask=()=>{ if(phase==='whole'||phase==='dwelling')wants.current=Math.min(2,wants.current+1); };
+  useEffect(()=>{
+    if(phase!=='whole'&&phase!=='dwelling')return;
+    let last=breath.current.cycle;
+    const i=setInterval(()=>{
+      const b=breath.current;
+      if(b.phase!=='out'||b.cycle===last)return;
+      if(wants.current<=0)return;
+      last=b.cycle; wants.current--;
+      if(phase==='whole'){setPhase('dwelling');setAnchor(0);return;}
+      setAnchor(n=>{
+        if(n>=scene.anchors.length-1){setPhase('beat');setBeatLine(-1);return n;}
+        return n+1;});
+    },80);
+    return()=>clearInterval(i);
+  },[phase]);
+
+  /* THE DECLARATION IS DRAWN IN, NOT DELIVERED. He presses and holds;
+     the line surfaces out of the stone as he draws breath; it locks
+     when he has taken the whole of it. The turn to first person happens
+     in his body before it happens on the screen. */
+  /* the gesture ends the instant the last Declaration locks — the cue and
+     the handler both die with it, so he is never asked to draw in a line
+     that does not exist */
+  const more=beatLine+1<scene.beat.length;
+  const drawIn=()=>{
+    if(holdRef.current||phase!=='beat'||!more)return; holdRef.current=true;
+    Sound.breathIn(4.2);
+    const t0=performance.now();
+    const step=n=>{ if(!holdRef.current)return;
+      const p=Math.min(1,(n-t0)/4200); setDrawing(p);
+      if(p>=1){ holdRef.current=false; setDrawing(0); Sound.voice('ashrey',196,7);
+        setBeatLine(k=>{ const next=k+1;
+          if(next>=scene.beat.length-1)setTimeout(()=>setPhase('landing'),breathMs*1.6);
+          return next; });
+        return; }
+      raf.current=requestAnimationFrame(step); };
+    raf.current=requestAnimationFrame(step);
+  };
+  const release=()=>{ if(!holdRef.current)return; holdRef.current=false; cancelAnimationFrame(raf.current); setDrawing(0); };
+  useEffect(()=>()=>cancelAnimationFrame(raf.current),[]);
+
+  const leave=()=>{Sound.closeTheRoom(6);Sound.darkReturns();onLeave();};
+
+  return (
+    <div data-screen-label="Light — Standing in the shaft"
+      onPointerDown={phase==='beat'&&more?drawIn:ask} onPointerUp={release} onPointerLeave={release}
+      style={{position:'absolute',inset:0,background:'var(--dark)',overflow:'hidden',touchAction:'none',userSelect:'none'}}>
+      <Nave breath={breath} cam={1} lit={lit} touching={drawing>0} flood={flood}/>
+
+      <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',
+        padding:'268px 44px 0',pointerEvents:'none',opacity:phase==='lifting'?0:1,transition:'opacity 1.6s ease'}}>
+
+        <div style={{height:14,marginBottom:26}}>
+          {phase!=='beat'&&phase!=='landing' && <Cue breath={breath} dark={false}/>}
+          {phase==='beat' && <div className="mono" style={{fontSize:9,letterSpacing:'0.3em',whiteSpace:'nowrap',color:'var(--lightInk30)',opacity:more?1:0,transition:'opacity 1.4s ease'}}>{drawing>0?'keep drawing it in':'press · draw it in'}</div>}
+        </div>
+
+        {/* the words lie INSIDE the pool of light, never spilling onto dim stone.
+           224 px is the widest column the beam can hold at the height the
+           first line sits — measured against shaftHalf, not guessed. */}
+        <div style={{width:224,maskImage:'linear-gradient(to bottom,transparent 0,#000 46px)',WebkitMaskImage:'linear-gradient(to bottom,transparent 0,#000 46px)'}}>
+        <div ref={colRef} style={{transform:`translateY(${-lift}px)`,transition:'transform 2.6s cubic-bezier(0.4,0,0.2,1)'}}>
+          {/* the whole text — living while it is the only thing here, settled once received */}
+          {phase!=='landing' && (
+            <div style={{animation:'dissolve 1.6s ease-out both',marginBottom:phase==='whole'?0:18}}>
+              {scene.whole.split('\n').map((l,i)=>(
+                <p key={i} style={{fontSize:phase==='whole'?21:15,lineHeight:phase==='whole'?1.5:1.6,
+                  color:phase==='whole'?'var(--living)':'var(--settled)',letterSpacing:'-0.014em',textWrap:'pretty',marginBottom:6,
+                  transition:'font-size 2.6s cubic-bezier(0.4,0,0.2,1), color 2.6s ease, line-height 2.6s ease'}}>{l}</p>
+              ))}
+            </div>
+          )}
+
+          {/* the anchors — only the newest is living */}
+          {phase==='dwelling' && scene.anchors.slice(0,anchor+1).map((a,i)=>(
+            <p key={i} style={{fontSize:16.5,lineHeight:1.7,textWrap:'pretty',marginBottom:14,
+              color:i===anchor?'var(--living)':'var(--settled)',transition:'color 3s ease',
+              animation:'riseFade 2.4s ease-out both'}}>{a}</p>
+          ))}
+
+          {/* the Declarations — cut into the floor. They never settle. */}
+          {(phase==='beat'||phase==='landing') && scene.beat.slice(0,beatLine+1).map((b,i)=>(
+            <p key={i} className="carved" style={{fontSize:21,lineHeight:1.5,letterSpacing:'-0.012em',
+              textWrap:'pretty',marginBottom:11,animation:'riseFade 2.6s ease-out both'}}>{b}</p>
+          ))}
+          {phase==='beat'&&drawing>0&&beatLine+1<scene.beat.length && (
+            <p style={{fontSize:21,lineHeight:1.5,letterSpacing:'-0.012em',textWrap:'pretty',marginBottom:11,
+              color:`rgba(22,19,27,${0.06+drawing*0.94})`,transform:`translateY(${(1-drawing)*10}px)`,
+              filter:`blur(${(1-drawing)*3.4}px)`,textShadow:`0 ${drawing}px 0 rgba(255,255,255,${drawing*0.95})`}}>{scene.beat[beatLine+1]}</p>
+          )}
+
+          {phase==='landing' && (
+            <div style={{animation:'dissolve 2.6s ease-out both',marginTop:16,pointerEvents:'auto'}}>
+              <p style={{fontSize:18,lineHeight:1.6,color:'var(--settled)',textWrap:'pretty',fontStyle:'italic'}}>{scene.landing}</p>
+              <button onClick={leave} className="mono" style={{marginTop:22,background:'none',border:'none',padding:'16px 0',cursor:'pointer',fontSize:9,letterSpacing:'0.16em',color:'var(--lightInk55)',textTransform:'uppercase'}}>walk back out ›</button>
+            </div>
+          )}
+        </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BackOut({breath,onAgain}){
+  return (
+    <div data-screen-label="Light — Walking back out" style={{position:'absolute',inset:0,animation:'dissolve 4s ease-out both'}}>
+      <Nave breath={breath} cam={0.34} lit={0} touching={false}/>
+      <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-end',padding:'0 46px 120px',textAlign:'center'}}>
+        <p style={{fontSize:15,lineHeight:1.74,color:'var(--ink60)',fontStyle:'italic',textWrap:'pretty'}}>You are in the dreaming field again.</p>
+        <p style={{fontSize:13,lineHeight:1.76,color:'var(--ink35)',marginTop:18,textWrap:'pretty',maxWidth:250}}>It sits a little lighter now. Un-named, un-announced. Just quieter.</p>
+        <div style={{display:'flex',flexDirection:'column',gap:4,marginTop:34,alignItems:'center'}}>
+          <button onClick={onAgain} className="mono" style={{background:'none',border:'none',padding:'16px 12px',cursor:'pointer',fontSize:9,letterSpacing:'0.16em',color:'var(--ink60)',textTransform:'uppercase'}}>again ›</button>
+          <a href="Home Feed.html" className="mono" style={{fontSize:9,letterSpacing:'0.16em',color:'var(--ink35)',textDecoration:'none',padding:'16px 12px'}}>the archive waits ›</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TheLight({scene,breathMs}){
+  const [stage,setStage]=useState('approach');
+  const breath=useBreath(breathMs,true);
+  return (
+    <div style={{position:'relative',height:'100%',background:'var(--dark)',overflow:'hidden'}}>
+      {stage==='approach' && <Approach scene={scene} breath={breath} onOpen={()=>setStage('hold')}/>}
+      {stage==='hold' && <Hold breath={breath} dur={breathMs*0.34} onLift={()=>setStage('lit')}/>}      {stage==='lit' && <LitSpace scene={scene} breathMs={breathMs} breath={breath} onLeave={()=>setStage('out')}/>}
+      {stage==='out' && <BackOut breath={breath} onAgain={()=>setStage('approach')}/>}
+    </div>
+  );
+}
+
+function App(){
+  const [which,setWhich]=useState('morning');
+  const [pace,setPace]=useState(10000);
+  const [run,setRun]=useState(0);
+  useEffect(()=>{document.documentElement.style.setProperty('--breath',(pace/1000)+'s');},[pace]);
+  const scene=SCENES[which];
+  return (
+    <React.Fragment>
+      <div className="stage">
+        <TheLight scene={scene} breathMs={pace} key={which+'-'+pace+'-'+run}/>
+      </div>
+      <div style={{display:'flex',gap:16,alignItems:'center',marginTop:16,fontFamily:'Space Mono,monospace',fontSize:10,letterSpacing:'0.12em',color:'rgba(237,232,227,0.35)',textTransform:'uppercase'}}>
+        <span>Scene</span>
+        {[['morning','the morning'],['floor','the floor']].map(([k,l])=>(
+          <button key={k} onClick={()=>{setWhich(k);setRun(r=>r+1);}} style={{background:'none',border:'none',padding:0,cursor:'pointer',fontFamily:'inherit',fontSize:'inherit',letterSpacing:'inherit',textTransform:'uppercase',color:which===k?'#F6F3ED':'rgba(237,232,227,0.35)'}}>{l}</button>
+        ))}
+        <span style={{opacity:0.3}}>|</span>
+        <span>Pace</span>
+        {[[10000,'true breath'],[4600,'preview']].map(([ms,l])=>(
+          <button key={ms} onClick={()=>setPace(ms)} style={{background:'none',border:'none',padding:0,cursor:'pointer',fontFamily:'inherit',fontSize:'inherit',letterSpacing:'inherit',textTransform:'uppercase',color:pace===ms?'#9B6BD6':'rgba(237,232,227,0.35)'}}>{l}</button>
+        ))}
+      </div>
+      <div style={{marginTop:10,fontFamily:'Space Mono,monospace',fontSize:9,letterSpacing:'0.12em',color:'rgba(237,232,227,0.22)',textAlign:'center',textTransform:'uppercase'}}>{scene.kind} · {scene.vector}<br></br>the door opens on stillness — touch once, then do nothing · inside, a touch asks and the next exhale answers</div>
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+(function fitStage(){
+  const r=document.getElementById('root');
+  const apply=()=>{
+    const w=Math.max(390,r.scrollWidth), h=Math.max(930,r.scrollHeight);
+    const k=Math.min(1,(window.innerHeight-24)/h,(window.innerWidth-24)/w);
+    r.style.transform='scale('+k+')';r.style.transformOrigin='50% 50%';};
+  apply();window.addEventListener('resize',apply);setTimeout(apply,400);
+})();
+</script>
+</body>
+</html>

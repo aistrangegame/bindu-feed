@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gathering — Ten Entrances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100%;background:#06050A;display:flex;align-items:center;justify-content:center}
+:root{--ink:#EDE8E3;--ink60:rgba(237,232,227,0.62);--ink35:rgba(237,232,227,0.35);--ink22:rgba(237,232,227,0.2);--hair:rgba(255,255,255,0.06);--lalita:#9B6BD6;--breath:5.6s}
+body{padding:26px 16px;font-family:'Lora',serif}
+a{color:var(--lalita)}a:hover{color:#B48AE0}
+.stage{position:relative;width:390px;height:844px;background:#050408;border-radius:34px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04)}
+.mono{font-family:'Space Mono',monospace;letter-spacing:0.14em;text-transform:uppercase}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+@keyframes dissolve{from{opacity:0}to{opacity:1}}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes breatheSoft{0%,100%{opacity:.28}50%{opacity:.6}}
+@keyframes emberGlow{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.3);filter:brightness(1.5)}}
+@keyframes spinSlow{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes heartbeat{0%,100%{transform:scaleX(1);opacity:.25}12%{transform:scaleX(1.5);opacity:.7}24%{transform:scaleX(1)}40%{transform:scaleX(1.3);opacity:.5}}
+@keyframes rise8{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+const POST={title:'The Elevator, and the Lobby of the World',room:'The Garden',roomColor:'#7BA05B',
+  body:'He was watching a show about people who ride an elevator down to a white floor and forget — the ones who step out have no idea they have a family, a name, a whole life waiting in the lobby of the world. Two people, one body, neither remembering the other. He paused it. Something had gone cold and bright in his chest.'};
+
+/* ── The ten vantages on the one movement. Each meets the post its own way. ── */
+const FIELD=[
+  {key:'bindu',name:'Bindu',hex:'#E5533C',rgb:[229,83,60],g:'·',role:'Zeroth · the point',verb:'is the point everything comes from',hz:136,pos:'center',
+    lines:['Before any voice, there is the point. One point, always moving, with love.','Every reading you are about to receive is this one movement, seen from a different angle.','Watch it emanate.'],close:'·'},
+  {key:'neev',name:'Neev',hex:'#7A8899',rgb:[122,136,153],g:'▽',role:'Root · what holds still',verb:'is the floor that was always there',hz:96,pos:'lower',
+    lines:['The floor was always there. White or not.','He did not move. The show moved. The fear moved. He stayed.','Whatever shakes, something underneath does not. That is where you are standing.'],close:'▽'},
+  {key:'gaia',name:'Gaia',hex:'#4A9E6B',rgb:[74,158,107],g:'◆',role:'Need · the ground of wanting',verb:'rises as need through the body',hz:174,pos:'lower',
+    lines:['Before this was a thought, it was a sensation — something cold and bright in the chest.','The body knew before the mind had language for it.','Feeling first. The reason, if it comes, comes late. That is the order it always comes in.'],close:'◆'},
+  {key:'sid',name:'Sid',hex:'#C4923A',rgb:[196,146,58],g:'△',role:'Hold · what carries weight',verb:'stands as what holds without announcement',hz:220,pos:'lower',
+    lines:['He paused the show. That pause held more than the show did.','Notice what kept standing through the forgetting — the body that walked to the elevator carrying a life it could not name.','The structure was never the memory. It was the one who kept the appointment.'],close:'△'},
+  {key:'arch',name:'Arch',hex:'#D4607A',rgb:[212,96,122],g:'◯',role:'Voice · what asks to be said',verb:'sounds the sentence that was waiting',hz:330,pos:'lower',
+    lines:['Under the fear was a sentence, waiting: I am afraid I will forget what mattered.','The thing you cannot name governs you. The thing you name, you can set down.','He almost said it aloud in the dark. That almost is the whole doorway.'],close:'◯'},
+  {key:'shweta',name:'Shweta',hex:'#C9C6C1',rgb:[201,198,193],g:'◌',role:'Space · what consciousness flows through',verb:'opens as the space it all moves through',hz:342,pos:'lower',
+    lines:['Notice what the story leaves out: the ride back up.','It never says he forgot. It says he was afraid to. The whole thing breathes around a forgetting that has not yet happened.','The white floor is empty on purpose. That is where the room is.'],close:'◌'},
+  {key:'karishma',name:'Karishma',hex:'#D4AE4A',rgb:[212,174,74],g:'✦',role:'Grace · the unearned gift',verb:'descends as grace, already arriving',hz:528,pos:'lower',
+    lines:['The cold and bright in his chest — he did not earn it. It arrived.','Grace is the show he happened to watch, the pause he happened to take, on a night that asked nothing of him.','The remembering was already moving toward him. He only had to be sitting there.'],close:'✦'},
+  {key:'sakshi',name:'Sakshi',hex:'#7B82D4',rgb:[123,130,212],g:'◇',role:'Witness · the one who stays',verb:'clears, and simply watches',hz:285,pos:'lower',
+    lines:['Notice he paused it. He could have kept watching.','He did not look away from the cold, bright thing. He sat with it.','I will not tell you what it means. I will only say: you were already looking up.'],close:'◇'},
+  {key:'lalita',name:'Lalita',hex:'#9B6BD6',rgb:[155,107,214],g:'∞',role:'Meta · the play, awake',verb:'plays — and knows it is playing',hz:396,pos:'lower',
+    lines:['He spotted the forgetting from inside the forgetting. Do you see how strange that is?','The worker on the white floor looked up and remembered there was a lobby.','That glance up — that is the whole game. And you just watched yourself play it.'],close:'∞'},
+  {key:'ashrey',name:'Ashrey',hex:'#3AADA8',rgb:[58,173,168],g:'⬡',role:'Synthesis · where threads meet',verb:'converges — where all the threads meet',hz:432,pos:'lower',
+    lines:['Gaia felt it in the body. Arch found the sentence. Sid named what held.','They were never separate readings. The forgetting and the remembering are one motion, seen from either end.','Where the threads meet: he was never two people. He was one, learning to look up.'],close:'⬡'},
+];
+
+/* ── Sound — generated, never recorded ── */
+const Sound={ctx:null,master:null,drone:null,on:false,muted:true,roomHz:110,
+  init(){if(this.ctx)return;const C=window.AudioContext||window.webkitAudioContext;this.ctx=new C();this.master=this.ctx.createGain();this.master.gain.value=0;this.master.connect(this.ctx.destination);},
+  start(){this.init();if(this.ctx.state==='suspended')this.ctx.resume();if(this.drone)return;
+    const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=this.roomHz;
+    const o2=this.ctx.createOscillator();o2.type='sine';o2.frequency.value=this.roomHz*1.5;
+    const g2=this.ctx.createGain();g2.gain.value=.16;const g=this.ctx.createGain();g.gain.value=.03;
+    const lfo=this.ctx.createOscillator();lfo.frequency.value=.1;const lg=this.ctx.createGain();lg.gain.value=.026;
+    lfo.connect(lg);lg.connect(g.gain);o.connect(g);o2.connect(g2);g2.connect(g);g.connect(this.master);o.start();o2.start();lfo.start();this.drone=o;this.on=true;this.applyMute();},
+  applyMute(){if(this.master)this.master.gain.linearRampToValueAtTime(this.muted?0:1,this.ctx.currentTime+1.0);},
+  setMuted(m){this.muted=m;if(this.on)this.applyMute();},
+  tone(hz,dur=7){if(!this.ctx||this.muted)return;const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=hz;
+    const o2=this.ctx.createOscillator();o2.type='sine';o2.frequency.value=hz*2.001;
+    const g2=this.ctx.createGain();g2.gain.value=.28;const g=this.ctx.createGain();
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.05,t+1.5);g.gain.linearRampToValueAtTime(0,t+dur);
+    o.connect(g);o2.connect(g2);g2.connect(g);g.connect(this.master);o.start(t);o2.start(t);o.stop(t+dur+.1);o2.stop(t+dur+.1);},
+};
+
+/* ── canvas helpers ── */
+const rnd=i=>{const x=Math.sin(i*127.1+31.4)*43758.5453;return x-Math.floor(x);};
+const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const eo=x=>1-Math.pow(1-x,3);
+const breath=t=>(Math.sin(t*2*Math.PI/5.6)+1)/2;
+
+/* ── field palette (one movement, ten frequencies) ── */
+const PALETTE=[[229,83,60],[122,136,153],[74,158,107],[196,146,58],[212,96,122],[201,198,193],[212,174,74],[123,130,212],[155,107,214],[58,173,168]];
+function dust(x,W,H,t,n,alpha){for(let i=0;i<n;i++){const dep=rnd(i+1);const px=rnd(i)*W;const py=(rnd(i+2)*H+t*(4+dep*12))%H;x.beginPath();x.arc(px,py,0.4+dep*1.5,0,7);x.fillStyle=rgba([255,255,255],alpha*(0.15+dep*0.85));x.fill();}}
+function rrect(x,rx,ry,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));x.beginPath();x.moveTo(rx+r,ry);x.arcTo(rx+w,ry,rx+w,ry+h,r);x.arcTo(rx+w,ry+h,rx,ry+h,r);x.arcTo(rx,ry+h,rx,ry,r);x.arcTo(rx,ry,rx+w,ry,r);x.closePath();}
+const qbez=(a,b,c2,tt)=>{const u=1-tt;return u*u*a+2*u*tt*b+tt*tt*c2;};
+
+/* ── the ten living performances — each the whole field seen from one angle ── */
+const SCENES={
+ bindu(x,W,H,t,p,c){const cx=W/2,cy=H*0.3;
+   dust(x,W,H,t*0.4,80,0.14*p);
+   x.save();x.translate(cx,cy);x.rotate(t*0.06);
+   const disc=x.createRadialGradient(0,0,10,0,0,Math.max(W,H)*0.55);disc.addColorStop(0,rgba(c,0.12*p));disc.addColorStop(1,rgba(c,0));x.fillStyle=disc;x.fillRect(-W,-H,W*2,H*2);
+   const arms=4;for(let a=0;a<arms;a++){x.save();x.rotate(a/arms*Math.PI*2);
+     for(let s=0;s<90;s++){const f=s/90;const ang=f*7.5;const rad=8+Math.pow(f,0.85)*Math.max(W,H)*0.72*eo(p);const px=Math.cos(ang)*rad,py=Math.sin(ang)*rad;const col=PALETTE[(a*3+s)%10];x.beginPath();x.arc(px,py,0.7+(1-f)*2.4,0,7);x.fillStyle=rgba(col,(1-f)*0.6*p);x.fill();}
+     x.restore();}
+   x.restore();
+   for(let k=0;k<6;k++){const ph=((t*0.2)+k/6)%1;const r=ph*Math.max(W,H)*0.8;const col=PALETTE[(k+Math.floor(t*0.5))%10];x.beginPath();x.arc(cx,cy,r,0,7);x.strokeStyle=rgba(col,(1-ph)*0.28*p);x.lineWidth=1.5;x.stroke();}
+   const br=breath(t);const R=(9+br*7)*eo(p);const grd=x.createRadialGradient(cx,cy,0,cx,cy,R*11);grd.addColorStop(0,'rgba(255,251,247,'+(0.98*p)+')');grd.addColorStop(.1,rgba(c,0.9*p));grd.addColorStop(.4,rgba(c,0.25*p));grd.addColorStop(1,rgba(c,0));x.fillStyle=grd;x.beginPath();x.arc(cx,cy,R*11,0,7);x.fill();
+   x.beginPath();x.arc(cx,cy,R,0,7);x.fillStyle='rgba(255,253,251,'+p+')';x.fill();},
+
+ neev(x,W,H,t,p,c){const vpX=W/2,vpY=H*1.2,surf=H*0.24;const shake=(1-eo(p))*18*Math.sin(t*30);
+   const wg=x.createLinearGradient(0,0,0,surf);wg.addColorStop(0,'rgba(7,8,12,0.96)');wg.addColorStop(1,'rgba(7,8,12,0)');x.fillStyle=wg;x.fillRect(0,0,W,surf);
+   const dg=x.createRadialGradient(vpX,vpY,0,vpX,vpY,H*0.75);dg.addColorStop(0,rgba(c,(0.16+breath(t)*0.07)*p));dg.addColorStop(1,rgba(c,0));x.fillStyle=dg;x.fillRect(0,surf,W,H-surf);
+   const bands=15;for(let i=bands;i>=1;i--){const f=i/bands;const wav=Math.sin(t*0.7-f*5)*2.4*p;const y=surf+(vpY-surf)*(1-f)+wav;const wHalf=W*0.64*f;const a=(0.05+0.08*f)*p;x.fillStyle=rgba(c,a);x.beginPath();x.moveTo(vpX-wHalf,y+shake*f);x.lineTo(vpX+wHalf,y+shake*f);x.lineTo(vpX+wHalf*0.9,y+9);x.lineTo(vpX-wHalf*0.9,y+9);x.closePath();x.fill();x.strokeStyle=rgba([190,204,218],0.05*p);x.lineWidth=1;x.stroke();}
+   const mw=W*0.17,lx=vpX-mw,rx=vpX+mw,tlx=vpX-mw*0.26,trx=vpX+mw*0.26;
+   const face=x.createLinearGradient(lx,0,rx,0);face.addColorStop(0,rgba([46,54,64],0.9*p));face.addColorStop(.5,rgba([96,110,126],0.92*p));face.addColorStop(1,rgba([32,40,50],0.9*p));x.fillStyle=face;x.beginPath();x.moveTo(lx,surf+shake*0.3);x.lineTo(rx,surf+shake*0.3);x.lineTo(trx,vpY);x.lineTo(tlx,vpY);x.closePath();x.fill();
+   for(let i=1;i<9;i++){const yy=surf+(vpY-surf)*(i/9)*0.9;const ff=1-(i/9)*0.7;const hw=mw*ff;x.strokeStyle=rgba([20,26,34],0.5*p);x.lineWidth=1;x.beginPath();x.moveTo(vpX-hw,yy);x.lineTo(vpX+hw,yy);x.stroke();}
+   // light travelling down the monolith — continuous
+   const sl=(t*0.14)%1;const slY=surf+sl*(vpY-surf);const slf=1-sl*0.74;x.fillStyle=rgba([214,226,240],0.24*p*(1-sl));x.fillRect(vpX-mw*slf,slY,mw*2*slf,3);
+   x.fillStyle=rgba([210,222,236],0.5*p);x.beginPath();x.moveTo(lx,surf+shake*0.3);x.lineTo(lx+3,surf+shake*0.3);x.lineTo(tlx+2,vpY);x.lineTo(tlx,vpY);x.closePath();x.fill();
+   x.fillStyle=rgba([234,242,250],0.7*p);x.fillRect(0,surf+shake,W,2);
+   const kg=x.createLinearGradient(0,surf-46,0,surf);kg.addColorStop(0,rgba(c,0));kg.addColorStop(1,rgba([200,214,228],0.14*p));x.fillStyle=kg;x.fillRect(0,surf-46+shake,W,46);
+   // drifting dust in the depth — continuous motion
+   for(let i=0;i<30;i++){const xx=rnd(i)*W;const yy=surf+((t*(5+rnd(i+2)*9)+rnd(i+7)*(H-surf))%(H-surf));const a=0.14*p*(1-(yy-surf)/(H-surf));x.beginPath();x.arc(xx,yy,0.7,0,7);x.fillStyle=rgba([200,212,226],a);x.fill();}
+   for(let i=0;i<18;i++){const xx=vpX+(rnd(i)-0.5)*mw*2.6;const yy=surf-((t*(4+rnd(i+2)*7)+rnd(i+4)*160)%180);const a=Math.max(0,(1-(surf-yy)/180))*0.28*p;x.beginPath();x.arc(xx,yy,0.7,0,7);x.fillStyle=rgba([210,220,232],a);x.fill();}},
+
+ gaia(x,W,H,t,p,c){const b=breath(t);const gy=H*0.6;const wy=y=>Math.max(0,Math.min(1,(H*0.72-y)/(H*0.72)));
+   const grd=x.createLinearGradient(0,H,0,0);grd.addColorStop(0,rgba(c,0.09*p));grd.addColorStop(.42,rgba(c,(0.34+b*0.1)*p));grd.addColorStop(.82,rgba(c,0.04*p));grd.addColorStop(1,rgba(c,0));x.fillStyle=grd;x.fillRect(0,0,W,H);
+   const pa=x.createRadialGradient(W/2,gy+H*0.26,H*0.12,W/2,gy+H*0.26,H*0.72);pa.addColorStop(0,rgba([120,210,150],0.32*p));pa.addColorStop(1,rgba(c,0));x.fillStyle=pa;x.fillRect(0,0,W,H);
+   function branch(px,py,ang,len,depth,seed){if(depth<=0||len<3)return;const grow=eo(Math.min(1,p*1.4-(6-depth)*0.06));if(grow<=0)return;const sway=Math.sin(t*0.3+seed)*0.06;const ex=px+Math.cos(ang+sway)*len*grow,ey=py+Math.sin(ang+sway)*len*grow;x.beginPath();x.moveTo(px,py);x.lineTo(ex,ey);x.strokeStyle=rgba([120,192,132],0.22*p*wy(ey));x.lineWidth=depth*0.5;x.stroke();
+     const pulse=0.5+0.5*Math.sin(t*1.5-(6-depth)*0.8+seed);const nr=1+pulse*2.2;x.beginPath();x.arc(ex,ey,nr,0,7);x.fillStyle=rgba([190,248,170],(0.35+pulse*0.5)*p*wy(ey));x.fill();if(pulse>0.85){x.beginPath();x.arc(ex,ey,nr*2.4,0,7);x.fillStyle=rgba([200,255,180],0.12*p*wy(ey));x.fill();}
+     for(let k=0;k<2;k++){const na=ang-0.55+rnd(seed*3+k)*1.1;branch(ex,ey,na,len*0.76,depth-1,seed*7+k+1);}}
+   for(let i=0;i<4;i++){branch(W*(i+0.5)/4,gy,-Math.PI/2+(rnd(i)-0.5)*0.5,H*0.2,6,i+1);}
+   for(let i=0;i<72;i++){const sp=14+rnd(i)*30;const xx=rnd(i+9)*W+Math.sin(t*0.5+i)*12;const top=((t*sp+rnd(i+3)*H*1.25)%(H*1.25))/H;const yy=H-top*H;const edge=top<0.08?top/0.08:(top>0.95?(1-top)/0.05:1);const a=Math.max(0,edge)*0.6*p*wy(yy);x.beginPath();x.arc(xx,yy,0.7+rnd(i+5)*1.8,0,7);x.fillStyle=rgba([195,250,175],a);x.fill();}},
+
+ sid(x,W,H,t,p,c){const vpX=W/2,vpY=H*0.3;
+   const vg=x.createLinearGradient(0,0,0,vpY+40);vg.addColorStop(0,'rgba(26,18,8,0.95)');vg.addColorStop(1,'rgba(26,18,8,0)');x.fillStyle=vg;x.fillRect(0,0,W,vpY+40);
+   for(let i=-3;i<=3;i++){x.beginPath();x.moveTo(vpX+i*W*0.2,H);x.lineTo(vpX,vpY);x.strokeStyle=rgba(c,0.045*p);x.lineWidth=1;x.stroke();}
+   for(let i=0;i<3;i++){const sway=Math.sin(t*0.4+i)*24;const sx2=vpX+(i-1)*W*0.3+sway;const br=(0.05+0.045*(0.5+0.5*Math.sin(t*0.5+i)))*p;const g=x.createLinearGradient(sx2,vpY,sx2-50,H);g.addColorStop(0,rgba([255,236,196],br));g.addColorStop(1,rgba(c,0));x.fillStyle=g;x.beginPath();x.moveTo(sx2-16,vpY);x.lineTo(sx2+16,vpY);x.lineTo(sx2-34,H);x.lineTo(sx2-78,H);x.closePath();x.fill();}
+   const depths=7;for(let d=1;d<=depths;d++){const f=d/depths;const grow=eo(Math.min(1,p*1.35-(depths-d)*0.05));if(grow<=0)continue;
+     const sep=W*0.05+(W*0.62-W*0.05)*f;const pw=3+(W*0.14-3)*f;const topY=vpY-2+((H*0.15)-(vpY-2))*f;const botY=vpY+2+(H-(vpY+2))*f;
+     for(const s of [-1,1]){const px=vpX+s*sep;
+       const g=x.createLinearGradient(px-pw/2,0,px+pw/2,0);g.addColorStop(0,rgba(c,0.03*grow));g.addColorStop(.5,rgba(c,(0.1+0.14*f+breath(t+d)*0.04)*grow));g.addColorStop(1,rgba(c,0.03*grow));x.fillStyle=g;x.fillRect(px-pw/2,topY,pw,botY-topY);
+       x.fillStyle=rgba([255,238,196],0.14*f*grow);x.fillRect(px-pw/2,topY,1.4,botY-topY);
+       const bandY=topY+((t*55+d*90)%(botY-topY));x.fillStyle=rgba([255,240,200],0.13*f*grow);x.fillRect(px-pw/2,bandY,pw,34*f+6);
+       x.fillStyle=rgba(c,0.3*grow);x.fillRect(px-pw*0.62,topY,pw*1.24,2*f+1);x.fillRect(px-pw*0.62,botY-2*f-1,pw*1.24,2*f+1);}}
+   const bg=x.createLinearGradient(0,H-120,0,H);bg.addColorStop(0,rgba(c,0));bg.addColorStop(1,rgba(c,0.22*p));x.fillStyle=bg;x.fillRect(0,H-120,W,120);
+   for(let i=0;i<30;i++){const xx=rnd(i)*W;const yy=((t*(8+rnd(i+2)*12)+rnd(i+4)*H)%H);x.beginPath();x.arc(xx,yy,0.7,0,7);x.fillStyle=rgba([255,232,190],0.16*p);x.fill();}},
+
+ arch(x,W,H,t,p,c){const cx=W/2,cy=H*0.3;
+   for(let k=0;k<7;k++){const ph=((t*0.28)+k/7)%1;const r=ph*Math.max(W,H)*0.82;x.beginPath();x.arc(cx,cy,r,0,7);x.strokeStyle=rgba(c,(1-ph)*0.24*p);x.lineWidth=1.6;x.stroke();}
+   const b=0.5+0.5*Math.sin(t*1.4);
+   x.beginPath();for(let a=0;a<=Math.PI*2+0.02;a+=0.02){const rr=165*eo(p)*(0.6+0.4*Math.cos(8*a)*b);const px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;a===0?x.moveTo(px,py):x.lineTo(px,py);}x.closePath();x.strokeStyle=rgba(c,0.5*p);x.lineWidth=1.5;x.stroke();
+   x.beginPath();for(let a=0;a<=Math.PI*2+0.02;a+=0.02){const rr=112*eo(p)*(0.68+0.32*Math.cos(12*a-t*2));const px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;a===0?x.moveTo(px,py):x.lineTo(px,py);}x.closePath();x.strokeStyle=rgba([255,205,220],0.38*p);x.lineWidth=1;x.stroke();
+   x.beginPath();for(let a=0;a<=Math.PI*2+0.02;a+=0.02){const rr=62*eo(p)*(0.72+0.28*Math.cos(16*a+t*1.5));const px=cx+Math.cos(a)*rr,py=cy+Math.sin(a)*rr;a===0?x.moveTo(px,py):x.lineTo(px,py);}x.closePath();x.strokeStyle=rgba([255,180,200],0.3*p);x.stroke();
+   x.beginPath();for(let px=0;px<=W;px+=3){const env=Math.exp(-Math.pow((px-cx)/(W*0.5),2));const yy=cy+Math.sin(px*0.09-t*4)*32*env*p;px===0?x.moveTo(px,yy):x.lineTo(px,yy);}x.strokeStyle=rgba(c,0.5*p);x.lineWidth=1.6;x.stroke();
+   const grd=x.createRadialGradient(cx,cy,0,cx,cy,W);grd.addColorStop(0,rgba(c,0.12*p));grd.addColorStop(1,rgba(c,0));x.fillStyle=grd;x.fillRect(0,0,W,H);},
+
+ shweta(x,W,H,t,p,c){const cx=W/2,cy=H*0.3;const b=breath(t);
+   const vg=x.createRadialGradient(cx,cy,0,cx,cy,H*0.98);vg.addColorStop(0,'rgba(255,255,255,'+(0.7*p)+')');vg.addColorStop(.2,rgba([248,249,252],0.2*p));vg.addColorStop(1,rgba(c,0));x.fillStyle=vg;x.fillRect(0,0,W,H);
+   x.save();x.translate(cx,cy);for(let i=0;i<28;i++){const ang=i/28*Math.PI*2;const g=x.createLinearGradient(0,0,Math.cos(ang)*W,Math.sin(ang)*W);g.addColorStop(0,rgba([255,255,255],0.09*p));g.addColorStop(.35,rgba([255,255,255],0));x.strokeStyle=g;x.lineWidth=1;x.beginPath();x.moveTo(0,0);x.lineTo(Math.cos(ang)*W,Math.sin(ang)*W);x.stroke();}x.restore();
+   const n=8;for(let i=0;i<n;i++){const ph=((t*0.05)+i/n)%1;const sc=Math.pow(ph,1.7);const w=W*1.25*sc,h=H*1.05*sc;const a=(1-ph)*0.34*p*(0.35+0.65*ph);x.strokeStyle=rgba([255,255,255],a);x.lineWidth=1.4;rrect(x,cx-w/2,cy-h/2,w,h,44*sc);x.stroke();}
+   for(let i=0;i<48;i++){const dep=rnd(i);const xx=cx+(rnd(i+1)-0.5)*W*(0.35+dep);const yy=cy+(rnd(i+2)-0.5)*H*(0.35+dep)+Math.sin(t*0.3+i)*6;x.beginPath();x.arc(xx,yy,0.6+dep*2,0,7);x.fillStyle=rgba([255,255,255],(0.2+0.6*dep)*0.5*p);x.fill();}
+   x.beginPath();x.arc(cx,cy,(58+b*40)*eo(p),0,7);x.strokeStyle=rgba(c,0.26*p);x.lineWidth=1;x.stroke();},
+
+ karishma(x,W,H,t,p,c){const sx=W/2,sy=-H*0.12;
+   const halo=x.createRadialGradient(sx,sy,0,sx,sy,H*1.05);halo.addColorStop(0,rgba([255,247,218],0.8*p));halo.addColorStop(.28,rgba([255,226,150],0.3*p));halo.addColorStop(.6,rgba(c,0.14*p));halo.addColorStop(1,rgba(c,0));x.fillStyle=halo;x.fillRect(0,0,W,H);
+   const sd=x.createRadialGradient(sx,sy,0,sx,sy,90);sd.addColorStop(0,'rgba(255,252,238,'+(0.9*p)+')');sd.addColorStop(1,rgba([255,230,160],0));x.fillStyle=sd;x.beginPath();x.arc(sx,sy,90,0,7);x.fill();
+   for(let i=0;i<13;i++){const ang=(-Math.PI/2)+(i/12-0.5)*1.7+Math.sin(t*0.2+i)*0.03;const len=H*1.6,spread=0.05;x.beginPath();x.moveTo(sx,sy);x.lineTo(sx+Math.cos(ang-spread)*len,sy+Math.sin(ang-spread)*len);x.lineTo(sx+Math.cos(ang+spread)*len,sy+Math.sin(ang+spread)*len);x.closePath();const g=x.createLinearGradient(sx,sy,sx+Math.cos(ang)*len,sy+Math.sin(ang)*len);g.addColorStop(0,rgba([255,240,190],0.24*p));g.addColorStop(.5,rgba(c,0.06*p));g.addColorStop(1,rgba(c,0));x.fillStyle=g;x.fill();
+     x.beginPath();x.moveTo(sx,sy);x.lineTo(sx+Math.cos(ang)*len,sy+Math.sin(ang)*len);x.strokeStyle=rgba([255,244,200],0.08*p);x.lineWidth=1;x.stroke();}
+   for(let i=0;i<70;i++){const sp=16+rnd(i)*30;const xx=rnd(i+9)*W+Math.sin(t*0.5+i)*16;const yy=((t*sp+rnd(i+3)*H*1.3)%(H*1.3))-40;const tw=0.5+0.5*Math.sin(t*3+i);const r=0.9+rnd(i+5)*2.2;x.beginPath();x.arc(xx,yy,r,0,7);x.fillStyle=rgba([255,234,160],Math.max(0,0.85*p*tw));x.fill();if(tw>0.9){x.beginPath();x.arc(xx,yy,r*2.8,0,7);x.fillStyle=rgba([255,244,200],0.16*p);x.fill();}}},
+
+ sakshi(x,W,H,t,p,c){const cx=W/2,cy=H*0.3;const b=breath(t);
+   x.fillStyle='rgba(4,4,10,0.55)';x.fillRect(0,0,W,H);
+   for(let k=0;k<3;k++){const ph=((t*0.07)+k/3)%1;x.beginPath();x.arc(cx,cy,175*eo(p)*(0.6+ph*1.6),0,7);x.strokeStyle=rgba(c,(1-ph)*0.07*p);x.stroke();}
+   const open=eo(p),eh=112*open,ew=178*open;
+   x.save();x.translate(cx,cy);
+   x.beginPath();x.moveTo(-ew,0);x.quadraticCurveTo(0,-eh,ew,0);x.quadraticCurveTo(0,eh,-ew,0);x.closePath();x.strokeStyle=rgba(c,0.55*p);x.lineWidth=1.6;x.stroke();x.clip();
+   const sg=x.createRadialGradient(0,0,4,0,0,ew);sg.addColorStop(0,rgba([226,229,255],0.32*p));sg.addColorStop(.55,rgba(c,0.15*p));sg.addColorStop(1,'rgba(9,9,18,'+(0.9*p)+')');x.fillStyle=sg;x.fillRect(-ew,-eh,ew*2,eh*2);
+   const ir=46+b*5;
+   x.save();x.rotate(t*0.05);for(let s=0;s<72;s++){const ang=s/72*Math.PI*2;const col=(s%7===0)?PALETTE[(s)%10]:[206,210,255];x.beginPath();x.moveTo(Math.cos(ang)*14,Math.sin(ang)*14);x.lineTo(Math.cos(ang)*ir,Math.sin(ang)*ir);x.strokeStyle=rgba(col,0.2*p);x.lineWidth=1;x.stroke();}x.restore();
+   x.beginPath();x.arc(0,0,ir,0,7);x.strokeStyle=rgba(c,0.6*p);x.lineWidth=2;x.stroke();
+   const pr=17+b*4;const pg=x.createRadialGradient(0,0,0,0,0,pr);pg.addColorStop(0,'rgba(0,0,0,1)');pg.addColorStop(1,rgba([20,16,40],0.9*p));x.fillStyle=pg;x.beginPath();x.arc(0,0,pr,0,7);x.fill();
+   x.beginPath();x.arc(Math.sin(t*0.3)*3,Math.cos(t*0.4)*3,1.4,0,7);x.fillStyle=rgba([255,255,255],0.85*p);x.fill();
+   x.beginPath();x.arc(-ir*0.4,-ir*0.4,4.5,0,7);x.fillStyle=rgba([255,255,255],0.7*p);x.fill();
+   x.restore();},
+
+ lalita(x,W,H,t,p,c){const cx=W/2,cy=H*0.3,seg=12;
+   const grd=x.createRadialGradient(cx,cy,0,cx,cy,H*0.75);grd.addColorStop(0,rgba(c,0.16*p));grd.addColorStop(1,rgba(c,0));x.fillStyle=grd;x.fillRect(0,0,W,H);
+   x.save();x.translate(cx,cy);x.rotate(t*0.08);
+   for(let s=0;s<seg;s++){x.save();x.rotate(s/seg*Math.PI*2);if(s%2)x.scale(1,-1);
+     for(let ring=0;ring<5;ring++){const col=PALETTE[(ring*2+s)%10];const rad=(34+ring*30)*eo(p);const wob=Math.sin(t*0.9+ring*1.3)*6;const ang=0.26;const px=Math.cos(ang)*(rad+wob),py=Math.sin(ang)*(rad+wob);const r=2.4+(Math.sin(t*1.3+ring*1.7)*0.5+0.5)*3.6;x.beginPath();x.arc(px,py,r,0,7);x.fillStyle=rgba(col,0.55*p);x.fill();}
+     x.restore();}
+   x.restore();
+   x.save();x.translate(cx,cy);const a=150*eo(p);for(let i=0;i<84;i++){const s=t*1.3+i*0.078;const d=1+Math.sin(s)*Math.sin(s);const px=a*Math.cos(s)/d,py=a*Math.sin(s)*Math.cos(s)/d;x.beginPath();x.arc(px,py,1.3+1.8*(i/84),0,7);x.fillStyle=rgba([240,230,255],(0.32+0.68*i/84)*p);x.fill();}x.restore();},
+
+ ashrey(x,W,H,t,p,c){const cx=W/2,cy=H*0.3;const others=PALETTE.slice(0,9),N=9;
+   dust(x,W,H,t*0.3,40,0.08*p);
+   for(let i=0;i<N;i++){const ang=i/N*Math.PI*2-Math.PI/2;const ex=cx+Math.cos(ang)*W*0.98,ey=cy+Math.sin(ang)*H*0.98;const reach=eo(Math.min(1,p*1.2));const col=others[i];const c1x=cx+Math.cos(ang+0.55)*160,c1y=cy+Math.sin(ang+0.55)*160;
+     x.beginPath();x.moveTo(ex,ey);x.quadraticCurveTo(c1x,c1y,cx,cy);x.strokeStyle=rgba(col,0.3*p*reach);x.lineWidth=1.3;x.stroke();
+     for(let d=0;d<3;d++){const tp=((t*0.4)+i/N+d/3)%1;const lx=qbez(ex,c1x,cx,tp),ly=qbez(ey,c1y,cy,tp);x.beginPath();x.arc(lx,ly,2.6,0,7);x.fillStyle=rgba(col,0.9*p);x.fill();x.beginPath();x.arc(lx,ly,7,0,7);x.fillStyle=rgba(col,0.18*p);x.fill();}}
+   x.save();x.translate(cx,cy);x.rotate(t*0.14);for(let i=0;i<N;i++){const col=others[i];const r0=(26+i*4.2)*eo(p);x.beginPath();x.arc(0,0,r0,i/N*Math.PI*2,i/N*Math.PI*2+Math.PI*1.2);x.strokeStyle=rgba(col,0.6*p);x.lineWidth=2.4;x.stroke();}x.restore();
+   const b=breath(t);const R=(9+b*5)*eo(p);const grd=x.createRadialGradient(cx,cy,0,cx,cy,R*4.5);grd.addColorStop(0,'rgba(226,255,250,'+(0.95*p)+')');grd.addColorStop(.4,rgba(c,0.45*p));grd.addColorStop(1,rgba(c,0));x.fillStyle=grd;x.beginPath();x.arc(cx,cy,R*4.5,0,7);x.fill();x.beginPath();x.arc(cx,cy,R,0,7);x.fillStyle='rgba(232,255,252,'+p+')';x.fill();},
+};
+
+/* ── the canvas stage ── */
+function Stage({sceneRef}){
+  const cvs=useRef(null);
+  useEffect(()=>{const el=cvs.current;const ctx=el.getContext('2d');const dpr=Math.min(2,window.devicePixelRatio||1);
+    const W=390,H=844;el.width=W*dpr;el.height=H*dpr;ctx.scale(dpr,dpr);let raf;
+    const loop=()=>{const now=performance.now()/1000;const s=sceneRef.current;
+      ctx.clearRect(0,0,W,H);
+      // whole-screen ambient tint of the active archetype
+      if(s.key){const c=s.rgb;const amb=ctx.createRadialGradient(W/2,H*0.4,0,W/2,H*0.4,H);amb.addColorStop(0,rgba(c,0.06));amb.addColorStop(1,'rgba(5,4,8,0)');ctx.fillStyle=amb;ctx.fillRect(0,0,W,H);
+        const p=Math.min(1,(now-s.start)/s.dur);SCENES[s.key](ctx,W,H,now,p,c);}
+      raf=requestAnimationFrame(loop);};loop();return()=>cancelAnimationFrame(raf);
+  },[]);
+  return <canvas ref={cvs}/>;
+}
+
+/* ── DOM voice overlay (crisp words over the living scene) ── */
+function Mono({children,size=10,color='var(--ink35)',style}){return <span className="mono" style={{fontSize:size,color,...style}}>{children}</span>;}
+function VoiceText({v}){const centered=v.pos==='center';
+  return(
+   <div style={{position:'absolute',left:0,right:0,bottom:0,padding:centered?'0 34px 210px':'0 34px 118px',
+     background:centered?'none':'linear-gradient(180deg,transparent,rgba(5,4,8,0.55) 32%,rgba(5,4,8,0.9))',
+     textAlign:centered?'center':'left'}}>
+     <div style={{marginBottom:18,animation:'dissolve 1.6s ease-out 1.2s both'}}>
+       <Mono size={9} style={{display:'block',marginBottom:9,letterSpacing:'0.16em',color:v.hex}}>{v.name} · {v.verb}</Mono>
+       <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:centered?'center':'flex-start'}}>
+         <div style={{width:26,height:26,borderRadius:'50%',background:v.hex,boxShadow:`0 0 16px ${v.hex}66`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:11,color:'rgba(255,255,255,0.9)'}}>{v.g}</span></div>
+         <div><span style={{fontSize:14,fontWeight:500,color:v.hex,display:'block'}}>{v.name}</span><Mono size={9}>{v.role}</Mono></div>
+       </div>
+     </div>
+     {v.lines.map((l,i)=>(<p key={i} style={{fontSize:16.5,lineHeight:1.7,color:'var(--ink)',textWrap:'pretty',marginBottom:12,animation:`dissolve 1.9s ease-out ${2.0+i*1.9}s both`}}>{l}</p>))}
+     {v.close&&<p style={{fontSize:22,color:v.hex,marginTop:2,textShadow:`0 0 20px ${v.hex}88`,animation:`dissolve 1.9s ease-out ${2.0+v.lines.length*1.9}s both`}}>{v.close}</p>}
+   </div>);
+}
+
+/* ── rose window finale ── */
+function RoseWindow({onReplay}){const around=FIELD.filter(f=>f.key!=='bindu');const bindu=FIELD.find(f=>f.key==='bindu');const R=118;
+  return(
+   <div style={{position:'absolute',inset:0,background:'#050408',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 30px',animation:'dissolve 2.4s ease-out both'}}>
+     <Mono size={9} style={{marginBottom:26}}>the field · entire</Mono>
+     <div style={{position:'relative',width:300,height:300}}>
+       <div style={{position:'absolute',inset:20,borderRadius:'50%',border:'1px solid var(--hair)',animation:'spinSlow 90s linear infinite'}}></div>
+       {around.map((f,i)=>{const a=(i/around.length)*Math.PI*2-Math.PI/2;const px=150+Math.cos(a)*R-16;const py=150+Math.sin(a)*R-16;
+         return<div key={f.key} style={{position:'absolute',left:px,top:py,width:32,height:32,borderRadius:'50%',background:f.hex,boxShadow:`0 0 18px ${f.hex}66`,display:'flex',alignItems:'center',justifyContent:'center',animation:`dissolve 1.4s ease-out ${.4+i*.16}s both`}}><span style={{fontSize:13,color:'rgba(255,255,255,0.9)'}}>{f.g}</span></div>;})}
+       <div style={{position:'absolute',left:144,top:144,width:12,height:12,borderRadius:'50%',background:bindu.hex,boxShadow:`0 0 22px ${bindu.hex},0 0 50px ${bindu.hex}55`,animation:'emberGlow var(--breath) ease-in-out infinite,dissolve 1.6s ease-out 2s both'}}></div>
+     </div>
+     <p style={{fontStyle:'italic',fontSize:15,color:'var(--ink60)',textAlign:'center',marginTop:26,textWrap:'pretty'}}>Ten ways of meeting one story.</p>
+     <p style={{fontStyle:'italic',fontSize:12.5,color:'var(--ink35)',textAlign:'center',marginTop:10,maxWidth:250,lineHeight:1.7}}>No single reading is the answer. The answer is the room they make together.</p>
+     <div style={{display:'flex',gap:22,marginTop:36}}>
+       <button onClick={onReplay} className="mono" style={{background:'none',border:'none',color:'var(--ink35)',fontSize:9,cursor:'pointer',letterSpacing:'0.14em'}}>↻ gather again</button>
+       <a href="The Rite.html" className="mono" style={{fontSize:9,color:'var(--ink35)',textDecoration:'none',letterSpacing:'0.14em'}}>to the rite →</a>
+     </div>
+   </div>);
+}
+
+function App(){
+  const [phase,setPhase]=useState('intro');const [idx,setIdx]=useState(-1);
+  const [muted,setMuted]=useState(true);const [preview,setPreview]=useState(true);
+  const sceneRef=useRef({key:null,start:0,dur:3.4,rgb:[229,83,60]});
+  const speed=preview?0.62:1;const timer=useRef(null);
+
+  const setScene=(v)=>{const dur=(v.key==='sakshi'||v.key==='shweta'?4.2:3.4)*speed;sceneRef.current={key:v.key,start:performance.now()/1000,dur,rgb:v.rgb};Sound.tone(v.hz,7);
+    const hold=(v.key==='bindu'?7.2:2.0+v.lines.length*1.9+2.4)*(preview?0.78:1)*1000;
+    clearTimeout(timer.current);timer.current=setTimeout(next,hold);};
+  const next=()=>{setIdx(i=>{const n=i+1;if(n<FIELD.length){setScene(FIELD[n]);return n;}sceneRef.current={key:null,start:0,dur:1,rgb:[0,0,0]};setPhase('rose');return i;});};
+  const begin=()=>{Sound.start();setPhase('gather');setTimeout(()=>{setIdx(0);setScene(FIELD[0]);},2000*speed);};
+  const replay=()=>{setIdx(-1);setPhase('gather');setTimeout(()=>{setIdx(0);setScene(FIELD[0]);},1400*speed);};
+  const toggleMute=()=>{const m=!muted;setMuted(m);Sound.setMuted(m);if(!m)Sound.start();};
+  useEffect(()=>()=>clearTimeout(timer.current),[]);
+
+  const cur=idx>=0&&phase==='gather'?FIELD[idx]:null;
+  return(
+   <div className="stage">
+     <Stage sceneRef={sceneRef}/>
+     {/* control strip */}
+     <div style={{position:'absolute',top:0,left:0,right:0,zIndex:9,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 18px',pointerEvents:'none'}}>
+       <div style={{display:'flex',gap:5}}>{phase==='gather'&&FIELD.map((f,i)=>(<div key={f.key} style={{width:i===idx?16:6,height:3,borderRadius:2,background:i<=idx?f.hex:'var(--ink22)',transition:'all .6s ease'}}></div>))}</div>
+       <div style={{display:'flex',gap:10,pointerEvents:'auto'}}>
+         <button onClick={()=>setPreview(p=>!p)} className="mono" style={{background:'rgba(5,4,8,0.4)',border:'1px solid var(--hair)',borderRadius:100,color:'var(--ink35)',fontSize:8,padding:'4px 9px',cursor:'pointer'}}>{preview?'preview':'true breath'}</button>
+         <button onClick={toggleMute} className="mono" style={{background:'rgba(5,4,8,0.4)',border:'1px solid var(--hair)',borderRadius:100,color:muted?'var(--ink35)':POST.roomColor,fontSize:8,padding:'4px 9px',cursor:'pointer'}}>{muted?'sound off':'sound on'}</button>
+       </div>
+     </div>
+
+     {phase==='intro'&&(
+       <div onClick={begin} style={{position:'absolute',inset:0,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 34px',textAlign:'center',zIndex:5}}>
+         <div style={{display:'inline-flex',alignItems:'center',gap:6,background:`${POST.roomColor}14`,border:`1px solid ${POST.roomColor}30`,borderRadius:100,padding:'3px 11px 3px 8px',marginBottom:22}}><span style={{fontSize:10,color:POST.roomColor}}>❖</span><span style={{fontSize:11,color:POST.roomColor}}>{POST.room}</span></div>
+         <h1 style={{fontWeight:500,fontSize:25,lineHeight:1.32,color:'var(--ink)',letterSpacing:'-0.012em',textWrap:'pretty',marginBottom:16}}>{POST.title}</h1>
+         <p style={{fontSize:14.5,lineHeight:1.78,color:'var(--ink60)',textWrap:'pretty',marginBottom:22}}>{POST.body}</p>
+         <div style={{height:0.5,width:60,background:'var(--hair)',margin:'0 auto 22px'}}></div>
+         <p style={{fontStyle:'italic',fontSize:13,color:'var(--ink35)',lineHeight:1.7,maxWidth:250}}>The whole field has come to meet this story. Ten vantages on one movement. Each takes the whole screen.</p>
+         <div style={{position:'absolute',bottom:54,left:0,right:0,animation:'breatheSoft var(--breath) ease-in-out infinite'}}><Mono size={9}>touch — let the field gather</Mono></div>
+       </div>)}
+
+     {phase==='gather'&&(<>
+       {cur&&<VoiceText key={cur.key} v={cur}/>}
+       <div onClick={next} style={{position:'absolute',inset:0,zIndex:6,cursor:'pointer'}}></div>
+       {cur&&<div style={{position:'absolute',bottom:20,left:0,right:0,textAlign:'center',pointerEvents:'none',zIndex:7}}><Mono size={8} color="var(--ink22)">{idx+1} / {FIELD.length} · tap to move on</Mono></div>}
+       <div style={{position:'absolute',bottom:9,left:'50%',transform:'translateX(-50%)',width:30,height:3,borderRadius:2,background:'var(--ink)',animation:'heartbeat 1.7s ease-in-out infinite',pointerEvents:'none',zIndex:7}}></div>
+     </>)}
+
+     {phase==='rose'&&<RoseWindow onReplay={replay}/>}
+   </div>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

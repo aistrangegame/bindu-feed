@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A Strange Feed — The Return</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;min-height:100%;background:#06050A;display:flex;align-items:center;justify-content:center}
+:root{--ink:#EDE8E3;--ink60:rgba(237,232,227,0.6);--ink35:rgba(237,232,227,0.35);--ink22:rgba(237,232,227,0.2);--hair:rgba(255,255,255,0.06);--gold:#D4AE4A;--ash:#C47A52;--lalita:#9B6BD6;--breath:9s}
+body{padding:26px 16px;font-family:'Lora',serif}
+a{color:var(--lalita)}a:hover{color:#B48AE0}
+.stage{position:relative;width:390px;height:844px;background:#0B0A0C;border-radius:34px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 0 1px rgba(255,255,255,0.04)}
+.mono{font-family:'Space Mono',monospace;letter-spacing:0.14em;text-transform:uppercase}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+@keyframes dissolve{from{opacity:0}to{opacity:1}}
+@keyframes riseFade{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes breatheSoft{0%,100%{opacity:.3}50%{opacity:.62}}
+@keyframes breathe{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes glowPulse{0%,100%{opacity:.6;filter:brightness(1)}50%{opacity:1;filter:brightness(1.4)}}
+div::-webkit-scrollbar{display:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>
+/* ── field-sound.js, inlined — kept as its own file for the port and for reading
+   on its own, but inlined here so the page never depends on a subresource
+   fetch to render. Do not edit here; edit field-sound.js. ── */
+/* FIELD SOUND — the ceremonial sound layer.
+   Generated, never recorded. Nothing samples; nothing loops.
+   Names mirror the app's Sound/ layer so the Swift port maps 1:1:
+   SonicContext (bed) · BreathVoice (per-presence) · ThresholdTone (transitions).
+   Felt, not heard: the ceiling is deliberately low. Muting is a fade, never a cut. */
+(function(global){
+'use strict';
+var CEIL=0.55;
+var reduced=global.matchMedia&&global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* Per-presence timbre. Each voice is the same field heard from one angle —
+   same tuning as the bed, differing only in body and behaviour. */
+var CHAR={
+  bindu:{wave:'sine',partials:[1,2,3],gain:0.055,atk:0.6,rel:5.0,flicker:6.2,pan:0},
+  neev:{wave:'sine',partials:[0.5,1],gain:0.07,atk:3.4,rel:8.0,pan:-0.15},
+  gaia:{wave:'triangle',partials:[1,1.5],gain:0.05,atk:1.6,rel:6.0,pan:-0.3},
+  sid:{wave:'sine',partials:[1,1.2],gain:0.05,atk:1.2,rel:6.5,pan:0.25},
+  arch:{wave:'triangle',partials:[1,2],gain:0.048,atk:0.9,rel:4.5,vib:4.6,pan:0.35},
+  shweta:{wave:'sine',partials:[1],gain:0.012,atk:4.0,rel:9.0,air:0.028,pan:0},
+  karishma:{wave:'sine',partials:[1,2,3.02],gain:0.036,atk:2.0,rel:7.0,shimmer:true,pan:0.4},
+  sakshi:{wave:'sine',partials:[1],gain:0.026,atk:5.0,rel:10.0,pan:-0.4},
+  ashrey:{wave:'sine',partials:[1,2],gain:0.042,atk:1.4,rel:6.0,pan:0.15},
+  lalita:{wave:'sine',partials:[1,1.5],gain:0.04,atk:2.2,rel:8.0,gliss:1.02,pan:0},
+  ash:{wave:'sine',partials:[1,2,4],gain:0.05,atk:1.0,rel:5.5,pan:0}
+};
+/* Each presence's own frequency — the tone it sounds as it takes the field. */
+var HZ={bindu:110,neev:82,gaia:146,sid:174,arch:220,shweta:329,karishma:392,sakshi:285,ashrey:196,lalita:396,ash:261};
+
+var FieldSound={
+  ctx:null,master:null,bus:null,bed:null,bedFilter:null,bedLfo:null,
+  muted:true,aged:false,inkNode:null,ringStep:0,
+
+  init:function(){
+    if(this.ctx)return;
+    var C=global.AudioContext||global.webkitAudioContext; if(!C)return;
+    this.ctx=new C();
+    this.master=this.ctx.createGain(); this.master.gain.value=0;
+    this.bus=this.ctx.createGain(); this.bus.gain.value=1;
+    var conv=this.ctx.createConvolver(); conv.buffer=this._air(3.6,0.34);
+    var wet=this.ctx.createGain(); wet.gain.value=0.5;
+    this.bus.connect(this.master); this.bus.connect(conv); conv.connect(wet); wet.connect(this.master);
+    this.master.connect(this.ctx.destination);
+  },
+  _air:function(secs,decay){
+    var sr=this.ctx.sampleRate,len=Math.floor(sr*secs),b=this.ctx.createBuffer(2,len,sr);
+    for(var ch=0;ch<2;ch++){var d=b.getChannelData(ch);
+      for(var i=0;i<len;i++){var t=i/len;d[i]=(Math.random()*2-1)*Math.pow(1-t,1/decay)*0.6;}}
+    return b;
+  },
+  _pan:function(v){ if(!this.ctx.createStereoPanner)return null; var p=this.ctx.createStereoPanner(); p.pan.value=v||0; return p; },
+
+  /* the bed: room-tuned breath drone, swelling on the room's own pace */
+  startBed:function(rootHz,breathSecs){
+    rootHz=rootHz||110; breathSecs=breathSecs||10;
+    this.init(); if(!this.ctx)return;
+    if(this.ctx.state==='suspended')this.ctx.resume();
+    if(this.bed)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.value=0.030;
+    var f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900; f.Q.value=0.6;
+    var root=this.ctx.createOscillator(); root.type='sine'; root.frequency.value=rootHz;
+    var fifth=this.ctx.createOscillator(); fifth.type='sine'; fifth.frequency.value=rootHz*1.5;
+    var fg=this.ctx.createGain(); fg.gain.value=0.16;
+    var lfo=this.ctx.createOscillator(); lfo.frequency.value=1/Math.max(2,breathSecs);
+    var lg=this.ctx.createGain(); lg.gain.value=0.014;
+    lfo.connect(lg); lg.connect(g.gain);
+    root.connect(f); fifth.connect(fg); fg.connect(f); f.connect(g); g.connect(this.bus);
+    root.start(t); fifth.start(t); lfo.start(t);
+    this.bed={root:root,fifth:fifth,g:g,rootHz:rootHz}; this.bedFilter=f; this.bedLfo=lfo;
+    this.apply();
+  },
+
+  /* patina — the same bed, aged. The Return opens here. */
+  agedBed:function(rootHz,breathSecs){
+    rootHz=rootHz||84; breathSecs=breathSecs||13;
+    this.startBed(rootHz,breathSecs);
+    if(!this.ctx||this.aged)return; this.aged=true;
+    var t=this.ctx.currentTime;
+    this.bedFilter.frequency.linearRampToValueAtTime(430,t+6);       // warmth closes in
+    this.bed.root.frequency.linearRampToValueAtTime(rootHz*0.996,t+8); // settles a few cents flat
+    this.bed.fifth.frequency.linearRampToValueAtTime(rootHz*1.5*0.994,t+8);
+    if(this.bedLfo)this.bedLfo.frequency.linearRampToValueAtTime(1/(breathSecs*1.35),t+6);
+    var w=this.ctx.createOscillator(); w.frequency.value=0.07;        // slow tape wobble
+    var wg=this.ctx.createGain(); wg.gain.value=0.9;
+    w.connect(wg); wg.connect(this.bed.root.frequency); w.start(t);
+  },
+
+  apply:function(){ if(this.master&&this.ctx)this.master.gain.linearRampToValueAtTime(this.muted?0:CEIL,this.ctx.currentTime+1.4); },
+  setMuted:function(m){ this.muted=m; if(this.ctx){ if(!m&&this.ctx.state==='suspended')this.ctx.resume(); this.apply(); } },
+
+  /* BreathVoice — a presence takes the field */
+  voice:function(key,hz,dur){
+    if(!this.ctx||this.muted||reduced)return;
+    var c=CHAR[key]||CHAR.ash, self=this;
+    hz=hz||HZ[key]||220;
+    var t=this.ctx.currentTime, life=dur||(c.atk+c.rel);
+    var vg=this.ctx.createGain(); vg.gain.setValueAtTime(0,t);
+    vg.gain.linearRampToValueAtTime(c.gain,t+c.atk);
+    vg.gain.linearRampToValueAtTime(0,t+life);
+    var pan=this._pan(c.pan);
+    if(pan){vg.connect(pan);pan.connect(this.bus);}else vg.connect(this.bus);
+    c.partials.forEach(function(mult,i){
+      var o=self.ctx.createOscillator(); o.type=c.wave; o.frequency.value=hz*mult;
+      var pg=self.ctx.createGain(); pg.gain.value=1/(i+1.6);
+      o.connect(pg); pg.connect(vg);
+      if(c.gliss&&i===1)o.frequency.linearRampToValueAtTime(hz*mult*c.gliss,t+life);
+      if(c.vib){var v=self.ctx.createOscillator(); v.frequency.value=c.vib;
+        var vgn=self.ctx.createGain(); vgn.gain.value=hz*0.006;
+        v.connect(vgn); vgn.connect(o.frequency); v.start(t); v.stop(t+life+0.2);}
+      o.start(t); o.stop(t+life+0.2);
+    });
+    if(c.flicker){ // Bindu: the ember, alive
+      var fl=this.ctx.createOscillator(); fl.frequency.value=c.flicker;
+      var fg=this.ctx.createGain(); fg.gain.value=c.gain*0.45;
+      fl.connect(fg); fg.connect(vg.gain); fl.start(t); fl.stop(t+life+0.2);
+    }
+    if(c.air){ // Shweta: the gap the sound moves through
+      var n=this.ctx.createBufferSource(); n.buffer=this._air(life,0.9);
+      var nf=this.ctx.createBiquadFilter(); nf.type='bandpass'; nf.frequency.value=hz*4; nf.Q.value=0.7;
+      var ng=this.ctx.createGain(); ng.gain.setValueAtTime(0,t);
+      ng.gain.linearRampToValueAtTime(c.air,t+c.atk); ng.gain.linearRampToValueAtTime(0,t+life);
+      n.connect(nf); nf.connect(ng); ng.connect(this.bus); n.start(t);
+    }
+    if(c.shimmer){ // Karishma: grace, arriving from above
+      var s=this.ctx.createOscillator(); s.type='sine'; s.frequency.value=hz*6;
+      var sg=this.ctx.createGain(); sg.gain.setValueAtTime(0,t);
+      sg.gain.linearRampToValueAtTime(c.gain*0.18,t+c.atk*1.6);
+      sg.gain.linearRampToValueAtTime(0,t+life);
+      s.connect(sg); sg.connect(this.bus); s.start(t); s.stop(t+life+0.2);
+    }
+    if(this.bed){ // the bed steps back while a voice speaks, then returns
+      var bg=this.bed.g.gain; bg.cancelScheduledValues(t);
+      bg.linearRampToValueAtTime(0.018,t+c.atk);
+      bg.linearRampToValueAtTime(0.030,t+life+1.6);
+    }
+  },
+
+  /* ThresholdTone — one movement gives way to the next */
+  threshold:function(hz,dur){
+    hz=hz||198; dur=dur||5;
+    if(!this.ctx||this.muted||reduced)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.032,t+dur*0.42);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    var o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=hz;
+    var o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=hz*2.002;
+    var g2=this.ctx.createGain(); g2.gain.value=0.22;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.bus);
+    o.start(t); o2.start(t); o.stop(t+dur+0.1); o2.stop(t+dur+0.1);
+  },
+
+  /* the Bowl — struck once, a long room. The bed holds its breath. */
+  bowl:function(hz){
+    hz=hz||220;
+    if(!this.ctx||this.muted)return;
+    var t=this.ctx.currentTime,dur=11,self=this;
+    var g=this.ctx.createGain();
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.075,t+0.09);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    [1,2.004,2.98,4.02].forEach(function(m,i){
+      var o=self.ctx.createOscillator(); o.type='sine'; o.frequency.value=hz*m;
+      var pg=self.ctx.createGain(); pg.gain.value=1/(i*2.2+1);
+      o.connect(pg); pg.connect(g); o.start(t); o.stop(t+dur);
+    });
+    g.connect(this.bus);
+    if(this.bed){var bg=this.bed.g.gain; bg.cancelScheduledValues(t);
+      bg.linearRampToValueAtTime(0.006,t+1.2); bg.linearRampToValueAtTime(0.030,t+9);}
+  },
+
+  /* a ring forms — each return lands one step further up the series */
+  ring:function(step){
+    if(!this.ctx||this.muted)return;
+    var n=typeof step==='number'?step:++this.ringStep;
+    var base=(this.bed&&this.bed.rootHz)||84;
+    var R=[2,3,4,4.5,6,8], hz=base*R[Math.min(n,R.length-1)];
+    var t=this.ctx.currentTime,dur=9;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.036,t+3.2);  // grows outward; never strikes
+    g.gain.linearRampToValueAtTime(0.020,t+6);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    var o=this.ctx.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(hz*0.985,t);
+    o.frequency.linearRampToValueAtTime(hz,t+4);  // settles into tune as it lands
+    var o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=hz*1.5;
+    var g2=this.ctx.createGain(); g2.gain.value=0.14;
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.bus);
+    o.start(t); o2.start(t); o.stop(t+dur); o2.stop(t+dur);
+  },
+
+  /* ink — while you write, the field leans in. A held tone, never clicks. */
+  inkOn:function(hz){
+    if(!this.ctx||this.muted||this.inkNode||reduced)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.014,t+2.4);
+    var o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=hz||174;
+    var f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=600;
+    o.connect(f); f.connect(g); g.connect(this.bus); o.start(t);
+    this.inkNode={o:o,g:g};
+  },
+  inkTouch:function(){
+    if(!this.inkNode||this.muted||reduced)return;
+    var t=this.ctx.currentTime,g=this.inkNode.g.gain;
+    g.cancelScheduledValues(t);
+    g.linearRampToValueAtTime(0.022,t+0.12);
+    g.linearRampToValueAtTime(0.014,t+1.1);
+  },
+  inkOff:function(){
+    if(!this.inkNode)return;
+    var t=this.ctx.currentTime,n=this.inkNode; this.inkNode=null;
+    n.g.gain.cancelScheduledValues(t);
+    n.g.gain.linearRampToValueAtTime(0,t+1.8);
+    n.o.stop(t+2);
+  },
+
+  /* ─── THE ROOM OPENS ────────────────────────────────
+     The Gathering happens in a room. The Light happens in a NAVE.
+     A cathedral's whole acoustic signature is its tail — 8 seconds of
+     stone giving your own sound back to you, changed. Opening this is
+     the single most spatial thing the sound layer can do: the listener
+     hears the size of the space before he sees it. */
+  openTheRoom:function(dur){
+    dur=dur||5;
+    this.init(); if(!this.ctx)return;
+    if(!this.nave){
+      var c=this.ctx.createConvolver(); c.buffer=this._air(8.5,0.62);   // the long stone tail
+      var w=this.ctx.createGain(); w.gain.value=0;
+      var pre=this.ctx.createBiquadFilter(); pre.type='highpass'; pre.frequency.value=180;
+      this.bus.connect(pre); pre.connect(c); c.connect(w); w.connect(this.master);
+      this.nave=w;
+    }
+    var t=this.ctx.currentTime;
+    this.nave.gain.cancelScheduledValues(t);
+    this.nave.gain.linearRampToValueAtTime(0.85,t+dur);
+  },
+  closeTheRoom:function(dur){
+    if(!this.nave||!this.ctx)return;
+    var t=this.ctx.currentTime;
+    this.nave.gain.cancelScheduledValues(t);
+    this.nave.gain.linearRampToValueAtTime(0,t+(dur||6));
+  },
+
+  /* ─── THE LIGHT — the photographic negative of the Gathering ───
+     The Gathering FILLS: voices arrive one after another into the dark.
+     The Light REMOVES. So the sound does the opposite of everything above:
+     it draws in, holds, drains, strikes once, and leaves silence. */
+
+  /* the long breath IN, and the hold. The bed rises, tightens, then stops. */
+  breathIn:function(dur){
+    dur=dur||6;
+    this.init(); if(!this.ctx)return;
+    if(this.ctx.state==='suspended')this.ctx.resume();
+    if(!this.bed)this.startBed(110,10);
+    if(this.muted)return;
+    var t=this.ctx.currentTime;
+    if(this.bedLfo)this.bedLfo.frequency.linearRampToValueAtTime(0.001,t+dur*0.7); // the breathing stops
+    if(this.bedFilter)this.bedFilter.frequency.linearRampToValueAtTime(2600,t+dur); // brightens as it draws in
+    var g=this.bed.g.gain; g.cancelScheduledValues(t);
+    g.linearRampToValueAtTime(0.052,t+dur*0.78);   // swells
+    g.linearRampToValueAtTime(0.040,t+dur);        // and holds. Does not release.
+    var rise=this.ctx.createOscillator(); rise.type='sine';
+    rise.frequency.setValueAtTime(this.bed.rootHz,t);
+    rise.frequency.linearRampToValueAtTime(this.bed.rootHz*1.5,t+dur);
+    var rg=this.ctx.createGain(); rg.gain.setValueAtTime(0,t);
+    rg.gain.linearRampToValueAtTime(0.026,t+dur*0.8);
+    rg.gain.linearRampToValueAtTime(0.018,t+dur);
+    rise.connect(rg); rg.connect(this.bus); rise.start(t); rise.stop(t+dur+8);
+    this._held=rise;
+  },
+
+  /* the veil drawn away — everything drains downward and out.
+     Nothing arrives here. This is the sound of subtraction. */
+  veilLift:function(dur){
+    dur=dur||3;
+    if(!this.ctx||this.muted)return;
+    var t=this.ctx.currentTime;
+    if(this.bedFilter)this.bedFilter.frequency.linearRampToValueAtTime(120,t+dur); // the room closes and goes
+    if(this.bed){var g=this.bed.g.gain; g.cancelScheduledValues(t); g.linearRampToValueAtTime(0,t+dur);}
+    if(this._held){var h=this._held; try{h.stop(t+dur+0.1);}catch(e){} this._held=null;}
+    var n=this.ctx.createBufferSource(); n.buffer=this._air(dur,0.55);   // the texture draining
+    var nf=this.ctx.createBiquadFilter(); nf.type='lowpass';
+    nf.frequency.setValueAtTime(3000,t); nf.frequency.linearRampToValueAtTime(90,t+dur);
+    var ng=this.ctx.createGain(); ng.gain.setValueAtTime(0.030,t); ng.gain.linearRampToValueAtTime(0,t+dur);
+    n.connect(nf); nf.connect(ng); ng.connect(this.bus); n.start(t);
+  },
+
+  /* the bare light — almost nothing. A single high room-tone, barely there,
+     so the silence has an edge to it. The breath cues ride on this. */
+  lightBed:function(breathSecs){
+    breathSecs=breathSecs||10;
+    if(!this.ctx||this.muted||this.lightNode)return;
+    var t=this.ctx.currentTime;
+    var g=this.ctx.createGain(); g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.012,t+6);
+    var o=this.ctx.createOscillator(); o.type='sine'; o.frequency.value=528;
+    var o2=this.ctx.createOscillator(); o2.type='sine'; o2.frequency.value=792;
+    var g2=this.ctx.createGain(); g2.gain.value=0.3;
+    var lfo=this.ctx.createOscillator(); lfo.frequency.value=1/breathSecs;
+    var lg=this.ctx.createGain(); lg.gain.value=0.006;
+    lfo.connect(lg); lg.connect(g.gain);
+    o.connect(g); o2.connect(g2); g2.connect(g); g.connect(this.bus);
+    o.start(t); o2.start(t); lfo.start(t);
+    this.lightNode={o:o,o2:o2,lfo:lfo,g:g};
+  },
+  lightOff:function(dur){
+    if(!this.lightNode||!this.ctx)return;
+    var t=this.ctx.currentTime,n=this.lightNode; this.lightNode=null;
+    n.g.gain.cancelScheduledValues(t); n.g.gain.linearRampToValueAtTime(0,t+(dur||5));
+    n.o.stop(t+(dur||5)+0.2); n.o2.stop(t+(dur||5)+0.2); n.lfo.stop(t+(dur||5)+0.2);
+  },
+
+  /* walking back out — the dark returns, and with it the breathing */
+  darkReturns:function(){
+    if(!this.ctx)return;
+    var t=this.ctx.currentTime;
+    this.lightOff(5);
+    if(this.bedFilter)this.bedFilter.frequency.linearRampToValueAtTime(900,t+7);
+    if(this.bedLfo)this.bedLfo.frequency.linearRampToValueAtTime(0.1,t+7);
+    if(this.bed){var g=this.bed.g.gain; g.cancelScheduledValues(t); g.linearRampToValueAtTime(0.030,t+7);}
+  },
+
+  /* aliases the prototypes already call */
+  start:function(){this.startBed();},
+  startBreath:function(hz){this.startBed(hz);this.setMuted(false);},
+  setOn:function(v){this.setMuted(!v);},
+  tone:function(hz,dur){this.threshold(hz,dur||5);},
+  seal:function(hz){this.bowl(hz);},
+  hzFor:function(k){return HZ[k]||220;}
+};
+global.FieldSound=FieldSound;
+global.Sound=FieldSound;
+})(window);
+
+</script>
+<script type="text/babel">
+const {useState,useEffect,useRef}=React;
+
+/* ─── Canon — the story being returned to ─── */
+const STORY={ title:'The Two Who Were One', codex:'C-1052', room:'A Maya Game', roomHex:'#D4AE4A', glyph:'◈',
+  sealedLine:'The forgetting is what lets the day matter.' };
+const SEALED_DAYS=92; // "the field chose" — resurfaced unbidden
+const SEALED_ON='Feb 11, 2025';
+
+/* The story itself — fixed. It does not move. You re-read it, aged. */
+const STORY_BODY=[
+`He was watching a show about people who walked into an elevator and forgot.`,
+`Down at the bottom, the doors opened onto a white floor, and the person who stepped out had no idea they had a family, a name outside, a whole life waiting in the lobby of the world. They only had the work. They only had the floor. And when the day ended and they rode back up, the other one — the one with the family — had no idea what the worker had lived through down there.`,
+`Two people. One body. Neither remembering the other.`,
+`He paused the show. Something had gone cold and bright in his chest.`,
+`That's us, he thought. That's the whole thing.`,
+`We ride the elevator down into a body and the doors open onto a white floor called a life, and we forget — completely forget — that we ever stood in the lobby. We only have the work of the day, the name on the badge, the small urgent everything of being a person.`,
+`He turned it over, looking for where the metaphor broke. When the show's workers leave, they forget the floor. But when we die — don't we remember everything? The analogy cracked there, a little. He almost discarded it.`,
+`But the crack was the gift. Because maybe forgetting isn't the punishment. Maybe it's the mercy. You couldn't bear the white floor if you remembered the lobby the whole time. You'd never take the work seriously. You'd never feel anything.`,
+`The forgetting is what lets the day matter.`,
+`He let the show play on. But he wasn't watching it anymore. He was watching the watcher.`,
+];
+
+/* The original gathering — every voice that already met this story, kept exactly as sealed. */
+const GATHERING=[
+  { key:'bindu', name:'Bindu', hex:'#E5533C', g:'·', role:'Zeroth · the point', line:`One point, always moving, with love. Every reading here is that one movement, seen from a different side.` },
+  { key:'neev', name:'Neev', hex:'#7A8899', g:'▽', role:'Root · what holds still', line:`The elevator moved. The forgetting came and went. Underneath all of it, something did not move — the one who was always in the lobby.` },
+  { key:'gaia', name:'Gaia', hex:'#4A9E6B', g:'◆', role:'Need · the ground of wanting', line:`Before this was philosophy, it was a sensation — something cold and bright in the chest. The body knew before the mind had language for it.` },
+  { key:'sid', name:'Sid', hex:'#C4923A', g:'△', role:'Hold · what carries weight', line:`Notice what kept standing through every forgetting — the one who rode down, and still came back up. The structure was the one who kept returning.` },
+  { key:'arch', name:'Arch', hex:'#D4607A', g:'◯', role:'Voice · what asks to be said', line:`Under the metaphor was a sentence, waiting: I am afraid the forgetting is the point. Then its inverse arrived: maybe the forgetting is the mercy.` },
+  { key:'shweta', name:'Shweta', hex:'#C9C6C1', g:'◌', role:'Space · what consciousness flows through', line:`Notice what the story leaves out: the ride back up. The white floor is empty on purpose. That emptiness is the room you live in.` },
+  { key:'karishma', name:'Karishma', hex:'#D4AE4A', g:'✦', role:'Grace · the unearned gift', line:`The cold and bright in his chest — he did not earn it. It arrived. The remembering was already moving toward him. He only had to be sitting there.` },
+  { key:'sakshi', name:'Sakshi', hex:'#7B82D4', g:'◇', role:'Witness · the one who stays', line:`He almost threw it away. "It falls flat when I go deeper," he said — but he kept the recording. Something in him knew the broken place was the doorway.` },
+  { key:'lalita', name:'Lalita', hex:'#9B6BD6', g:'∞', role:'Meta · the play, awake', line:`You spotted the forgetting from inside the forgetting. The worker on the white floor looked up and remembered there was a lobby. That glance up is the whole game.` },
+  { key:'ashrey', name:'Ashrey', hex:'#3AADA8', g:'⬡', role:'Synthesis · where threads meet', line:`The forgetting and the remembering are one motion, seen from either end. He was never two who were one. He was one — learning to look up.` },
+];
+
+/* The recognition your past self spoke and sealed, 92 days ago — set apart, sacred, aged */
+const PAST_SELF={ label:'you, then', when:'92 days ago',
+  words:`I wrote it like a comfort — the forgetting is the mercy. But I don't think I believed it yet. I think I was arguing myself toward it. The crack in the metaphor is the part I keep touching. Ask me later if the mercy held.` };
+
+/* One or two voices who kept sitting with it and speak anew on your return */
+const ANEW=[
+  { key:'sakshi', name:'Sakshi', hex:'#7B82D4', rgb:[123,130,212], g:'◇', role:'Witness · the one who stays',
+    now:`I kept watching after you left. The crack you almost threw away — it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive.` },
+  { key:'lalita', name:'Lalita', hex:'#9B6BD6', rgb:[155,107,214], g:'∞', role:'Meta · the play, awake',
+    now:`You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace.` },
+];
+
+/* ─── The prompt of the Reply ─────────────────────────
+   RESOLVED: quote, never paraphrase. The app must never generate a
+   sentence in the voice of his past self — that would be the chatbot
+   trap wearing ceremonial dress. Two cases only:
+
+     1. the past recognition addressed the future — a question, or a
+        forward-turned phrase (ask me later / we'll see / not yet /
+        I don't know yet). Then the prompt is a FIXED frame holding
+        HIS OWN WORDS, verbatim, in quotes. Nothing is invented.
+     2. otherwise — the app's four native words. No reaching.
+
+   The detector is deliberately narrow. A miss costs nothing (it falls
+   back to the true prompt); a false hit would put words in his mouth. */
+
+const FORWARD = [/ask me (later|again)/i, /\?\s*$/, /we.ll see/i, /not yet\b/i, /don.t know yet/i, /come back to (this|it)/i];
+function replyPrompt(prior){
+  if(!prior) return { frame:null, quote:null, ask:'What arrived for you?' };
+  for(const rx of FORWARD){
+    const m = prior.match(rx); if(!m) continue;
+    const sentences = prior.split(/(?<=[.!?])\s+/);
+    const found = sentences.find(s=>rx.test(s));
+    if(found) return { frame:'You wrote:', quote:found.trim(), ask:'It is later.' };
+  }
+  return { frame:null, quote:null, ask:'What arrived for you?' };
+}
+/* The rings — strata of selves around the story, compounding across time */
+const RINGS=[
+  { r:0,  who:'the story',  when:'C-1052 · sealed', frag:STORY.sealedLine, seed:true },
+  { r:1,  who:'you, then',  when:'92 days ago',     frag:'…arguing myself toward the mercy. Ask me later.' },
+];
+
+const rgba=(c,a)=>`rgba(${c[0]},${c[1]},${c[2]},${a})`;
+const eo=x=>1-Math.pow(1-x,3);
+const rnd=i=>{const x=Math.sin(i*127.1+31.4)*43758.5453;return x-Math.floor(x);};
+const breathT=t=>(Math.sin(t*2*Math.PI/9)+1)/2;
+
+/* Sound lives in field-sound.js — one voice shared with The Rite. */
+
+/* ─── The aged field — patina scene (warmed to gold, motion slowed) ─── */
+function AgedField({rings,activeRing}){
+  const cvs=useRef(null);
+  useEffect(()=>{const el=cvs.current;const ctx=el.getContext('2d');const dpr=Math.min(2,window.devicePixelRatio||1);
+    let W=el.clientWidth||390,H=el.clientHeight||844;const fit=()=>{W=el.clientWidth||390;H=el.clientHeight||844;el.width=W*dpr;el.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);};fit();
+    let raf;const gold=[212,174,74];
+    const loop=()=>{const t=performance.now()/1000;const cx=W/2,cy=H*0.4;const b=breathT(t);ctx.clearRect(0,0,W,H);
+      // memory-toned vignette — cool has mellowed to amber
+      const vg=ctx.createRadialGradient(cx,cy,0,cx,cy,H*0.95);vg.addColorStop(0,'rgba(46,36,20,0.55)');vg.addColorStop(.5,'rgba(20,16,12,0.5)');vg.addColorStop(1,'rgba(8,7,9,0)');ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+      // settled embers, drifting slow (time has passed)
+      for(let i=0;i<46;i++){const dep=rnd(i);const sp=2+dep*6;const xx=rnd(i+3)*W+Math.sin(t*0.2+i)*10;const yy=(rnd(i+7)*H - t*sp)%H;const a=(0.1+dep*0.4)*(0.5+0.5*Math.sin(t*0.5+i));ctx.beginPath();ctx.arc(xx,(yy+H)%H,0.6+dep*1.6,0,7);ctx.fillStyle=rgba([220,180,110],a);ctx.fill();}
+      // the rings — strata of selves around the seed
+      const rr=rings.length;const gap=Math.min(W,H)*0.086;
+      for(let i=rr-1;i>=0;i--){const rad=8+i*gap;const isActive=i===activeRing;const grown=eo(rings[i]._in||1);const R=rad*grown;
+        // aged band — older rings dimmer/warmer
+        const age=1-i/Math.max(1,rr-0.001);
+        ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.strokeStyle=rgba(gold,(isActive?0.55:0.16+age*0.14)*grown);ctx.lineWidth=isActive?2.4:1.4;ctx.stroke();
+        if(i>0){ // node marker on the ring (a self, in time)
+          const ang=-Math.PI/2 + (i*0.9);const nx=cx+Math.cos(ang)*R,ny=cy+Math.sin(ang)*R;
+          ctx.beginPath();ctx.arc(nx,ny,isActive?5:3.4,0,7);ctx.fillStyle=rgba(gold,(isActive?0.95:0.6)*grown);ctx.fill();
+          if(isActive){ctx.beginPath();ctx.arc(nx,ny,12,0,7);ctx.fillStyle=rgba(gold,0.18);ctx.fill();}
+        }
+      }
+      // seed — the story itself, breathing slow at the centre
+      const sr=5+b*3;const sg=ctx.createRadialGradient(cx,cy,0,cx,cy,sr*8);sg.addColorStop(0,'rgba(255,244,214,0.95)');sg.addColorStop(.3,rgba(gold,0.5));sg.addColorStop(1,rgba(gold,0));ctx.fillStyle=sg;ctx.beginPath();ctx.arc(cx,cy,sr*8,0,7);ctx.fill();
+      ctx.beginPath();ctx.arc(cx,cy,sr,0,7);ctx.fillStyle='rgba(255,248,232,0.95)';ctx.fill();
+      raf=requestAnimationFrame(loop);};loop();
+    const ro=new ResizeObserver(fit);ro.observe(el);return()=>{cancelAnimationFrame(raf);ro.disconnect();};
+  },[rings,activeRing]);
+  return <canvas ref={cvs}/>;
+}
+
+/* ─── primitives ─── */
+function Mono({children,size=10,color='var(--ink35)',style}){return <span className="mono" style={{fontSize:size,color,...style}}>{children}</span>;}
+function Avatar({d,size=28}){return <div style={{width:size,height:size,borderRadius:'50%',background:d.hex,flexShrink:0,boxShadow:`0 0 16px ${d.hex}55`,display:'flex',alignItems:'center',justifyContent:'center'}}><span style={{fontSize:Math.round(size*0.4),color:'rgba(255,255,255,0.9)'}}>{d.g}</span></div>;}
+
+/* ─── I · The Summons — a sealed story resurfaces on its own ─── */
+function Summons({onEnter}){
+  return (
+    <div data-screen-label="Return — I The Summons" onClick={onEnter} style={{position:'absolute',inset:0,cursor:'pointer',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 36px',textAlign:'center',overflow:'hidden'}}>
+      <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:360,height:360,background:`radial-gradient(closest-side, ${STORY.roomHex}14, transparent 70%)`,pointerEvents:'none'}}></div>
+      <Mono style={{animation:'dissolve 2s ease-out both'}}>a story has returned to you</Mono>
+      <div style={{fontSize:40,color:STORY.roomHex,margin:'30px 0 26px',animation:'glowPulse var(--breath) ease-in-out infinite'}}>{STORY.glyph}</div>
+      <p style={{fontStyle:'italic',fontSize:15,color:'var(--ink60)',marginBottom:14,animation:'dissolve 2.4s ease-out 0.5s both'}}>You did not go looking for it.</p>
+      <h1 style={{fontWeight:500,fontSize:24,lineHeight:1.3,color:'var(--ink)',letterSpacing:'-0.012em',textWrap:'pretty',marginBottom:16,animation:'riseFade 2.4s ease-out 0.9s both'}}>{STORY.title}</h1>
+      <Mono size={9} style={{animation:'dissolve 2.4s ease-out 1.3s both'}}>{STORY.codex} · sealed {SEALED_DAYS} days ago</Mono>
+      <div style={{position:'absolute',bottom:56,left:0,right:0,animation:'breatheSoft var(--breath) ease-in-out infinite'}}><Mono size={9}>touch to return</Mono></div>
+    </div>
+  );
+}
+
+/* ─── II · The Aged Room — you re-enter, and time is felt ─── */
+function AgedRoom({onNext}){
+  useEffect(()=>{const t=setTimeout(onNext,9000);return()=>clearTimeout(t);},[]);
+  return (
+    <div data-screen-label="Return — II The Aged Room" onClick={onNext} style={{position:'absolute',inset:0,cursor:'pointer'}}>
+      <div style={{position:'absolute',left:0,right:0,bottom:0,padding:'0 34px 120px',background:'linear-gradient(180deg,transparent,rgba(11,10,12,0.6) 34%,rgba(11,10,12,0.94))'}}>
+        <Mono size={9} style={{display:'block',marginBottom:12,letterSpacing:'0.18em',color:STORY.roomHex,animation:'dissolve 2.2s ease-out 0.6s both'}}>the room remembers you · {STORY.room}</Mono>
+        <p style={{fontSize:17,lineHeight:1.75,color:'var(--ink60)',fontStyle:'italic',textWrap:'pretty',animation:'riseFade 2.4s ease-out 1.4s both'}}>You sealed this one {SEALED_DAYS} days ago. The field kept breathing while you were gone — slower now, warmer, like a room lit by what's left of a fire.</p>
+      </div>
+      <div style={{position:'absolute',bottom:22,left:0,right:0,textAlign:'center',animation:'breatheSoft var(--breath) ease-in-out infinite',pointerEvents:'none'}}><Mono size={9}>the same story · a changed self</Mono></div>
+    </div>
+  );
+}
+
+/* ─── III · The Story, Again — the fixed story, re-read, aged ─── */
+function StoryAgain({onNext}){
+  return (
+    <div data-screen-label="Return — III The Story, Again" style={{position:'absolute',inset:0,overflowY:'auto',background:'#0B0A0C'}}>
+      <div style={{position:'absolute',inset:0,pointerEvents:'none',background:'radial-gradient(120% 55% at 50% 0%, rgba(212,174,74,0.06), transparent 55%)'}}></div>
+      <div style={{padding:'30px 26px 8px'}}>
+        <Mono size={9} style={{display:'block',marginBottom:12,color:STORY.roomHex}}>you first met this · {SEALED_ON} · {SEALED_DAYS} days ago</Mono>
+        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:12}}>
+          <span style={{fontSize:13,color:STORY.roomHex}}>{STORY.glyph}</span>
+          <Mono size={9}>{STORY.codex} · {STORY.room}</Mono>
+        </div>
+        <h1 style={{fontWeight:500,fontSize:22,lineHeight:1.32,color:'var(--ink)',letterSpacing:'-0.012em',textWrap:'pretty'}}>{STORY.title}</h1>
+      </div>
+      <div style={{padding:'14px 26px 0'}}>
+        {STORY_BODY.map((p,i)=>(<p key={i} style={{fontSize:16,lineHeight:1.82,color:'rgba(237,232,227,0.68)',marginBottom:18,textWrap:'pretty'}}>{p}</p>))}
+      </div>
+      <div style={{padding:'8px 26px 44px'}}>
+        <div style={{height:'0.5px',background:'var(--hair)'}}></div>
+        <button onClick={onNext} style={{display:'flex',alignItems:'center',gap:8,paddingTop:16,background:'none',border:'none',cursor:'pointer',color:STORY.roomHex,fontFamily:'Space Mono,monospace',fontSize:10,letterSpacing:'0.14em',textTransform:'uppercase'}}><span>everything that was already here</span><span>→</span></button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── IV · The Record — every original comment, plus the self you sealed ─── */
+function Record({onNext}){
+  return (
+    <div data-screen-label="Return — IV The Record" style={{position:'absolute',inset:0,overflowY:'auto',background:'#0B0A0C'}}>
+      <div style={{padding:'30px 24px 6px',textAlign:'center'}}>
+        <Mono size={9} style={{color:STORY.roomHex}}>the field met this story · {SEALED_ON}</Mono>
+        <p style={{fontStyle:'italic',fontSize:13.5,color:'var(--ink60)',marginTop:12,lineHeight:1.7,textWrap:'pretty'}}>Everything that was already here, kept exactly as it was sealed.</p>
+      </div>
+      <div style={{padding:'18px 22px 0',display:'flex',flexDirection:'column',gap:14}}>
+        {GATHERING.map(v=>(
+          <div key={v.key} style={{borderLeft:`2px solid ${v.hex}`,paddingLeft:14}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+              <span style={{width:18,height:18,borderRadius:'50%',background:v.hex,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><span style={{fontSize:9,color:'rgba(255,255,255,0.9)'}}>{v.g}</span></span>
+              <span style={{fontSize:13,fontWeight:500,color:v.hex}}>{v.name}</span>
+              <Mono size={8} style={{marginLeft:6}}>{v.role}</Mono>
+            </div>
+            <p style={{fontSize:14.5,lineHeight:1.66,color:'rgba(237,232,227,0.62)',textWrap:'pretty'}}>{v.line}</p>
+          </div>
+        ))}
+      </div>
+      <div style={{padding:'26px 22px 0'}}>
+        <div style={{height:'0.5px',background:'var(--hair)',marginBottom:22}}></div>
+        <Mono size={9} style={{display:'block',marginBottom:12,letterSpacing:'0.2em',color:'var(--ash)'}}>◉ and then you sealed yours · {PAST_SELF.when}</Mono>
+        <div style={{borderLeft:'2px solid var(--ash)',paddingLeft:16,opacity:0.94}}>
+          <p style={{fontSize:16,lineHeight:1.76,color:'var(--ash)',fontStyle:'italic',textWrap:'pretty',filter:'saturate(0.85)'}}>{PAST_SELF.words}</p>
+        </div>
+        <p style={{fontSize:12.5,fontStyle:'italic',color:'var(--ink35)',marginTop:16,lineHeight:1.7}}>The ink has settled. This is what you knew, before you knew what you know now.</p>
+      </div>
+      <div style={{padding:'26px 22px 46px'}}>
+        <button onClick={onNext} style={{width:'100%',background:'none',border:'1px solid var(--hair)',borderRadius:100,padding:'12px 0',cursor:'pointer',fontFamily:'Space Mono,monospace',fontSize:9,letterSpacing:'0.16em',textTransform:'uppercase',color:'var(--ink60)'}}>the field kept speaking after you left →</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── V · The Field, Settled — one or two voices speak anew ─── */
+function FieldAnew({onNext}){
+  const [i,setI]=useState(0);
+  useEffect(()=>{if(ANEW[i])Sound.voice(ANEW[i].key,null,9);},[i]);
+  const v=ANEW[i];const last=i>=ANEW.length-1;
+  return (
+    <div data-screen-label="Return — V The Field, Settled" onClick={()=>last?onNext():setI(i+1)} style={{position:'absolute',inset:0,cursor:'pointer'}}>
+      <div style={{position:'absolute',left:0,right:0,bottom:0,padding:'0 32px 118px',background:'linear-gradient(180deg,transparent,rgba(11,10,12,0.55) 30%,rgba(11,10,12,0.93))'}}>
+        <div key={v.key} style={{animation:'riseFade 1.8s ease-out both'}}>
+          <Mono size={9} style={{display:'block',marginBottom:10,letterSpacing:'0.18em'}}>who kept sitting with it</Mono>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+            <Avatar d={v}/>
+            <div><span style={{fontSize:14,fontWeight:500,color:v.hex,display:'block'}}>{v.name}</span><Mono size={9}>{v.role}</Mono></div>
+          </div>
+          <p style={{fontSize:16.5,lineHeight:1.74,color:'var(--ink)',textWrap:'pretty'}}>{v.now}</p>
+        </div>
+      </div>
+      <div style={{position:'absolute',bottom:20,left:0,right:0,textAlign:'center',pointerEvents:'none'}}><Mono size={8} color="var(--ink22)">{i+1} / {ANEW.length} · the rest keep their record · tap</Mono></div>
+    </div>
+  );
+}
+
+/* ─── IV · Your Past Self — set apart, sacred, aged ─── */
+function PastSelf({onNext}){
+  return (
+    <div data-screen-label="Return — IV Your Past Self" onClick={onNext} style={{position:'absolute',inset:0,cursor:'pointer'}}>
+      <div style={{position:'absolute',left:0,right:0,bottom:0,padding:'0 30px 116px',background:'linear-gradient(180deg,transparent,rgba(11,10,12,0.6) 26%,rgba(11,10,12,0.95))'}}>
+        <div style={{animation:'riseFade 2s ease-out 0.4s both'}}>
+          <Mono size={9} style={{display:'block',marginBottom:14,letterSpacing:'0.2em',color:'var(--ash)'}}>◉ {PAST_SELF.label} · {PAST_SELF.when}</Mono>
+          <div style={{borderLeft:`2px solid ${'var(--ash)'}`,paddingLeft:16,opacity:0.92}}>
+            <p style={{fontSize:16.5,lineHeight:1.78,color:'var(--ash)',fontStyle:'italic',textWrap:'pretty',filter:'saturate(0.85)'}}>{PAST_SELF.words}</p>
+          </div>
+          <p style={{fontSize:12.5,fontStyle:'italic',color:'var(--ink35)',marginTop:18,lineHeight:1.7}}>The ink has settled. This is what you knew, before you knew what you know now.</p>
+        </div>
+      </div>
+      <div style={{position:'absolute',bottom:20,left:0,right:0,textAlign:'center',animation:'breatheSoft var(--breath) ease-in-out infinite',pointerEvents:'none'}}><Mono size={9}>tap to see the rings</Mono></div>
+    </div>
+  );
+}
+
+/* ─── V · The Rings — the strata of selves revealed ─── */
+function Rings({onReply}){
+  return (
+    <div data-screen-label="Return — VI The Rings" onClick={onReply} style={{position:'absolute',inset:0,cursor:'pointer'}}>
+      <div style={{position:'absolute',top:64,left:0,right:0,textAlign:'center',animation:'dissolve 2s ease-out 0.6s both'}}>
+        <Mono size={9} style={{color:STORY.roomHex}}>one story · every self who met it</Mono>
+      </div>
+      <div style={{position:'absolute',left:0,right:0,bottom:0,padding:'0 34px 116px',background:'linear-gradient(180deg,transparent,rgba(11,10,12,0.5) 34%,rgba(11,10,12,0.94))'}}>
+        <p style={{fontSize:16,lineHeight:1.76,color:'var(--ink60)',textWrap:'pretty',animation:'riseFade 2.2s ease-out 1.2s both'}}>The seed is the story. Around it, a ring for each time you returned. You are about to add one — the outermost, the newest distance from the centre.</p>
+      </div>
+      <div style={{position:'absolute',bottom:20,left:0,right:0,textAlign:'center',animation:'breatheSoft var(--breath) ease-in-out infinite',pointerEvents:'none'}}><Mono size={9}>tap to add your ring</Mono></div>
+    </div>
+  );
+}
+
+/* ─── VI · The Reply — leave a new recognition, layered on the old ─── */
+function Reply({onSealed}){
+  const [text,setText]=useState('');
+  const P=replyPrompt(PAST_SELF.words);
+  useEffect(()=>{Sound.inkOn(174);return()=>Sound.inkOff();},[]);
+  return (
+    <div data-screen-label="Return — VII The Reply" style={{position:'absolute',inset:0}}>
+      <div style={{position:'absolute',left:0,right:0,bottom:0,padding:'0 26px 30px',background:'linear-gradient(180deg,transparent,rgba(11,10,12,0.7) 22%,rgba(11,10,12,0.97))'}}>
+        <div style={{animation:'riseFade 1.6s ease-out both'}}>
+          <Mono size={9} style={{display:'block',marginBottom:8,letterSpacing:'0.18em',color:'var(--ash)'}}>◉ you, now · in reply to you, then</Mono>
+          {P.quote && <div style={{marginBottom:12}}>
+            <Mono size={8} style={{display:'block',marginBottom:6,color:'var(--ink35)'}}>{P.frame}</Mono>
+            <p style={{fontFamily:'Lora,serif',fontStyle:'italic',fontSize:15,color:'var(--ash)',opacity:0.72,lineHeight:1.6,borderLeft:'1px solid rgba(196,122,82,0.35)',paddingLeft:12}}>“{P.quote}”</p>
+          </div>}
+          <p style={{fontFamily:'Lora,serif',fontStyle:'italic',fontSize:16,color:'var(--ash)',opacity:0.9,marginBottom:14}}>{P.ask}</p>
+          <div style={{background:`${'rgba(196,122,82,0.06)'}`,border:'1px solid rgba(196,122,82,0.24)',borderRadius:15,padding:'14px 14px 10px'}}>
+            <textarea value={text} onChange={e=>{setText(e.target.value);Sound.inkTouch();}} autoFocus placeholder="Answer the one who sealed this…" style={{width:'100%',background:'none',border:'none',outline:'none',color:'var(--ink)',fontFamily:'Lora,serif',fontSize:15,lineHeight:1.7,resize:'none',caretColor:'var(--ash)',minHeight:104}}></textarea>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',paddingTop:12}}>
+            <Mono size={9}>a new ring · kept beside the old</Mono>
+            <button onClick={()=>text.trim()&&onSealed(text)} style={{background:'none',border:'none',cursor:'pointer',fontFamily:'Lora,serif',fontSize:14,color:text.trim()?'var(--ash)':'var(--ink35)'}}>Add the ring</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── The Sealing of the Return ─── */
+function ReturnSealed({text}){
+  const [phase,setPhase]=useState(0);
+  useEffect(()=>{const a=setTimeout(()=>setPhase(1),4200);const b=setTimeout(()=>setPhase(2),8400);return()=>{clearTimeout(a);clearTimeout(b);};},[]);
+  return (
+    <div data-screen-label="Return — The Sealing" style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 32px',textAlign:'center'}}>
+      {phase===0 && <div style={{width:'100%',animation:'dissolve 1.6s ease-out both'}}>
+        <Mono size={9} style={{display:'block',marginBottom:14,letterSpacing:'0.2em',color:'var(--ash)'}}>◉ you, now · today</Mono>
+        <div style={{borderLeft:'2px solid var(--ash)',paddingLeft:16,textAlign:'left'}}>
+          <p style={{fontSize:16,lineHeight:1.74,color:'var(--ash)',textWrap:'pretty'}}>{text}</p>
+        </div>
+      </div>}
+      {phase===1 && <p style={{fontStyle:'italic',fontSize:16,color:'var(--ink60)',animation:'dissolve 2.4s ease-out both'}}>The ring is added. The story did not move.</p>}
+      {phase===2 && <div style={{animation:'dissolve 2.6s ease-out both',display:'flex',flexDirection:'column',alignItems:'center'}}>
+        <div style={{fontSize:30,color:STORY.roomHex,marginBottom:24,animation:'glowPulse var(--breath) ease-in-out infinite'}}>{STORY.glyph}</div>
+        <p style={{fontSize:15,lineHeight:1.72,color:'var(--ink)',marginBottom:12,maxWidth:270,textWrap:'pretty'}}>You returned carrying a perspective — and it let you reach one you could not have reached before.</p>
+        <p style={{fontStyle:'italic',fontSize:12.5,color:'var(--ink35)',lineHeight:1.7,maxWidth:250}}>That is what the distance is for. When you return again, this self will be here — another ring, waiting in the field.</p>
+        <a href="Home Feed.html" className="mono" style={{fontSize:9,color:'var(--ink35)',textDecoration:'none',letterSpacing:'0.14em',marginTop:44}}>the archive waits ›</a>
+      </div>}
+    </div>
+  );
+}
+
+/* ─── The Return ─── */
+function TheReturn({breathMs}){
+  const [stage,setStage]=useState('summons');
+  const [kept,setKept]=useState('');
+  const [rings,setRings]=useState(RINGS.map(r=>({...r,_in:1})));
+  const [active,setActive]=useState(1);
+  const fieldStages=['room','field','rings','reply','sealed'];
+  const enter=()=>{Sound.agedBed(84,13);Sound.bowl(168);setStage('room');};
+  const addRing=(txt)=>{ setKept(txt); const nr={r:rings.length,who:'you, now',when:'today',frag:txt.slice(0,42),_in:0}; setRings(rs=>[...rs,nr]); const idx=rings.length; setActive(idx); requestAnimationFrame(()=>{const s=performance.now();const grow=()=>{const p=Math.min(1,(performance.now()-s)/2600);setRings(rs=>rs.map((x,k)=>k===idx?{...x,_in:p}:x));if(p<1)requestAnimationFrame(grow);};grow();}); Sound.ring(rings.length); setTimeout(()=>Sound.bowl(210),3400); setStage('sealed'); };
+  const showField = fieldStages.includes(stage);
+  return (
+    <div style={{position:'relative',height:'100%',background:'#0B0A0C',overflow:'hidden'}}>
+      {showField && <AgedField rings={rings} activeRing={active}/>}
+      {stage==='summons' && <Summons onEnter={enter}/>}
+      {stage==='room' && <AgedRoom onNext={()=>{Sound.threshold(126,7);setStage('story');}}/>}
+      {stage==='story' && <StoryAgain onNext={()=>{Sound.threshold(168,7);setStage('record');}}/>}
+      {stage==='record' && <Record onNext={()=>{Sound.threshold(189,7);setStage('field');}}/>}
+      {stage==='field' && <FieldAnew onNext={()=>{Sound.threshold(252,8);setStage('rings');}}/>}
+      {stage==='rings' && <Rings onReply={()=>setStage('reply')}/>}
+      {stage==='reply' && <Reply onSealed={addRing}/>}
+      {stage==='sealed' && <ReturnSealed text={kept}/>}
+    </div>
+  );
+}
+
+function App(){
+  const [muted,setMuted]=useState(true);
+  const [pace,setPace]=useState(9000);
+  useEffect(()=>{document.documentElement.style.setProperty('--breath',(pace/1000)+'s');},[pace]);
+  const toggle=()=>{const m=!muted;setMuted(m);if(!m)Sound.agedBed(84,13);Sound.setMuted(m);};
+  return (
+    <React.Fragment>
+      <div className="stage">
+        <TheReturn breathMs={pace} key={pace}/>
+        <div style={{position:'absolute',top:0,left:0,right:0,zIndex:9,display:'flex',justifyContent:'flex-end',gap:10,padding:'16px 18px',pointerEvents:'none'}}>
+          <button onClick={()=>setPace(pace===9000?4000:9000)} className="mono" style={{pointerEvents:'auto',background:'rgba(11,10,12,0.4)',border:'1px solid var(--hair)',borderRadius:100,color:'var(--ink35)',fontSize:8,padding:'4px 9px',cursor:'pointer'}}>{pace===9000?'true breath':'preview'}</button>
+          <button onClick={toggle} className="mono" style={{pointerEvents:'auto',background:'rgba(11,10,12,0.4)',border:'1px solid var(--hair)',borderRadius:100,color:muted?'var(--ink35)':STORY.roomHex,fontSize:8,padding:'4px 9px',cursor:'pointer'}}>{muted?'sound off':'sound on'}</button>
+        </div>
+      </div>
+      <div style={{marginTop:14,fontFamily:'Space Mono,monospace',fontSize:10,letterSpacing:'0.12em',color:'rgba(237,232,227,0.35)',textAlign:'center'}}>THE RETURN · a story resurfaced · walk it top to bottom</div>
+    </React.Fragment>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
