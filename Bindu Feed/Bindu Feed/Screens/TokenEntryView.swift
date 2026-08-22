@@ -8,9 +8,10 @@ struct TokenEntryView: View {
     @FocusState private var fieldFocused: Bool
 
     #if DEBUG
-    // Dev-only door straight into the Instrument, so the axis can be walked without a
-    // live PAT (the axis itself needs no Airtable data). Never ships — DEBUG only.
+    // Dev-only doors (never ship) — walk the Instrument, or the Rite/Gathering (canon
+    // content, no PAT needed), so both can be verified without a live token.
     @State private var showInstrument = false
+    @State private var showRite = false
     @State private var demoPath = NavigationPath()
     #endif
 
@@ -77,6 +78,12 @@ struct TokenEntryView: View {
                         .foregroundColor(BinduTheme.inkTertiary)
                         .padding(.top, BinduTheme.space16)
                 }
+                Button { showRite = true } label: {
+                    Text("⟿ the Rite")
+                        .font(.spaceMono(10)).tracking(2)
+                        .foregroundColor(BinduTheme.inkTertiary)
+                        .padding(.top, BinduTheme.space8)
+                }
                 #endif
 
                 Spacer()
@@ -89,6 +96,16 @@ struct TokenEntryView: View {
             ZStack(alignment: .topTrailing) {
                 InstrumentView(path: $demoPath, startZ: 0)
                 Button { showInstrument = false } label: {
+                    Text("✕").font(.spaceMono(15))
+                        .foregroundColor(BinduTheme.inkSecondary)
+                        .padding(16)
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showRite) {
+            ZStack(alignment: .topTrailing) {
+                RiteView(path: $demoPath, onFinish: { showRite = false })
+                Button { showRite = false } label: {
                     Text("✕").font(.spaceMono(15))
                         .foregroundColor(BinduTheme.inkSecondary)
                         .padding(16)
