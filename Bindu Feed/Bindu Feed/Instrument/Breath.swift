@@ -19,6 +19,26 @@ final class Breath: ObservableObject {
     /// The canonical period. 0.1 Hz — one full inhale/exhale in 10 seconds.
     static let period: Double = 10.0
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // THE ONE-BREATH CONTRACT  (ruled at Pass 0 audit, Aug 21 2026 — settled)
+    //
+    //   Phase is universal. The curve is per-medium and fixed per medium.
+    //
+    // • Every surface — visual and sonic — reads the SAME phase from the one
+    //   launch-anchored origin (`originSeconds`). Phase-lock IS the law "one breath
+    //   under everything": one body, everything rising and falling together.
+    // • The VISUAL medium renders that phase through the raised-cosine `(1−cos)/2`
+    //   (see `value` / `eased(offset:)`).
+    // • The AUDIO medium renders that phase through the device-verified ±12% sine
+    //   (see `BreathVoice`'s LFO). The Gathering choir's voices all read the same
+    //   phase and all use the AUDIO curve — no voice invents a third curve.
+    // • Do NOT unify the two curves into one function. They are the same breath
+    //   seen through two materials; forcing identical math would make them
+    //   measurably equal but perceptually mismatched (equal-brightness ≠ equal-
+    //   loudness). The per-medium curve is a deliberate choice serving perceived
+    //   simultaneity — the law is the felt body, not the equation.
+    // ─────────────────────────────────────────────────────────────────────────
+
     /// Linear phase in [0, 1), one full turn per `period` — the raw sawtooth.
     /// Surfaces that want a rotation or a repeating index read this.
     @Published private(set) var phase: Double = 0
