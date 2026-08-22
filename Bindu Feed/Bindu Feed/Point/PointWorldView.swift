@@ -15,83 +15,77 @@ struct PointWorldView: View {
 
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var openStar: PointStar?
+    @State private var goodnight = false
+
+    // The solfeggio ladder — one tone per dimension (285…852), the ladder rising as he descends.
+    private let ladder: [Double] = [285, 396, 417, 528, 639, 741, 852]
 
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
 
     var body: some View {
         ZStack {
-            // The world material — a per-dimension colour wash (≈ the full per-world
-            // materials: stay/turn/part/bear/mirror/strata/pace).
-            RadialGradient(colors: [hue.opacity(0.14), .clear],
-                           center: .center, startRadius: 0, endRadius: 360)
-                .ignoresSafeArea().allowsHitTesting(false)
-
             if let star = openStar {
                 PointStarDescent(star: star, hue: hue, onClose: { withAnimation { openStar = nil } })
             } else if let dim {
-                world(dim)
-            }
-        }
-    }
-
-    private func world(_ dim: PointDimension) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text("\(dim.roman) · \(dim.name.uppercased())")
-                    .font(.spaceMono(10)).tracking(2.5).foregroundStyle(hue)
-                    .padding(.top, 44)
-                Text(dim.voice)
-                    .font(.lora(16)).italic().lineSpacing(6).foregroundStyle(BinduTheme.inkPrimary)
-
-                ForEach(dim.universes) { uni in
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(uni.name).font(.lora(15, weight: .medium)).foregroundStyle(BinduTheme.inkSecondary)
-                        Text(uni.sub).font(.loraItalic(12)).foregroundStyle(BinduTheme.inkTertiary)
-                        ForEach(uni.stars, id: \.self) { key in
-                            if let star = PointContent.star(key) {
-                                Button {
-                                    soundEngine.riteVoice(hz: 285 + Double(dimensionN) * 40, dur: 6)
-                                    withAnimation(.easeInOut(duration: 0.8)) { openStar = star }
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        Circle().fill(hue.opacity(star.st == "w" ? 0.9 : star.st == "p" ? 0.5 : 0.28))
-                                            .frame(width: 7, height: 7)
-                                        VStack(alignment: .leading, spacing: 1) {
-                                            Text(star.t).font(.lora(15)).foregroundStyle(BinduTheme.inkPrimary)
-                                            Text(star.ti).font(.loraItalic(11.5)).foregroundStyle(BinduTheme.inkTertiary)
-                                        }
-                                        Spacer()
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding(.top, 6)
+                // The dimension as its own distinct world (Amendment §7.3).
+                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(dim), hue: hue) { s in
+                    soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 6)
+                    withAnimation(.easeInOut(duration: 0.8)) { openStar = s }
                 }
+                .ignoresSafeArea()
+
+                // The world's name + voice, quiet at the crown.
+                VStack(spacing: 6) {
+                    Text("\(dim.roman) · \(dim.name.uppercased())")
+                        .font(.spaceMono(9)).tracking(2.5).foregroundStyle(hue)
+                    Text(dim.voice)
+                        .font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
+                        .multilineTextAlignment(.center).lineLimit(2).padding(.horizontal, 44)
+                    Spacer()
+                }
+                .padding(.top, 46)
+                .allowsHitTesting(false)
 
                 if dimensionN == 6 {
-                    // World VI earns its door into the Return.
-                    Button(action: onReturn) {
-                        Text("open the return ›").font(.spaceMono(10)).tracking(2)
-                            .foregroundStyle(hue).padding(.top, 12)
+                    VStack { Spacer()
+                        Button(action: onReturn) {
+                            Text("settle deeper · open the return ›")
+                                .font(.spaceMono(9)).tracking(2).foregroundStyle(hue)
+                        }.padding(.bottom, 64)
                     }
                 }
                 if dimensionN == 7 {
-                    // The Dance opens onto the Aperture, then the centre.
-                    NavigationLink { ApertureView(path: $path) } label: {
-                        Text("the aperture ›").font(.spaceMono(10)).tracking(2)
-                            .foregroundStyle(hue).padding(.top, 12)
+                    VStack { Spacer()
+                        NavigationLink { ApertureView(path: $path) } label: {
+                            Text("the aperture ›").font(.spaceMono(9)).tracking(2).foregroundStyle(hue)
+                        }.padding(.bottom, 64)
                     }
                 }
-                Color.clear.frame(height: 60)
+
+                // The goodnight — "I Love You" at first arrival in this world, in its hue, then gone.
+                if goodnight {
+                    Text("I Love You")
+                        .font(.loraItalic(21)).foregroundStyle(hue)
+                        .shadow(color: hue.opacity(0.4), radius: 10)
+                        .transition(.opacity)
+                }
             }
-            .padding(.horizontal, 32)
         }
-        .scrollIndicators(.hidden)
+        .onAppear {
+            if !PointGoodnight.shown.contains(dimensionN) {
+                PointGoodnight.shown.insert(dimensionN)
+                withAnimation(.easeIn(duration: 1.2)) { goodnight = true }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
+                    withAnimation(.easeOut(duration: 1.4)) { goodnight = false }
+                }
+            }
+        }
     }
 }
+
+// The goodnights are said once per dimension per session, then gone.
+private enum PointGoodnight { static var shown = Set<Int>() }
 
 // The star descent — SAY → WALK → HAND → OPEN, one beat per touch. Verbatim canon.
 private struct PointStarDescent: View {
