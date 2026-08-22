@@ -144,9 +144,12 @@ struct ReturnStoryData {
     let sealedWhen: String
     let sealedSelf: String
     let anew: [ReturnCanon.AnewVoice]
+    let storyId: String            // where a new ring (the reply) is written; "" = canon demo, no target
+    let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
 
     static let canon = ReturnStoryData(
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
         codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body,
-        sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew)
+        sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew,
+        storyId: "", record: RiteVoices.all)
 }

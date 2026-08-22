@@ -186,10 +186,11 @@ struct RootView: View {
             RiteRoute(path: $path)
         case .light:
             LightView(path: $path)
-        case .returnCeremony:
-            // ReturnRoute loads today's real sealed story (rotating, standing alone)
-            // before showing the Return; falls back to canon when nothing's sealed yet.
-            ReturnRoute(path: $path)
+        case .returnCeremony(let story):
+            // ReturnRoute loads the sealed story before showing the Return: THIS story when
+            // one is given (tapped from its page), else the daily standalone rotation; falls
+            // back to canon when nothing's sealed yet.
+            ReturnRoute(path: $path, story: story)
         case .instrument(let z):
             InstrumentView(path: $path, startZ: z)
         }
@@ -259,6 +260,7 @@ private struct RiteRoute: View {
 // the Return. Falls back to canon when the feed isn't reachable or nothing is sealed yet.
 private struct ReturnRoute: View {
     @Binding var path: NavigationPath
+    var story: Story? = nil          // a specific sealed story (from its page), or nil = daily
     @EnvironmentObject private var store: FeedStore
     @State private var data: ReturnStoryData = .canon
     @State private var loaded = false
@@ -278,7 +280,9 @@ private struct ReturnRoute: View {
         .task {
             guard !loaded else { return }
             if store.stories.isEmpty { await store.loadStories() }
-            if let d = await store.returnData() { data = d }
+            // THIS story when one was tapped; otherwise the daily standalone rotation.
+            let d = story != nil ? await store.returnData(for: story!) : await store.returnData()
+            if let d { data = d }
             loaded = true
         }
     }

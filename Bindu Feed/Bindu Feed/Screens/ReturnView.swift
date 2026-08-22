@@ -19,6 +19,7 @@ struct ReturnView: View {
     @Binding var path: NavigationPath
     var storyData: ReturnStoryData = .canon        // TODAY's sealed story (rotating), or canon
     @EnvironmentObject private var soundEngine: SoundEngine
+    @EnvironmentObject private var store: FeedStore
 
     @State private var stage: ReturnStage = .summons
     @State private var anewShown = 0
@@ -140,7 +141,7 @@ struct ReturnView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text(ReturnCanon.recordIntro).font(.lora(15)).italic().foregroundStyle(BinduTheme.inkSecondary).padding(.top, 56)
-                ForEach(RiteVoices.all) { v in
+                ForEach(storyData.record) { v in
                     VStack(alignment: .leading, spacing: 3) {
                         Text("\(v.name) · \(v.role)").font(.spaceMono(9)).tracking(0.5).foregroundStyle(v.color.opacity(0.7))
                         Text(v.lines.first ?? "").font(.lora(14)).lineSpacing(5).foregroundStyle(BinduTheme.inkSecondary)
@@ -243,6 +244,14 @@ struct ReturnView: View {
 
     private func addRing() {
         soundEngine.riteBowl(hz: 210)          // the ring's bowl
+        // KEEP the ring. The reply is the user's new response to their past self — written
+        // as a durable Ash comment on the returned story (the same robust, retry-queued
+        // path Compose uses). Before, "The ring is added" was a lie: nothing persisted.
+        let text = replyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !text.isEmpty, !storyData.storyId.isEmpty {
+            let storyId = storyData.storyId
+            Task { await store.postComment(storyId: storyId, body: text, parentId: nil) }
+        }
         withAnimation(.easeInOut(duration: 1.0)) { stage = .sealed }
     }
 

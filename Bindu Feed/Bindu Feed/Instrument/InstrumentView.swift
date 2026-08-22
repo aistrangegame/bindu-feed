@@ -249,14 +249,14 @@ struct InstrumentView: View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
             PointWorldView(dimensionN: here.z - 1, path: $path,
-                           onReturn: { $path.pushDissolve(FeedRoute.returnCeremony) })
+                           onReturn: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) })
         case "centre":
             PointRevealView(path: $path)
         case "gate":
             AxisGateView()
         case "sky", "region", "world", "fall":
             UniverseView(register: here, path: $path,
-                         onFall: { $path.pushDissolve(FeedRoute.returnCeremony) })
+                         onFall: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) })
         case "feed":
             AxisFeedSeam { if !path.isEmpty { $path.popToRootDissolve() } }
         case "light":
