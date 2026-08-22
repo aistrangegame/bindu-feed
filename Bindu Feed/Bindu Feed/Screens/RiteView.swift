@@ -28,14 +28,15 @@ struct RiteView: View {
     @EnvironmentObject private var soundEngine: SoundEngine
     @EnvironmentObject private var store: FeedStore
 
-    /// 0 = first meeting (Wave 2 default). Return-depth derivation from App
-    /// Activity is deferred.
-    var depth: Int = 0
-
     /// Today's real story (rotating daily) and its real field-comment voices. Defaults to
     /// the canon story/voices when the feed isn't reachable, so the Rite always stands up.
     var storyData: RiteStoryData = .canon
     var voices: [RiteVoice]? = nil
+
+    /// 0 = first meeting; ≥1 = a return (the user has sealed a ring here before). Derived
+    /// from the user's Ash-comment count on today's story (FeedStore.riteMeeting). The
+    /// Gathering's budget law reads it to thin the field on returns (RiteBudget.tiers).
+    var depth: Int = 0
 
     /// When set, the Rite is running standalone (e.g. from the unmet Door, outside
     /// the nav stack); finishing calls this instead of popping the path.

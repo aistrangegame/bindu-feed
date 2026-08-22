@@ -39,11 +39,12 @@ struct DoorView: View {
     // canon story stands in only if the feed can't be reached.
     @State private var storyData: RiteStoryData = .canon
     @State private var riteVoices: [RiteVoice]? = nil
+    @State private var riteDepth = 0
 
     var body: some View {
         ZStack {
             if enteringRite {
-                RiteView(path: .constant(NavigationPath()), storyData: storyData, voices: riteVoices, onFinish: onComplete)
+                RiteView(path: .constant(NavigationPath()), storyData: storyData, voices: riteVoices, depth: riteDepth, onFinish: onComplete)
                     .transition(.opacity)
             } else {
                 surface
@@ -75,7 +76,9 @@ struct DoorView: View {
                     await store.loadStories()
                     if let s = store.storyOfDay() {
                         storyData = RiteStoryData(story: s, room: store.room(named: s.room))
-                        riteVoices = await store.riteVoices(for: s)
+                        let meeting = await store.riteMeeting(for: s)
+                        riteVoices = meeting.voices
+                        riteDepth = meeting.depth
                     }
                 }
                 withAnimation(.easeInOut(duration: 1.0)) { weather = isUnmet ? .unmet : .met }

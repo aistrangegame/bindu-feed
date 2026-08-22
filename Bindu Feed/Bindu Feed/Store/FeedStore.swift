@@ -533,7 +533,10 @@ final class FeedStore: ObservableObject {
     // real field comments), so Reading and Gathering are the SAME story. Bindu is never
     // silent. Falls back to the canon ten when the story carries no field comments.
     func riteVoices(for story: Story) async -> [RiteVoice] {
-        let field = await loadComments(for: story.id).field
+        riteVoices(from: await loadComments(for: story.id).field)
+    }
+
+    private func riteVoices(from field: [FieldComment]) -> [RiteVoice] {
         var voices: [RiteVoice] = []
         var seen = Set<String>()
         for c in field {
@@ -549,6 +552,16 @@ final class FeedStore: ObservableObject {
         }
         if !seen.contains("bindu"), let b = RiteVoices.voice("bindu") { voices.insert(b, at: 0) }
         return voices.isEmpty ? RiteVoices.all : voices
+    }
+
+    /// A meeting = the story's real voices AND its depth in one fetch. Depth is how many
+    /// times the user has already sealed a ring on this story (their Ash comments) — 0 on a
+    /// first meeting, ≥1 on a return. The Gathering's budget law reads it to decide density:
+    /// the whole field arrives the first time; on returns it thins to the claim + a passing
+    /// queue (RiteBudget.tiers). This is what makes the daily story feel met-before when it is.
+    func riteMeeting(for story: Story) async -> (voices: [RiteVoice], depth: Int) {
+        let c = await loadComments(for: story.id)
+        return (riteVoices(from: c.field), c.ash.count)
     }
 
     // Today's Return — a story the user has actually SEALED (their own words on it),

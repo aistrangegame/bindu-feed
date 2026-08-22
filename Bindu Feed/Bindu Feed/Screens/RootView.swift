@@ -226,12 +226,13 @@ private struct RiteRoute: View {
     @EnvironmentObject private var store: FeedStore
     @State private var data: RiteStoryData = .canon
     @State private var voices: [RiteVoice]? = nil
+    @State private var depth = 0
     @State private var loaded = false
 
     var body: some View {
         Group {
             if loaded {
-                RiteView(path: $path, storyData: data, voices: voices)
+                RiteView(path: $path, storyData: data, voices: voices, depth: depth)
             } else {
                 ZStack {
                     BinduTheme.bgDeep.ignoresSafeArea()
@@ -245,7 +246,9 @@ private struct RiteRoute: View {
             if store.stories.isEmpty { await store.loadStories() }
             if let s = store.storyOfDay() {
                 data = RiteStoryData(story: s, room: store.room(named: s.room))
-                voices = await store.riteVoices(for: s)
+                let meeting = await store.riteMeeting(for: s)
+                voices = meeting.voices
+                depth = meeting.depth
             }
             loaded = true
         }
