@@ -32,7 +32,7 @@ private let uniRooms: [UniRoom] = [
 
 struct UniverseView: View {
     let register: AxisRegister
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     let onFall: () -> Void
 
     @EnvironmentObject private var store: FeedStore

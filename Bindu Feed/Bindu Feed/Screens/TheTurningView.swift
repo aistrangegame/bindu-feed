@@ -17,7 +17,7 @@ import SwiftUI
 // retired ArchetypeProfileView's Hold-to-Witness.)
 struct TheTurningView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     let archetype: Archetype
 
     // Comment / story state
@@ -89,14 +89,7 @@ struct TheTurningView: View {
             .colorMultiply(Color(white: 0.70 + progress * 0.30))
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackChevron { $path.popDissolve() }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                HubTrigger(open: $showHub)
-            }
-        }
+        .floatingBackHub(path: $path, showHub: $showHub)
         .task(id: archetype.id) {
             await loadComments()
         }

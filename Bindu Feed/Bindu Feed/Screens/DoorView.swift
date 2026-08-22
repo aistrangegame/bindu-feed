@@ -44,7 +44,7 @@ struct DoorView: View {
     var body: some View {
         ZStack {
             if enteringRite {
-                RiteView(path: .constant(NavigationPath()), storyData: storyData, voices: riteVoices, depth: riteDepth, onFinish: onComplete)
+                RiteView(path: .constant([FeedRoute]()), storyData: storyData, voices: riteVoices, depth: riteDepth, onFinish: onComplete)
                     .transition(.opacity)
             } else {
                 surface

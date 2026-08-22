@@ -6,7 +6,7 @@ import SwiftUI
 // archetype it answered.
 struct AshVoiceView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
 
     @State private var comments: [FieldComment] = []
     @State private var storyById: [String: Story] = [:]
@@ -79,14 +79,7 @@ struct AshVoiceView: View {
             .scrollIndicators(.hidden)
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackChevron { $path.popDissolve() }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                HubTrigger(open: $showHub)
-            }
-        }
+        .floatingBackHub(path: $path, showHub: $showHub)
         .task {
             await load()
         }

@@ -8,7 +8,7 @@ import SwiftUI
 // Turning via the .archetype route.
 struct PlayersView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
 
     @State private var showHub = false
 
@@ -78,19 +78,20 @@ struct PlayersView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackChevron { $path.popDissolve() }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                HubTrigger(open: $showHub)
-            }
-            ToolbarItem(placement: .principal) {
+        .safeAreaInset(edge: .top, spacing: 0) {
+            // Back + hub on the left, the centered title where the nav bar's principal
+            // item used to sit — the router has no toolbar to host either.
+            ZStack {
                 Text("THE PLAYERS")
-                    .font(.spaceMono(10))
-                    .tracking(2.2)
-                    .foregroundColor(BinduTheme.inkTertiary)
+                    .font(.spaceMono(10)).tracking(2.2).foregroundColor(BinduTheme.inkTertiary)
+                HStack(spacing: 4) {
+                    BackChevron { $path.popDissolve() }
+                    HubTrigger(open: $showHub)
+                    Spacer()
+                }
             }
+            .padding(.horizontal, BinduTheme.space16)
+            .padding(.vertical, 6)
         }
         .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)

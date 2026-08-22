@@ -16,7 +16,7 @@ import SwiftUI
 // in-axis. The hand-feel constants are the design's own; the felt tuning is the Neev walk.
 
 struct InstrumentView: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     let startZ: Int
 
     @EnvironmentObject private var store: FeedStore
@@ -39,7 +39,7 @@ struct InstrumentView: View {
         return exp(log(a) + (log(b) - log(a)) * f)
     }
 
-    init(path: Binding<NavigationPath>, startZ: Int) {
+    init(path: Binding<[FeedRoute]>, startZ: Int) {
         self._path = path
         self.startZ = startZ
         self._travel = StateObject(wrappedValue: AxisTravel(startZ: Double(startZ)))

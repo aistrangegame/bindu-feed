@@ -18,7 +18,7 @@ import SwiftUI
 private enum LightStage { case approach, scene, out }
 
 struct LightView: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
     @EnvironmentObject private var soundEngine: SoundEngine

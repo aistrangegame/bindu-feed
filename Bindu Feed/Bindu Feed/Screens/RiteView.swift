@@ -24,7 +24,7 @@ struct RiteBreathe: ViewModifier {
 }
 
 struct RiteView: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     @EnvironmentObject private var soundEngine: SoundEngine
     @EnvironmentObject private var store: FeedStore
 

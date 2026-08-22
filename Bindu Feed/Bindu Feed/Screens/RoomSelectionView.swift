@@ -2,7 +2,7 @@ import SwiftUI
 
 struct RoomSelectionView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
 
     @State private var portalFrames: [String: CGRect] = [:]
     @State private var floodColor: Color?
@@ -50,14 +50,7 @@ struct RoomSelectionView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackChevron { $path.popDissolve() }   // back one level, not to root
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                HubTrigger(open: $showHub)
-            }
-        }
+        .floatingBackHub(path: $path, showHub: $showHub)
         .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
     }

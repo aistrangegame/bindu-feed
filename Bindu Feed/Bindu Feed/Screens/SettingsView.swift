@@ -5,7 +5,7 @@ import SwiftUI
 // Live preview at the top updates as the user picks a glyph, color, name.
 struct SettingsView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
 
     @State private var name: String = ""
     @State private var glyph: String = ""
@@ -63,14 +63,7 @@ struct SettingsView: View {
             .scrollDismissesKeyboard(.interactively)
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackChevron { $path.popDissolve() }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                HubTrigger(open: $showHub)
-            }
-        }
+        .floatingBackHub(path: $path, showHub: $showHub)
         .onAppear(perform: loadSavedSettings)
         .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)

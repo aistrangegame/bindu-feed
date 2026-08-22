@@ -10,7 +10,7 @@ import SwiftUI
 
 struct PointWorldView: View {
     let dimensionN: Int          // 1…7 → m1…m7
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     let onReturn: () -> Void
 
     @EnvironmentObject private var soundEngine: SoundEngine
@@ -58,9 +58,11 @@ struct PointWorldView: View {
                 }
                 if dimensionN == 7 {
                     VStack { Spacer()
-                        NavigationLink { ApertureView(path: $path) } label: {
+                        Button { $path.pushDissolve(FeedRoute.aperture) } label: {
                             Text("the aperture ›").font(.spaceMono(9)).tracking(2).foregroundStyle(hue)
-                        }.padding(.bottom, 64)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, 64)
                     }
                 }
 

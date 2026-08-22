@@ -3,18 +3,27 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject private var store: FeedStore
 
-    @State private var path = NavigationPath()
+    @State private var path: [FeedRoute] = []
     @State private var selectedRoom: String? = nil
     @State private var sort: StorySort = .mostActive
     @State private var hasLoaded = false
     @State private var showHub = false
 
+    // The custom cross-dissolve router: the feed at the base, then one opacity-transitioned
+    // layer per pushed route. Every level stays mounted (state preserved); only the top is
+    // interactive. Pushes/pops go through the $path dissolve helpers, which animate the
+    // array — so each change cross-fades (see Navigation.swift).
     var body: some View {
-        NavigationStack(path: $path) {
+        ZStack {
             feedScreen
-                .navigationDestination(for: FeedRoute.self) { route in
-                    destination(for: route)
-                }
+                .allowsHitTesting(path.isEmpty)
+
+            ForEach(Array(path.enumerated()), id: \.offset) { index, route in
+                destination(for: route)
+                    .zIndex(Double(index + 1))
+                    .allowsHitTesting(index == path.count - 1)
+                    .transition(.opacity)
+            }
         }
         .task(id: "initial-load") {
             guard !hasLoaded else { return }
@@ -193,6 +202,8 @@ struct RootView: View {
             ReturnRoute(path: $path, story: story)
         case .instrument(let z):
             InstrumentView(path: $path, startZ: z)
+        case .aperture:
+            ApertureView(path: $path)
         }
     }
 
@@ -223,7 +234,7 @@ struct RootView: View {
 // Loads today's real story + its field-comment voices, then shows the Rite. Used by the
 // turn's `.rite` route (the Door loads its own before entering).
 private struct RiteRoute: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     @EnvironmentObject private var store: FeedStore
     @State private var data: RiteStoryData = .canon
     @State private var voices: [RiteVoice]? = nil
@@ -259,7 +270,7 @@ private struct RiteRoute: View {
 // Loads today's real sealed story (rotating day over day, standing alone), then shows
 // the Return. Falls back to canon when the feed isn't reachable or nothing is sealed yet.
 private struct ReturnRoute: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     var story: Story? = nil          // a specific sealed story (from its page), or nil = daily
     @EnvironmentObject private var store: FeedStore
     @State private var data: ReturnStoryData = .canon

@@ -7,7 +7,7 @@ import SwiftUI
 // owns its own current-room state.
 struct GameView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     let initialRoom: Room
 
     // Cross-dissolve state
@@ -25,7 +25,7 @@ struct GameView: View {
 
     @State private var showHub = false
 
-    init(path: Binding<NavigationPath>, room: Room) {
+    init(path: Binding<[FeedRoute]>, room: Room) {
         self._path = path
         self.initialRoom = room
         self._currentRoom = State(initialValue: room)

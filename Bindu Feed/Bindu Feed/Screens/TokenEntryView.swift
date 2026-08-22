@@ -12,7 +12,7 @@ struct TokenEntryView: View {
     // content, no PAT needed), so both can be verified without a live token.
     @State private var showInstrument = false
     @State private var showRite = false
-    @State private var demoPath = NavigationPath()
+    @State private var demoPath = [FeedRoute]()
     #endif
 
     private var canBegin: Bool {

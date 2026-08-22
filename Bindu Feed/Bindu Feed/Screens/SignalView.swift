@@ -9,7 +9,7 @@ import SwiftUI
 // "— THE FIELD." One clean leave. No comments, no resonance, no "next."
 struct SignalView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
 
     @State private var loaded = false
     @State private var loadError = false

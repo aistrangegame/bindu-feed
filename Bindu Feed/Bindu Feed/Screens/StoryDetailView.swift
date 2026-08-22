@@ -7,7 +7,7 @@ import SwiftUI
 // comments — four exact words: "What arrived for you?"
 struct StoryDetailView: View {
     @EnvironmentObject private var store: FeedStore
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     let story: Story
 
     // Comment state
@@ -125,14 +125,7 @@ struct StoryDetailView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                BackChevron { $path.popDissolve() }
-            }
-            ToolbarItem(placement: .topBarLeading) {
-                HubTrigger(open: $showHub)
-            }
-        }
+        .floatingBackHub(path: $path, showHub: $showHub)
         .task(id: story.id) {
             await loadComments()
         }

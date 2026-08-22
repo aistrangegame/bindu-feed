@@ -16,7 +16,7 @@ import SwiftUI
 private enum ReturnStage { case summons, fall, room, story, record, field, rings, reply, sealed }
 
 struct ReturnView: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     var storyData: ReturnStoryData = .canon        // TODAY's sealed story (rotating), or canon
     @EnvironmentObject private var soundEngine: SoundEngine
     @EnvironmentObject private var store: FeedStore

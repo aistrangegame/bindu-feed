@@ -7,7 +7,7 @@ import SwiftUI
 // touched was me" — the one particle, literally, throughout.
 
 struct PointRevealView: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
     @EnvironmentObject private var soundEngine: SoundEngine

@@ -10,7 +10,7 @@ import SwiftUI
 // the Aperture states plainly that it needs one — it does not fake a response.
 
 struct ApertureView: View {
-    @Binding var path: NavigationPath
+    @Binding var path: [FeedRoute]
     @EnvironmentObject private var store: FeedStore
 
     @State private var keyInput = ""
@@ -64,8 +64,22 @@ struct ApertureView: View {
                 Spacer()
             }
             .padding(.horizontal, 40)
+
+            // The router has no nav bar; carry the back control in-view, top-left,
+            // like every other screen. (Was the app's one screen relying on the
+            // system back button.)
+            VStack {
+                HStack {
+                    Button { $path.popDissolve() } label: {
+                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
+                            .foregroundStyle(Color(hex: "#D4A94B").opacity(0.6)).padding(16)
+                    }
+                    Spacer()
+                }
+                Spacer()
+            }
         }
-        .navigationBarBackButtonHidden(false)
+        .navigationBarBackButtonHidden(true)
     }
 
     private var keyEntry: some View {
