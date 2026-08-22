@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var glyph: String = ""
     @State private var colorHex: String = ""
     @State private var savedSnapshot: ArrivalSettings = .init()
+    @State private var justSaved = false
     @State private var showHub = false
     @State private var showClearConfirm = false
 
@@ -41,7 +42,14 @@ struct SettingsView: View {
 
                     moodPicker
 
-                    if hasChanges { saveButton }
+                    if hasChanges {
+                        saveButton
+                    } else if justSaved {
+                        Text("Saved. You\u{2019}ve arrived.")
+                            .font(.loraItalic(14))
+                            .foregroundColor(selectedColor.opacity(0.9))
+                            .transition(.opacity)
+                    }
 
                     voiceLink
 
@@ -382,7 +390,10 @@ struct SettingsView: View {
         nameFocused = false
         let s = ArrivalSettings(name: name, glyph: glyph, colorHex: colorHex)
         s.save()
-        savedSnapshot = s
+        withAnimation(.easeInOut(duration: 0.5)) { savedSnapshot = s; justSaved = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+            withAnimation(.easeOut(duration: 0.8)) { justSaved = false }
+        }
     }
 
     // MARK: - Options
