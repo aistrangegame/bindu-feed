@@ -36,6 +36,18 @@ struct ReturnView: View {
                 .ignoresSafeArea().allowsHitTesting(false)
 
             content.transition(.opacity)
+
+            // Always a quiet way out — never trapped in the Return.
+            VStack {
+                HStack {
+                    Spacer()
+                    Button { if !path.isEmpty { path.removeLast(path.count) } } label: {
+                        Text("leave ›").font(.spaceMono(9)).tracking(2)
+                            .foregroundStyle(ReturnCanon.ashColor.opacity(0.5)).padding(16)
+                    }
+                }
+                Spacer()
+            }
         }
         .navigationBarBackButtonHidden(true)
         .sonicContext(.base)
