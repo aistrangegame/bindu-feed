@@ -205,13 +205,32 @@ struct GameView: View {
 
     // MARK: - Stats bar
 
+    // The authored hero stats, verbatim per room from Game View.html — the room's own
+    // poetry, not analytics ("147 veils lifted · 23 floors entered · 89 lobby moments").
+    private static let authoredStats: [String: [(String, String)]] = [
+        "A Maya Game":    [("147", "veils lifted"), ("23", "floors entered"), ("89", "lobby moments")],
+        "The Garden":     [("52", "unplanned shapes"), ("◆ 8", "still growing"), ("34", "earth readings")],
+        "The Watcher":    [("67", "recursive moments"), ("28", "self-seeings"), ("∞", "the return")],
+        "The Descent":    [("44", "edges crossed"), ("19", "bottoms sought"), ("3", "times kept going")],
+        "The Return":     [("63", "recognitions"), ("38", "lobbies recalled"), ("101", "already-theres")],
+        "The Forgetting": [("47", "loops entered"), ("4", "loops noticed"), ("1", "still watching")],
+        "The Remembering":[("29", "dawns witnessed"), ("12", "patterns simply seen"), ("∞", "charge building")],
+        "The Body":       [("∞", "breaths taken"), ("72", "first knowings"), ("8s", "per breath")],
+        "The Thread":     [("3", "generations"), ("48yrs", "of craft"), ("∞", "yards woven")],
+        "The Circle":     [("7", "faces"), ("1", "table"), ("∞", "meals shared")],
+        "The Signal":     [("2", "clear receptions"), ("14", "nights waiting"), ("1", "antenna open")],
+        "The Forge":      [("88", "new forms"), ("12", "acts of making"), ("1", "still building")],
+        "The Field":      [("13", "rooms inside"), ("1", "ground holding"), ("∞", "recursive depth")],
+    ]
+
     private var statsBar: some View {
-        HStack(spacing: 0) {
-            statCell(value: "\(stories.count)", label: "STORIES")
-            statDivider
-            statCell(value: "\(totalResonance)", label: "RESONANCE")
-            statDivider
-            statCell(value: "\(activeVoiceCount)", label: "VOICES")
+        let cells = Self.authoredStats[currentRoom.name]
+            ?? [("\(stories.count)", "stories"), ("\(totalResonance)", "resonance"), ("\(activeVoiceCount)", "voices")]
+        return HStack(spacing: 0) {
+            ForEach(Array(cells.enumerated()), id: \.offset) { i, cell in
+                if i > 0 { statDivider }
+                statCell(value: cell.0, label: cell.1)
+            }
         }
         .frame(maxWidth: .infinity)
     }

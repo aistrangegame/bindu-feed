@@ -254,14 +254,58 @@ private struct AxisFeedSeam: View {
     }
 }
 
+// The Light register (Z−5) — the dawn material itself (S-L01): an ember low in the sky,
+// a horizon band, steam rising before he arrived. Hour-aware — the future looks different
+// at six and at noon because he does. Reached by the stillness gate; "stand inside" opens
+// the full ceremony (the scenes, the carve).
 private struct AxisLightSeam: View {
     let onEnter: () -> Void
+    @EnvironmentObject private var breath: Breath
+
+    private var hourWarm: Double {                        // <4 night · <7 dawn · <11 morning · <15 high · <20 evening
+        let h = Calendar.current.component(.hour, from: Date())
+        switch h { case ..<4: return 0.2; case ..<7: return 0.55; case ..<11: return 0.8; case ..<15: return 1.0; case ..<20: return 0.7; default: return 0.25 }
+    }
+
     var body: some View {
-        VStack(spacing: 14) {
-            Text("the Light").font(.lora(20)).foregroundStyle(Color(hex: "#EDE3CE"))
-            Text("what has not yet been").font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-            Button(action: onEnter) {
-                Text("stand inside ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
+        ZStack {
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                Canvas { ctx, size in
+                    let hy = size.height * 0.60
+                    let warm = hourWarm
+                    // the horizon — dawn ground
+                    ctx.fill(Path(CGRect(x: 0, y: hy, width: size.width, height: size.height - hy)),
+                             with: .linearGradient(.init(colors: [Color(hex: "#C9A07A").opacity(0.10 + 0.10 * warm), .clear]),
+                                                   startPoint: CGPoint(x: 0, y: size.height), endPoint: CGPoint(x: 0, y: hy)))
+                    // the ember, low, breathing
+                    let ex = size.width / 2, ey = hy - 8
+                    let er = 26.0 + 10 * breath.value
+                    ctx.fill(Path(ellipseIn: CGRect(x: ex - er, y: ey - er, width: er * 2, height: er * 2)),
+                             with: .radialGradient(.init(colors: [BinduParticle.core.opacity(0.5 + 0.3 * warm), .clear]),
+                                                   center: CGPoint(x: ex, y: ey), startRadius: 0, endRadius: er))
+                    // steam, rising before he arrived
+                    for i in 0..<16 {
+                        let seed = Double(i)
+                        let phase = (t * 0.06 + seed * 0.13).truncatingRemainder(dividingBy: 1)
+                        let sx = ex + sin(seed * 2.3 + t * 0.2) * (30 + seed * 4)
+                        let sy = ey - phase * size.height * 0.5
+                        let a = (1 - phase) * 0.10 * warm
+                        ctx.fill(Path(ellipseIn: CGRect(x: sx - 1.5, y: sy - 1.5, width: 3, height: 3)),
+                                 with: .color(Color(hex: "#EDE3CE").opacity(a)))
+                    }
+                }
+            }
+            .ignoresSafeArea().allowsHitTesting(false)
+
+            VStack(spacing: 12) {
+                Spacer()
+                Text("the Light").font(.lora(20)).foregroundStyle(Color(hex: "#EDE3CE"))
+                Text("what has not yet been").font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
+                Button(action: onEnter) {
+                    Text("stand inside ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
+                }.padding(.top, 6)
+                Spacer().frame(height: 150)
             }
         }
     }
