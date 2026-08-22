@@ -52,7 +52,7 @@ struct RoomSelectionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                BackChevron { path.removeLast(max(path.count - 0, 0)) }
+                BackChevron { if !path.isEmpty { path.removeLast() } }   // back one level, not to root
             }
             ToolbarItem(placement: .topBarLeading) {
                 HubTrigger(open: $showHub)

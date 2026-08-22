@@ -107,7 +107,14 @@ final class FeedStore: ObservableObject {
 
     // MARK: - Stories
 
+    // The feed's own loading state — `isLoading` is toggled only by loadFoundation, so
+    // without this the feed showed "Nothing has gathered here yet." in the gap between
+    // foundation finishing and the story fetch returning. This closes that flash.
+    @Published var isLoadingStories = true
+
     func loadStories(room: String? = nil, sort: StorySort = .mostActive) async {
+        isLoadingStories = true
+        defer { isLoadingStories = false }
         do {
             let result = try await service.fetchStories(room: room, sort: sort)
             self.stories = result

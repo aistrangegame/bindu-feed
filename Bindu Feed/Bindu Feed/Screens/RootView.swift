@@ -119,7 +119,7 @@ struct RootView: View {
 
     @ViewBuilder
     private var emptyState: some View {
-        if store.isLoading {
+        if store.isLoading || store.isLoadingStories {
             Text("the field is gathering…")
                 .font(.loraItalic(13))
                 .foregroundColor(BinduTheme.inkTertiary)

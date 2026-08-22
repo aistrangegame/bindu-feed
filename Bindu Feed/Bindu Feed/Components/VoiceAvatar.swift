@@ -12,18 +12,15 @@ struct VoiceAvatar: View {
                 .blur(radius: 4)
                 .frame(width: size * 1.6, height: size * 1.6)
 
-            // body
+            // body — a SOLID disc in the archetype's colour (the comps draw filled discs,
+            // not the ghosted 0.30 ring this used to render), with a white glyph.
             Circle()
-                .fill(archetype.color.opacity(0.30))
+                .fill(archetype.color)
                 .frame(width: size, height: size)
-                .overlay(
-                    Circle()
-                        .strokeBorder(archetype.color.opacity(0.55), lineWidth: 0.5)
-                )
 
             Text(archetype.glyph)
                 .font(.system(size: size * 0.52))
-                .foregroundColor(archetype.color)
+                .foregroundColor(.white.opacity(0.88))
         }
         .frame(width: size, height: size)
     }

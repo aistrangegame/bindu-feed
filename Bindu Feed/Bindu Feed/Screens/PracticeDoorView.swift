@@ -29,13 +29,27 @@ struct PracticeDoorView: View {
             } else if let content {
                 contentScreen(for: content)
             } else {
-                // Foundation loaded but the selector returned nil — rare
-                // (would mean no kinds had any data).
-                centeredItalic(
-                    "The field is resting. Try again when you're ready.",
-                    color: BinduTheme.colorLalita,
-                    maxWidth: 280
-                )
+                // Foundation loaded but the selector returned nil (no kind had any data).
+                // Must NOT be a trap — this surface has no hub/back, so without an escape a
+                // force-quit was the only recovery. Give it TRY AGAIN, like preFoundation.
+                VStack(spacing: BinduTheme.space20) {
+                    Text("The field is resting. Try again when you're ready.")
+                        .font(.loraItalic(15))
+                        .foregroundColor(BinduTheme.colorLalita)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .frame(maxWidth: 280)
+                    Button {
+                        store.error = nil
+                        Task { await store.loadFoundation(); startIfReady() }
+                    } label: {
+                        Text("TRY AGAIN")
+                            .font(.spaceMono(9)).tracking(2.0)
+                            .foregroundColor(BinduTheme.inkSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, BinduTheme.space24)
             }
         }
         .contentShape(Rectangle())
