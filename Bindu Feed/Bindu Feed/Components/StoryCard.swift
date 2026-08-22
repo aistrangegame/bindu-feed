@@ -71,8 +71,8 @@ struct StoryCard: View {
                         .font(.spaceMono(11))
                         .foregroundColor(BinduTheme.inkSecondary)
                 } icon: {
-                    Text("▲")
-                        .font(.system(size: 10))
+                    Text("\u{2661}")                        // ♡ — the resonance glyph, one across the app
+                        .font(.system(size: 11))
                         .foregroundColor(BinduTheme.inkTertiary)
                 }
                 .contentShape(Rectangle())
@@ -87,8 +87,8 @@ struct StoryCard: View {
                     .font(.spaceMono(11))
                     .foregroundColor(BinduTheme.inkSecondary)
             } icon: {
-                Image(systemName: "bubble.left.fill")
-                    .font(.system(size: 9))
+                Text("\u{21B3}")                            // ↳ — comments, the comp's own mark
+                    .font(.system(size: 11))
                     .foregroundColor(BinduTheme.inkTertiary)
             }
 

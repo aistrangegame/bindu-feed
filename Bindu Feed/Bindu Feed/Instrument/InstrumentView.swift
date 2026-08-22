@@ -25,6 +25,7 @@ struct InstrumentView: View {
 
     @StateObject private var travel: AxisTravel
     @State private var lastDragY: CGFloat = 0
+    @State private var showRope = false
 
     init(path: Binding<NavigationPath>, startZ: Int) {
         self._path = path
@@ -89,6 +90,20 @@ struct InstrumentView: View {
         .navigationBarBackButtonHidden(true)
         .contentShape(Rectangle())
         .gesture(travelGesture)
+        // The rope from anywhere (§7.5) — a ~1.1s long-press; the particle is always here.
+        .simultaneousGesture(
+            LongPressGesture(minimumDuration: 1.1).onEnded { _ in
+                withAnimation(.easeInOut(duration: 0.8)) { showRope = true }
+            }
+        )
+        .overlay {
+            if showRope {
+                DoorRopeOverlay(onExit: { _ in
+                    withAnimation(.easeInOut(duration: 0.8)) { showRope = false }
+                })
+                .transition(.opacity)
+            }
+        }
         .onAppear {
             travel.onCross = { reg in
                 soundEngine.riteThreshold(hz: reg.hz, dur: 4)   // the crossing, struck

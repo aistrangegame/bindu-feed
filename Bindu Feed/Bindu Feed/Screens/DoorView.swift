@@ -195,7 +195,9 @@ struct DoorView: View {
 
 enum RopeExit { case point, day }
 
-private struct DoorRopeOverlay: View {
+// Reusable — the Door raises it on a threshold long-press; the axis raises it from
+// anywhere (§7.5: the particle is always present, so the rope is always one gesture away).
+struct DoorRopeOverlay: View {
     let onExit: (RopeExit) -> Void
     @State private var phase = 0   // 0,1 breaths · 2 the line + exits
 
