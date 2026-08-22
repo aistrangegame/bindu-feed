@@ -174,6 +174,9 @@ struct RootView: View {
             AshComposeView(story: story, onPosted: {
                 if !path.isEmpty { path.removeLast() }
             })
+        case .rite:
+            // The daily meeting — a full-screen ceremony that pops to home when done.
+            RiteView(path: $path)
         }
     }
 

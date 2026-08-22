@@ -12,4 +12,5 @@ enum FeedRoute: Hashable {
     case players
     case practiceDoor
     case compose(Story)
+    case rite            // the daily meeting (Wave 2)
 }

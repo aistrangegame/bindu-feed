@@ -27,6 +27,10 @@ struct HubOverlay: View {
                     .padding(.bottom, BinduTheme.space24)
 
                 VStack(spacing: 11) {
+                    row(color: BinduTheme.colorBindu,
+                        name: "The Rite",
+                        descriptor: "one story has come to meet you") { go(to: .rite) }
+
                     row(color: BinduTheme.colorLalita,
                         name: "The Rooms",
                         descriptor: "thirteen ways in") { go(to: .rooms) }

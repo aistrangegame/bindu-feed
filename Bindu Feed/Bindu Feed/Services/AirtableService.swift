@@ -33,6 +33,7 @@ enum AirtableError: LocalizedError {
 enum FeedActivityType: String {
     case ashReplied     = "Ash Replied"
     case storyResonated = "Story Resonated"
+    case storyMet       = "Story Met"     // the Rite — created on first write (typecast)
 }
 
 final class AirtableService {
@@ -396,7 +397,7 @@ final class AirtableService {
     @discardableResult
     func logActivity(
         type: FeedActivityType,
-        feedRecordId: String,
+        feedRecordId: String? = nil,
         activityName: String,
         detail: String,
         excerpt: String?
@@ -413,9 +414,11 @@ final class AirtableService {
             "Source App":    "Feed",
             "Activity Type": type.rawValue,
             "Activity Date": today,
-            "Detail":        detail,
-            "Link to Feed":  [feedRecordId]
+            "Detail":        detail
         ]
+        if let feedRecordId {
+            fieldsDict["Link to Feed"] = [feedRecordId]
+        }
         if let excerpt, !excerpt.isEmpty {
             fieldsDict["Excerpt"] = excerpt
         }

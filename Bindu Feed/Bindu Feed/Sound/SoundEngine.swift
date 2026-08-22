@@ -458,6 +458,75 @@ final class SoundEngine: ObservableObject {
         }
     }
 
+    // MARK: - Rite tones (Wave 2)
+
+    private var inkVoice: InkVoice?
+
+    /// A movement-transition threshold bloom (bowl), e.g. 220 / 146 / 261 Hz.
+    func riteThreshold(hz: Double, dur: Double) {
+        playCeremony(
+            CeremonyVoice(hz: hz, peak: 0.30, attackSeconds: 0.6, releaseSeconds: dur, synth: .bowl),
+            maxWait: dur + 1
+        )
+    }
+
+    /// A presence's choir voice — a quiet sine-plus-octave bloom over the bed.
+    func riteVoice(hz: Double, dur: Double) {
+        playCeremony(
+            CeremonyVoice(hz: hz, peak: 0.05, attackSeconds: 1.5, releaseSeconds: dur, synth: .sineOctave),
+            maxWait: dur + 1
+        )
+    }
+
+    /// The Sealing bowl — struck once, long decay while the bed holds.
+    func riteBowl(hz: Double) {
+        playCeremony(
+            CeremonyVoice(hz: hz, peak: 0.32, attackSeconds: 0.05, releaseSeconds: 11.0, synth: .bowl),
+            maxWait: 12
+        )
+    }
+
+    private func playCeremony(_ voice: CeremonyVoice, maxWait: Double) {
+        guard isRunning else { return }
+        engine.attach(voice.sourceNode)
+        let format = voice.sourceNode.outputFormat(forBus: 0)
+        engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        let deadline = Date().addingTimeInterval(maxWait)
+        Task { @MainActor [weak self] in
+            while !voice.isDone && Date() < deadline {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard let self else { return }
+            self.engine.disconnectNodeInput(voice.sourceNode)
+            self.engine.detach(voice.sourceNode)
+        }
+    }
+
+    /// The ink — a sustained soft tone held while Ash speaks in Recognition.
+    func inkOn(hz: Double = 174) {
+        guard isRunning, inkVoice == nil else { return }
+        let ink = InkVoice(hz: hz)
+        engine.attach(ink.sourceNode)
+        let format = ink.sourceNode.outputFormat(forBus: 0)
+        engine.connect(ink.sourceNode, to: engine.mainMixerNode, format: format)
+        inkVoice = ink
+    }
+
+    func inkOff() {
+        guard let ink = inkVoice else { return }
+        ink.release()
+        inkVoice = nil
+        let deadline = Date().addingTimeInterval(4.0)
+        Task { @MainActor [weak self] in
+            while !ink.isDone && Date() < deadline {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard let self else { return }
+            self.engine.disconnectNodeInput(ink.sourceNode)
+            self.engine.detach(ink.sourceNode)
+        }
+    }
+
     // MARK: - Resonance Depth hook (silent stub)
 
     // Reserved for the future voice layer. The Sound Layer's locked

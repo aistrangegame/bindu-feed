@@ -428,6 +428,21 @@ final class FeedStore: ObservableObject {
         }
     }
 
+    /// The Rite met a story. A pulse into App Activity — never a count. Resolves
+    /// the live Story record by Codex ID when the feed is loaded (to link it);
+    /// logs without a link otherwise (the canon Rite can run before stories load).
+    /// Fire-and-forget: a failed activity row never affects the ceremony.
+    func logStoryMet(codexId: String, title: String) async {
+        let recordId = stories.first { $0.codexId == codexId }?.id
+        try? await service.logActivity(
+            type: .storyMet,
+            feedRecordId: recordId,
+            activityName: "\(title) — met in the Rite",
+            detail: "The story was met in the Rite.",
+            excerpt: nil
+        )
+    }
+
     // MARK: - Refresh handoff
 
     func flagStoryRefresh(storyId: String) {

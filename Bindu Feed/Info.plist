@@ -24,6 +24,8 @@
 		<string>Lora-Italic[wght].ttf</string>
 		<string>SpaceMono-Regular.ttf</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>The Rite keeps your spoken recognition in your own voice.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>
