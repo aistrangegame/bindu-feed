@@ -27,10 +27,10 @@ struct RootView: View {
                 path.append(route)
             }
         }
-        .onChange(of: selectedRoom) { _ in
+        .onChange(of: selectedRoom) {
             Task { await store.loadStories(room: selectedRoom, sort: sort) }
         }
-        .onChange(of: sort) { _ in
+        .onChange(of: sort) {
             Task { await store.loadStories(room: selectedRoom, sort: sort) }
         }
     }

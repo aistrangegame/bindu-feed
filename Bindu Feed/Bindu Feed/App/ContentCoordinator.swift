@@ -42,10 +42,10 @@ struct ContentCoordinator: View {
                 startSoundEngine()
             }
         }
-        .onChange(of: scenePhase) { phase in
+        .onChange(of: scenePhase) { _, phase in
             handleScenePhase(phase)
         }
-        .onChange(of: store.hasToken) { hasToken in
+        .onChange(of: store.hasToken) { _, hasToken in
             // Sign-out path: when the user clears the token from Settings,
             // unmount everything behind the gate and route back to
             // TokenEntryView. Resetting doorCrossed means re-entry will
@@ -58,7 +58,7 @@ struct ContentCoordinator: View {
                 showTokenEntry = true
             }
         }
-        .onChange(of: store.fieldSounds) { _ in
+        .onChange(of: store.fieldSounds) {
             // When field sounds load (or change after a re-fetch),
             // refresh the engine's .base Breath snapshot. Per the
             // locked fallback decision: values normally match the

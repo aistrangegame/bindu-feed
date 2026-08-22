@@ -152,7 +152,7 @@ final class RiteRecorder: ObservableObject {
     func start() {
         AVAudioApplication.requestRecordPermission { [weak self] granted in
             guard granted else { return }
-            Task { @MainActor in self?.beginRecording() }
+            Task { @MainActor [weak self] in self?.beginRecording() }
         }
     }
 

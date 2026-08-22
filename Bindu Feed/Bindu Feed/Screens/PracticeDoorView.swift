@@ -41,7 +41,7 @@ struct PracticeDoorView: View {
         .contentShape(Rectangle())
         .onTapGesture { cross() }
         .onAppear { startIfReady() }
-        .onChange(of: store.foundationLoaded) { _ in startIfReady() }
+        .onChange(of: store.foundationLoaded) { startIfReady() }
         // Hide the system nav bar so the hub-launched route case doesn't
         // get a default back chevron — tap-anywhere-to-cross is the only
         // gesture this surface offers, in both launch and route contexts.

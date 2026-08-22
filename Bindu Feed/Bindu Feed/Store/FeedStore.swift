@@ -386,7 +386,7 @@ final class FeedStore: ObservableObject {
         let activityName = title.isEmpty ? "Ash spoke in the field" : "\(title) — Ash spoke"
         let snippet = story?.excerpt ?? String(body.prefix(140))
         Task {
-            try? await service.logActivity(
+            _ = try? await service.logActivity(
                 type: .ashReplied,
                 feedRecordId: storyId,
                 activityName: activityName,
@@ -417,7 +417,7 @@ final class FeedStore: ObservableObject {
             let title = ctx.title.trimmingCharacters(in: .whitespacesAndNewlines)
             let activityName = title.isEmpty ? "First resonance in the field" : "\(title) — first resonance"
             Task {
-                try? await service.logActivity(
+                _ = try? await service.logActivity(
                     type: .storyResonated,
                     feedRecordId: recordId,
                     activityName: activityName,
@@ -434,7 +434,7 @@ final class FeedStore: ObservableObject {
     /// Fire-and-forget: a failed activity row never affects the ceremony.
     func logStoryMet(codexId: String, title: String) async {
         let recordId = stories.first { $0.codexId == codexId }?.id
-        try? await service.logActivity(
+        _ = try? await service.logActivity(
             type: .storyMet,
             feedRecordId: recordId,
             activityName: "\(title) — met in the Rite",
@@ -457,12 +457,12 @@ final class FeedStore: ObservableObject {
     /// The Vow loop — a carved Declaration in the Light writes a Reflection (Vow).
     /// Fire-and-forget; a failed write never affects the ceremony.
     func writeVow(text: String) async {
-        try? await service.writeVow(text: text)
+        _ = try? await service.writeVow(text: text)
     }
 
     /// The Light was entered — a pulse into App Activity (never a count).
     func logVeilLifted() async {
-        try? await service.logActivity(
+        _ = try? await service.logActivity(
             type: .veilLifted,
             activityName: "The Light — stood inside",
             detail: "Stillness opened the Light.",
@@ -472,7 +472,7 @@ final class FeedStore: ObservableObject {
 
     /// The walk to the centre completed — a pulse (never a count).
     func logWalkCompleted() async {
-        try? await service.logActivity(
+        _ = try? await service.logActivity(
             type: .walkCompleted,
             activityName: "The Point — walked to the centre",
             detail: "Inward to the one.",

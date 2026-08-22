@@ -17,7 +17,7 @@ struct StaggeredReveal<Content: View>: View {
         content()
             .opacity(visible ? 1 : 0)
             .onAppear { revealIfReady() }
-            .onChange(of: triggered) { _ in revealIfReady() }
+            .onChange(of: triggered) { revealIfReady() }
     }
 
     private func revealIfReady() {

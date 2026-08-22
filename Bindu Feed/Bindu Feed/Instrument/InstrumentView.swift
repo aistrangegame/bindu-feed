@@ -122,16 +122,16 @@ struct InstrumentView: View {
                 .transition(.opacity)
             }
         }
-        .onChange(of: travel.z) { _ in
+        .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
         }
-        .onChange(of: travel.crossing) { crossing in
+        .onChange(of: travel.crossing) { _, crossing in
             if crossing {                                       // a give / the passage fires
                 soundEngine.axisRush(dir: travel.passageDir)
                 soundEngine.axisGive(hz: here.hz)
             }
         }
-        .onChange(of: travel.thin) { thin in
+        .onChange(of: travel.thin) { _, thin in
             if thin > 0.1 && !thinSounded { thinSounded = true; soundEngine.axisThin(thin) }
             else if thin <= 0.01 { thinSounded = false }
         }

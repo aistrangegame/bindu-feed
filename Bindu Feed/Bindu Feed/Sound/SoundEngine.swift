@@ -419,9 +419,9 @@ final class SoundEngine: ObservableObject {
             object: nil,
             queue: .main
         ) { [weak self] note in
-            Task { @MainActor [weak self] in
-                self?.handleInterruption(note)
-            }
+            // queue: .main guarantees this runs on the main actor's executor — handle it
+            // synchronously so `note` (non-Sendable) is never captured across a Task boundary.
+            MainActor.assumeIsolated { self?.handleInterruption(note) }
         }
         observers.append(interruptionObserver)
     }

@@ -45,7 +45,7 @@ struct SonicContextModifier: ViewModifier {
             .onAppear {
                 soundEngine.setContext(context)
             }
-            .onChange(of: context) { newValue in
+            .onChange(of: context) { _, newValue in
                 soundEngine.setContext(newValue)
             }
     }

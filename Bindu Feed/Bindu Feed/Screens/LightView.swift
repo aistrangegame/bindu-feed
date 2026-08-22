@@ -187,7 +187,7 @@ struct LightView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
         .gesture(sceneGesture)
-        .onChange(of: breath.value) { _ in deliverOnExhale() }
+        .onChange(of: breath.value) { deliverOnExhale() }
     }
 
     // A touch reveals the next anchor (for `release`, the ungrip = the lift). Once
@@ -211,7 +211,7 @@ struct LightView: View {
         // The stillness gate — accumulates only while the hand is off the glass and
         // no input for 340ms. It NEVER resets; a touch only pauses the fill.
         gate = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
-            guard stage == .approach else { return }
+            guard case .approach = stage else { return }   // pattern-match avoids the isolated Equatable
             let idle = Date().timeIntervalSince(lastInput) * 1000
             if !touching && idle > idleMs {
                 stillMs = min(gateMs, stillMs + 50)
