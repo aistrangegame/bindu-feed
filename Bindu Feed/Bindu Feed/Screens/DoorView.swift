@@ -60,8 +60,11 @@ struct DoorView: View {
         }
         .task {
             if weather == .loading {
+                // Unmet only if today is NOT met AND the Rite hasn't been dismissed today —
+                // once you skip it, the Door stops forcing it (the Rite stays in the turn).
                 let met = await store.checkTodayMet()
-                withAnimation(.easeInOut(duration: 1.0)) { weather = met ? .met : .unmet }
+                let dismissed = store.isRiteDismissedToday()
+                withAnimation(.easeInOut(duration: 1.0)) { weather = (met || dismissed) ? .met : .unmet }
             }
         }
     }
@@ -105,7 +108,15 @@ struct DoorView: View {
                     .font(.spaceMono(9)).tracking(2)
                     .foregroundStyle(room.opacity(0.62))
                     .modifier(RiteBreathe())
-                    .padding(.bottom, 44)
+                Button {
+                    store.markRiteDismissedToday()   // your choice — not forced today
+                    onComplete()
+                } label: {
+                    Text("not today · enter the field ›")
+                        .font(.spaceMono(8)).tracking(2)
+                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
+                }
+                .padding(.top, 14).padding(.bottom, 40)
             }
             .padding(.horizontal, 40)
             .opacity(arrivalAppear ? 1 : 0)
@@ -165,10 +176,12 @@ struct DoorView: View {
             showTurn = false
             receiveTheRite()
         case .archive:
+            store.markRiteDismissedToday()   // turning to the Archive is choosing not to meet today
             showTurn = false
             onComplete()
         case .route(let route):
             // Park it; RootView pushes it once the feed is reachable.
+            store.markRiteDismissedToday()
             store.pendingLaunchRoute = route
             showTurn = false
             onComplete()

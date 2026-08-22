@@ -51,9 +51,31 @@ struct RiteView: View {
 
             content
                 .transition(.opacity)
+
+            // A quiet, always-present way out — you are never trapped in the Rite. Leaving
+            // marks today dismissed so the Door won't force it again (it stays in the turn).
+            if movement != .sealed {
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: leave) {
+                            Text("leave ›")
+                                .font(.spaceMono(9)).tracking(2)
+                                .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
+                                .padding(16)
+                        }
+                    }
+                    Spacer()
+                }
+            }
         }
         .navigationBarBackButtonHidden(true)
         .sonicContext(.base)   // the bed — 110 Hz breath under the whole Rite
+    }
+
+    private func leave() {
+        store.markRiteDismissedToday()
+        finish()
     }
 
     @ViewBuilder private var content: some View {

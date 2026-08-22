@@ -52,6 +52,13 @@ struct RiteRecognitionView: View {
                 Text(RiteWord.recogTouchSpeak)
                     .font(.spaceMono(9)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary)
+                // Leaving a word is a CHOICE, never a requirement — seal with nothing.
+                Button { onSealed("") } label: {
+                    Text("nothing to leave · seal ›")
+                        .font(.spaceMono(8)).tracking(2)
+                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
+                }
+                .padding(.top, 10)
 
             case .listening:
                 Text(mmss)
@@ -93,11 +100,10 @@ struct RiteRecognitionView: View {
                             .foregroundStyle(BinduTheme.inkTertiary)
                         Spacer()
                         Button(RiteWord.recogKeepIt) {
-                            let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                            if !t.isEmpty { onSealed(t) }
+                            onSealed(text.trimmingCharacters(in: .whitespacesAndNewlines))
                         }
                         .font(.lora(15))
-                        .foregroundStyle(t: text, color: RiteAsh.color)
+                        .foregroundStyle(RiteAsh.color)   // always sealable — empty is allowed
                     }
                 }
                 .padding(.horizontal, 6)

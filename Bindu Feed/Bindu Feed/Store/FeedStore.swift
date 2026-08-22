@@ -507,6 +507,17 @@ final class FeedStore: ObservableObject {
     }
 
     private static func metCacheKey(_ day: String) -> String { "bindu.met.\(day)" }
+    private static func riteDismissedKey(_ day: String) -> String { "bindu.rite.dismissed.\(day)" }
+
+    /// The user chose not to meet today's story (exited the Rite, or turned to the
+    /// Archive). Records it so the Door does NOT re-offer the Rite every open today — the
+    /// Rite stays reachable from the turn, but you are never forced back into it.
+    func markRiteDismissedToday() {
+        UserDefaults.standard.set(true, forKey: Self.riteDismissedKey(AirtableService.localDayString()))
+    }
+    func isRiteDismissedToday() -> Bool {
+        UserDefaults.standard.bool(forKey: Self.riteDismissedKey(AirtableService.localDayString()))
+    }
 
     /// The Door's weather read: is today already met? True if the local same-day cache is
     /// set (a Rite completed on this device today) OR App Activity has today's Story Met.
