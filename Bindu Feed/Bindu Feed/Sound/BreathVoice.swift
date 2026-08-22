@@ -34,7 +34,8 @@ final class BreathVoice {
         snapshot: VoiceSnapshot,
         initialCrossfadeLevel: Double = 0,
         sampleRate: Double = 48000,
-        routeState: RouteStateHolder
+        routeState: RouteStateHolder,
+        breathOriginSeconds: Double? = nil
     ) {
         self.snapshot = snapshot
         let level = CrossfadeLevelHolder(initialCrossfadeLevel)
@@ -60,6 +61,21 @@ final class BreathVoice {
         let rightFreq = snap.rootHz + snap.binauralHz
         let centerFreq = snap.rootHz
 
+        // One-breath alignment. When given the app's launch-anchored origin, the
+        // LFO re-anchors its phase to that single clock at the start of every
+        // buffer — deriving "now" from the render block's own `mHostTime`, in the
+        // same seconds base as `CACurrentMediaTime()` (both are mach_absolute_time).
+        // The per-sample increment below still runs, so the LFO never freezes even
+        // if a buffer lacks a valid host time; the re-anchor only removes drift and
+        // keeps this voice breathing in phase with the visuals and every other
+        // voice — the "one breath" law, with no cross-thread clock and no coupling
+        // to main-thread scheduling. The period is the canonical Breath.period.
+        let breathOrigin = breathOriginSeconds
+        let breathPeriodSeconds = 10.0
+        var timebase = mach_timebase_info_data_t()
+        mach_timebase_info(&timebase)
+        let hostTicksToSeconds = Double(timebase.numer) / Double(timebase.denom) / 1_000_000_000.0
+
         guard let format = AVAudioFormat(
             standardFormatWithSampleRate: sampleRate,
             channels: 2
@@ -68,10 +84,23 @@ final class BreathVoice {
         }
 
         self.sourceNode = AVAudioSourceNode(format: format) {
-            _, _, frameCount, audioBufferList in
+            _, timestamp, frameCount, audioBufferList in
             let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let currentLevel = level.read()
             let useBinaural = routeState.read()
+
+            // Re-anchor the LFO to the one shared breath at the top of each buffer.
+            // Only when we have both an origin and a valid host time; otherwise the
+            // per-sample increment below carries the phase forward (never a freeze).
+            if let breathOrigin {
+                let hostTime = timestamp.pointee.mHostTime
+                if hostTime != 0 {
+                    let nowSeconds = Double(hostTime) * hostTicksToSeconds
+                    let cyclePos = (nowSeconds - breathOrigin)
+                        .truncatingRemainder(dividingBy: breathPeriodSeconds) / breathPeriodSeconds
+                    lfoPhase = cyclePos * 2.0 * .pi
+                }
+            }
 
             let bufL = buffers[0].mData?.assumingMemoryBound(to: Float.self)
             let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)

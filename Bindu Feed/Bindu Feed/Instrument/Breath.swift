@@ -30,6 +30,15 @@ final class Breath: ObservableObject {
     private var link: CADisplayLink?
     private var startTime: CFTimeInterval = 0
 
+    /// The launch-anchored origin, in `CACurrentMediaTime()` seconds — the single
+    /// point in time the whole app's breath is measured from. The audio engine reads
+    /// this so each `BreathVoice` LFO derives the *same* phase from its render
+    /// block's `mHostTime`, in the same time base (`CACurrentMediaTime` and
+    /// AVAudioTime host-time share the `mach_absolute_time` base). One origin, one
+    /// breath — sound and visuals aligned with no cross-thread clock and no coupling
+    /// of audio smoothness to main-thread scheduling.
+    var originSeconds: CFTimeInterval { startTime }
+
     init() { start() }
 
     /// Begins the clock. Idempotent — the breath starts once, from load, and is

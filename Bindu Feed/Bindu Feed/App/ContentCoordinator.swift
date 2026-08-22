@@ -6,6 +6,7 @@ import SwiftUI
 struct ContentCoordinator: View {
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var soundEngine: SoundEngine
+    @EnvironmentObject private var breath: Breath
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var showTokenEntry = false
@@ -94,11 +95,18 @@ struct ContentCoordinator: View {
     // silent — the onChange handler above picks up the real values
     // if/when they arrive different.
     private func startSoundEngine() {
+        // Hand the engine the one launch-anchored breath origin BEFORE the first
+        // voice spawns, so every BreathVoice is born reading the single shared
+        // clock, not retrofitted onto it (Ruling 3: the breath is the foundation).
+        // `breath` here is the Breath clock (the @EnvironmentObject); `breathSound`
+        // below is the Field Sound record that seeds the voice's timbre — different
+        // things that happen to share the word.
+        soundEngine.setBreathOrigin(breath.originSeconds)
         soundEngine.start()
-        let breath = store.breath
+        let breathSound = store.breath
         soundEngine.startBreath(
-            snapshot: VoiceSnapshot(from: breath),
-            attackSeconds: breath.attackSeconds
+            snapshot: VoiceSnapshot(from: breathSound),
+            attackSeconds: breathSound.attackSeconds
         )
     }
 

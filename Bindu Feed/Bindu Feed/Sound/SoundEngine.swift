@@ -50,6 +50,12 @@ final class SoundEngine: ObservableObject {
     // Breath values exactly so a race during cold launch is silent).
     private var baseBreathSnapshot: VoiceSnapshot = .breathDefault
 
+    // The app's single launch-anchored breath origin (CACurrentMediaTime seconds),
+    // handed in from the shared `Breath` clock. Every BreathVoice derives its LFO
+    // phase from this one origin so sound and visuals breathe as one. nil until
+    // wired (voices then free-run their own LFO — the pre-fold behavior).
+    private var breathOriginSeconds: Double?
+
     // 4s equal-power crossfade for room transitions. The initial
     // cold-launch Breath fade-in uses the Breath's own attackSeconds
     // (12s seeded) — that's a slower, ceremonial ramp, not the same
@@ -129,7 +135,8 @@ final class SoundEngine: ObservableObject {
         let voice = BreathVoice(
             snapshot: snapshot,
             initialCrossfadeLevel: 0,
-            routeState: routeState
+            routeState: routeState,
+            breathOriginSeconds: breathOriginSeconds
         )
         attach(voice)
         currentBreath = voice
@@ -155,6 +162,13 @@ final class SoundEngine: ObservableObject {
     // .base context and the snapshot differs, retarget via crossfade.
     // If values match the running voice (the common no-op case when
     // the fallback already matched the seeded values), nothing happens.
+    /// Hand the engine the app's single breath origin (from the shared `Breath`
+    /// clock). Wired once at startup, before the first BreathVoice spawns, so every
+    /// voice is born reading the one clock. Later voices pick it up automatically.
+    func setBreathOrigin(_ seconds: Double) {
+        breathOriginSeconds = seconds
+    }
+
     func setBaseBreathSnapshot(_ snapshot: VoiceSnapshot) {
         baseBreathSnapshot = snapshot
         if currentContext == .base,
@@ -255,7 +269,8 @@ final class SoundEngine: ObservableObject {
         let newCurrent = BreathVoice(
             snapshot: targetSnapshot,
             initialCrossfadeLevel: 0,
-            routeState: routeState
+            routeState: routeState,
+            breathOriginSeconds: breathOriginSeconds
         )
         attach(newCurrent)
         currentBreath = newCurrent
