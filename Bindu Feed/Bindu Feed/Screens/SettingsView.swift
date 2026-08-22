@@ -447,5 +447,7 @@ struct ArrivalSettings: Codable, Equatable {
     func save() {
         guard let data = try? JSONEncoder().encode(self) else { return }
         UserDefaults.standard.set(data, forKey: ArrivalSettings.defaultsKey)
+        // Tell the live surfaces (the feed's AshMark, etc.) to re-read immediately.
+        NotificationCenter.default.post(name: .arrivalSettingsChanged, object: nil)
     }
 }
