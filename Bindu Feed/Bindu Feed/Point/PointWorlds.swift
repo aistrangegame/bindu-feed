@@ -188,7 +188,7 @@ private struct WorldVeil: View {
                         .position(x: geo.size.width / 2, y: geo.size.height - 40)
                 }
                 .contentShape(Rectangle())
-                .gesture(DragGesture().onChanged { v in
+                .simultaneousGesture(DragGesture().onChanged { v in
                     part = min(1, max(0, abs(v.translation.width) / (geo.size.width * 0.5)))
                 }.onEnded { _ in withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 } })
             }
@@ -226,7 +226,7 @@ private struct WorldChamber: View {
                     .position(x: geo.size.width / 2, y: geo.size.height - 40)
             }
             .contentShape(Rectangle())
-            .gesture(DragGesture().onChanged { v in panX = v.translation.width }
+            .simultaneousGesture(DragGesture().onChanged { v in panX = v.translation.width }
                 .onEnded { _ in withAnimation(.easeOut(duration: 0.4)) { panX = max(-spread + geo.size.width * 0.5, min(0, panX)) } })
         }
     }
