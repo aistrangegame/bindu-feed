@@ -58,6 +58,12 @@ struct InstrumentView: View {
             // The one particle — rides centre → crown, and blooms into the world at +9.
             particle
 
+            // The passage throat — a wormhole inward, a whitehole outward.
+            if travel.crossing {
+                ThroatView(t: travel.passageT, dir: travel.passageDir, hue: here.color)
+                    .ignoresSafeArea().allowsHitTesting(false)
+            }
+
             // The passage flash on crossing.
             if travel.flash > 0.01 {
                 Circle().fill(RadialGradient(
@@ -226,6 +232,38 @@ struct InstrumentView: View {
             AxisLightSeam { path.append(FeedRoute.light) }
         default:
             EmptyView()
+        }
+    }
+}
+
+// THE PASSAGE — the crossing drawn as a throat (spine-passage.js): perspective rings
+// scrolling through the tunnel with an aperture flooding at the far end. Inward is a
+// wormhole (the world rushes outward past him, light pours from the point); outward a
+// whitehole (the sky un-collapses on arrival). ≈ the full three-act draw; the throat +
+// aperture are here.
+private struct ThroatView: View {
+    let t: Double; let dir: Double; let hue: Color
+    var body: some View {
+        Canvas { ctx, size in
+            let cx = size.width / 2, cy = size.height / 2
+            let R0 = min(size.width, size.height) * 0.5
+            let run = pow(t, 1.28) * 3.4 * dir
+            for i in 0..<34 {
+                var zz = (Double(i) / 34.0 + run).truncatingRemainder(dividingBy: 1.0)
+                if zz <= 0.02 { zz += 1 }
+                let r = R0 * 0.085 / zz
+                guard r < R0 * 2.5 else { continue }
+                let a = (1 - zz) * 0.5 * (0.55 + 0.45 * sin(Double(i) * 2.1))
+                ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
+                           with: .color(hue.opacity(a)), lineWidth: 0.6 + (1 - zz) * 2.0)
+            }
+            let ap = pow(max(0, (t - 0.28) / 0.72), 2.5)
+            if ap > 0 {
+                let ar = R0 * (0.02 + ap * 2.3)
+                ctx.fill(Path(ellipseIn: CGRect(x: cx - ar, y: cy - ar, width: ar * 2, height: ar * 2)),
+                         with: .radialGradient(.init(colors: [.white.opacity(0.5 * ap), hue.opacity(0.2 * ap), .clear]),
+                                               center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: ar))
+            }
         }
     }
 }

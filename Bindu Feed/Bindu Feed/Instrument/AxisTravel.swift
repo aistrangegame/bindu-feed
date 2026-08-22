@@ -23,6 +23,8 @@ final class AxisTravel: ObservableObject {
     @Published private(set) var thin: Double = 0        // the stillness gate filling at the sky, 0…1
     @Published private(set) var tension: Double = 0     // how hard the near membrane is felt, 0…1
     @Published private(set) var crossing = false        // inside a passage — the camera is out of the hand
+    @Published private(set) var passageT: Double = 0     // 0…1 through the passage
+    @Published private(set) var passageDir: Double = 1   // +1 inward (wormhole) · −1 outward (whitehole)
 
     var onCross: ((AxisRegister) -> Void)?
 
@@ -106,10 +108,11 @@ final class AxisTravel: ObservableObject {
         if crossing {
             glideT += dt / glideDur
             let tt = Swift.min(1, glideT)
+            passageT = tt
             let e = tt * tt * (3 - 2 * tt)               // smoothstep
             z = glideFrom + (glideTo - glideFrom) * e
             flash = Swift.max(0, flash - dt / 0.9)
-            if tt >= 1 { z = glideTo; crossing = false; zv = 0; force = 0 }
+            if tt >= 1 { z = glideTo; crossing = false; passageT = 0; zv = 0; force = 0 }
             detectCross()
             return
         }
@@ -202,7 +205,7 @@ final class AxisTravel: ObservableObject {
         glideFrom = z
         glideTo = Swift.min(Swift.max(target, MINZ), MAXZ)
         glideT = 0; glideDur = 2.9
-        dir = d
+        dir = d; passageDir = d; passageT = 0
         crossing = true
         flash = 1
     }
