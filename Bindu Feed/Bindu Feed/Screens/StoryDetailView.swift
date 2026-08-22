@@ -99,6 +99,17 @@ struct StoryDetailView: View {
                         .padding(.horizontal, BinduTheme.space16)
                         .padding(.top, 12)
 
+                    // Re-meet a sealed story — the Return (Wave 5). The faithful
+                    // entry is the axis fall (Wave 6); this is the interim door.
+                    Button { path.append(FeedRoute.returnCeremony) } label: {
+                        Text("you sealed this once · return ›")
+                            .font(.spaceMono(9)).tracking(1.5)
+                            .foregroundColor(BinduTheme.inkTertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 28)
+
                     Color.clear.frame(height: 80)
                 }
             }

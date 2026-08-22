@@ -183,6 +183,10 @@ struct RootView: View {
         case .rite:
             // The daily meeting — a full-screen ceremony that pops to home when done.
             RiteView(path: $path)
+        case .light:
+            LightView(path: $path)
+        case .returnCeremony:
+            ReturnView(path: $path)
         }
     }
 

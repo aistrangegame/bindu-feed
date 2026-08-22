@@ -34,6 +34,7 @@ enum FeedActivityType: String {
     case ashReplied     = "Ash Replied"
     case storyResonated = "Story Resonated"
     case storyMet       = "Story Met"     // the Rite — created on first write (typecast)
+    case veilLifted     = "Veil Lifted"   // the Light — created on first write (typecast)
 }
 
 final class AirtableService {
@@ -385,6 +386,43 @@ final class AirtableService {
 
         let (data, response) = try await session.data(for: req)
         try Self.validate(response: response, data: data)
+    }
+
+    /// The Vow loop: a carved Declaration in the Light writes a `Reflection` row
+    /// (Flairs = Vow) to The Feed, so it later surfaces in the Mirror by date-hash.
+    /// First-person crystallized words, authored as Ash. `typecast: true` brings the
+    /// `Reflection` Type and `Vow` Flair into being on first write. Best-effort.
+    @discardableResult
+    func writeVow(text: String) async throws -> AirtableRecord {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
+
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let fields: [String: Any] = [
+            "Name": "vow-\(timestamp)",
+            "Type": "Reflection",
+            "Status": "Live",
+            "Body": text,
+            "Archetype": "Ash",
+            "Flairs": ["Vow"],
+        ]
+        let payload: [String: Any] = [
+            "records": [["fields": fields]],
+            "typecast": true,
+        ]
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
+        let result = try decoder.decode(AirtableCreateResponse.self, from: data)
+        guard let first = result.records.first else {
+            throw AirtableError.http(200, "Empty response from Airtable")
+        }
+        return first
     }
 
     // MARK: - App Activity (cross-app feed)

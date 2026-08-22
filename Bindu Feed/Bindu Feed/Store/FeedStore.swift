@@ -454,6 +454,22 @@ final class FeedStore: ObservableObject {
     /// appear and pushes it once the feed is reachable. Nil clears it.
     @Published var pendingLaunchRoute: FeedRoute?
 
+    /// The Vow loop — a carved Declaration in the Light writes a Reflection (Vow).
+    /// Fire-and-forget; a failed write never affects the ceremony.
+    func writeVow(text: String) async {
+        try? await service.writeVow(text: text)
+    }
+
+    /// The Light was entered — a pulse into App Activity (never a count).
+    func logVeilLifted() async {
+        try? await service.logActivity(
+            type: .veilLifted,
+            activityName: "The Light — stood inside",
+            detail: "Stillness opened the Light.",
+            excerpt: nil
+        )
+    }
+
     // MARK: - Refresh handoff
 
     func flagStoryRefresh(storyId: String) {
