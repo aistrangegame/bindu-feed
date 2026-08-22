@@ -470,6 +470,16 @@ final class FeedStore: ObservableObject {
         )
     }
 
+    /// The walk to the centre completed — a pulse (never a count).
+    func logWalkCompleted() async {
+        try? await service.logActivity(
+            type: .walkCompleted,
+            activityName: "The Point — walked to the centre",
+            detail: "Inward to the one.",
+            excerpt: nil
+        )
+    }
+
     // MARK: - Refresh handoff
 
     func flagStoryRefresh(storyId: String) {

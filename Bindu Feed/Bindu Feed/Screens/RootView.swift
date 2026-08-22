@@ -187,6 +187,8 @@ struct RootView: View {
             LightView(path: $path)
         case .returnCeremony:
             ReturnView(path: $path)
+        case .instrument(let z):
+            InstrumentView(path: $path, startZ: z)
         }
     }
 

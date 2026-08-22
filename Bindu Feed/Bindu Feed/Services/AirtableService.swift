@@ -35,6 +35,7 @@ enum FeedActivityType: String {
     case storyResonated = "Story Resonated"
     case storyMet       = "Story Met"     // the Rite — created on first write (typecast)
     case veilLifted     = "Veil Lifted"   // the Light — created on first write (typecast)
+    case walkCompleted  = "Walk Completed" // the Point — created on first write (typecast)
 }
 
 final class AirtableService {

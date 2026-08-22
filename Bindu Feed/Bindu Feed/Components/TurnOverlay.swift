@@ -34,9 +34,9 @@ let turnRows: [TurnRow] = [
     .init(id: "rite", name: "The Rite", sub: "today\u{2019}s meeting", glyph: "◆", hex: "#4A9E6B", dest: .rite, unmetOnly: true),
     .init(id: "rooms", name: "The Rooms", sub: "thirteen ways in", glyph: "⌗", hex: "#B9AEA2", dest: .route(.rooms), unmetOnly: false),
     .init(id: "archive", name: "The Archive", sub: "everything, as it stands", glyph: "≡", hex: "#A9A29B", dest: .archive, unmetOnly: false),
-    .init(id: "universe", name: "The Universe", sub: "the whole of it, from above", glyph: "✧", hex: "#9FB2C4", dest: .absorbed, unmetOnly: false),
+    .init(id: "universe", name: "The Universe", sub: "the whole of it, from above", glyph: "✧", hex: "#9FB2C4", dest: .route(.instrument(-4)), unmetOnly: false),
     .init(id: "light", name: "The Light", sub: "the future, already underway", glyph: "▷", hex: "#EDE3CE", dest: .route(.light), unmetOnly: false),
-    .init(id: "point", name: "The Point", sub: "everything you know, arranged", glyph: "·", hex: "#C0392B", dest: .absorbed, unmetOnly: false),
+    .init(id: "point", name: "The Point", sub: "everything you know, arranged", glyph: "·", hex: "#C0392B", dest: .route(.instrument(1)), unmetOnly: false),
     .init(id: "players", name: "The Players", sub: "the lenses that read", glyph: "◊", hex: "#3AADA8", dest: .route(.players), unmetOnly: false),
     .init(id: "arrive", name: "How You Arrive", sub: "name, colour, mark", glyph: "◉", hex: "#C47A52", dest: .route(.settings), unmetOnly: false),
 ]
