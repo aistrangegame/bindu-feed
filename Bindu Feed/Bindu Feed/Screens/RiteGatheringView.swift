@@ -20,6 +20,7 @@ private enum GatherPhase { case intro, playing, resolving }
 
 struct RiteGatheringView: View {
     let depth: Int
+    var voices: [RiteVoice] = RiteVoices.all   // this story's real field-comment voices
     let onDone: () -> Void
 
     @EnvironmentObject private var soundEngine: SoundEngine
@@ -160,7 +161,7 @@ struct RiteGatheringView: View {
     // MARK: - Flow
 
     private func begin() {
-        let all = RiteVoices.all
+        let all = voices
         let t = RiteBudget.tiers(for: all, depth: depth)
         tiers = t
         speaking = all.filter { t[$0.key] != .silent }

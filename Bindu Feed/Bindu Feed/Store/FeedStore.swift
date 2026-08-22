@@ -519,6 +519,38 @@ final class FeedStore: ObservableObject {
         UserDefaults.standard.bool(forKey: Self.riteDismissedKey(AirtableService.localDayString()))
     }
 
+    // Today's story to meet — a deterministic daily pick over the live feed (rotates day
+    // over day and stands alone), the same date-hash discipline as the Mirror/Signal.
+    func storyOfDay() -> Story? {
+        guard !stories.isEmpty else { return nil }
+        let key = AirtableService.localDayString()
+        var h: UInt32 = 2166136261
+        for b in key.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
+        return stories[Int(h % UInt32(stories.count))]
+    }
+
+    // The Gathering's voices for a story = the archetypes who ACTUALLY spoke on it (their
+    // real field comments), so Reading and Gathering are the SAME story. Bindu is never
+    // silent. Falls back to the canon ten when the story carries no field comments.
+    func riteVoices(for story: Story) async -> [RiteVoice] {
+        let field = await loadComments(for: story.id).field
+        var voices: [RiteVoice] = []
+        var seen = Set<String>()
+        for c in field {
+            let key = c.archetype.lowercased()
+            guard !key.isEmpty, !seen.contains(key), let a = archetype(named: c.archetype) else { continue }
+            let lines = field.filter { $0.archetype == c.archetype }.map { $0.body }.filter { !$0.isEmpty }
+            guard !lines.isEmpty else { continue }
+            seen.insert(key)
+            let ref = RiteVoices.voice(key)
+            voices.append(RiteVoice(key: key, name: a.name, hex: a.hexColor, glyph: a.glyph,
+                                    role: a.role, verb: ref?.verb ?? "", lines: lines,
+                                    passing: lines.first ?? "", close: "\u{00B7}", hz: ref?.hz ?? 220, answering: nil))
+        }
+        if !seen.contains("bindu"), let b = RiteVoices.voice("bindu") { voices.insert(b, at: 0) }
+        return voices.isEmpty ? RiteVoices.all : voices
+    }
+
     /// The Door's weather read: is today already met? True if the local same-day cache is
     /// set (a Rite completed on this device today) OR App Activity has today's Story Met.
     /// Fail-safe to `false` (unmet).

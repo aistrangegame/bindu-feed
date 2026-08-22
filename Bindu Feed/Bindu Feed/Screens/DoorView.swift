@@ -35,10 +35,15 @@ struct DoorView: View {
     @State private var showRope = false
     @State private var arrivalAppear = false
 
+    // Today's real story to meet (rotating daily) and its real field-comment voices; the
+    // canon story stands in only if the feed can't be reached.
+    @State private var storyData: RiteStoryData = .canon
+    @State private var riteVoices: [RiteVoice]? = nil
+
     var body: some View {
         ZStack {
             if enteringRite {
-                RiteView(path: .constant(NavigationPath()), onFinish: onComplete)
+                RiteView(path: .constant(NavigationPath()), storyData: storyData, voices: riteVoices, onFinish: onComplete)
                     .transition(.opacity)
             } else {
                 surface
@@ -64,7 +69,16 @@ struct DoorView: View {
                 // once you skip it, the Door stops forcing it (the Rite stays in the turn).
                 let met = await store.checkTodayMet()
                 let dismissed = store.isRiteDismissedToday()
-                withAnimation(.easeInOut(duration: 1.0)) { weather = (met || dismissed) ? .met : .unmet }
+                let isUnmet = !(met || dismissed)
+                if isUnmet {
+                    // Load today's real story + its real voices before we offer the Rite.
+                    await store.loadStories()
+                    if let s = store.storyOfDay() {
+                        storyData = RiteStoryData(story: s, room: store.room(named: s.room))
+                        riteVoices = await store.riteVoices(for: s)
+                    }
+                }
+                withAnimation(.easeInOut(duration: 1.0)) { weather = isUnmet ? .unmet : .met }
             }
         }
     }
@@ -88,21 +102,26 @@ struct DoorView: View {
     }
 
     private var unmetDoor: some View {
-        let room = BinduTheme.colorGaia   // "The Garden" — today's room colour
+        let room = storyData.roomColor   // today's real story's room colour
         return ZStack {
             BinduTheme.bgDeep.ignoresSafeArea()
             RadialGradient(colors: [room.opacity(0.16), room.opacity(0.03), .clear],
                            center: UnitPoint(x: 0.5, y: -0.08), startRadius: 0, endRadius: 520)
                 .ignoresSafeArea().allowsHitTesting(false)
 
-            VStack(spacing: 20) {
+            VStack(spacing: 18) {
                 Spacer()
-                Text(RiteCanon.roomGlyph).font(.system(size: 30)).foregroundStyle(room)
+                Text(storyData.roomGlyph).font(.system(size: 30)).foregroundStyle(room)
                 Text(RiteWord.arrivalMeeting)
-                    .font(.lora(21, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
+                    .font(.lora(15)).italic().foregroundStyle(BinduTheme.inkSecondary)
+                Text(storyData.title)
+                    .font(.lora(24, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
                     .multilineTextAlignment(.center)
+                Text(storyData.roomName)
+                    .font(.spaceMono(9)).tracking(1.5).foregroundStyle(room.opacity(0.85))
                 Text(RiteWord.arrivalNotDone)
-                    .font(.lora(14)).italic().foregroundStyle(BinduTheme.inkTertiary)
+                    .font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary)
+                    .padding(.top, 6)
                 Spacer()
                 Text("touch to receive")
                     .font(.spaceMono(9)).tracking(2)

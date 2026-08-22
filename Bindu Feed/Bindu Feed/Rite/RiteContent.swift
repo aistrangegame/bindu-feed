@@ -221,3 +221,39 @@ enum RiteWord {
     static let sealTomorrow    = "Tomorrow, another comes to meet you. When you return to this one, you will be here — waiting in the field."
     static let sealDoorWaits   = "the door waits ›"
 }
+
+// A Rite's story — TODAY's real feed story (rotating daily, standing alone) or the canon
+// fallback when the feed isn't reachable. Drives Arrival, Reading, and Sealing.
+struct RiteStoryData {
+    let title: String
+    let roomName: String
+    let roomColor: Color
+    let roomGlyph: String
+    let codexId: String
+    let date: String
+    let body: [String]
+
+    static let canon = RiteStoryData(
+        title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
+        roomGlyph: RiteCanon.roomGlyph, codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body)
+
+    init(title: String, roomName: String, roomColor: Color, roomGlyph: String,
+         codexId: String, date: String, body: [String]) {
+        self.title = title; self.roomName = roomName; self.roomColor = roomColor
+        self.roomGlyph = roomGlyph; self.codexId = codexId; self.date = date; self.body = body
+    }
+
+    init(story: Story, room: Room?) {
+        title = story.title
+        roomName = story.room
+        roomColor = room?.color ?? RiteCanon.roomColor
+        roomGlyph = room?.glyph ?? RiteCanon.roomGlyph
+        codexId = story.codexId
+        date = story.sourceDate
+        let paras = story.body
+            .components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        body = paras.isEmpty ? [story.body] : paras
+    }
+}

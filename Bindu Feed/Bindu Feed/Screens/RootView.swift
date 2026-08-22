@@ -182,7 +182,8 @@ struct RootView: View {
             })
         case .rite:
             // The daily meeting — a full-screen ceremony that pops to home when done.
-            RiteView(path: $path)
+            // RiteRoute loads today's real story + its voices before showing the Rite.
+            RiteRoute(path: $path)
         case .light:
             LightView(path: $path)
         case .returnCeremony:
@@ -213,5 +214,38 @@ struct RootView: View {
     private func reloadFeed() async {
         await store.loadStories(room: selectedRoom, sort: sort)
         await store.loadStoryStats()
+    }
+}
+
+// Loads today's real story + its field-comment voices, then shows the Rite. Used by the
+// turn's `.rite` route (the Door loads its own before entering).
+private struct RiteRoute: View {
+    @Binding var path: NavigationPath
+    @EnvironmentObject private var store: FeedStore
+    @State private var data: RiteStoryData = .canon
+    @State private var voices: [RiteVoice]? = nil
+    @State private var loaded = false
+
+    var body: some View {
+        Group {
+            if loaded {
+                RiteView(path: $path, storyData: data, voices: voices)
+            } else {
+                ZStack {
+                    BinduTheme.bgDeep.ignoresSafeArea()
+                    Text("the story is coming to meet you…")
+                        .font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
+                }
+            }
+        }
+        .task {
+            guard !loaded else { return }
+            if store.stories.isEmpty { await store.loadStories() }
+            if let s = store.storyOfDay() {
+                data = RiteStoryData(story: s, room: store.room(named: s.room))
+                voices = await store.riteVoices(for: s)
+            }
+            loaded = true
+        }
     }
 }

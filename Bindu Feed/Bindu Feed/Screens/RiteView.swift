@@ -32,6 +32,11 @@ struct RiteView: View {
     /// Activity is deferred.
     var depth: Int = 0
 
+    /// Today's real story (rotating daily) and its real field-comment voices. Defaults to
+    /// the canon story/voices when the feed isn't reachable, so the Rite always stands up.
+    var storyData: RiteStoryData = .canon
+    var voices: [RiteVoice]? = nil
+
     /// When set, the Rite is running standalone (e.g. from the unmet Door, outside
     /// the nav stack); finishing calls this instead of popping the path.
     var onFinish: (() -> Void)? = nil
@@ -81,15 +86,15 @@ struct RiteView: View {
     @ViewBuilder private var content: some View {
         switch movement {
         case .arrival:
-            RiteArrival(onBegin: begin)
+            RiteArrival(data: storyData, onBegin: begin)
         case .reading:
-            RiteReading(onGather: toGathering)
+            RiteReading(data: storyData, onGather: toGathering)
         case .gathering:
-            RiteGatheringView(depth: depth, onDone: toRecognition)
+            RiteGatheringView(depth: depth, voices: voices ?? RiteVoices.all, onDone: toRecognition)
         case .recognition:
             RiteRecognitionView(onSealed: toSealed)
         case .sealed:
-            RiteSealed(text: keptText, onDoor: finish)
+            RiteSealed(data: storyData, text: keptText, onDoor: finish)
         }
     }
 
@@ -110,7 +115,7 @@ struct RiteView: View {
     private func toSealed(_ text: String) {
         keptText = text
         withAnimation(.easeInOut(duration: 1.0)) { movement = .sealed }
-        Task { await store.logStoryMet(codexId: RiteCanon.codexId, title: RiteCanon.title) }
+        Task { await store.logStoryMet(codexId: storyData.codexId, title: storyData.title) }
     }
     private func finish() {
         if let onFinish {
@@ -124,6 +129,7 @@ struct RiteView: View {
 // MARK: - I · Arrival
 
 private struct RiteArrival: View {
+    let data: RiteStoryData
     let onBegin: () -> Void
     @State private var appear = false
 
@@ -137,16 +143,16 @@ private struct RiteArrival: View {
                 .font(.lora(15)).italic()
                 .foregroundStyle(BinduTheme.inkSecondary)
             VStack(spacing: 10) {
-                Text(RiteCanon.title)
+                Text(data.title)
                     .font(.lora(28, weight: .medium))
                     .foregroundStyle(BinduTheme.inkPrimary)
                     .multilineTextAlignment(.center)
                 HStack(spacing: 8) {
-                    Text(RiteCanon.roomName)
+                    Text(data.roomName)
                         .font(.spaceMono(9)).tracking(1.5)
-                        .foregroundStyle(RiteCanon.roomColor)
+                        .foregroundStyle(data.roomColor)
                     Text("·").foregroundStyle(BinduTheme.inkTertiary)
-                    Text("\(RiteCanon.codexId) · \(RiteCanon.date)")
+                    Text("\(data.codexId) · \(data.date)")
                         .font(.spaceMono(9)).tracking(1)
                         .foregroundStyle(BinduTheme.inkTertiary)
                 }
@@ -177,21 +183,22 @@ private struct RiteArrival: View {
 // MARK: - II · Reading (touch-paced)
 
 private struct RiteReading: View {
+    let data: RiteStoryData
     let onGather: () -> Void
     @State private var lit = 1          // first paragraph pre-lit; his pace, not a timer's
 
-    private var done: Bool { lit >= RiteCanon.body.count }
+    private var done: Bool { lit >= data.body.count }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
-                    Text(RiteCanon.title)
+                    Text(data.title)
                         .font(.lora(24, weight: .medium))
                         .foregroundStyle(BinduTheme.inkPrimary)
                         .padding(.top, 60)
 
-                    ForEach(Array(RiteCanon.body.enumerated()), id: \.offset) { i, para in
+                    ForEach(Array(data.body.enumerated()), id: \.offset) { i, para in
                         Text(para)
                             .font(.lora(17))
                             .lineSpacing(7)
@@ -206,7 +213,7 @@ private struct RiteReading: View {
                         Button(action: onGather) {
                             Text("⬡ \(RiteWord.gatherButton)")
                                 .font(.lora(15)).italic()
-                                .foregroundStyle(RiteCanon.roomColor)
+                                .foregroundStyle(data.roomColor)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 22)
                         }
@@ -248,6 +255,7 @@ private struct RiteReading: View {
 // MARK: - The Sealing
 
 private struct RiteSealed: View {
+    let data: RiteStoryData
     let text: String
     let onDoor: () -> Void
     @EnvironmentObject private var soundEngine: SoundEngine
@@ -282,9 +290,9 @@ private struct RiteSealed: View {
             }
             if phase >= 2 {
                 VStack(spacing: 16) {
-                    Text(RiteCanon.roomGlyph)
+                    Text(data.roomGlyph)
                         .font(.system(size: 30))
-                        .foregroundStyle(RiteCanon.roomColor)
+                        .foregroundStyle(data.roomColor)
                     Text(RiteWord.sealWhole)
                         .font(.lora(17, weight: .medium))
                         .foregroundStyle(BinduTheme.inkPrimary)
@@ -295,7 +303,7 @@ private struct RiteSealed: View {
                     Button(action: onDoor) {
                         Text(RiteWord.sealDoorWaits)
                             .font(.spaceMono(10)).tracking(2)
-                            .foregroundStyle(RiteCanon.roomColor)
+                            .foregroundStyle(data.roomColor)
                             .padding(.top, 10)
                     }
                 }
