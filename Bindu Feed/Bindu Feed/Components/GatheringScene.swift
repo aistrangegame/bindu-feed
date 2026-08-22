@@ -14,6 +14,7 @@ struct GatheringScene: View {
     let voice: RiteVoice
     let progress: Double      // arrival ramp 0…1
     let breath: Double        // master breath 0…1
+    var t: Double = 0         // continuous clock — the fields LIVE (slide, ring, rotate), not just breathe
 
     var body: some View {
         Canvas { ctx, size in
@@ -72,26 +73,59 @@ struct GatheringScene: View {
                                        center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: er * 2))
     }
 
-    // neev — a hex-packed floor receding to a low horizon, a monolith rising.
+    // neev — the HEX-PACKED floor receding in perspective, and the double-square monolith
+    // with a light band sliding down it (rite-scenes.js neev, ported faithfully).
     private func drawNeev(_ ctx: GraphicsContext, _ W: Double, _ H: Double, _ cx: Double, _ e: Double, _ c: Color) {
-        let surf = H * 0.24, vpY = H * 1.2
-        for row in 0..<14 {
-            let f = Double(row) / 14
-            let y = surf + (H - surf) * pow(f, 1.7) * e
-            var path = Path(); path.move(to: CGPoint(x: 0, y: y)); path.addLine(to: CGPoint(x: W, y: y))
-            stroke(ctx, path, c.opacity(0.10 + 0.14 * (1 - f)), 0.6)
+        let vpX = cx, vpY = H * 1.2, surf = H * 0.24
+        let shake = (1 - e) * 16 * sin(t * 30)               // settles as he arrives
+        let stone = Color(hex: "#B0C0D0")
+        // the hexagon ground, row by row into the distance
+        let rows = 15
+        for r in 1...rows {
+            let d = Double(r) / Double(rows)
+            let y = surf + (H * 1.06 - surf) * pow(d, 1.75) + shake * (1 - d)
+            let sc = 0.06 + d * 1.5
+            let hw = W * 0.085 * sc, hh = hw * 0.62
+            if hh < 0.8 { continue }
+            let off = (r % 2 != 0) ? hw : 0
+            let a = (0.05 + 0.16 * d) * e
+            for q in -9...9 {
+                let hx = vpX + Double(q) * hw * 1.74 + off
+                if hx < -hw * 2 || hx > W + hw * 2 { continue }
+                var hex = Path()
+                for k in 0..<6 {
+                    let ang = Double(k) * .pi / 3 + .pi / 6
+                    let px = hx + cos(ang) * hw, py = y + sin(ang) * hh
+                    if k == 0 { hex.move(to: CGPoint(x: px, y: py)) } else { hex.addLine(to: CGPoint(x: px, y: py)) }
+                }
+                hex.closeSubpath()
+                ctx.stroke(hex, with: .color(stone.opacity(a * 0.7)), lineWidth: 1)
+                ctx.fill(hex, with: .color(c.opacity(a * 0.12 * (0.6 + 0.4 * sin(t * 0.4 + Double(q) * 0.7 + Double(r))))))
+            }
         }
-        for k in stride(from: -6, through: 6, by: 1) {
-            let x0 = cx + Double(k) * W * 0.11
-            var path = Path(); path.move(to: CGPoint(x: x0, y: surf))
-            path.addLine(to: CGPoint(x: cx + (x0 - cx) * 3.4, y: vpY))
-            stroke(ctx, path, c.opacity(0.10 * e), 0.6)
-        }
-        let mw = W * 0.14 * e, mh = H * 0.30 * e
-        let mono = CGRect(x: cx - mw / 2, y: surf - mh + 6, width: mw, height: mh)
-        ctx.fill(Path(mono), with: .linearGradient(
-            Gradient(colors: [c.opacity(0.28 * e), c.opacity(0.06 * e)]),
-            startPoint: CGPoint(x: cx, y: surf - mh), endPoint: CGPoint(x: cx, y: surf)))
+        // the monolith — a double square (root-two), shaded, rising from the horizon
+        let mw = W * 0.17
+        let lx = vpX - mw, rx2 = vpX + mw, tlx = vpX - mw * 0.26, trx = vpX + mw * 0.26
+        var face = Path()
+        face.move(to: CGPoint(x: lx, y: surf + shake * 0.3))
+        face.addLine(to: CGPoint(x: rx2, y: surf + shake * 0.3))
+        face.addLine(to: CGPoint(x: trx, y: vpY))
+        face.addLine(to: CGPoint(x: tlx, y: vpY))
+        face.closeSubpath()
+        let mo = 0.94 * e
+        let faceGrad = Gradient(colors: [Color(hex: "#1A2028").opacity(mo),
+                                         Color(hex: "#404C5A").opacity(mo),
+                                         Color(hex: "#12181F").opacity(mo)])
+        ctx.fill(face, with: .linearGradient(faceGrad,
+                 startPoint: CGPoint(x: lx, y: surf), endPoint: CGPoint(x: rx2, y: surf)))
+        // the light band, sliding down the face
+        let sl = (t * 0.14).truncatingRemainder(dividingBy: 1)
+        let slY = surf + sl * (vpY - surf), slf = 1 - sl * 0.74
+        ctx.fill(Path(CGRect(x: vpX - mw * slf, y: slY, width: mw * 2 * slf, height: 3)),
+                 with: .color(Color(hex: "#D6E2F0").opacity(0.24 * e * (1 - sl))))
+        // the horizon line — the floor lit at the seam
+        ctx.fill(Path(CGRect(x: 0, y: surf + shake, width: W, height: 2)),
+                 with: .color(Color(hex: "#EAF2FA").opacity(0.7 * e)))
     }
 
     // gaia — phyllotaxis seed head (137.5° golden angle). Simplified count.
@@ -136,25 +170,52 @@ struct GatheringScene: View {
     }
 
     // arch — a rose window; radial tracery as a vibration mode.
+    // arch — a CHLADNI rose window: outgoing rings (she is always already sounding),
+    // nodal circles and nodal diameters of a drifting (m,n) mode, and the antinodes
+    // glowing loudest between them (rite-scenes.js arch, ported).
     private func drawArch(_ ctx: GraphicsContext, _ W: Double, _ H: Double, _ cx: Double, _ e: Double, _ c: Color) {
-        let cy = H * 0.30
-        let R = min(W, H) * 0.34 * e
-        let m = Int((6 + breath * 6).rounded())
-        for ring in 1...4 {
-            let rr = R * Double(ring) / 4
-            stroke(ctx, Path(ellipseIn: CGRect(x: cx - rr, y: cy - rr, width: rr * 2, height: rr * 2)),
-                   c.opacity(0.18 * e), 0.8)
+        let cy = H * 0.30, b = breath
+        let rose = Color(hex: "#FFCDDC")
+        // the outgoing rings
+        for k in 0..<6 {
+            let ph = ((t * 0.26) + Double(k) / 6).truncatingRemainder(dividingBy: 1)
+            let rr = ph * max(W, H) * 0.8
+            ctx.stroke(Path(ellipseIn: CGRect(x: cx - rr, y: cy - rr, width: rr * 2, height: rr * 2)),
+                       with: .color(c.opacity((1 - ph) * 0.18 * e)), lineWidth: 1.4)
         }
-        for k in 0..<(m * 2) {
-            let a = Double(k) * .pi / Double(m)
-            var path = Path()
-            path.move(to: CGPoint(x: cx, y: cy))
-            path.addLine(to: CGPoint(x: cx + cos(a) * R, y: cy + sin(a) * R))
-            stroke(ctx, path, c.opacity(0.16 * e), 0.7)
+        let Rr = 176 * e
+        let m = max(2, Int((6 + b * 6).rounded())), n = 4
+        var g = ctx
+        g.translateBy(x: cx, y: cy)
+        g.rotate(by: .radians(sin(t * 0.09) * 0.16))
+        // nodal circles
+        for j in 1...n {
+            let rr = Rr * Double(j) / (Double(n) + 0.4) * (1 + sin(t * 1.2 + Double(j)) * 0.012)
+            g.stroke(Path(ellipseIn: CGRect(x: -rr, y: -rr, width: rr * 2, height: rr * 2)),
+                     with: .color(rose.opacity((0.34 - Double(j) * 0.045) * e)), lineWidth: j == n ? 1.6 : 1)
         }
-        let er = (6 + breath * 4) * e
-        ctx.fill(Path(ellipseIn: CGRect(x: cx - er, y: cy - er, width: er * 2, height: er * 2)),
-                 with: .color(.white.opacity(0.6 * e)))
+        // nodal diameters
+        for d2 in 0..<m {
+            let a3 = (Double(d2) + 0.5) * .pi / Double(m)
+            var line = Path()
+            line.move(to: CGPoint(x: cos(a3) * Rr, y: sin(a3) * Rr))
+            line.addLine(to: CGPoint(x: -cos(a3) * Rr, y: -sin(a3) * Rr))
+            g.stroke(line, with: .color(c.opacity(0.24 * e)), lineWidth: 1)
+        }
+        // the antinodes — where the membrane is loudest
+        for q in 0..<m {
+            for s4 in 0..<n {
+                let aa = Double(q) * .pi / Double(m) + .pi / (2 * Double(m))
+                let rr2 = Rr * (Double(s4) + 0.5) / (Double(n) + 0.4)
+                let amp = abs(cos(Double(m) * aa + t * 1.4)) * abs(sin((Double(s4) + 1) * 1.7 + t * 1.1))
+                let ar = 1.4 + amp * 3.4
+                for sgn in [-1.0, 1.0] {
+                    let ax = cos(aa) * rr2 * sgn, ay = sin(aa) * rr2 * sgn
+                    g.fill(Path(ellipseIn: CGRect(x: ax - ar, y: ay - ar, width: ar * 2, height: ar * 2)),
+                           with: .color(c.opacity(0.55 * e * amp)))
+                }
+            }
+        }
     }
 
     // shweta — a vesica; only the lit lens between two circles.
@@ -174,27 +235,64 @@ struct GatheringScene: View {
     }
 
     // karishma — a golden spiral, light riding down it, a sun above.
+    // karishma — the GOLDEN spiral through 3·5·8: a high sun with rays, the subdividing
+    // golden rectangles, and the true golden-growth spiral PHI^(θ·2/π) (rite-scenes.js).
     private func drawKarishma(_ ctx: GraphicsContext, _ W: Double, _ H: Double, _ cx: Double, _ e: Double, _ c: Color) {
-        let sy = -H * 0.12, cy = H * 0.34
-        let sunR = W * 0.5
-        ctx.fill(Path(ellipseIn: CGRect(x: cx - sunR, y: sy - sunR, width: sunR * 2, height: sunR * 2)),
-                 with: .radialGradient(Gradient(colors: [c.opacity(0.16 * e), c.opacity(0)]),
-                                       center: CGPoint(x: cx, y: sy), startRadius: 0, endRadius: sunR))
-        var path = Path()
-        let turns = 3.2, steps = 220
-        for i in 0...steps {
-            let t = Double(i) / Double(steps)
-            let a = t * turns * 2 * .pi
-            let r = min(W, H) * 0.03 * pow(1.16, a) * e
-            let x = cx + cos(a) * r, y = cy + sin(a) * r
-            if i == 0 { path.move(to: CGPoint(x: x, y: y)) } else { path.addLine(to: CGPoint(x: x, y: y)) }
+        let PHI = 1.6180339887
+        let sx = W / 2, sy = -H * 0.12
+        let gold = Color(hex: "#FFEEBA")
+        // the halo + sun disc
+        let haloGrad = Gradient(colors: [Color(hex: "#FFF7DA").opacity(0.7 * e),
+                                         Color(hex: "#FFD684").opacity(0.2 * e),
+                                         c.opacity(0.085 * e),
+                                         c.opacity(0)])
+        ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)), with: .radialGradient(
+            haloGrad, center: CGPoint(x: sx, y: sy), startRadius: 0, endRadius: H * 1.05))
+        ctx.fill(Path(ellipseIn: CGRect(x: sx - 90, y: sy - 90, width: 180, height: 180)), with: .radialGradient(
+            Gradient(colors: [Color(hex: "#FFFCEE").opacity(0.9 * e), Color(hex: "#FFE6A0").opacity(0)]),
+            center: CGPoint(x: sx, y: sy), startRadius: 0, endRadius: 90))
+        // the rays
+        for i in 0..<9 {
+            let ang = (-Double.pi / 2) + (Double(i) / 8 - 0.5) * 1.7 + sin(t * 0.2 + Double(i)) * 0.03
+            let len = H * 1.6, spread = 0.05
+            var ray = Path()
+            ray.move(to: CGPoint(x: sx, y: sy))
+            ray.addLine(to: CGPoint(x: sx + cos(ang - spread) * len, y: sy + sin(ang - spread) * len))
+            ray.addLine(to: CGPoint(x: sx + cos(ang + spread) * len, y: sy + sin(ang + spread) * len))
+            ray.closeSubpath()
+            ctx.fill(ray, with: .linearGradient(
+                Gradient(colors: [Color(hex: "#FFF0BE").opacity(0.2 * e), c.opacity(0.05 * e), c.opacity(0)]),
+                startPoint: CGPoint(x: sx, y: sy), endPoint: CGPoint(x: sx + cos(ang) * len, y: sy + sin(ang) * len)))
         }
-        stroke(ctx, path, c.opacity(0.5 * e), 1.2)
-        let rid = breath
-        let a = rid * turns * 2 * .pi
-        let r = min(W, H) * 0.03 * pow(1.16, a) * e
-        let bx = cx + cos(a) * r, by = cy + sin(a) * r
-        ctx.fill(Path(ellipseIn: CGRect(x: bx - 4, y: by - 4, width: 8, height: 8)), with: .color(.white.opacity(0.9 * e)))
+        // the golden rectangles, subdividing 3·5·8…
+        let u = W * 0.40 * e
+        var g = ctx
+        g.translateBy(x: W * 0.5, y: H * 0.33)
+        g.rotate(by: .radians(sin(t * 0.06) * 0.05))
+        var rw = u * PHI, rh = u, px = -u * PHI / 2, py = -u / 2, dir = 0
+        for s in 0..<8 {
+            g.stroke(Path(CGRect(x: px, y: py, width: rw, height: rh)),
+                     with: .color(gold.opacity((0.13 - Double(s) * 0.012) * e)), lineWidth: 1)
+            if dir % 2 == 0 { let sq = rh
+                g.stroke(Path(CGRect(x: px, y: py, width: sq, height: sq)), with: .color(Color(hex: "#FFF4CE").opacity(0.07 * e)), lineWidth: 1)
+                px += sq; rw -= sq
+            } else { let sq2 = rw
+                g.stroke(Path(CGRect(x: px, y: py, width: sq2, height: sq2)), with: .color(Color(hex: "#FFF4CE").opacity(0.07 * e)), lineWidth: 1)
+                py += sq2; rh -= sq2
+            }
+            dir += 1
+            if rw < 3 || rh < 3 { break }
+        }
+        // the spiral itself
+        var spiral = Path()
+        var th = 0.0
+        while th <= Double.pi * 3.6 {
+            let r2 = u * 0.055 * pow(PHI, th * 2 / Double.pi)
+            let qx = cos(th) * r2, qy = sin(th) * r2
+            if th == 0 { spiral.move(to: CGPoint(x: qx, y: qy)) } else { spiral.addLine(to: CGPoint(x: qx, y: qy)) }
+            th += 0.05
+        }
+        g.stroke(spiral, with: .color(Color(hex: "#FFF0C4").opacity(0.4 * e)), lineWidth: 1.5)
     }
 
     // sakshi — an eye as a mandorla, iris in spokes.

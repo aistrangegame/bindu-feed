@@ -91,7 +91,7 @@ struct RiteGatheringView: View {
         let dur = (v.key == "sakshi" || v.key == "shweta") ? 4.2 : 3.4
         let p = min(1.0, elapsed / dur)
         return ZStack {
-            GatheringScene(voice: v, progress: p, breath: breath.value)
+            GatheringScene(voice: v, progress: p, breath: breath.value, t: Date().timeIntervalSinceReferenceDate)
                 .opacity(dim(v))
                 .ignoresSafeArea()
             VoiceText(voice: v, lines: lines(v), shown: shown)
