@@ -440,20 +440,38 @@ final class FeedStore: ObservableObject {
     /// logs without a link otherwise (the canon Rite can run before stories load).
     /// Fire-and-forget: a failed activity row never affects the ceremony.
     func logStoryMet(codexId: String, title: String) async {
+        // Mark today met LOCALLY first, synchronously — so a completed Rite can never
+        // re-prompt on this device even if the Airtable write is slow, fails, or the
+        // read is flaky. App Activity remains the cross-device source of truth; this is a
+        // same-day reliability cache, not a replacement (it is the exact failure the user
+        // hit — the ceremony completed but the day still read "unmet").
+        UserDefaults.standard.set(true, forKey: Self.metCacheKey(AirtableService.localDayString()))
         let recordId = stories.first { $0.codexId == codexId }?.id
-        _ = try? await service.logActivity(
-            type: .storyMet,
-            feedRecordId: recordId,
-            activityName: "\(title) — met in the Rite",
-            detail: "The story was met in the Rite.",
-            excerpt: nil
-        )
+        do {
+            _ = try await service.logActivity(
+                type: .storyMet,
+                feedRecordId: recordId,
+                activityName: "\(title) — met in the Rite",
+                detail: "The story was met in the Rite.",
+                excerpt: nil
+            )
+        } catch {
+            #if DEBUG
+            print("[FeedStore] logStoryMet write failed (local met-cache still set): \(error)")
+            #endif
+        }
     }
 
-    /// The Door's weather read: is today already met? Derived from App Activity,
-    /// never a stored flag. Fail-safe to `false` (unmet).
+    private static func metCacheKey(_ day: String) -> String { "bindu.met.\(day)" }
+
+    /// The Door's weather read: is today already met? True if the local same-day cache is
+    /// set (a Rite completed on this device today) OR App Activity has today's Story Met.
+    /// Fail-safe to `false` (unmet).
     func checkTodayMet() async -> Bool {
-        await service.isTodayMet()
+        if UserDefaults.standard.bool(forKey: Self.metCacheKey(AirtableService.localDayString())) {
+            return true
+        }
+        return await service.isTodayMet()
     }
 
     /// A destination chosen from the launch Door's turn — the Door lives before
@@ -463,8 +481,33 @@ final class FeedStore: ObservableObject {
 
     /// The Vow loop — a carved Declaration in the Light writes a Reflection (Vow).
     /// Fire-and-forget; a failed write never affects the ceremony.
+    private static let pendingVowsKey = "bindu.vows.pending"
+
     func writeVow(text: String) async {
-        _ = try? await service.writeVow(text: text)
+        do {
+            _ = try await service.writeVow(text: text)
+        } catch {
+            // A carved Declaration is durable user content the Mirror promises to hand
+            // back — never lose it on a failed write. Queue it and retry on next launch.
+            var pending = UserDefaults.standard.stringArray(forKey: Self.pendingVowsKey) ?? []
+            pending.append(text)
+            UserDefaults.standard.set(pending, forKey: Self.pendingVowsKey)
+            #if DEBUG
+            print("[FeedStore] writeVow failed — queued for retry: \(error)")
+            #endif
+        }
+    }
+
+    /// Retry any vows that failed to write on a previous run. Called at bootstrap.
+    func flushPendingVows() async {
+        let pending = UserDefaults.standard.stringArray(forKey: Self.pendingVowsKey) ?? []
+        guard !pending.isEmpty else { return }
+        var remaining: [String] = []
+        for text in pending {
+            do { _ = try await service.writeVow(text: text) }
+            catch { remaining.append(text) }
+        }
+        UserDefaults.standard.set(remaining, forKey: Self.pendingVowsKey)
     }
 
     /// The Light was entered — a pulse into App Activity (never a count).
