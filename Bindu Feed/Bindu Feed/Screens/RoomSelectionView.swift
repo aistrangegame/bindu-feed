@@ -52,7 +52,7 @@ struct RoomSelectionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                BackChevron { if !path.isEmpty { path.removeLast() } }   // back one level, not to root
+                BackChevron { $path.popDissolve() }   // back one level, not to root
             }
             ToolbarItem(placement: .topBarLeading) {
                 HubTrigger(open: $showHub)
@@ -153,7 +153,7 @@ struct RoomSelectionView: View {
             var t = Transaction()
             t.disablesAnimations = true
             withTransaction(t) {
-                path.append(route)
+                $path.pushDissolve(route)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 floodPhase = .idle

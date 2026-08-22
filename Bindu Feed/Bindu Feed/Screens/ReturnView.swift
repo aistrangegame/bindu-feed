@@ -41,7 +41,7 @@ struct ReturnView: View {
             VStack {
                 HStack {
                     Spacer()
-                    Button { if !path.isEmpty { path.removeLast(path.count) } } label: {
+                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
                         Text("leave ›").font(.spaceMono(9)).tracking(2)
                             .foregroundStyle(ReturnCanon.ashColor.opacity(0.5)).padding(16)
                     }
@@ -259,7 +259,7 @@ struct ReturnView: View {
                 VStack(spacing: 14) {
                     Text(ReturnCanon.sealDwell1).font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
                     Text(ReturnCanon.sealDwell2).font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
-                    Button { if !path.isEmpty { path.removeLast(path.count) } } label: {
+                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
                         Text(ReturnCanon.archiveWaits).font(.spaceMono(10)).tracking(2).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
                     }
                 }

@@ -22,9 +22,9 @@ struct HubOverlay: View {
         withAnimation(.easeInOut(duration: 0.3)) { presented = false }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) {
             switch dest {
-            case .rite:            path.append(FeedRoute.rite)
-            case .archive:         path.removeLast(path.count)   // pop to the home feed (the archive)
-            case .route(let r):    path.append(r)
+            case .rite:            $path.pushDissolve(FeedRoute.rite)
+            case .archive:         $path.popToRootDissolve()   // pop to the home feed (the archive)
+            case .route(let r):    $path.pushDissolve(r)
             case .absorbed:        break                          // an axis-depth, not built yet
             }
         }

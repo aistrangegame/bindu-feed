@@ -69,7 +69,7 @@ struct PointRevealView: View {
                             .multilineTextAlignment(.center).transition(.opacity)
                     }
                     if line >= lines.count - 1 {
-                        Button { path.removeLast(path.count) } label: {
+                        Button { $path.popToRootDissolve() } label: {
                             Text("OM · 136.1").font(.spaceMono(10)).tracking(3).foregroundStyle(Color(hex: "#D4A94B"))
                         }
                         .padding(.top, 12).transition(.opacity)

@@ -24,7 +24,7 @@ struct RootView: View {
             // the feed is reachable.
             if let route = store.pendingLaunchRoute {
                 store.pendingLaunchRoute = nil
-                path.append(route)
+                $path.pushDissolve(route)
             }
         }
         .onChange(of: selectedRoom) {
@@ -80,7 +80,7 @@ struct RootView: View {
 
             Spacer(minLength: 8)
 
-            AshMark { path.append(FeedRoute.ash) }
+            AshMark { $path.pushDissolve(FeedRoute.ash) }
         }
     }
 
@@ -101,7 +101,7 @@ struct RootView: View {
             LazyVStack(spacing: BinduTheme.space14) {
                 ForEach(store.stories) { story in
                     Button {
-                        path.append(FeedRoute.story(story))
+                        $path.pushDissolve(FeedRoute.story(story))
                     } label: {
                         StoryCard(
                             story: story,
@@ -172,13 +172,13 @@ struct RootView: View {
             // the entire stack). The launch-time door lives outside the
             // NavigationStack in ContentCoordinator.
             PracticeDoorView(onComplete: {
-                path.removeLast(path.count)
+                $path.popToRootDissolve()
             })
         case .compose(let story):
             // AshComposeView handles its own post + refresh flag; this
             // closure just pops back to Story Detail.
             AshComposeView(story: story, onPosted: {
-                if !path.isEmpty { path.removeLast() }
+                $path.popDissolve()
             })
         case .rite:
             // The daily meeting — a full-screen ceremony that pops to home when done.

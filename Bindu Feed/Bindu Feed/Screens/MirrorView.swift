@@ -39,7 +39,7 @@ struct MirrorView: View {
             }
 
             HStack(spacing: 10) {
-                BackChevron { if !path.isEmpty { path.removeLast() } }
+                BackChevron { $path.popDissolve() }
                 HubTrigger(open: $showHub)
                 Spacer()
             }

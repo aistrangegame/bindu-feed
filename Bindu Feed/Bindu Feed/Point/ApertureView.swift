@@ -49,7 +49,7 @@ struct ApertureView: View {
                         Text(response).font(.lora(16)).lineSpacing(7).foregroundStyle(BinduTheme.inkPrimary)
                             .multilineTextAlignment(.center).padding(.horizontal, 8)
                     }.frame(maxHeight: 300)
-                    Button { path.append(FeedRoute.instrument(9)) } label: {
+                    Button { $path.pushDissolve(FeedRoute.instrument(9)) } label: {
                         Text("to the centre ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#D4A94B"))
                     }
                 case .needKey:

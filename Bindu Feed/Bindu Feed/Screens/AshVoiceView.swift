@@ -81,7 +81,7 @@ struct AshVoiceView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                BackChevron { if !path.isEmpty { path.removeLast() } }
+                BackChevron { $path.popDissolve() }
             }
             ToolbarItem(placement: .topBarLeading) {
                 HubTrigger(open: $showHub)
@@ -206,7 +206,7 @@ struct AshVoiceView: View {
                         room: storyById[comment.linkedStoryId ?? ""].flatMap { store.room(named: $0.room) },
                         parentArchetypeName: parentCommentById[comment.parentCommentId ?? ""]?.archetype,
                         terra: terra,
-                        onTapStory: { story in path.append(FeedRoute.story(story)) }
+                        onTapStory: { story in $path.pushDissolve(FeedRoute.story(story)) }
                     )
                 }
             }

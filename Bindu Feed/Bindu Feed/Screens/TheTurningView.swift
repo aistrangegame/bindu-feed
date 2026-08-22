@@ -91,7 +91,7 @@ struct TheTurningView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                BackChevron { if !path.isEmpty { path.removeLast() } }
+                BackChevron { $path.popDissolve() }
             }
             ToolbarItem(placement: .topBarLeading) {
                 HubTrigger(open: $showHub)
@@ -423,7 +423,7 @@ struct TheTurningView: View {
 
     private var ashramVoiceLink: some View {
         Button {
-            path.append(FeedRoute.ash)
+            $path.pushDissolve(FeedRoute.ash)
         } label: {
             HStack {
                 Text("All of \(archetype.name)'s words in the field")

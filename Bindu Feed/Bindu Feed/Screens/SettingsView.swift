@@ -65,7 +65,7 @@ struct SettingsView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                BackChevron { if !path.isEmpty { path.removeLast() } }
+                BackChevron { $path.popDissolve() }
             }
             ToolbarItem(placement: .topBarLeading) {
                 HubTrigger(open: $showHub)
@@ -318,7 +318,7 @@ struct SettingsView: View {
                 .padding(.vertical, 4)
 
             Button {
-                path.append(FeedRoute.ash)
+                $path.pushDissolve(FeedRoute.ash)
             } label: {
                 HStack(spacing: 8) {
                     Text("◉")

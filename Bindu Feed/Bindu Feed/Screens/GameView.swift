@@ -114,7 +114,7 @@ struct GameView: View {
 
     private var floatingNavBar: some View {
         HStack(alignment: .center) {
-            BackChevron { if !path.isEmpty { path.removeLast() } }
+            BackChevron { $path.popDissolve() }
 
             HubTrigger(open: $showHub)
                 .padding(.leading, 4)
@@ -326,7 +326,7 @@ struct GameView: View {
             LazyVStack(spacing: BinduTheme.space14) {
                 ForEach(stories) { story in
                     Button {
-                        path.append(FeedRoute.story(story))
+                        $path.pushDissolve(FeedRoute.story(story))
                     } label: {
                         StoryCard(
                             story: story,

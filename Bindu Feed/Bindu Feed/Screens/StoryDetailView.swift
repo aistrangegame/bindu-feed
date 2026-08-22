@@ -101,7 +101,7 @@ struct StoryDetailView: View {
 
                     // Re-meet a sealed story — the Return (Wave 5). The faithful
                     // entry is the axis fall (Wave 6); this is the interim door.
-                    Button { path.append(FeedRoute.returnCeremony) } label: {
+                    Button { $path.pushDissolve(FeedRoute.returnCeremony) } label: {
                         Text("you sealed this once · return ›")
                             .font(.spaceMono(9)).tracking(1.5)
                             .foregroundColor(BinduTheme.inkTertiary)
@@ -124,7 +124,7 @@ struct StoryDetailView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                BackChevron { if !path.isEmpty { path.removeLast() } }
+                BackChevron { $path.popDissolve() }
             }
             ToolbarItem(placement: .topBarLeading) {
                 HubTrigger(open: $showHub)
@@ -270,7 +270,7 @@ struct StoryDetailView: View {
         // refresh; .onAppear below pulls the new tree on return.
         StaggeredReveal(triggered: triggered, delay: ashEntryDelay, duration: 1.5) {
             AshEntryRow(onTap: {
-                path.append(FeedRoute.compose(story))
+                $path.pushDissolve(FeedRoute.compose(story))
             })
         }
     }
@@ -299,7 +299,7 @@ struct StoryDetailView: View {
     }
 
     private func navigateToArchetype(_ archetype: Archetype) {
-        path.append(FeedRoute.turning(archetype))
+        $path.pushDissolve(FeedRoute.turning(archetype))
     }
 
     // MARK: - Ash refresh

@@ -57,7 +57,7 @@ struct LightView: View {
             VStack {
                 HStack {
                     Spacer()
-                    Button { if !path.isEmpty { path.removeLast(path.count) } } label: {
+                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
                         Text("leave ›").font(.spaceMono(9)).tracking(2)
                             .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.4)).padding(16)
                     }
@@ -296,7 +296,7 @@ struct LightView: View {
                 Button { restart() } label: {
                     Text("again ›").font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
                 }
-                Button { if !path.isEmpty { path.removeLast(path.count) } } label: {
+                Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
                     Text("the archive waits ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }
             }

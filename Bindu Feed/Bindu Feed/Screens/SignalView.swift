@@ -216,7 +216,7 @@ struct SignalView: View {
 
     private func exitScreen() {
         phaseTask?.cancel()
-        if !path.isEmpty { path.removeLast() }
+        $path.popDissolve()
     }
 
     // MARK: - Loading + selection

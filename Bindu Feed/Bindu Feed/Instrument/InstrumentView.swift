@@ -87,7 +87,7 @@ struct InstrumentView: View {
             // Where he is + the exit.
             VStack {
                 HStack {
-                    Button { if !path.isEmpty { path.removeLast(path.count) } } label: {
+                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
                         Text("‹").font(.system(size: 22)).foregroundStyle(BinduTheme.inkTertiary)
                     }
                     Spacer()
@@ -249,18 +249,18 @@ struct InstrumentView: View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
             PointWorldView(dimensionN: here.z - 1, path: $path,
-                           onReturn: { path.append(FeedRoute.returnCeremony) })
+                           onReturn: { $path.pushDissolve(FeedRoute.returnCeremony) })
         case "centre":
             PointRevealView(path: $path)
         case "gate":
             AxisGateView()
         case "sky", "region", "world", "fall":
             UniverseView(register: here, path: $path,
-                         onFall: { path.append(FeedRoute.returnCeremony) })
+                         onFall: { $path.pushDissolve(FeedRoute.returnCeremony) })
         case "feed":
-            AxisFeedSeam { if !path.isEmpty { path.removeLast(path.count) } }
+            AxisFeedSeam { if !path.isEmpty { $path.popToRootDissolve() } }
         case "light":
-            AxisLightSeam { path.append(FeedRoute.light) }
+            AxisLightSeam { $path.pushDissolve(FeedRoute.light) }
         default:
             EmptyView()
         }
