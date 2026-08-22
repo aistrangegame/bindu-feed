@@ -81,7 +81,8 @@ struct ContentCoordinator: View {
         Task { await store.loadPracticeInvitations() }
         Task { await store.loadSignals() }
         Task { await store.loadFieldSounds() }
-        Task { await store.flushPendingVows() }   // retry any vow that failed to write earlier
+        Task { await store.flushPendingVows() }       // retry any vow that failed to write earlier
+        Task { await store.flushPendingComments() }    // retry any comment that failed to write earlier
     }
 
     // The Breath arrives the moment the field is reachable (per

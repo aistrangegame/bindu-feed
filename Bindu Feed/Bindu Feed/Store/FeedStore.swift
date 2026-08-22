@@ -375,19 +375,29 @@ final class FeedStore: ObservableObject {
 
     // MARK: - Writes
 
-    func postComment(storyId: String, body: String, parentId: String?) async throws {
-        // Resolved here so the service layer stays entity-agnostic.
+    /// Post an Ash comment. NEVER loses it: on a failed write it is queued to disk and
+    /// retried at bootstrap, so a network hiccup can't silently discard authored words
+    /// (the compose ceremony completes for the user either way). Returns true if it landed
+    /// now, false if it was queued for retry.
+    @discardableResult
+    func postComment(storyId: String, body: String, parentId: String?) async -> Bool {
         let userArchetypeName = archetype(named: "Ash")?.name ?? "Ash"
-        _ = try await service.postAshComment(
-            storyId: storyId,
-            body: body,
-            parentCommentId: parentId,
-            archetypeName: userArchetypeName
-        )
+        do {
+            _ = try await service.postAshComment(
+                storyId: storyId,
+                body: body,
+                parentCommentId: parentId,
+                archetypeName: userArchetypeName
+            )
+        } catch {
+            queuePendingComment(PendingComment(storyId: storyId, body: body, parentId: parentId))
+            #if DEBUG
+            print("[FeedStore] postComment failed — queued for retry: \(error)")
+            #endif
+            return false
+        }
 
-        // Report the crossing into the shared App Activity feed. Every Ash reply
-        // is a deliberate authored act, so each one logs. Fire-and-forget: the
-        // comment already posted; a failed activity row is an acceptable loss.
+        // Report the crossing into the shared App Activity feed (fire-and-forget pulse).
         let story = stories.first { $0.id == storyId }
         let title = (story?.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let activityName = title.isEmpty ? "Ash spoke in the field" : "\(title) — Ash spoke"
@@ -400,6 +410,40 @@ final class FeedStore: ObservableObject {
                 detail: "Ash spoke on this story.",
                 excerpt: snippet
             )
+        }
+        return true
+    }
+
+    // MARK: - Durable comment queue (never lose an authored comment)
+
+    private struct PendingComment: Codable { let storyId: String; let body: String; let parentId: String? }
+    private static let pendingCommentsKey = "bindu.comments.pending"
+
+    private func queuePendingComment(_ c: PendingComment) {
+        var queue = loadPendingComments()
+        queue.append(c)
+        if let data = try? JSONEncoder().encode(queue) {
+            UserDefaults.standard.set(data, forKey: Self.pendingCommentsKey)
+        }
+    }
+    private func loadPendingComments() -> [PendingComment] {
+        guard let data = UserDefaults.standard.data(forKey: Self.pendingCommentsKey),
+              let q = try? JSONDecoder().decode([PendingComment].self, from: data) else { return [] }
+        return q
+    }
+
+    /// Retry any comments that failed to write on a previous run. Called at bootstrap.
+    func flushPendingComments() async {
+        let queue = loadPendingComments()
+        guard !queue.isEmpty else { return }
+        var remaining: [PendingComment] = []
+        for c in queue {
+            let name = archetype(named: "Ash")?.name ?? "Ash"
+            do { _ = try await service.postAshComment(storyId: c.storyId, body: c.body, parentCommentId: c.parentId, archetypeName: name) }
+            catch { remaining.append(c) }
+        }
+        if let data = try? JSONEncoder().encode(remaining) {
+            UserDefaults.standard.set(data, forKey: Self.pendingCommentsKey)
         }
     }
 

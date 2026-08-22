@@ -336,15 +336,11 @@ struct AshComposeView: View {
         // Post in parallel with the visual ceremony — the user doesn't
         // wait on the network. On success, flag Story Detail to re-fetch
         // its comment tree on appear.
-        do {
-            try await store.postComment(storyId: story.id, body: body, parentId: nil)
-            store.flagStoryRefresh(storyId: story.id)
-        } catch {
-            // Leave the released card in place. The release ceremony
-            // already completed for the user; surfacing a mid-flight
-            // error would feel like an interruption. The error is
-            // already on store.error if anyone wants it later.
-        }
+        // Durable: postComment queues + retries on failure, so the comment is never lost
+        // even offline. Always flag a refresh — the write landed now, or the retry will
+        // surface it on a later load.
+        await store.postComment(storyId: story.id, body: body, parentId: nil)
+        store.flagStoryRefresh(storyId: story.id)
     }
 
     // MARK: - Released surface
