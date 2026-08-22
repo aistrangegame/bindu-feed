@@ -8,10 +8,13 @@ import SwiftUI
 // The past self is NEVER regenerated — the Reply quotes his verbatim sealed words
 // via the forward detector, or shows the four native words (ReturnCanon.replyPrompt).
 //
+// The story shown, its record, its sealed self, and its "how long ago" are all REAL —
+// the returned story the user actually sealed (ReturnStoryData, built by the store), or
+// canon only when nothing is reachable. The ring (the reply) is PERSISTED — a durable
+// Ash-comment write, the same retry-queued path Compose uses.
+//
 // Wave-5 scope (flagged): the aged patina is a saturate/warm treatment on the aged
-// elements, not the full canvas strata; the ring is added in-session (persisting
-// returns is deferred); the fall is a fade (the axis fall ships Wave 6). Reuses
-// RiteCanon.body + RiteVoices.
+// elements, not the full canvas strata; the fall is a fade (the axis fall ships Wave 6).
 
 private enum ReturnStage { case summons, fall, room, story, record, field, rings, reply, sealed }
 
