@@ -43,6 +43,8 @@ enum BinduTheme {
     static let colorAshrey   = Color(hex: "#3AADA8")
     static let colorLalita   = Color(hex: "#9B6BD6")
     static let colorAsh      = Color(hex: "#C47A52")
+    static let colorNeev     = Color(hex: "#7A8899")
+    static let colorShweta   = Color(hex: "#ABA7A2")
 
     static let accent = colorLalita
 
