@@ -22,6 +22,7 @@ struct MirrorView: View {
     // its rise animation — otherwise SwiftUI would diff the body change in
     // place and the alternate would appear without the dissolve.
     @State private var cardAnimationKey: Int = 0
+    @State private var leaving = false          // the current card fading/lifting out on a draw
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -119,6 +120,8 @@ struct MirrorView: View {
 
             ReflectionCard(card: store.mirrorCards[currentIdx])
                 .id(cardAnimationKey)
+                .opacity(leaving ? 0 : 1)          // the old face departs before the new surfaces
+                .offset(y: leaving ? -6 : 0)
                 .padding(.horizontal, BinduTheme.space24)
 
             Spacer(minLength: 0)
@@ -205,10 +208,14 @@ struct MirrorView: View {
         let base = Int(Self.fnv1a(key) % UInt32(cards.count))
         let altIdx = (base + 3 + Int(Self.fnv1a(key + "·draw") % UInt32(cards.count - 3))) % cards.count
 
-        withAnimation(.easeOut(duration: 0.55)) {
+        // Two-stage (comp The Mirror): the current reflection fades out and lifts, THEN the
+        // alternate rises in — the old face departs before the new surfaces.
+        withAnimation(.easeInOut(duration: 0.62)) { leaving = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.62) {
             currentIdx = altIdx
             drawn = true
-            cardAnimationKey += 1
+            cardAnimationKey += 1       // new ReflectionCard identity → its own rise-in reveal
+            leaving = false
         }
         persist(idx: altIdx, drawn: true)
     }

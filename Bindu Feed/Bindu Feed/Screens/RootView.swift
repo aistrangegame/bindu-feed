@@ -144,7 +144,7 @@ struct RootView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, BinduTheme.space24)
         } else {
-            Text("Nothing has gathered here yet.")
+            Text("The field is quiet here.")
                 .font(.loraItalic(13))
                 .foregroundColor(BinduTheme.inkTertiary)
                 .multilineTextAlignment(.center)

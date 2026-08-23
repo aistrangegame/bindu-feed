@@ -77,6 +77,10 @@ struct FieldSurfacePortalCard: View {
             }
 
             Spacer(minLength: 0)
+            // the turn-card chevron (comp Room Selection TurnCard)
+            Text("\u{203A}")
+                .font(.system(size: 18))
+                .foregroundColor(config.color.opacity(0.6))
         }
         .padding(.vertical, BinduTheme.space20)
         .padding(.horizontal, BinduTheme.space20)

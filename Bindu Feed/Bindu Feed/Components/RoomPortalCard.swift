@@ -88,6 +88,7 @@ struct RoomPortalCard: View {
 struct FloodOverlay: View {
     let color: Color
     let anchor: CGPoint
+    var glyph: String? = nil            // the room's mark, expanding as the colour floods
     @Binding var phase: Phase
 
     enum Phase {
@@ -98,12 +99,23 @@ struct FloodOverlay: View {
     var body: some View {
         GeometryReader { proxy in
             let size = max(proxy.size.width, proxy.size.height) * 2.2
-            Circle()
-                .fill(color)
-                .frame(width: size, height: size)
-                .position(anchor)
-                .scaleEffect(phase == .expanding ? 1.0 : 0.001, anchor: .center)
-                .opacity(phase == .expanding ? 1.0 : 0.0)
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: size, height: size)
+                    .position(anchor)
+                    .scaleEffect(phase == .expanding ? 1.0 : 0.001, anchor: .center)
+                    .opacity(phase == .expanding ? 1.0 : 0.0)
+                // the glyph swells to fill the screen as the room takes you in (comp scale 11)
+                if let glyph {
+                    Text(glyph)
+                        .font(.system(size: 44))
+                        .foregroundColor(.white)
+                        .position(anchor)
+                        .scaleEffect(phase == .expanding ? 6 : 1, anchor: .center)
+                        .opacity(phase == .expanding ? 0.3 : 0)
+                }
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)

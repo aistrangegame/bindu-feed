@@ -335,6 +335,7 @@ private struct AntennaDot: View {
     let phase: SignalView.Phase
 
     @State private var pulse = false
+    @State private var ping = false          // arriving: quiet, then a discrete ping arrives
 
     var body: some View {
         Circle()
@@ -357,12 +358,24 @@ private struct AntennaDot: View {
                     pulse = true
                 }
             }
+            // While arriving: hold quiet, then deliver a discrete ping (comp sigArrive) —
+            // a signal landing, not a smooth pulse.
+            .task(id: phase) {
+                guard phase == .arriving else { return }
+                while !Task.isCancelled && phase == .arriving {
+                    try? await Task.sleep(nanoseconds: UInt64.random(in: 4_000_000_000...7_000_000_000))
+                    if Task.isCancelled || phase != .arriving { return }
+                    withAnimation(.easeOut(duration: 0.28)) { ping = true }
+                    try? await Task.sleep(nanoseconds: 260_000_000)
+                    withAnimation(.easeIn(duration: 1.3)) { ping = false }
+                }
+            }
             .animation(.easeInOut(duration: 1.4), value: phase)
     }
 
     private var opacity: Double {
         switch phase {
-        case .arriving: return pulse ? 1.0 : 0.40
+        case .arriving: return ping ? 1.0 : 0.40
         case .received: return pulse ? 1.0 : 0.78
         case .gone:     return 0.3
         }
@@ -370,7 +383,7 @@ private struct AntennaDot: View {
 
     private var scale: CGFloat {
         switch phase {
-        case .arriving: return pulse ? 1.55 : 1.0
+        case .arriving: return ping ? 1.55 : 1.0
         case .received: return pulse ? 1.04 : 0.98
         case .gone:     return 1.0
         }

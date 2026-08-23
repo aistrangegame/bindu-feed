@@ -7,6 +7,7 @@ struct RoomSelectionView: View {
     @State private var portalFrames: [String: CGRect] = [:]
     @State private var floodColor: Color?
     @State private var floodAnchor: CGPoint = .zero
+    @State private var floodGlyph: String?
     @State private var floodPhase: FloodOverlay.Phase = .idle
     @State private var showHub = false
 
@@ -45,7 +46,7 @@ struct RoomSelectionView: View {
             }
 
             if let floodColor {
-                FloodOverlay(color: floodColor, anchor: floodAnchor, phase: $floodPhase)
+                FloodOverlay(color: floodColor, anchor: floodAnchor, glyph: floodGlyph, phase: $floodPhase)
             }
         }
         .navigationTitle("")
@@ -118,17 +119,18 @@ struct RoomSelectionView: View {
     // MARK: - Flood + navigate
 
     private func triggerFlood(for room: Room) {
-        performFlood(anchorId: room.id, color: room.color, route: .room(room))
+        performFlood(anchorId: room.id, color: room.color, glyph: room.glyph, route: .room(room))
     }
 
     private func triggerFlood(forSurface config: FieldSurfaceConfig, route: FeedRoute) {
-        performFlood(anchorId: config.id, color: config.color, route: route)
+        performFlood(anchorId: config.id, color: config.color, glyph: config.glyph, route: route)
     }
 
-    private func performFlood(anchorId: String, color: Color, route: FeedRoute) {
+    private func performFlood(anchorId: String, color: Color, glyph: String?, route: FeedRoute) {
         let frame = portalFrames[anchorId] ?? .zero
         floodAnchor = CGPoint(x: frame.midX, y: frame.midY)
         floodColor = color
+        floodGlyph = glyph
         floodPhase = .idle
 
         // Tick to ensure overlay is laid out at scale 0 before the expand animation runs.

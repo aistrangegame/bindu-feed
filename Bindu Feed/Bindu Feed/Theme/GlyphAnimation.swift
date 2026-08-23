@@ -43,7 +43,11 @@ struct GlyphView: View {
             // the living light — a wide soft halo + a tight bright core, in the glyph's colour
             .shadow(color: color.opacity(0.55), radius: glowRadius)
             .shadow(color: color.opacity(0.35), radius: glowRadius * 0.4)
-            .rotationEffect(.degrees(rotation))
+            // The Field's ∞ is a 3D Möbius flip about Y (comp perspective rotateY), not a
+            // flat spin; every other glyph rotates in-plane.
+            .rotation3DEffect(.degrees(animation == .glyphField ? rotation : 0),
+                              axis: (x: 0, y: 1, z: 0), perspective: 0.6)
+            .rotationEffect(.degrees(animation == .glyphField ? 0 : rotation))
             .scaleEffect(scale)
             .opacity(opacity)
             .offset(x: offsetX)

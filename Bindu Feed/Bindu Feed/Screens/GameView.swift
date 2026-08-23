@@ -15,7 +15,7 @@ struct GameView: View {
     @State private var heroVisible: Bool = true
 
     // Room-scoped state
-    @State private var sort: StorySort = .mostActive
+    @State private var sort: StorySort = .mostRecent
     @State private var stories: [Story] = []
     @State private var loadingStories: Bool = false
     @State private var loadError: Bool = false
