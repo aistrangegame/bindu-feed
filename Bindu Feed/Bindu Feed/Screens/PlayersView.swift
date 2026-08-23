@@ -112,9 +112,12 @@ struct PlayersView: View {
 
     private var lensGrid: some View {
         LazyVGrid(columns: columns, spacing: 14) {
-            ForEach(lenses) { archetype in
-                PlayerCard(archetype: archetype, isSubstrate: false) {
-                    $path.pushDissolve(FeedRoute.turning(archetype))
+            // playerArrive — the presences gather from stillness, staggered (comp i*0.075).
+            ForEach(Array(lenses.enumerated()), id: \.element.id) { i, archetype in
+                StaggeredReveal(triggered: true, delay: Double(i) * 0.075, duration: 0.8, rise: 10) {
+                    PlayerCard(archetype: archetype, isSubstrate: false) {
+                        $path.pushDissolve(FeedRoute.turning(archetype))
+                    }
                 }
             }
         }

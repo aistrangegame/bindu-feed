@@ -403,12 +403,16 @@ struct TheTurningView: View {
                 .padding(.vertical, 24)
         } else {
             LazyVStack(spacing: 12) {
-                ForEach(comments) { comment in
+                // lRise — each word-card rises into place, staggered, as the words resolve
+                // (comp: lRise 1.1s, delay 0.15 + i*0.32). Opacity stays driven by wordsLight.
+                ForEach(Array(comments.enumerated()), id: \.element.id) { i, comment in
                     WordCard(
                         comment: comment,
                         story: storyById[comment.linkedStoryId ?? ""],
                         color: archetype.color
                     )
+                    .offset(y: done ? 0 : 10)
+                    .animation(.easeOut(duration: 1.1).delay(0.15 + Double(i) * 0.32), value: done)
                 }
             }
         }

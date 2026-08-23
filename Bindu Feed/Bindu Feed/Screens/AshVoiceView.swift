@@ -62,16 +62,29 @@ struct AshVoiceView: View {
                         .padding(.horizontal, BinduTheme.space20)
                         .padding(.top, BinduTheme.space20)
 
-                    Text("WHAT ASH HAS LEFT")
-                        .font(.spaceMono(9))
-                        .tracking(2.0)
-                        .foregroundColor(BinduTheme.inkSecondary)
+                    // The intimate serif line the comp uses — not a system label
+                    // (comp Ash's Voice.html: "Every time you chose to enter the room. Newest first.").
+                    Text("Every time you chose to enter the room. Newest first.")
+                        .font(.loraItalic(13))
+                        .foregroundColor(BinduTheme.inkTertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, BinduTheme.space20)
                         .padding(.top, BinduTheme.space16)
 
                     commentList
                         .padding(.top, BinduTheme.space12)
+
+                    // The closing beat — a terra thread, then the line, fading in last
+                    // (comp Ash's Voice.html: "this is where you began").
+                    if !comments.isEmpty {
+                        VStack(spacing: 18) {
+                            Rectangle().fill(terra.opacity(0.4)).frame(width: 0.5, height: 32)
+                            Text("this is where you began")
+                                .font(.loraItalic(14)).foregroundColor(terra.opacity(0.4))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 44)
+                    }
 
                     Color.clear.frame(height: 60)
                 }
@@ -192,15 +205,18 @@ struct AshVoiceView: View {
                 .padding(.vertical, BinduTheme.space24)
         } else {
             LazyVStack(spacing: BinduTheme.space12) {
-                ForEach(comments) { comment in
-                    AshCommentRow(
-                        comment: comment,
-                        story: storyById[comment.linkedStoryId ?? ""],
-                        room: storyById[comment.linkedStoryId ?? ""].flatMap { store.room(named: $0.room) },
-                        parentArchetypeName: parentCommentById[comment.parentCommentId ?? ""]?.archetype,
-                        terra: terra,
-                        onTapStory: { story in $path.pushDissolve(FeedRoute.story(story)) }
-                    )
+                ForEach(Array(comments.enumerated()), id: \.element.id) { i, comment in
+                    // riseIn — each entry rises in, staggered (comp Ash's Voice.html: 0.4 + i*0.18).
+                    StaggeredReveal(triggered: true, delay: 0.4 + Double(i) * 0.18, duration: 0.8, rise: 12) {
+                        AshCommentRow(
+                            comment: comment,
+                            story: storyById[comment.linkedStoryId ?? ""],
+                            room: storyById[comment.linkedStoryId ?? ""].flatMap { store.room(named: $0.room) },
+                            parentArchetypeName: parentCommentById[comment.parentCommentId ?? ""]?.archetype,
+                            terra: terra,
+                            onTapStory: { story in $path.pushDissolve(FeedRoute.story(story)) }
+                        )
+                    }
                 }
             }
             .padding(.horizontal, BinduTheme.space16)

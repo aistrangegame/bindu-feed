@@ -5,6 +5,9 @@ struct StoryCard: View {
     let room: Room?
     let stats: StoryStats
     let archetypes: [Archetype]
+    /// The community pill is shown on the Home Feed; hidden inside a room (Game View),
+    /// where you already know which room you're in (comp Game View.html omits it).
+    var showCommunity: Bool = true
 
     @EnvironmentObject private var store: FeedStore
     @State private var pulseGlow: Double = 0
@@ -34,7 +37,7 @@ struct StoryCard: View {
 
     private var topRow: some View {
         HStack(alignment: .center) {
-            if let room {
+            if showCommunity, let room {
                 CommunityPill(room: room, compact: true)
             }
             Spacer(minLength: BinduTheme.space12)

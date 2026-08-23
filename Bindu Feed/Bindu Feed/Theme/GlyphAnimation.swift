@@ -25,16 +25,24 @@ struct GlyphView: View {
     let size: CGFloat
     let color: Color
     let animation: GlyphAnimation
+    /// The coloured halo every glyph floats in (comp: `drop-shadow(0 0 …px color65)`).
+    /// Defaults to a size-proportional glow; pass an override for a stronger hero glow.
+    var glow: CGFloat? = nil
 
     @State private var rotation: Double = 0
     @State private var scale: CGFloat = 1
     @State private var opacity: Double = 1
     @State private var offsetX: CGFloat = 0
 
+    private var glowRadius: CGFloat { glow ?? size * 0.20 }
+
     var body: some View {
         Text(glyph)
             .font(.system(size: size))
             .foregroundColor(color)
+            // the living light — a wide soft halo + a tight bright core, in the glyph's colour
+            .shadow(color: color.opacity(0.55), radius: glowRadius)
+            .shadow(color: color.opacity(0.35), radius: glowRadius * 0.4)
             .rotationEffect(.degrees(rotation))
             .scaleEffect(scale)
             .opacity(opacity)

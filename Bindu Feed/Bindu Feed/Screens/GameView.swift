@@ -324,19 +324,24 @@ struct GameView: View {
                 .padding(.vertical, BinduTheme.space24)
         } else {
             LazyVStack(spacing: BinduTheme.space14) {
-                ForEach(stories) { story in
-                    Button {
-                        $path.pushDissolve(FeedRoute.story(story))
-                    } label: {
-                        StoryCard(
-                            story: story,
-                            room: store.room(named: story.room) ?? currentRoom,
-                            stats: store.stats(for: story.id),
-                            archetypes: archetypes(for: story.id)
-                        )
+                ForEach(Array(stories.enumerated()), id: \.element.id) { i, story in
+                    // riseIn — cards rise and fade in one after another as the room reveals
+                    // (comp Game View.html: riseIn 0.8s, delay 0.1 + i*0.15).
+                    StaggeredReveal(triggered: true, delay: 0.1 + Double(i) * 0.15, duration: 0.8, rise: 14) {
+                        Button {
+                            $path.pushDissolve(FeedRoute.story(story))
+                        } label: {
+                            StoryCard(
+                                story: story,
+                                room: store.room(named: story.room) ?? currentRoom,
+                                stats: store.stats(for: story.id),
+                                archetypes: archetypes(for: story.id),
+                                showCommunity: false
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, BinduTheme.space16)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, BinduTheme.space16)
                 }
             }
         }
