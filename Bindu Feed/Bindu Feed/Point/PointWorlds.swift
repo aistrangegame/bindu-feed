@@ -119,11 +119,27 @@ private struct WorldPoint: View {
     }
 }
 
-// ── II · THE TURN — everything in slow orbit; TAP draws a star inward from its circle ──
+// ── II · THE TURN — everything in slow orbit; TOUCH a star and it DRAWS INWARD from its
+// circle to the centre, growing as the others recede, then opens (§7.3.2: "he touches one to
+// draw it inward from its circle"). Not an instant open. ──
 private struct WorldTurn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    @State private var drawingId: String? = nil     // the star being drawn inward
+    @State private var drawStart: Double = 0
+    private let drawDur: Double = 0.9
+
+    // precompute each star's ring + slot once (was a per-frame filter/firstIndex per star)
+    private var placement: [String: (ring: Int, idx: Int, count: Int)] {
+        var byRing: [Int: [String]] = [:]
+        for p in stars { byRing[p.uni % 4, default: []].append(p.id) }
+        var out: [String: (Int, Int, Int)] = [:]
+        for (ring, ids) in byRing { for (idx, id) in ids.enumerated() { out[id] = (ring, idx, ids.count) } }
+        return out
+    }
+
     var body: some View {
-        GeometryReader { geo in
+        let place = placement
+        return GeometryReader { geo in
             let cx = geo.size.width / 2, cy = geo.size.height / 2
             let R0 = min(geo.size.width, geo.size.height) * 0.5
             TimelineView(.animation) { tl in
@@ -136,17 +152,32 @@ private struct WorldTurn: View {
                                        with: .color(hue.opacity(0.12)), lineWidth: 0.6)
                         }
                     }
-                    ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
-                        let ring = p.uni % 4
-                        let inRing = stars.filter { $0.uni % 4 == ring }.count
-                        let idx = stars.filter { $0.uni % 4 == ring }.firstIndex(where: { $0.id == p.id }) ?? 0
-                        let r = R0 * (0.34 + Double(ring) * 0.20)
-                        let dirn = ring % 2 == 0 ? 1.0 : -1.0
-                        let a = Double(idx) / Double(max(inRing, 1)) * 6.2831 + t * 0.16 * dirn
-                        StarMark(placed: p, hue: hue, compact: true)
-                            .position(x: cx + cos(a) * r, y: cy + sin(a) * r)
-                            .onTapGesture { onOpen(p.star) }
+                    ForEach(stars) { p in
+                        let pl = place[p.id] ?? (0, 0, 1)
+                        let r = R0 * (0.34 + Double(pl.ring) * 0.20)
+                        let dirn = pl.ring % 2 == 0 ? 1.0 : -1.0
+                        let a = Double(pl.idx) / Double(max(pl.count, 1)) * 6.2831 + t * 0.16 * dirn
+                        let ox = cx + cos(a) * r, oy = cy + sin(a) * r
+                        // the pull inward, once touched (eased); it spirals in as it orbits
+                        let pull = drawingId == p.id ? min(1, (t - drawStart) / drawDur) : 0
+                        let e = pull * pull * (3 - 2 * pull)
+                        let px = ox + (cx - ox) * e, py = oy + (cy - oy) * e
+                        StarMark(placed: p, hue: hue, compact: pull < 0.4)
+                            .scaleEffect(1 + e * 0.9)
+                            .opacity(drawingId == nil || drawingId == p.id ? 1 : 0.28)   // the rest recede
+                            .position(x: px, y: py)
+                            .onTapGesture {
+                                guard drawingId == nil else { return }
+                                drawingId = p.id
+                                drawStart = t
+                                DispatchQueue.main.asyncAfter(deadline: .now() + drawDur) {
+                                    onOpen(p.star); drawingId = nil
+                                }
+                            }
                     }
+                    Text("touch a star · it draws inward").font(.spaceMono(8)).tracking(2)
+                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
+                        .position(x: cx, y: geo.size.height - 40)
                 }
             }
         }
