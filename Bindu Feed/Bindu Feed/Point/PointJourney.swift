@@ -8,6 +8,7 @@ import Foundation
 enum PointJourney {
     static var reachedGate = false
     static var enteredDims: [String] = []
+    static var universes: [String] = []       // the named universes he entered (middle tier)
     static var openedStars: [String] = []
     static var descended: [String] = []
     static var visitors = 0

@@ -33,6 +33,24 @@ enum PointWorlds {
         }
         return out
     }
+    // One universe's stars — the constellation you drill into (uni = index within the universe,
+    // so each world's ring/row math still spreads them).
+    static func placed(_ universe: PointUniverse) -> [PlacedStar] {
+        var out: [PlacedStar] = []
+        for (i, k) in universe.stars.enumerated() {
+            if let s = PointContent.stars.first(where: { $0.key == k }) {
+                out.append(PlacedStar(star: s, uni: i))
+            }
+        }
+        return out
+    }
+    // A universe's aggregate walked-status: ● all walked · ◐ some walked/in-progress · ○ none.
+    static func status(_ universe: PointUniverse) -> Int {
+        let sts = universe.stars.compactMap { k in PointContent.stars.first(where: { $0.key == k })?.st }
+        if !sts.isEmpty, sts.allSatisfy({ $0 == "w" }) { return 2 }
+        if sts.contains(where: { $0 == "w" || $0 == "p" }) { return 1 }
+        return 0
+    }
     static func hash(_ s: String) -> Double {
         var h: UInt32 = 2166136261
         for b in s.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
@@ -81,6 +99,80 @@ struct PointWorld: View {
         case 5: WorldMirrors(stars: stars, hue: hue, onOpen: onOpen)
         case 6: WorldReturn(stars: stars, hue: hue, onOpen: onOpen)
         default: WorldDance(stars: stars, hue: hue, onOpen: onOpen)
+        }
+    }
+}
+
+// THE MIDDLE TIER (Amendment §7.3, point-levels.js constellation()) — a dimension is not a
+// flat field of stars; it holds its named UNIVERSES. This is the first thing met inside a
+// dimension: the universes arranged as a constellation on the enclosure ring, bound by the
+// connecting thread, the point burning at the centre. Choose one to descend into its stars.
+struct PointUniversesView: View {
+    let dim: PointDimension
+    let hue: Color
+    let onSelect: (PointUniverse) -> Void
+
+    var body: some View {
+        GeometryReader { geo in
+            let W = geo.size.width, H = geo.size.height
+            let cx = W / 2, cy = H * 0.52
+            let R = min(W, H) * 0.30
+            let n = dim.universes.count
+            ZStack {
+                // the enclosure ring + the connecting THREAD through the universes + the centre point
+                Canvas { ctx, size in
+                    ctx.stroke(Path(ellipseIn: CGRect(x: cx - R, y: cy - R, width: R * 2, height: R * 2)),
+                               with: .color(hue.opacity(0.13)), lineWidth: 0.8)
+                    var thread = Path()
+                    for i in 0..<n {
+                        let a = nodeAngle(i, n)
+                        let p = CGPoint(x: cx + cos(a) * R, y: cy + sin(a) * R)
+                        if i == 0 { thread.move(to: p) } else { thread.addLine(to: p) }
+                    }
+                    if n > 2 { thread.closeSubpath() }
+                    ctx.stroke(thread, with: .color(hue.opacity(0.10)), lineWidth: 0.6)   // two are one, all are threaded
+                    ctx.fill(Path(ellipseIn: CGRect(x: cx - 3.5, y: cy - 3.5, width: 7, height: 7)),
+                             with: .color(Color(hex: "#C0392B").opacity(0.85)))            // the point at the centre
+                }
+                ForEach(Array(dim.universes.enumerated()), id: \.element.id) { i, u in
+                    let a = nodeAngle(i, n)
+                    Button { onSelect(u) } label: {
+                        VStack(spacing: 3) {
+                            universeMark(PointWorlds.status(u))
+                            Text(u.name)
+                                .font(.lora(11)).foregroundStyle(BinduTheme.inkPrimary.opacity(0.86))
+                                .lineLimit(2).multilineTextAlignment(.center).frame(maxWidth: 104)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .position(x: cx + cos(a) * R, y: cy + sin(a) * R)
+                }
+                VStack(spacing: 6) {
+                    Text("\(dim.roman) · \(dim.name.uppercased())")
+                        .font(.spaceMono(9)).tracking(2.5).foregroundStyle(hue)
+                    Text(dim.voice)
+                        .font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
+                        .multilineTextAlignment(.center).lineLimit(2).padding(.horizontal, 44)
+                    Spacer()
+                }
+                .padding(.top, 46).allowsHitTesting(false)
+                VStack {
+                    Spacer()
+                    Text("a universe opens · a constellation within")
+                        .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
+                        .padding(.bottom, 40)
+                }
+            }
+        }
+    }
+    private func nodeAngle(_ i: Int, _ n: Int) -> Double { -Double.pi / 2 + Double(i) * (2 * Double.pi / Double(max(n, 1))) }
+
+    @ViewBuilder private func universeMark(_ st: Int) -> some View {
+        switch st {
+        case 2: Circle().fill(hue).frame(width: 10, height: 10).shadow(color: hue.opacity(0.7), radius: 5)
+        case 1: Circle().fill(LinearGradient(colors: [hue, .clear], startPoint: .leading, endPoint: .trailing))
+                    .overlay(Circle().stroke(hue, lineWidth: 1)).frame(width: 10, height: 10)
+        default: Circle().stroke(hue.opacity(0.6), lineWidth: 1).frame(width: 10, height: 10)
         }
     }
 }

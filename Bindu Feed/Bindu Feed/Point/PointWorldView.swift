@@ -14,6 +14,7 @@ struct PointWorldView: View {
     let onReturn: () -> Void
 
     @EnvironmentObject private var soundEngine: SoundEngine
+    @State private var selectedUniverse: PointUniverse?   // the middle tier: dimension → universe → star
     @State private var openStar: PointStar?
     @State private var goodnight = false
 
@@ -26,27 +27,44 @@ struct PointWorldView: View {
     var body: some View {
         ZStack {
             if let star = openStar {
+                // LEVEL 2 — the star reading + descent.
                 PointStarDescent(star: star, hue: hue, onClose: { withAnimation { openStar = nil } })
-            } else if let dim {
-                // The dimension as its own distinct world (Amendment §7.3).
-                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(dim), hue: hue) { s in
+            } else if let dim, let u = selectedUniverse {
+                // LEVEL 1 — the universe as a constellation: its stars in the world's native
+                // material (Amendment §7.3: the universe, drawn inside the figure).
+                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue) { s in
                     soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 6)
                     PointJourney.openedStars.append(s.t)
                     withAnimation(.easeInOut(duration: 0.8)) { openStar = s }
                 }
                 .ignoresSafeArea()
 
-                // The world's name + voice, quiet at the crown.
                 VStack(spacing: 6) {
-                    Text("\(dim.roman) · \(dim.name.uppercased())")
-                        .font(.spaceMono(9)).tracking(2.5).foregroundStyle(hue)
-                    Text(dim.voice)
-                        .font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
+                    Text(u.name.uppercased()).font(.spaceMono(9)).tracking(2).foregroundStyle(hue)
+                    Text(u.sub).font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
                         .multilineTextAlignment(.center).lineLimit(2).padding(.horizontal, 44)
                     Spacer()
                 }
-                .padding(.top, 46)
-                .allowsHitTesting(false)
+                .padding(.top, 46).allowsHitTesting(false)
+
+                VStack {
+                    HStack {
+                        Button { withAnimation(.easeInOut(duration: 0.6)) { selectedUniverse = nil } } label: {
+                            Text("‹ the enclosure").font(.spaceMono(9)).tracking(2)
+                                .foregroundStyle(BinduTheme.inkTertiary).padding(16)
+                        }
+                        Spacer()
+                    }
+                    Spacer()
+                }
+            } else if let dim {
+                // LEVEL 0 — the dimension holds its named universes (the middle tier).
+                PointUniversesView(dim: dim, hue: hue) { u in
+                    soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 5)
+                    PointJourney.universes.append(u.name)
+                    withAnimation(.easeInOut(duration: 0.7)) { selectedUniverse = u }
+                }
+                .ignoresSafeArea()
 
                 if dimensionN == 6 {
                     VStack { Spacer()
