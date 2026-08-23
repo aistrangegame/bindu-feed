@@ -90,16 +90,18 @@ private struct WorldPoint: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     @EnvironmentObject private var breath: Breath
     @State private var dwell: String? = nil
+    @State private var lastStir: Date = Date()      // the points approach only when the hand is still
     var body: some View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
                 let t = tl.date.timeIntervalSinceReferenceDate
+                let still = min(1.0, Date().timeIntervalSince(lastStir) / 4.0)   // 0 stirred … 1 still
                 ZStack {
                     ForEach(stars) { p in
                         let seed = PointWorlds.hash(p.id)
-                        let drift = 0.5 + 0.42 * sin(t * 0.04 + seed * 6.28)   // approaches centre and away, slowly
                         let ang = seed * 6.2831
-                        let rad = (0.20 + seed * 0.24) * drift
+                        // approaches the centre as he stays still; a touch (below) pushes them out
+                        let rad = (0.20 + seed * 0.24) * (1 - still * 0.55) + 0.05 * sin(t * 0.05 + seed * 6.28)
                         let x = geo.size.width * (0.5 + cos(ang) * rad)
                         let y = geo.size.height * (0.5 + sin(ang) * rad * 1.15)
                         StarMark(placed: p, hue: hue, compact: dwell != p.id)
@@ -108,12 +110,15 @@ private struct WorldPoint: View {
                             .position(x: x, y: y)
                             .onLongPressGesture(minimumDuration: 0.9, pressing: { pressing in
                                 dwell = pressing ? p.id : nil
+                                if pressing { lastStir = Date() }
                             }, perform: { onOpen(p.star); dwell = nil })
                     }
-                    Text("look at a point · hold it until it opens")
+                    Text(still > 0.6 ? "hold one until it opens" : "be still · the points come to you")
                         .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4))
                         .position(x: geo.size.width / 2, y: geo.size.height - 40)
                 }
+                .contentShape(Rectangle())
+                .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastStir = Date() })
             }
         }
     }
@@ -209,6 +214,7 @@ private struct WorldVeil: View {
                         let seed = PointWorlds.hash(p.id)
                         StarMark(placed: p, hue: hue, compact: part < 0.5)
                             .opacity(0.18 + 0.82 * Double(part))
+                            .blur(radius: (1 - Double(part)) * 7)          // behind the gauze, out of focus; sharpens as it parts
                             .position(x: geo.size.width * (0.16 + seed * 0.68),
                                       y: geo.size.height * (0.16 + PointWorlds.hash(p.id + "y") * 0.68))
                             .allowsHitTesting(part > 0.4)
@@ -227,101 +233,180 @@ private struct WorldVeil: View {
     }
 }
 
-// ── IV · THE CHAMBER — an interior of dark warmth; MOVE ALONG the walls (pan) ──
+// ── IV · THE CHAMBER — an INTERIOR of lit stone (courses receding to a vanishing line, side
+// walls, heavy grain, ember from below-left); the stars are DEBOSSED into the walls, met by
+// MOVING ALONG them (pan). Not flat lines with floating dots (§7.3.4). ──
 private struct WorldChamber: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     @State private var panX: CGFloat = 0
+    @State private var panBase: CGFloat = 0
     var body: some View {
         GeometryReader { geo in
-            let spread = geo.size.width * 1.4
+            let W = geo.size.width, H = geo.size.height
+            let spread = W * 1.7
             ZStack {
-                Canvas { ctx, size in                           // lit stone courses, ember from below-left
-                    for c in 0..<7 {
-                        let y = size.height * Double(c) / 7
-                        ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: y)); $0.addLine(to: CGPoint(x: size.width, y: y)) },
-                                   with: .color(hue.opacity(0.08)), lineWidth: 0.6)
+                Canvas { ctx, size in
+                    let vpx = size.width / 2, vpy = size.height * 0.42
+                    // the courses, tapering inward toward the vanishing line — the interior recedes
+                    for c in 0..<9 {
+                        let y = size.height * (0.10 + Double(c) / 8 * 0.82)
+                        let inset = (1 - abs(y - vpy) / size.height) * size.width * 0.08
+                        ctx.stroke(Path { $0.move(to: CGPoint(x: inset, y: y)); $0.addLine(to: CGPoint(x: size.width - inset, y: y)) },
+                                   with: .color(hue.opacity(0.10)), lineWidth: 0.6)
                     }
+                    // the side walls — the enclosure closing toward the vanishing point
+                    ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: 0)); $0.addLine(to: CGPoint(x: vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
+                    ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: size.height)); $0.addLine(to: CGPoint(x: vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
+                    ctx.stroke(Path { $0.move(to: CGPoint(x: size.width, y: 0)); $0.addLine(to: CGPoint(x: size.width - vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
+                    ctx.stroke(Path { $0.move(to: CGPoint(x: size.width, y: size.height)); $0.addLine(to: CGPoint(x: size.width - vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
+                    // ember from below-left
                     ctx.fill(Path(ellipseIn: CGRect(x: -80, y: size.height - 60, width: 260, height: 260)),
                              with: .radialGradient(.init(colors: [hue.opacity(0.14), .clear]),
                                                    center: CGPoint(x: 40, y: size.height), startRadius: 0, endRadius: 220))
+                    // heavy grain — the stone's texture
+                    for g in 0..<170 {
+                        let gx = (sin(Double(g) * 12.9898) * 0.5 + 0.5) * size.width
+                        let gy = (sin(Double(g) * 78.233) * 0.5 + 0.5) * size.height
+                        ctx.fill(Path(ellipseIn: CGRect(x: gx, y: gy, width: 1.1, height: 1.1)), with: .color(hue.opacity(0.045)))
+                    }
                 }
                 ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
                     let col = Double(i) / Double(max(stars.count - 1, 1))
                     StarMark(placed: p, hue: hue)
+                        .padding(5)
+                        .background(Ellipse().fill(Color.black.opacity(0.28)).blur(radius: 2.5))   // the carved recess
+                        .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)                  // deboss — cut INTO the wall
+                        .shadow(color: hue.opacity(0.25), radius: 0, x: 0, y: -0.7)                  // the lit upper lip
                         .position(x: 40 + col * spread + panX,
-                                  y: geo.size.height * (0.22 + Double(p.uni % 4) * 0.18))
+                                  y: geo.size.height * (0.24 + Double(p.uni % 4) * 0.17))
                         .onTapGesture { onOpen(p.star) }
                 }
-                Text("move along the wall").font(.spaceMono(8)).tracking(2)
+                Text("move along the walls").font(.spaceMono(8)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                    .position(x: geo.size.width / 2, y: geo.size.height - 40)
+                    .position(x: W / 2, y: H - 40)
             }
             .contentShape(Rectangle())
-            .simultaneousGesture(DragGesture().onChanged { v in panX = v.translation.width }
-                .onEnded { _ in withAnimation(.easeOut(duration: 0.4)) { panX = max(-spread + geo.size.width * 0.5, min(0, panX)) } })
+            .simultaneousGesture(DragGesture().onChanged { v in panX = max(-spread + W * 0.5, min(0, panBase + v.translation.width)) }
+                .onEnded { _ in panBase = panX })
         }
     }
 }
 
-// ── V · THE MIRRORS — perspectives paired and facing; TURN a surface to see its other ──
+// ── V · THE MIRRORS — perspectives PAIRED AND FACING their echo across the seam, a thread
+// binding each pair (two things are always one, §7.3.5); TURN a surface, then again to enter.
+// Not solo stars split by parity — each is met ALONGSIDE its facing echo. ──
 private struct WorldMirrors: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     @State private var turned: Set<String> = []
+
+    // pair the stars two-by-two; each pair faces across the seam (an odd one out sits solo)
+    private var pairs: [(PlacedStar, PlacedStar?)] {
+        var out: [(PlacedStar, PlacedStar?)] = []
+        var i = 0
+        while i < stars.count { out.append((stars[i], i + 1 < stars.count ? stars[i + 1] : nil)); i += 2 }
+        return out
+    }
+
     var body: some View {
-        GeometryReader { geo in
-            let cx = geo.size.width / 2
+        let ps = pairs
+        let rows = max(1, ps.count)
+        return GeometryReader { geo in
+            let W = geo.size.width, H = geo.size.height, cx = W / 2
             ZStack {
-                Rectangle().fill(hue.opacity(0.14)).frame(width: 0.8)                 // the mirror seam
-                    .frame(maxHeight: .infinity).position(x: cx, y: geo.size.height / 2)
-                ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
-                    let left = i % 2 == 0
-                    let row = Double(i / 2)
-                    let rows = ceil(Double(stars.count) / 2)
-                    let y = geo.size.height * (0.18 + (rows <= 1 ? 0.3 : row / (rows - 1) * 0.62))
-                    StarMark(placed: p, hue: hue)
-                        .rotation3DEffect(.degrees(turned.contains(p.id) ? 0 : (left ? 40 : -40)), axis: (x: 0, y: 1, z: 0))
-                        .position(x: left ? cx - geo.size.width * 0.24 : cx + geo.size.width * 0.24, y: y)
-                        .onTapGesture {
-                            if turned.contains(p.id) { onOpen(p.star) }
-                            else { withAnimation(.easeInOut(duration: 0.7)) { _ = turned.insert(p.id) } }
-                        }
+                Canvas { ctx, size in
+                    let cx = size.width / 2
+                    ctx.stroke(Path { $0.move(to: CGPoint(x: cx, y: 0)); $0.addLine(to: CGPoint(x: cx, y: size.height)) },
+                               with: .color(hue.opacity(0.14)), lineWidth: 0.8)                  // the seam
+                    for r in 0..<rows {                                                          // the thread of each pair
+                        let y = rowY(r, size.height, rows)
+                        ctx.stroke(Path { $0.move(to: CGPoint(x: cx - size.width * 0.24, y: y)); $0.addLine(to: CGPoint(x: cx + size.width * 0.24, y: y)) },
+                                   with: .color(hue.opacity(0.10)), lineWidth: 0.5)
+                    }
                 }
-                Text("turn a surface · then again to enter").font(.spaceMono(8)).tracking(2)
+                .allowsHitTesting(false)
+                ForEach(Array(ps.enumerated()), id: \.offset) { row, pair in
+                    let y = rowY(row, H, rows)
+                    mirrorStar(pair.0, x: cx - W * 0.24, y: y, facingRight: true)
+                    if let echo = pair.1 { mirrorStar(echo, x: cx + W * 0.24, y: y, facingRight: false) }
+                }
+                Text("each meets its echo · turn to enter").font(.spaceMono(8)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                    .position(x: cx, y: geo.size.height - 40)
+                    .position(x: cx, y: H - 40)
             }
         }
     }
+
+    private func rowY(_ r: Int, _ H: CGFloat, _ rows: Int) -> CGFloat {
+        H * (0.16 + (rows <= 1 ? 0.34 : CGFloat(r) / CGFloat(rows - 1) * 0.64))
+    }
+
+    @ViewBuilder private func mirrorStar(_ p: PlacedStar, x: CGFloat, y: CGFloat, facingRight: Bool) -> some View {
+        StarMark(placed: p, hue: hue, compact: true)
+            .rotation3DEffect(.degrees(turned.contains(p.id) ? 0 : (facingRight ? 42 : -42)),
+                              axis: (x: 0, y: 1, z: 0), perspective: 0.5)
+            .position(x: x, y: y)
+            .onTapGesture {
+                if turned.contains(p.id) { onOpen(p.star) }
+                else { withAnimation(.easeInOut(duration: 0.7)) { _ = turned.insert(p.id) } }
+            }
+    }
 }
 
-// ── VI · THE RETURN — the world of strata; SETTLE down through the time-layers ──
+// ── VI · THE RETURN — the world of strata; you SETTLE DOWN through the time-layers (a
+// downward drag lowers you through them), the ring grammar of the ceremony aged into the
+// floor, the deeper stars older. Reached by settling, not a flat tap. ──
 private struct WorldReturn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    @State private var settle: CGFloat = 0     // 0 at the surface … grows as he settles downward
+    @State private var settleBase: CGFloat = 0
     var body: some View {
         GeometryReader { geo in
+            let H = geo.size.height, W = geo.size.width
+            let maxSettle = H * 0.7
             ZStack {
-                Canvas { ctx, size in                            // rose strata + rings, aged with depth
-                    for s in 0..<7 {
-                        let y = size.height * (0.12 + Double(s) * 0.12)
-                        let age = Double(s) / 7
+                Canvas { ctx, size in
+                    // the strata — aged rose layers; they rise past him as he settles down
+                    for s in 0..<11 {
+                        let y = (size.height * (0.08 + Double(s) * 0.10)) - Double(settle)
+                        if y < -10 || y > size.height + 10 { continue }
+                        let age = Double(s) / 11
                         ctx.stroke(Path { $0.move(to: CGPoint(x: 20, y: y)); $0.addLine(to: CGPoint(x: size.width - 20, y: y)) },
-                                   with: .color(hue.opacity(0.16 - 0.12 * age)), lineWidth: 0.7)
+                                   with: .color(hue.opacity(0.16 - 0.11 * age)), lineWidth: 0.7)
                     }
+                    // the ring grammar, borrowed from the ceremony — concentric aged rings settling
+                    // into the floor around a seed (the flattened ellipse the Return's rings wear)
+                    let cx = size.width / 2, cy = size.height * 0.62 - Double(settle) * 0.5
+                    for r in 1...5 {
+                        let rr = 24.0 * Double(r)
+                        let age = Double(r) / 6
+                        ctx.stroke(Path(ellipseIn: CGRect(x: cx - rr, y: cy - rr * 0.4, width: rr * 2, height: rr * 0.8)),
+                                   with: .color(hue.opacity(0.13 - age * 0.08)), lineWidth: 0.6)
+                    }
+                    ctx.fill(Path(ellipseIn: CGRect(x: cx - 3, y: cy - 3, width: 6, height: 6)), with: .color(hue.opacity(0.6)))
                 }
                 ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
                     let strat = Double(i) / Double(max(stars.count - 1, 1))
+                    let y = geo.size.height * (0.14 + strat * 1.1) - settle      // deeper stars, revealed by settling
                     StarMark(placed: p, hue: hue)
-                        .saturation(1 - strat * 0.5).opacity(1 - strat * 0.35)        // deeper = aged
-                        .position(x: geo.size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22)),
-                                  y: geo.size.height * (0.14 + strat * 0.62))
+                        .saturation(1 - strat * 0.5).opacity(1 - strat * 0.35)   // deeper = aged
+                        .position(x: geo.size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22)), y: y)
+                        .allowsHitTesting(y > 40 && y < H - 40)
                         .onTapGesture { onOpen(p.star) }
                 }
+                Text(settle < 20 ? "settle down through the layers" : "")
+                    .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
+                    .position(x: W / 2, y: H - 40)
             }
+            .contentShape(Rectangle())
+            .simultaneousGesture(DragGesture()
+                .onChanged { v in settle = max(0, min(maxSettle, settleBase + v.translation.height)) }
+                .onEnded { _ in settleBase = settle })
         }
     }
 }
 
-// ── VII · THE DANCE — motion everything; CATCH a star in flight (the only fast world) ──
+// ── VII · THE DANCE — motion everything; CATCH a star in flight (the only fast world). Even
+// its speed OBEYS THE BREATH — the flight quickens on the in-breath and eases on the out. ──
 private struct WorldDance: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var body: some View {
@@ -329,23 +414,26 @@ private struct WorldDance: View {
             let cx = geo.size.width / 2, cy = geo.size.height / 2
             TimelineView(.animation) { tl in
                 let t = tl.date.timeIntervalSinceReferenceDate
+                // a breathing clock: its SPEED (d/dt = 1 + 0.31·sin) swells on the in-breath and
+                // eases on the out, but never reverses — the flight itself obeys the breath.
+                let bt = t - 0.5 * cos(t * .pi * 2 / 10)
                 ZStack {
                     Canvas { ctx, size in                        // fast gold streaks
                         for k in 0..<10 {
                             let ph = Double(k) / 10 * 6.2831
-                            let x = cx + cos(t * 0.7 + ph) * size.width * 0.42
-                            let y = cy + sin(t * 0.9 + ph) * size.height * 0.36
+                            let x = cx + cos(bt * 0.7 + ph) * size.width * 0.42
+                            let y = cy + sin(bt * 0.9 + ph) * size.height * 0.36
                             ctx.stroke(Path { $0.move(to: CGPoint(x: x, y: y)); $0.addLine(to: CGPoint(x: x + 26, y: y + 10)) },
                                        with: .color(hue.opacity(0.18)), lineWidth: 0.8)
                         }
                     }
-                    ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
+                    ForEach(Array(stars.enumerated()), id: \.element.id) { i, sp in
                         let ph = Double(i) / Double(max(stars.count, 1)) * 6.2831
-                        let x = cx + cos(t * 0.55 + ph) * geo.size.width * 0.36
-                        let y = cy + sin(t * 0.73 + ph * 1.3) * geo.size.height * 0.30
-                        StarMark(placed: p, hue: hue, compact: true)
+                        let x = cx + cos(bt * 0.55 + ph) * geo.size.width * 0.36
+                        let y = cy + sin(bt * 0.73 + ph * 1.3) * geo.size.height * 0.30
+                        StarMark(placed: sp, hue: hue, compact: true)
                             .position(x: x, y: y)
-                            .onTapGesture { onOpen(p.star) }
+                            .onTapGesture { onOpen(sp.star) }
                     }
                     Text("catch one in flight").font(.spaceMono(8)).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
