@@ -14,9 +14,29 @@ enum GlyphAnimation: String {
     case glyphSignal
     case glyphAssemble
     case glyphField
+    case glyphBreathSlow      // the roots' near-imperceptible 18s breath (Neev/Shweta)
+    case glyphPulse           // Ash's heartbeat spike (~2.8s)
 
     init(name: String?) {
         self = GlyphAnimation(rawValue: name ?? "") ?? .none
+    }
+
+    /// Each presence breathes at its OWN cadence (comp Player Detail) — returns the animation
+    /// and its period (seconds), so a gathering of presences never synchronises into one pulse.
+    /// Bindu the most alive, Lalita the only turn, the roots the slowest, Ash a heartbeat.
+    static func presence(_ name: String) -> (GlyphAnimation, Double?) {
+        switch name {
+        case "Bindu":          return (.glyphEmber, 3.2)
+        case "Lalita":         return (.glyphCircle, 30)
+        case "Ash":            return (.glyphPulse, 2.8)
+        case "Neev", "Shweta": return (.glyphBreathSlow, 18)
+        case "Sakshi":         return (.glyphBreathe, 13.5)
+        case "Gaia":           return (.glyphBreathe, 7.5)
+        case "Sid":            return (.glyphBreathe, 9.2)
+        case "Arch":           return (.glyphBreathe, 6.8)
+        case "Karishma":       return (.glyphBreathe, 8.5)
+        default:               return (.glyphBreathe, 7.0)   // Ashrey + any other lens
+        }
     }
 }
 
@@ -28,6 +48,9 @@ struct GlyphView: View {
     /// The coloured halo every glyph floats in (comp: `drop-shadow(0 0 …px color65)`).
     /// Defaults to a size-proportional glow; pass an override for a stronger hero glow.
     var glow: CGFloat? = nil
+    /// Per-presence breath period (seconds) — each lens/root/substrate breathes at its own
+    /// cadence (comp), so the field never synchronises. Overrides the breathe/breathSlow default.
+    var period: Double? = nil
 
     @State private var rotation: Double = 0
     @State private var scale: CGFloat = 1
@@ -51,7 +74,7 @@ struct GlyphView: View {
             .scaleEffect(scale)
             .opacity(opacity)
             .offset(x: offsetX)
-            .task(id: animation) { await run() }
+            .task(id: "\(animation.rawValue)-\(period ?? -1)") { await run() }
     }
 
     @MainActor
@@ -68,15 +91,31 @@ struct GlyphView: View {
             }
 
         case .glyphBreathe:
-            opacity = 0.65
-            withAnimation(.easeInOut(duration: 4.5).repeatForever(autoreverses: true)) {
-                opacity = 1.0
+            // A living breath swells AND brightens (comp glyphBreath: scale(1.06) + opacity).
+            opacity = 0.65; scale = 0.97
+            withAnimation(.easeInOut(duration: period ?? 4.5).repeatForever(autoreverses: true)) {
+                opacity = 1.0; scale = 1.06
+            }
+
+        case .glyphBreathSlow:
+            // The roots' near-imperceptible breath (comp glyphBreathSlow ~18s, scale 1.04).
+            opacity = 0.72; scale = 0.98
+            withAnimation(.easeInOut(duration: period ?? 18).repeatForever(autoreverses: true)) {
+                opacity = 1.0; scale = 1.04
             }
 
         case .glyphEmber:
-            opacity = 0.4
-            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) {
-                opacity = 1.0
+            // The ember swells as it brightens (comp glyphEmber 3.2s, scale 1.10).
+            opacity = 0.4; scale = 0.94
+            withAnimation(.easeInOut(duration: period ?? 3.2).repeatForever(autoreverses: true)) {
+                opacity = 1.0; scale = 1.10
+            }
+
+        case .glyphPulse:
+            // Ash's heartbeat — a quick swell-and-settle (comp glyphPulse ~2.8s, scale 1.08).
+            opacity = 0.68; scale = 1.0
+            withAnimation(.easeInOut(duration: (period ?? 2.8) * 0.5).repeatForever(autoreverses: true)) {
+                opacity = 1.0; scale = 1.08
             }
 
         case .glyphOrbit:
@@ -118,7 +157,8 @@ struct GlyphView: View {
             }
 
         case .glyphCircle:
-            withAnimation(.linear(duration: 42).repeatForever(autoreverses: false)) {
+            // Lalita's long turn (comp lTurn 30s).
+            withAnimation(.linear(duration: period ?? 30).repeatForever(autoreverses: false)) {
                 rotation = 360
             }
 

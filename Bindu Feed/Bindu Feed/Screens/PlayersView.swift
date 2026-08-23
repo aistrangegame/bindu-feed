@@ -247,30 +247,17 @@ private struct PlayerCard: View {
                     Circle().strokeBorder(archetype.color.opacity(0.32), lineWidth: 1)
                 )
 
-            // Glyph
+            // Glyph — each presence at its own breath cadence (comp)
             GlyphView(
                 glyph: archetype.glyph,
                 size: glyphSize,
                 color: archetype.color,
-                animation: animationForArchetype
+                animation: GlyphAnimation.presence(archetype.name).0,
+                period: GlyphAnimation.presence(archetype.name).1
             )
             .shadow(color: archetype.color.opacity(0.55), radius: glowRadius)
         }
         .frame(width: size, height: size)
-    }
-
-    // Per-presence animation cadences from the prototype. Bindu the most
-    // alive; Lalita the only rotation; Sakshi the stillest lens; the
-    // roots breathe the slowest.
-    private var animationForArchetype: GlyphAnimation {
-        switch archetype.name {
-        case "Bindu":   return .glyphEmber
-        case "Lalita":  return .glyphCircle    // continuous rotation
-        case "Sakshi":  return .glyphBreathe   // gentle breath
-        case "Neev":    return .glyphBreathe
-        case "Shweta":  return .glyphBreathe
-        default:        return .glyphBreathe
-        }
     }
 
     private var glyphSize: CGFloat {

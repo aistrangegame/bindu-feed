@@ -46,7 +46,8 @@ struct TheTurningView: View {
             // shows in full archetype color when progress rises.
             dawnWash
 
-            ScrollView {
+            ScrollViewReader { proxy in
+             ScrollView {
                 VStack(spacing: 0) {
                     header
                         .padding(.top, BinduTheme.space20)
@@ -79,14 +80,23 @@ struct TheTurningView: View {
                         .padding(.top, BinduTheme.space20)
                         .padding(.bottom, BinduTheme.space24 + 6)
 
-                    wordsSection
+                    wordsSection.id("words")
 
                     Color.clear.frame(height: 60)
                 }
+             }
+             .scrollIndicators(.hidden)
+             .saturation(0.32 + progress * 0.68)
+             .colorMultiply(Color(white: 0.70 + progress * 0.30))
+             // When the trace completes, the gathered words are delivered — the content
+             // scrolls them up to reading height (comp: scroll to the words ~700ms after done).
+             .onChange(of: done) { _, isDone in
+                 guard isDone else { return }
+                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                     withAnimation(.easeInOut(duration: 1.1)) { proxy.scrollTo("words", anchor: .top) }
+                 }
+             }
             }
-            .scrollIndicators(.hidden)
-            .saturation(0.32 + progress * 0.68)
-            .colorMultiply(Color(white: 0.70 + progress * 0.30))
         }
         .navigationBarBackButtonHidden(true)
         .floatingBackHub(path: $path, showHub: $showHub)
@@ -171,21 +181,11 @@ struct TheTurningView: View {
                 glyph: archetype.glyph,
                 size: 44,
                 color: Color.white.opacity(0.92),
-                animation: animationForArchetype
+                animation: GlyphAnimation.presence(archetype.name).0,
+                period: GlyphAnimation.presence(archetype.name).1
             )
         }
         .frame(width: 96, height: 96)
-    }
-
-    // Per-presence breath cadences are a polish-pass item — for now
-    // every lens shares glyphBreathe and Bindu / Lalita keep their
-    // distinct ember / rotation.
-    private var animationForArchetype: GlyphAnimation {
-        switch archetype.name {
-        case "Bindu":   return .glyphEmber
-        case "Lalita":  return .glyphCircle
-        default:        return .glyphBreathe
-        }
     }
 
     // MARK: - Stats
