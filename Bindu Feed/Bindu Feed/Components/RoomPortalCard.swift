@@ -21,7 +21,7 @@ struct RoomPortalCard: View {
 
             GlyphView(
                 glyph: room.glyph,
-                size: max(room.glyphSize, 44),
+                size: RoomStyle.forRoom(room.name).portalGlyph,   // the room's own portal scale (comp 34–52)
                 color: room.color,
                 animation: room.animation
             )
@@ -29,7 +29,7 @@ struct RoomPortalCard: View {
 
             Spacer(minLength: 0)
 
-            Text(room.name)
+            Text(room.name == "The Watcher" ? room.name.uppercased() : room.name)
                 .font(nameFont)
                 .foregroundColor(room.color.opacity(0.80))
                 .tracking(room.name == "The Watcher" ? 1.8 : 0)
@@ -75,9 +75,8 @@ struct RoomPortalCard: View {
         switch room.name {
         case "The Descent", "The Return", "The Field":
             return .loraItalic(size, weight: .medium)
-        case "The Watcher":
-            return .spaceMono(size)
         default:
+            // The Watcher stays Lora (uppercased + tracked), not Space Mono — comp Room Selection.
             return .lora(size, weight: .medium)
         }
     }

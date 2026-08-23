@@ -140,20 +140,22 @@ struct GameView: View {
     // MARK: - Hero
 
     private var hero: some View {
-        VStack(spacing: BinduTheme.space16) {
+        let style = RoomStyle.forRoom(currentRoom.name)
+        return VStack(spacing: BinduTheme.space16) {
             GlyphView(
                 glyph: currentRoom.glyph,
-                size: max(52, currentRoom.glyphSize * 1.15),   // per-room size (comp 44–78), not uniform 92
+                size: style.heroGlyph,                 // the room's own hero glyph scale (comp 44–78)
                 color: currentRoom.color,
                 animation: currentRoom.animation,
-                glow: max(52, currentRoom.glyphSize * 1.15) * 0.30   // the hero glow reads strong
+                glow: style.heroGlyph * 0.30           // the hero glow reads strong
             )
             .id(currentRoom.id)
 
-            Text(currentRoom.name)
-                .font(roomNameFont)
+            // the room's own bespoke title typography (comp nameStyle), not a uniform 28pt
+            Text(style.uppercase ? currentRoom.name.uppercased() : currentRoom.name)
+                .font(style.heroFont)
                 .foregroundColor(BinduTheme.inkPrimary)
-                .tracking(currentRoom.name == "The Watcher" ? 2.0 : 0)
+                .tracking(style.heroTracking)
 
             if !currentRoom.blurb.isEmpty {
                 Text(currentRoom.blurb)
@@ -165,17 +167,6 @@ struct GameView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.top, BinduTheme.space12)
-    }
-
-    private var roomNameFont: Font {
-        switch currentRoom.name {
-        case "The Descent", "The Return", "The Field":
-            return .loraItalic(28, weight: .medium)
-        case "The Watcher":
-            return .spaceMono(20)
-        default:
-            return .lora(28, weight: .medium)
-        }
     }
 
     // Chrome label in the floating nav bar. Honors the room's canonical
