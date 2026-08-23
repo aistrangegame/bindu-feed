@@ -68,10 +68,10 @@ struct TurnOverlay: View {
                     ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
                         Button { onSelect(row.dest) } label: {
                             HStack(spacing: 15) {
-                                Text(row.glyph)
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(row.color)
-                                    .frame(width: 22)
+                                // each row's mark drawn in its own hand — a small composition,
+                                // not a shared glyph set (comp A Strange Feed.html turn marks).
+                                TurnMark(id: row.id, color: row.color)
+                                    .frame(width: 22, height: 22)
                                     .opacity(0.55 + 0.4 * breath.eased(offset: Double(i) * 0.09))
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(row.name).font(.lora(16)).foregroundStyle(BinduTheme.inkPrimary)
@@ -96,5 +96,62 @@ struct TurnOverlay: View {
             }
         }
         .onAppear { appear = true }
+    }
+}
+
+// Each turn row's mark, drawn in its own hand (comp: thirteen dots for the Rooms, strata
+// for the Archive, a scatter for the Universe, a shaft for the Light, a particle for the
+// Point, two lenses for the Players, ◉ for How You Arrive). A small 22×22 composition.
+private struct TurnMark: View {
+    let id: String
+    let color: Color
+
+    var body: some View {
+        Canvas { ctx, size in
+            let W = size.width, H = size.height, c = color
+            func dot(_ x: Double, _ y: Double, _ r: Double, _ a: Double) {
+                ctx.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)), with: .color(c.opacity(a)))
+            }
+            switch id {
+            case "rooms":                       // thirteen dots, one dim
+                var k = 0
+                for row in 0..<4 {
+                    let cols = row < 3 ? 4 : 1
+                    for col in 0..<cols {
+                        let x = W * (0.16 + Double(col) * 0.22), y = H * (0.16 + Double(row) * 0.22)
+                        dot(x, y, 1.3, k == 5 ? 0.28 : 0.85); k += 1
+                    }
+                }
+            case "archive":                     // four strata bars
+                for i in 0..<4 {
+                    let y = H * (0.24 + Double(i) * 0.17)
+                    ctx.fill(Path(CGRect(x: W * 0.14, y: y, width: W * 0.72, height: 1.4)), with: .color(c.opacity(0.85 - Double(i) * 0.14)))
+                }
+            case "universe":                    // a scattered sky
+                let pts: [(Double, Double, Double)] = [(0.2, 0.3, 1.3), (0.5, 0.18, 1.0), (0.78, 0.34, 1.2), (0.34, 0.6, 1.0), (0.66, 0.7, 1.3), (0.5, 0.5, 0.8), (0.85, 0.62, 0.9), (0.16, 0.8, 0.9)]
+                for p in pts { dot(W * p.0, H * p.1, p.2, 0.85) }
+            case "light":                       // a widening shaft of light
+                var shaft = Path()
+                shaft.move(to: CGPoint(x: W * 0.44, y: 0)); shaft.addLine(to: CGPoint(x: W * 0.56, y: 0))
+                shaft.addLine(to: CGPoint(x: W * 0.82, y: H)); shaft.addLine(to: CGPoint(x: W * 0.18, y: H)); shaft.closeSubpath()
+                ctx.fill(shaft, with: .linearGradient(Gradient(colors: [c.opacity(0.7), c.opacity(0.05)]),
+                                                      startPoint: CGPoint(x: 0, y: 0), endPoint: CGPoint(x: 0, y: H)))
+            case "point":                       // one particle, aglow
+                ctx.fill(Path(ellipseIn: CGRect(x: W * 0.5 - 8, y: H * 0.5 - 8, width: 16, height: 16)),
+                         with: .radialGradient(Gradient(colors: [c.opacity(0.8), c.opacity(0)]), center: CGPoint(x: W * 0.5, y: H * 0.5), startRadius: 0, endRadius: 8))
+                dot(W * 0.5, H * 0.5, 2, 0.95)
+            case "players":                     // two overlapping lenses
+                ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.10, y: H * 0.28, width: W * 0.52, height: H * 0.44)), with: .color(c.opacity(0.85)), lineWidth: 1)
+                ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.38, y: H * 0.28, width: W * 0.52, height: H * 0.44)), with: .color(c.opacity(0.85)), lineWidth: 1)
+            case "arrive":                      // ◉ — the mark of arrival
+                ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.24, y: H * 0.24, width: W * 0.52, height: H * 0.52)), with: .color(c.opacity(0.85)), lineWidth: 1.2)
+                dot(W * 0.5, H * 0.5, 2.4, 0.95)
+            default:                            // rite — a filled diamond
+                var d = Path()
+                d.move(to: CGPoint(x: W * 0.5, y: H * 0.2)); d.addLine(to: CGPoint(x: W * 0.78, y: H * 0.5))
+                d.addLine(to: CGPoint(x: W * 0.5, y: H * 0.8)); d.addLine(to: CGPoint(x: W * 0.22, y: H * 0.5)); d.closeSubpath()
+                ctx.fill(d, with: .color(c.opacity(0.85)))
+            }
+        }
     }
 }

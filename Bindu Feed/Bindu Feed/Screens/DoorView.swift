@@ -111,6 +111,8 @@ struct DoorView: View {
             RadialGradient(colors: [room.opacity(0.16), room.opacity(0.03), .clear],
                            center: UnitPoint(x: 0.5, y: -0.08), startRadius: 0, endRadius: 520)
                 .ignoresSafeArea().allowsHitTesting(false)
+            // the air rises — something is coming to meet you
+            DoorDust(rising: true, color: room).ignoresSafeArea()
 
             VStack(spacing: 18) {
                 Spacer()

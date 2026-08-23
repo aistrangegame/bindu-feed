@@ -154,6 +154,9 @@ struct PracticeDoorView: View {
                 startRadius: 0,
                 endRadius: 440
             )
+
+            // the air settles — the day's light has passed
+            DoorDust(rising: false, color: accent)
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)

@@ -108,6 +108,12 @@ struct LightView: View {
                 .frame(width: 28 * (1.10 + still * 1.30), height: 28 * (1.10 + still * 1.30))
 
             VStack {
+                Spacer().frame(height: 90)
+                // the scene's name, fading as stillness deepens (comp The Light v2 approach)
+                Text(scene.title)
+                    .font(.lora(20)).italic()
+                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.75 * (1 - still)))
+                    .multilineTextAlignment(.center).padding(.horizontal, 40)
                 Spacer()
                 if still > 0.18 {
                     Text(LightCanon.gateLine)
