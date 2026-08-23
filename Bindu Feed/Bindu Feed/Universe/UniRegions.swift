@@ -131,6 +131,49 @@ let uniRooms: [UniRoom] = [
     UniRoom(id: "The Return",      hex: "#9B6BD6", x: 140,  y: 1020,  r: 165, n: 6,  civ: "ports"),
 ]
 
+// ── the structure lens (uni-sky.js STRUCTURES / uni-rooms.js) ──
+// The beliefs that built the place. Under the lens the lit sky sinks back and a lattice is
+// thrown over each region — one belief per region, its nodes strung on the region's own
+// spread, `loose` beliefs wobbling more, `proof` nodes pulsing. Held-edges, nothing counted.
+struct UniStructNode { let x, y: Double; let proof: Bool; let ph: Double }
+struct UniStructure { let room: Int; let name: String; let loose: Double; let nodes: [UniStructNode] }
+
+let uniStructures: [UniStructure] = {
+    // (room index into uniRooms, belief, looseness) — verbatim from uni-rooms.js STRUCTURES.
+    let defs: [(Int, String, Double)] = [
+        (2,  "I was sentenced to this life",               0.15),
+        (2,  "consciousness suffering leads to positivity", 0.05),
+        (4,  "I am individual",                            0.62),
+        (6,  "I am alone in my consciousness",             0.78),
+        (6,  "separation",                                 0.30),
+        (8,  "I was broken and needed repair",             0.48),
+        (9,  "I lost what needed earning back",            0.22),
+        (10, "permanence",                                 0.36),
+        (11, "love comes from elsewhere",                  0.70),
+        (3,  "scarcity",                                   0.12),
+        (5,  "control",                                    0.26),
+        (7,  "transaction",                                0.08),
+        (0,  "hierarchy",                                  0.18),
+    ]
+    return defs.enumerated().map { (i, def) in
+        let rm = uniRooms[def.0]
+        let N = 5 + Int(UniGeo.hash(Double(i) * 5.5) * 3)
+        let a0 = UniGeo.hash(Double(i) * 2.2) * UniGeo.TAU
+        let spread = rm.r * 0.62
+        var nodes: [UniStructNode] = []
+        for j in 0..<N {
+            let tt = Double(j) / Double(max(1, N - 1))
+            let a = a0 + (tt - 0.5) * 2.1 + sin(Double(i) * 1.7 + Double(j) * 1.3) * 0.34
+            let rr = spread * (0.26 + tt * 0.74)
+            nodes.append(UniStructNode(
+                x: rm.x + cos(a) * rr, y: rm.y + sin(a) * rr * 0.85,
+                proof: UniGeo.hash(Double(i) * 9.1 + Double(j)) > 0.58,
+                ph: UniGeo.hash(Double(i) * 3.7 + Double(j)) * UniGeo.TAU))
+        }
+        return UniStructure(room: def.0, name: def.1, loose: def.2, nodes: nodes)
+    }
+}()
+
 // ── the dispatcher: arm() draws the region's figure at sky scale; field() its weather inside ──
 enum RegionForm {
     static func arm(_ ctx: GraphicsContext, _ rm: UniRoom, cx: Double, cy: Double, R: Double, t: Double, a: Double, c: [Double]) {

@@ -27,6 +27,12 @@ struct UniverseView: View {
     // When the fall register was reached — drives the four-layer descent's depth d (0→~0.95).
     @State private var fallStartT: Double? = nil
 
+    // The structure lens — 0 lit sky … 1 the belief-lattice thrown over the regions. A quiet
+    // toggle ramps it; the draw reads the live value each TimelineView tick.
+    @State private var lens: Double = 0
+    @State private var lensOn = false
+    @State private var lensTimer: Timer?
+
     // Reading distance from the register: sky far → fall close.
     private var scale: Int {
         switch register.key { case "sky": return 0; case "region": return 1; case "world": return 2; default: return 3 }
@@ -53,6 +59,21 @@ struct UniverseView: View {
                         Spacer().frame(height: 60)
                     }
                 }
+                // The structure lens toggle — only where the regions are legible (sky/region).
+                if scale <= 1 {
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Button(action: toggleLens) {
+                                Text(lensOn ? "the light ›" : "the structure ›")
+                                    .font(.spaceMono(9)).tracking(2)
+                                    .foregroundStyle(Color(hex: "#AAB2BC").opacity(lensOn ? 0.9 : 0.5))
+                                    .padding(16)
+                            }
+                        }
+                    }
+                }
             }
             .contentShape(Rectangle())
             // Tap to APPROACH — choose which star's world you fall into. A discrete tap
@@ -66,6 +87,19 @@ struct UniverseView: View {
             fallStartT = key == "fall" ? Date().timeIntervalSinceReferenceDate : nil
         }
         .onAppear { if register.key == "fall" { fallStartT = Date().timeIntervalSinceReferenceDate } }
+        .onDisappear { lensTimer?.invalidate() }
+    }
+
+    // Ramp the lens toward its toggled target over ~1s (Canvas reads `lens` each tick).
+    private func toggleLens() {
+        lensOn.toggle()
+        let target: Double = lensOn ? 1 : 0
+        lensTimer?.invalidate()
+        lensTimer = Timer.scheduledTimer(withTimeInterval: 0.033, repeats: true) { _ in
+            let step = 0.06
+            if abs(lens - target) <= step { lens = target; lensTimer?.invalidate(); lensTimer = nil }
+            else { lens += lens < target ? step : -step }
+        }
     }
 
     // Map a tap to the nearest star and make it the approached focus.
@@ -185,6 +219,56 @@ struct UniverseView: View {
                 let sw = starWorld(rm, i, s)
                 let sp = worldToScreen(sw.0, sw.1, size, zoom: zoom, focus: focus)
                 drawStar(ctx, at: sp, story: s, color: color, index: i, t: t)
+            }
+        }
+
+        // ── the structure lens: the lit sky sinks back and the belief-lattice is thrown over ──
+        if lens > 0.02 {
+            // the light dims — two ways of standing in the same place (uni-sky.js lens)
+            ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
+                     with: .color(Color(.sRGB, red: 8 / 255, green: 7 / 255, blue: 11 / 255, opacity: 0.36 * lens)))
+            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens)
+        }
+    }
+
+    // The belief-lattices, beneath the light (uni-sky.js STRUCTURES): a wobbling held-edge
+    // strand through each region's nodes, proof-nodes pulsing, the belief named at the head.
+    private func drawStructures(_ ctx: GraphicsContext, _ size: CGSize, t: Double, zoom: Double, focus: CGPoint, lens: Double) {
+        let W = size.width, H = size.height, z = zoom
+        for (i, st) in uniStructures.enumerated() {
+            let soft = st.loose
+            let a = lens * (0.46 - soft * 0.24)
+            let col = UniGeo.mix(UniGeo.BONE, [168, 178, 188], soft * 0.5)
+            let wob = 1 + soft * 2.6
+            let pts: [CGPoint] = st.nodes.map { nd in
+                worldToScreen(nd.x + sin(t * 0.16 + nd.ph) * wob * 5,
+                              nd.y + cos(t * 0.13 + nd.ph * 1.3) * wob * 5,
+                              size, zoom: zoom, focus: focus)
+            }
+            if pts.allSatisfy({ $0.x < -60 || $0.x > W + 60 || $0.y < -60 || $0.y > H + 60 }) { continue }
+            _ = i
+            // the strand — a quadratic through the node midpoints (comp quadraticCurveTo)
+            if pts.count >= 2 {
+                var path = Path(); path.move(to: pts[0])
+                for j in 1..<pts.count {
+                    let mid = CGPoint(x: (pts[j - 1].x + pts[j].x) / 2, y: (pts[j - 1].y + pts[j].y) / 2)
+                    path.addQuadCurve(to: mid, control: pts[j - 1])
+                }
+                path.addLine(to: pts[pts.count - 1])
+                ctx.stroke(path, with: .color(UniGeo.col(col, a)),
+                           style: StrokeStyle(lineWidth: max(0.8, 1.4 * min(1.6, z)), lineCap: .round))
+            }
+            // the nodes — proof-nodes pulse, held-nodes sit quiet
+            for (j, nd) in st.nodes.enumerated() {
+                let p = pts[j]
+                let gl = nd.proof ? (0.5 + 0.5 * sin(t * 0.7 + nd.ph)) : 0.25
+                let r = (1.6 + (nd.proof ? 1.6 : 0)) * min(2, max(0.8, z))
+                ctx.fill(UniGeo.ringPath(p.x, p.y, r), with: .color(UniGeo.col(col, lens * (0.20 + gl * 0.44 - soft * 0.12))))
+            }
+            // the belief, named at the head node
+            if z > 0.85, z < 6, let head = pts.first {
+                ctx.draw(Text(st.name).font(.spaceMono(9)).foregroundStyle(UniGeo.col(col, lens * min(0.42, (z - 0.85) * 0.7))),
+                         at: CGPoint(x: head.x + 11, y: head.y + 3), anchor: .leading)
             }
         }
     }
