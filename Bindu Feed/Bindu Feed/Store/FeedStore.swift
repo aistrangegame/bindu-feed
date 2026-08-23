@@ -601,7 +601,8 @@ final class FeedStore: ObservableObject {
         let story = candidates[Int(h % UInt32(candidates.count))]
         guard let sealed = sealedByStory[story.id] else { return nil }
         let field = await loadComments(for: story.id).field
-        return buildReturnData(story: story, sealed: sealed, field: field)
+        let seals = ash.filter { $0.linkedStoryId == story.id && !$0.body.isEmpty }
+        return buildReturnData(story: story, sealed: sealed, field: field, seals: seals)
     }
 
     // The Return of a SPECIFIC story — used when the user taps "return" beneath a story
@@ -610,16 +611,16 @@ final class FeedStore: ObservableObject {
     // defensive edge case).
     func returnData(for story: Story) async -> ReturnStoryData? {
         let (field, ash) = await loadComments(for: story.id)
-        guard let sealed = ash.filter({ !$0.body.isEmpty })
-            .max(by: { $0.sourceDate < $1.sourceDate }) else { return nil }
-        return buildReturnData(story: story, sealed: sealed, field: field)
+        let seals = ash.filter { !$0.body.isEmpty }
+        guard let sealed = seals.max(by: { $0.sourceDate < $1.sourceDate }) else { return nil }
+        return buildReturnData(story: story, sealed: sealed, field: field, seals: seals)
     }
 
     // Assemble a ReturnStoryData from a story, the self sealed on it, and its gathering.
     // `record` is the full aged gathering (real voices, "kept exactly as it was sealed");
     // `anew` highlights up to two who sat with it. Falls back to canon voices only when a
     // story genuinely carries no field comments.
-    private func buildReturnData(story: Story, sealed: FieldComment, field: [FieldComment]) -> ReturnStoryData {
+    private func buildReturnData(story: Story, sealed: FieldComment, field: [FieldComment], seals: [FieldComment] = []) -> ReturnStoryData {
         var anew: [ReturnCanon.AnewVoice] = []
         var seen = Set<String>()
         for c in field {
@@ -635,6 +636,9 @@ final class FeedStore: ObservableObject {
             .components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+        // Each own-words seal on this story is one ring; the earliest is when he first met it.
+        let ringCount = max(1, seals.count)
+        let firstMetDay = seals.map { $0.sourceDate }.min() ?? story.sourceDate
         return ReturnStoryData(
             title: story.title, roomName: story.room, roomColor: room?.color ?? RiteCanon.roomColor,
             codexId: story.codexId, date: story.sourceDate,
@@ -642,7 +646,9 @@ final class FeedStore: ObservableObject {
             sealedWhen: ReturnCanon.sealedWhenPhrase(fromDay: sealed.sourceDate),
             sealedSelf: sealed.body,
             anew: anew.isEmpty ? ReturnCanon.anew : anew,
-            storyId: story.id, record: record)
+            storyId: story.id, record: record,
+            returnCount: ringCount,
+            firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay))
     }
 
     /// The Door's weather read: is today already met? True if the local same-day cache is

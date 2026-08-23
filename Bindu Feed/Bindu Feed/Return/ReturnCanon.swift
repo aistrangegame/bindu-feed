@@ -128,6 +128,25 @@ enum ReturnCanon {
         if days == 1 { return "yesterday" }
         return "\(days) days ago"
     }
+
+    // A readable calendar date ("April 3, 2026") for the "you first met this · <date>"
+    // line — same local, POSIX/Gregorian-fixed discipline. Falls back to the raw day.
+    static func firstMetDate(fromDay day: String) -> String {
+        let key = String(day.prefix(10))
+        guard !key.isEmpty else { return day }
+        let inDF = DateFormatter()
+        inDF.calendar = Calendar(identifier: .gregorian)
+        inDF.locale = Locale(identifier: "en_US_POSIX")
+        inDF.timeZone = .current
+        inDF.dateFormat = "yyyy-MM-dd"
+        guard let then = inDF.date(from: key) else { return day }
+        let outDF = DateFormatter()
+        outDF.calendar = Calendar(identifier: .gregorian)
+        outDF.locale = Locale(identifier: "en_US_POSIX")
+        outDF.timeZone = .current
+        outDF.dateFormat = "MMMM d, yyyy"
+        return outDF.string(from: then)
+    }
 }
 
 // A Return's story — a story the user has SEALED (has their own words on), rotating
@@ -146,10 +165,12 @@ struct ReturnStoryData {
     let anew: [ReturnCanon.AnewVoice]
     let storyId: String            // where a new ring (the reply) is written; "" = canon demo, no target
     let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
+    var returnCount: Int = 1       // rings already sealed here (each seal = one ring); ≥1
+    var firstMet: String = ReturnCanon.firstMetDate(fromDay: RiteCanon.date)  // "you first met this · <date>"
 
     static let canon = ReturnStoryData(
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
         codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body,
         sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew,
-        storyId: "", record: RiteVoices.all)
+        storyId: "", record: RiteVoices.all, returnCount: 2)
 }

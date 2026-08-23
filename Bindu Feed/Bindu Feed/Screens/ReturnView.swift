@@ -29,6 +29,8 @@ struct ReturnView: View {
     @State private var ringAdded = false
     @State private var replyText = ""
     @State private var sealPhase = 0
+    @State private var fallZoom: CGFloat = 1        // the inward rush of the fall
+    @State private var fallFade: Double = 1
 
     // The Reply quotes his real prior words (never generated) — from THIS story's sealed self.
     private var prompt: ReturnCanon.ReplyPrompt { ReturnCanon.replyPrompt(prior: storyData.sealedSelf) }
@@ -84,24 +86,34 @@ struct ReturnView: View {
             Text(ReturnCanon.summonsLine).font(.lora(14)).italic().foregroundStyle(BinduTheme.inkSecondary)
             Text(storyData.title).font(.lora(26, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
                 .multilineTextAlignment(.center).padding(.top, 6)
+            // The sealed line, cut in — debossed, not printed (the seal is pressed, not written).
             Text("\(storyData.codexId) · sealed \(storyData.sealedWhen)")
                 .font(.spaceMono(9)).tracking(1).foregroundStyle(BinduTheme.inkTertiary)
+                .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)
+            Text("you first met this · \(storyData.firstMet)")
+                .font(.spaceMono(9)).tracking(1).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
             hint(ReturnCanon.summonsHint)
         }
         .contentShape(Rectangle())
         .onTapGesture { withAnimation(.easeInOut(duration: 1.2)) { stage = .fall } }
     }
 
-    // (the fall — a fade; the axis fall ships Wave 6)
+    // The fall — an inward rush toward the sealed story: the mark accelerates past you as
+    // you drop in, the strata behind widening. (A localized inward-zoom; the full axis-driven
+    // fall shares the Universe's four-layer descent and ships with the Wave-6 axis.)
     private var fall: some View {
         centered {
             Text("\(storyData.codexId)")
                 .font(.spaceMono(10)).tracking(2).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
-                .modifier(RiteBreathe())
         }
+        .scaleEffect(fallZoom)
+        .opacity(fallFade)
         .onAppear {
             soundEngine.riteBowl(hz: 168)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+            fallZoom = 0.6; fallFade = 0.2
+            withAnimation(.easeIn(duration: 2.4)) { fallZoom = 3.2; fallFade = 0 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+                fallZoom = 1; fallFade = 1
                 withAnimation(.easeInOut(duration: 1.2)) { stage = .room }
             }
         }
@@ -197,7 +209,7 @@ struct ReturnView: View {
     private var rings: some View {
         centered {
             Text(ReturnCanon.ringsTitle).font(.spaceMono(9)).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
-            ReturnRings(newRing: false).frame(height: 180)
+            ReturnRings(newRing: false, priorRings: storyData.returnCount).frame(height: 180)
             Text(ReturnCanon.ringsBody).font(.lora(14)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center)
             hint(ReturnCanon.ringsHint)
@@ -261,7 +273,7 @@ struct ReturnView: View {
     private var sealing: some View {
         centered {
             Text("◉ you, now · today").font(.spaceMono(9)).tracking(0.5).foregroundStyle(ReturnCanon.ashColor)
-            ReturnRings(newRing: true).frame(height: 150)
+            ReturnRings(newRing: true, priorRings: storyData.returnCount).frame(height: 150)
             if sealPhase == 0 {
                 Text(ReturnCanon.sealPlain).font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary).multilineTextAlignment(.center)
             }
@@ -296,27 +308,32 @@ struct ReturnView: View {
     }
 }
 
-// The strata: a seed with a ring for each return, the newest the plainest.
+// The strata: a seed with a ring for EACH return he sealed here (not a fixed two), the
+// oldest dimmest; the new ring — the reply he adds today — is the plainest, growing.
 private struct ReturnRings: View {
     let newRing: Bool
+    var priorRings: Int = 2
     @State private var grow: CGFloat = 0
 
     var body: some View {
         Canvas { ctx, size in
             let cx = size.width / 2, cy = size.height / 2
-            let gap = min(size.width, size.height) * 0.13
+            let n = max(1, priorRings)
+            // Keep the whole strata inside the frame however many rings there are.
+            let gap = min(size.width, size.height) * 0.45 / Double(n + 1)
             // The seed.
             ctx.fill(Path(ellipseIn: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8)),
                      with: .color(Color(hex: "#E4DCC8")))
-            // Past rings — aged (amber, dimmer).
-            for i in 1...2 {
+            // Past rings — aged (amber), dimming outward toward the oldest.
+            for i in 1...n {
                 let r = 8 + Double(i) * gap
+                let age = Double(i) / Double(n + 1)               // 0 newest-of-old … →1 oldest
                 ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
-                           with: .color(Color(hex: "#D0A048").opacity(0.5 - Double(i) * 0.12)), lineWidth: 1)
+                           with: .color(Color(hex: "#D0A048").opacity(0.5 - age * 0.30)), lineWidth: 1)
             }
-            // The new ring — the plainest thing on the screen, growing.
+            // The new ring — today's reply, the plainest thing on the screen, growing.
             if newRing {
-                let r = (8 + 3 * gap) * grow
+                let r = (8 + Double(n + 1) * gap) * grow
                 ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
                            with: .color(Color(hex: "#E4DCC8").opacity(0.85 * grow)), lineWidth: 1.2)
             }
