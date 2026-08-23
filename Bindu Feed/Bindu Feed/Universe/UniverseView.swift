@@ -189,6 +189,10 @@ struct UniverseView: View {
             return
         }
 
+        // ── the deep sky: a coloured ground + three parallax depths of dust, so the sky has
+        // thickness (uni-sky.js) — drawn behind everything at the sky/region distances ──
+        drawDeepSky(ctx, size, t, focus: focus, zoom: zoom)
+
         // ── region weather: the focus region's own field, when you're inside it ──
         if scale >= 1 {
             RegionForm.field(ctx, focusRoom, W, H, t: t, a: 0.5, c: focusRoom.rgb)
@@ -236,6 +240,32 @@ struct UniverseView: View {
             // Names read only once you've come in to a region (comp fades them in on zoom-in);
             // at full sky, thirteen labelled beliefs would crowd the whole field.
             drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: scale >= 1)
+        }
+    }
+
+    // The deep sky (uni-sky.js §170): a coloured radial ground, then three parallax depths of
+    // dust so the sky reads as a volume, not a flat black. Nearer layers shift more with the
+    // approached focus (a quiet parallax; the axis pans in depth, not laterally).
+    private func drawDeepSky(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double, focus: CGPoint, zoom: Double) {
+        let W = size.width, H = size.height
+        ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)), with: .radialGradient(
+            Gradient(stops: [.init(color: Color(hex: "#080711"), location: 0),
+                             .init(color: Color(hex: "#040307"), location: 1)]),
+            center: CGPoint(x: W / 2, y: H * 0.42), startRadius: 0, endRadius: max(W, H) * 0.85))
+        let counts = [58, 38, 38]
+        for (L, n) in counts.enumerated() {
+            let par = 0.30 + Double(L) * 0.40
+            let a = 0.10 + Double(L) * 0.05
+            let sz = 0.6 + Double(L) * 0.5
+            for i in 0..<n {
+                let hx = nhash(Double(i) * 1.3 + Double(L) * 40)
+                let hy = nhash(Double(i) * 2.7 + Double(L) * 71)
+                var px = hx * W - (focus.x - 0.5) * W * par * 0.35
+                px = px.truncatingRemainder(dividingBy: W); if px < 0 { px += W }
+                let y = hy * H
+                let tw = 0.5 + 0.5 * abs(sin(t * 0.5 + hx * 6.2831))
+                ctx.fill(UniGeo.ringPath(px, y, sz), with: .color(Color(hex: "#C9CEDA").opacity(a * tw)))
+            }
         }
     }
 
@@ -303,18 +333,33 @@ struct UniverseView: View {
                 ctx.stroke(UniGeo.ringPath(sx, sy, dr), with: .color(color.opacity(0.05)), lineWidth: 0.5)
             }
         }
-        // ── the company: one mote per voice that spoke, each at its own phase ──
-        // (uni-field.js — never synchronises: per-star seed + varied period)
+        // ── the company: one mote per voice that spoke, each at ITS OWN period + phase so the
+        // sky never synchronises into a mechanism (uni-field.js law). Lalita always threads and
+        // her orbit alone breathes; Ash joins when he returned more than the field spoke. ──
         if scale >= 1 {
-            let voices = store.stats(for: s.id).archetypes
-            let seed = hash(s.id)
-            let per = 3.0 + seed * 23.0                    // 3–26s family
-            for (v, name) in voices.prefix(6).enumerated() {
-                let ang = Double(v) / 6 * 2 * .pi + t * (2 * .pi / per) + seed * 6.2831
-                let orbit = sz * 5.5
+            let stats = store.stats(for: s.id)
+            var names = Array(stats.archetypes.prefix(6))
+            if !names.contains(where: { $0.lowercased() == "lalita" }) { names.append("Lalita") }
+            let starSeed = hash(s.id)
+            for (v, name) in names.prefix(7).enumerated() {
+                let isLalita = name.lowercased() == "lalita"
+                let ms = hash(s.id + name)               // per-attendant seed → own period/phase/orbit
+                let per = 3.0 + ms * 23.0                 // 3–26s, each its own
+                let ph = ms * 6.2831 + Double(v) * 0.7
+                var orbit = sz * (4.6 + ms * 2.4)
+                if isLalita { orbit *= 1 + 0.18 * sin(t * 0.31 + starSeed * 6.2831) }  // the thread wobbles
+                let ang = t * (2 * .pi / per) + ph
                 let mx = sx + cos(ang) * orbit, my = sy + sin(ang) * orbit
                 let mc = store.archetype(named: name)?.color ?? color
-                ctx.fill(UniGeo.ringPath(mx, my, 1.2), with: .color(mc.opacity(0.7)))
+                ctx.fill(UniGeo.ringPath(mx, my, isLalita ? 1.4 : 1.2), with: .color(mc.opacity(isLalita ? 0.8 : 0.7)))
+            }
+            // Ash's own mote — when the thread ran longer than the voices that spoke.
+            if stats.commentCount > stats.archetypes.count + 1 {
+                let ms = hash(s.id + "ash")
+                let ang = t * (2 * .pi / (4.0 + ms * 20.0)) + ms * 6.2831
+                let orbit = sz * 3.4
+                let ac = store.archetype(named: "Ash")?.color ?? BinduTheme.colorAsh
+                ctx.fill(UniGeo.ringPath(sx + cos(ang) * orbit, sy + sin(ang) * orbit, 1.5), with: .color(ac.opacity(0.85)))
             }
         }
     }
@@ -552,18 +597,31 @@ struct UniverseView: View {
             let voices = Array(store.stats(for: story.id).archetypes.prefix(6))
             let m = max(1, voices.count)
             for (i, name) in voices.enumerated() {
+                let isAsh = name.lowercased() == "ash"
                 let ang = Double(i) / Double(m) * UniGeo.TAU + t * (1 - set * 0.92) * 0.3
                 let orbX = cx + cos(ang) * Sr * 2.2, orbY = cy + sin(ang) * Sr * 2.2
                 let f = m < 2 ? 0.5 : (Double(i) + 0.5) / Double(m)
                 let seatAng = (0.11 + f * 0.78) * Double.pi
-                let seatX = cx + cos(seatAng) * S * 1.06, seatY = cy + sin(seatAng) * S * 0.98
+                // Ash sits closest to the story — the one who lived it (uni-fall.js seat()).
+                let seatX = isAsh ? cx - S * 0.24 : cx + cos(seatAng) * S * 1.06
+                let seatY = isAsh ? cy + S * 0.46 : cy + sin(seatAng) * S * 0.98
                 let px2 = orbX + (seatX - orbX) * set, py2 = orbY + (seatY - orbY) * set
-                let mc = store.archetype(named: name)?.color ?? Color(hex: rm.hex)
+                let arch = store.archetype(named: name)
+                let mc = arch?.color ?? Color(hex: rm.hex)
+                let glyph = arch?.glyph ?? "◌"
                 if set > 0.2 {
                     var line = Path(); line.move(to: CGPoint(x: cx, y: cy)); line.addLine(to: CGPoint(x: px2, y: py2))
                     ctx.stroke(line, with: .color(mc.opacity(0.20 * gath)), lineWidth: 0.6)
                 }
-                ctx.fill(UniGeo.ringPath(px2, py2, 3), with: .color(mc.opacity(0.66 * gath + set * 0.34)))
+                // the seat IS the presence — the archetype's own glyph, its name settling beneath
+                let seatAlpha = 0.66 * gath + set * 0.34
+                ctx.draw(Text(glyph).font(.lora(isAsh ? 19 : 17)).foregroundStyle(mc.opacity(seatAlpha)),
+                         at: CGPoint(x: px2, y: py2))
+                if set > 0.6 {
+                    ctx.draw(Text(name.uppercased()).font(.spaceMono(8))
+                                .foregroundStyle(mc.opacity(0.7 * (set - 0.6) / 0.4)),
+                             at: CGPoint(x: px2, y: py2 + 15))
+                }
             }
         }
 
