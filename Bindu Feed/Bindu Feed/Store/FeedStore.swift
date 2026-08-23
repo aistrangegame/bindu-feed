@@ -648,7 +648,8 @@ final class FeedStore: ObservableObject {
             anew: anew.isEmpty ? ReturnCanon.anew : anew,
             storyId: story.id, record: record,
             returnCount: ringCount,
-            firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay))
+            firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay),
+            audioReference: sealed.audioReference)
     }
 
     /// The Door's weather read: is today already met? True if the local same-day cache is

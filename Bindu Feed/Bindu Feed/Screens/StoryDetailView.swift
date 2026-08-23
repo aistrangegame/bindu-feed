@@ -39,6 +39,10 @@ struct StoryDetailView: View {
     @State private var showHub = false
     @State private var arrivalSettings: ArrivalSettings = .init()
 
+    // The Audio Anchor — one shared player for the whole story; a quiet mark on any Ash entry
+    // that kept a voice on this device. The full crossed-into playback lives in the Return.
+    @StateObject private var anchor = AudioAnchorPlayer()
+
     private enum DepthPhase {
         case closed
         case dim                  // overlay bg fades in, story dims under
@@ -87,7 +91,10 @@ struct StoryDetailView: View {
                                 AshPostedCard(
                                     commentBody: node.comment.body,
                                     date: formattedAshDate(node.comment.sourceDate),
-                                    name: arrivalName
+                                    name: arrivalName,
+                                    audioReference: node.comment.audioReference,
+                                    isPlayingThis: anchor.isPlaying && anchor.currentFile == node.comment.audioReference,
+                                    onPlayTap: { toggleAnchor(node.comment.audioReference) }
                                 )
                                 .padding(.horizontal, BinduTheme.space16)
                                 .padding(.top, 4)
@@ -138,6 +145,7 @@ struct StoryDetailView: View {
         .onDisappear {
             depthHoldTask?.cancel()
             depthAutoAdvanceTask?.cancel()
+            anchor.stop()
         }
         .sonicContext(storySonicContext)
         .hubOverlay(open: $showHub, path: $path)
@@ -315,6 +323,17 @@ struct StoryDetailView: View {
     // in .onAppear so a name change in Settings surfaces on next return.
     private var arrivalName: String {
         arrivalSettings.name.isEmpty ? "Ash" : arrivalSettings.name
+    }
+
+    // Tap the quiet voice mark: stop if this one is sounding, else play it (raw, no chrome).
+    // One shared player means tapping another entry replaces the first — only one voice sounds.
+    private func toggleAnchor(_ ref: String?) {
+        guard let ref, AudioAnchorPlayer.exists(ref) else { return }
+        if anchor.isPlaying && anchor.currentFile == ref {
+            anchor.stop()
+        } else {
+            anchor.play(ref) { /* the story surface holds no ceremony; it simply returns to quiet */ }
+        }
     }
 
     // The story's own room — the story carries the room's weather

@@ -32,6 +32,11 @@ struct ReturnView: View {
     @State private var fallZoom: CGFloat = 1        // the inward rush of the fall
     @State private var fallFade: Double = 1
 
+    // The Audio Anchor — the kept voice of the sealed self, reached here (the descent grants
+    // it). Raw, no chrome; the silence is held after it ends.
+    @StateObject private var anchor = AudioAnchorPlayer()
+    @State private var voiceHeldSilence = false
+
     // The Reply quotes his real prior words (never generated) — from THIS story's sealed self.
     private var prompt: ReturnCanon.ReplyPrompt { ReturnCanon.replyPrompt(prior: storyData.sealedSelf) }
 
@@ -58,6 +63,47 @@ struct ReturnView: View {
         }
         .navigationBarBackButtonHidden(true)
         .sonicContext(.base)
+        .onDisappear { anchor.stop() }
+    }
+
+    // The Audio Anchor affordance — quiet, never a loud play button; no scrubber, no timeline,
+    // no duration. Tap to hear the voice you left; while it sounds the ember breathes on the
+    // master clock; when it ends the silence is HELD (a settling mark, ~2.6s) before the
+    // affordance returns. (Law 3: no chrome. Law 4: hold the silence after.)
+    @ViewBuilder private func audioAnchor(_ ref: String) -> some View {
+        if voiceHeldSilence {
+            Text("◌")
+                .font(.system(size: 16))
+                .foregroundStyle(ReturnCanon.ashColor.opacity(0.30))
+                .padding(.top, 8)
+                .transition(.opacity)
+        } else if anchor.isPlaying, anchor.currentFile == ref {
+            Button { anchor.stop() } label: {
+                Text("◉")
+                    .font(.system(size: 20))
+                    .foregroundStyle(ReturnCanon.ashColor)
+                    .modifier(RiteBreathe())            // the ember breathes while the voice sounds
+            }
+            .padding(.top, 8)
+        } else {
+            Button {
+                anchor.play(ref) {
+                    // hold the silence after — no snap-back, no autoplay, no replay button
+                    withAnimation(.easeInOut(duration: 0.8)) { voiceHeldSilence = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
+                        withAnimation(.easeInOut(duration: 1.2)) { voiceHeldSilence = false }
+                    }
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Text("◉").font(.system(size: 13))
+                    Text("hear the voice you left")
+                        .font(.spaceMono(9)).tracking(1.5)
+                }
+                .foregroundStyle(ReturnCanon.ashColor.opacity(0.72))
+            }
+            .padding(.top, 8)
+        }
     }
 
     @ViewBuilder private var content: some View {
@@ -170,6 +216,11 @@ struct ReturnView: View {
                     .foregroundStyle(ReturnCanon.ashColor)
                     .saturation(0.85)                       // .dried — the past self, ash terracotta
                     .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)
+                // The kept voice, sounding over the aged self — his young voice, not yet knowing
+                // what he now knows. Only if the recording is on this device.
+                if AudioAnchorPlayer.exists(storyData.audioReference), let ref = storyData.audioReference {
+                    audioAnchor(ref)
+                }
                 Text(ReturnCanon.recordSettled).font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary).padding(.top, 6)
                 Button { cross(189, .field) } label: {
                     Text(ReturnCanon.recordButton).font(.loraItalic(14)).foregroundStyle(ReturnCanon.ashColor).padding(.vertical, 18)

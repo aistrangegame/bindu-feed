@@ -37,6 +37,7 @@ struct RecordFields: Codable {
     var linkedStory: [String]?
     var parentComment: [String]?
     var commentOrder: Int?
+    var audioReference: String?   // Movement IV — the on-device filename of the kept voice
 
     var glyph: String?
     var hexColor: String?
@@ -84,6 +85,7 @@ struct RecordFields: Codable {
         case linkedStory       = "Linked Story"
         case parentComment     = "Parent Comment"
         case commentOrder      = "Comment Order"
+        case audioReference    = "Audio Reference"
         case glyph             = "Glyph"
         case hexColor          = "Hex Color"
         case blurb             = "Blurb"
@@ -153,6 +155,9 @@ struct FieldComment: Identifiable, Hashable {
     let resonance: Int
     let sourceDate: String
     let type: String
+    /// Movement IV — the on-device filename of the kept voice (Return/Story playback).
+    /// nil for every comment that carries no audio (the ordinary case).
+    let audioReference: String?
 
     var isBinduSilence: Bool {
         body.trimmingCharacters(in: .whitespacesAndNewlines) == "·"
@@ -171,6 +176,8 @@ struct FieldComment: Identifiable, Hashable {
         self.resonance = f.resonance ?? 0
         self.sourceDate = f.sourceDate ?? ""
         self.type = f.type ?? ""
+        self.audioReference = f.audioReference?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            ? f.audioReference : nil
     }
 }
 

@@ -167,6 +167,7 @@ struct ReturnStoryData {
     let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
     var returnCount: Int = 1       // rings already sealed here (each seal = one ring); ≥1
     var firstMet: String = ReturnCanon.firstMetDate(fromDay: RiteCanon.date)  // "you first met this · <date>"
+    var audioReference: String? = nil   // Movement IV — the kept voice of the sealed self, if any
 
     static let canon = ReturnStoryData(
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,

@@ -53,6 +53,12 @@ struct AshPostedCard: View {
     let commentBody: String
     var date: String = "JUST NOW"
     var name: String = "Ash"
+    // The Audio Anchor, quietly: a small voice mark when this entry kept a recording that
+    // lives on THIS device. Never a loud play button — the story is the quiet surface; the
+    // voice is fully crossed-into through the Return. The parent owns the shared player.
+    var audioReference: String? = nil
+    var isPlayingThis: Bool = false
+    var onPlayTap: () -> Void = {}
 
     private let terra = BinduTheme.colorAsh
 
@@ -83,6 +89,14 @@ struct AshPostedCard: View {
                         .foregroundColor(BinduTheme.inkTertiary)
                 }
                 Spacer()
+                if AudioAnchorPlayer.exists(audioReference) {
+                    Button(action: onPlayTap) {
+                        Text("◉")
+                            .font(.system(size: 14))
+                            .foregroundColor(terra.opacity(isPlayingThis ? 1.0 : 0.42))
+                    }
+                    .buttonStyle(.plain)
+                }
             }
 
             Text(commentBody)
