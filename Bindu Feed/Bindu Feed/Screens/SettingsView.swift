@@ -38,9 +38,9 @@ struct SettingsView: View {
 
                     nameField
 
-                    glyphPicker
+                    moodPicker            // color first, then the mark (comp order)
 
-                    moodPicker
+                    glyphPicker
 
                     if hasChanges {
                         saveButton
@@ -157,76 +157,68 @@ struct SettingsView: View {
 
     // MARK: - Glyph picker
 
+    // The mark — a wrap-grid of 52pt rounded-square tiles (comp Settings.html "Your mark").
     private var glyphPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            sectionLabel("YOUR GLYPH")
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(Self.glyphOptions, id: \.self) { g in
-                        Button {
-                            glyph = g
-                        } label: {
-                            Text(g)
-                                .font(.system(size: 22))
-                                .foregroundColor(glyph == g ? selectedColor : BinduTheme.inkPrimary.opacity(0.85))
-                                .frame(width: 46, height: 46)
-                                .background(
-                                    Circle().fill(glyph == g ? selectedColor.opacity(0.18) : Color.white.opacity(0.04))
-                                )
-                                .overlay(
-                                    Circle().strokeBorder(
-                                        glyph == g ? selectedColor.opacity(0.60) : BinduTheme.hairline,
-                                        lineWidth: glyph == g ? 0.8 : 0.5
-                                    )
-                                )
-                        }
-                        .buttonStyle(.plain)
+        let cols = [GridItem(.adaptive(minimum: 52, maximum: 52), spacing: 8, alignment: .leading)]
+        return VStack(alignment: .leading, spacing: 14) {
+            sectionLabel("YOUR MARK")
+            LazyVGrid(columns: cols, alignment: .leading, spacing: 8) {
+                ForEach(Self.glyphOptions, id: \.self) { g in
+                    let active = glyph == g
+                    Button { glyph = g } label: {
+                        Text(g)
+                            .font(.system(size: 24))
+                            .foregroundColor(active ? selectedColor : BinduTheme.inkTertiary)
+                            .frame(width: 52, height: 52)
+                            .background(RoundedRectangle(cornerRadius: 14)
+                                .fill(active ? selectedColor.opacity(0.09) : Color.white.opacity(0.04)))
+                            .overlay(RoundedRectangle(cornerRadius: 14)
+                                .strokeBorder(active ? selectedColor.opacity(0.45) : BinduTheme.hairline, lineWidth: active ? 1 : 0.5))
+                            .shadow(color: active ? selectedColor.opacity(0.25) : .clear, radius: 8)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, 2)
             }
         }
     }
 
     // MARK: - Mood / color picker
 
+    // Your color today — a 2-column grid of mood CARDS: swatch + name + quality phrase
+    // (comp Settings.html "Your color today"), not a strip of bare circles.
     private var moodPicker: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            sectionLabel("YOUR MOOD")
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 14) {
-                    ForEach(Self.moods, id: \.hex) { mood in
-                        Button {
-                            colorHex = mood.hex
-                        } label: {
-                            VStack(spacing: 6) {
-                                Circle()
-                                    .fill(Color(hex: mood.hex))
-                                    .frame(width: 36, height: 36)
-                                    .overlay(
-                                        Circle().strokeBorder(
-                                            Color(hex: mood.hex).opacity(colorHex == mood.hex ? 1.0 : 0.0),
-                                            lineWidth: 1
-                                        )
-                                        .scaleEffect(1.4)
-                                    )
-                                Text(mood.name.uppercased())
-                                    .font(.spaceMono(9))
-                                    .tracking(1.4)
-                                    .foregroundColor(
-                                        colorHex == mood.hex
-                                            ? Color(hex: mood.hex)
-                                            : BinduTheme.inkTertiary
-                                    )
+        let cols = [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
+        return VStack(alignment: .leading, spacing: 14) {
+            sectionLabel("YOUR COLOR TODAY")
+            LazyVGrid(columns: cols, spacing: 10) {
+                ForEach(Self.moods, id: \.hex) { mood in
+                    let active = colorHex == mood.hex
+                    let mc = Color(hex: mood.hex)
+                    Button { colorHex = mood.hex } label: {
+                        HStack(spacing: 12) {
+                            Circle().fill(mc).frame(width: 28, height: 28)
+                                .shadow(color: active ? mc.opacity(0.6) : .clear, radius: 8)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(mood.name)
+                                    .font(.lora(13, weight: .medium))
+                                    .foregroundColor(active ? mc : BinduTheme.inkSecondary)
+                                Text(mood.quality)
+                                    .font(.spaceMono(9)).tracking(0.3)
+                                    .foregroundColor(BinduTheme.inkTertiary)
                                     .lineLimit(1)
                             }
-                            .frame(width: 78)
+                            Spacer(minLength: 0)
                         }
-                        .buttonStyle(.plain)
+                        .padding(.horizontal, 14).padding(.vertical, 11)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(RoundedRectangle(cornerRadius: 14)
+                            .fill(active ? mc.opacity(0.078) : Color.white.opacity(0.04)))
+                        .overlay(RoundedRectangle(cornerRadius: 14)
+                            .strokeBorder(active ? mc.opacity(0.25) : BinduTheme.hairline, lineWidth: active ? 1 : 0.5))
+                        .shadow(color: active ? mc.opacity(0.10) : .clear, radius: 8)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 2)
             }
         }
     }
@@ -391,30 +383,25 @@ struct SettingsView: View {
 
     // MARK: - Options
 
-    static let glyphOptions: [String] = [
-        // Bindu first — the dot is the default arrival.
-        "·",
-        // Eight archetype glyphs.
-        "◆", "△", "◯", "◇", "✦", "⬡", "∞", "◉",
-        // Room glyphs that aren't already covered.
-        "◈", "○", "⊕", "◎", "✧", "▲"
-    ]
+    // The eight marks, verbatim from the comp (Settings.html GLYPHS).
+    static let glyphOptions: [String] = ["◉", "◈", "◆", "△", "✦", "⊕", "◎", "∞"]
 
     struct Mood {
         let hex: String
         let name: String
+        let quality: String
     }
 
+    // The eight moods with their quality phrases, verbatim from the comp (Settings.html MOODS).
     static let moods: [Mood] = [
-        Mood(hex: "#C47A52", name: "Grounded"),    // Terra / Ash
-        Mood(hex: "#9B6BD6", name: "Witnessing"),  // Lalita violet
-        Mood(hex: "#4A9E6B", name: "Receiving"),   // Gaia green
-        Mood(hex: "#7B82D4", name: "Observing"),   // Sakshi blue
-        Mood(hex: "#E5533C", name: "Arriving"),    // Bindu ember
-        Mood(hex: "#D4AE4A", name: "Playing"),     // Karishma gold
-        Mood(hex: "#C4923A", name: "Holding"),     // Sid amber
-        Mood(hex: "#D4607A", name: "Speaking"),    // Arch rose
-        Mood(hex: "#3AADA8", name: "Weaving")      // Ashrey teal
+        Mood(hex: "#C47A52", name: "Terra", quality: "grounded, present"),
+        Mood(hex: "#E5A352", name: "Ember", quality: "warm, seeking"),
+        Mood(hex: "#7B82D4", name: "Clear", quality: "witness, open"),
+        Mood(hex: "#4A9E6B", name: "Deep",  quality: "rooted, growing"),
+        Mood(hex: "#D4607A", name: "Open",  quality: "expressive, alive"),
+        Mood(hex: "#9B6BD6", name: "Play",  quality: "awake, aware"),
+        Mood(hex: "#C4923A", name: "Held",  quality: "solid, warm"),
+        Mood(hex: "#3AADA8", name: "Flow",  quality: "connected, synthesis"),
     ]
 }
 
