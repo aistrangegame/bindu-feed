@@ -87,15 +87,10 @@ struct LightView: View {
         case .nave:
             ZStack {
                 Color(hex: "#0A0A0C").ignoresSafeArea()
-                // A shaft from an aperture beyond the frame, a pool on stone.
-                LinearGradient(colors: [Color(hex: "#FBF9F4").opacity(0.10), .clear],
-                               startPoint: .top, endPoint: .center)
-                    .ignoresSafeArea().allowsHitTesting(false)
-                Ellipse().fill(Color(hex: "#FBF9F4").opacity(0.06))
-                    .frame(width: 220, height: 40)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-                    .offset(y: 170)
-                LightStars(material: .nave, breath: breath.value)
+                // The real nave — a dim stone interior, one shaft of light, the pool, the
+                // worn rings, the settling beam-dust, flooding dark → lit as the scene opens
+                // (The Light v2.html). Replaces the flat gradient + static ellipse stand-in.
+                LightNave(breath: breath, still: still, flooding: stage == .scene)
             }
         }
     }
