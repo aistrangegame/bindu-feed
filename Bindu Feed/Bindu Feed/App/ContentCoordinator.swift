@@ -12,6 +12,13 @@ struct ContentCoordinator: View {
     @State private var showTokenEntry = false
     @State private var doorCrossed = false
 
+    // The Door's native crossing motion — a blink (BUILD-LEDGER §2): leaving the Door
+    // through its gateway closes and reopens like an eyelid, two shades meeting at a
+    // hairline that glints in the field's warmth. Used at NO other surface (the turn
+    // dissolves; only the crossing blinks).
+    @State private var blinking = false
+    @State private var lid: CGFloat = 0      // 0 open … 1 shut (each lid covers its half)
+
     var body: some View {
         ZStack {
             BinduTheme.bgDeep.ignoresSafeArea()
@@ -24,11 +31,36 @@ struct ContentCoordinator: View {
                 })
                 .transition(.opacity)
             } else if !doorCrossed {
-                DoorView(onComplete: { doorCrossed = true })
+                DoorView(onComplete: crossDoor)
                     .transition(.opacity)
             } else {
                 RootView()
                     .transition(.opacity)
+            }
+
+            // The eyelid — above both the Door and the feed, so the swap happens unseen
+            // behind the shut lids and the field is revealed as they open.
+            if blinking {
+                GeometryReader { g in
+                    let half = g.size.height / 2
+                    ZStack {
+                        VStack(spacing: 0) {
+                            Rectangle().fill(Color(hex: "#050408")).frame(height: lid * half)
+                            Spacer(minLength: 0)
+                            Rectangle().fill(Color(hex: "#050408")).frame(height: lid * half)
+                        }
+                        // the hairline where the shades meet, glinting in the field's warmth
+                        Rectangle()
+                            .fill(Color(hex: "#C9A07A"))
+                            .frame(height: 1.4)
+                            .opacity(Double(lid) * 0.7)
+                            .position(x: g.size.width / 2, y: half)
+                            .blur(radius: 0.4)
+                    }
+                    .ignoresSafeArea()
+                }
+                .ignoresSafeArea()
+                .allowsHitTesting(true)   // swallow taps during the crossing
             }
         }
         .animation(.easeInOut(duration: 1.0), value: doorCrossed)
@@ -69,6 +101,23 @@ struct ContentCoordinator: View {
                 soundEngine.setBaseBreathSnapshot(
                     VoiceSnapshot(from: store.breath)
                 )
+            }
+        }
+    }
+
+    // The crossing — the eyelid closes, the feed is swapped in behind the shut lids
+    // (no crossfade — the blink IS the transition), then the lids open onto the field.
+    // ~0.30 close · ~0.12 hold · ~0.30 open, per the ledger's ~0.66s blink.
+    private func crossDoor() {
+        guard !blinking else { return }
+        blinking = true
+        withAnimation(.easeIn(duration: 0.30)) { lid = 1 }        // close
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
+            var tx = Transaction(); tx.disablesAnimations = true  // swap unseen, no dissolve
+            withTransaction(tx) { doorCrossed = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                withAnimation(.easeOut(duration: 0.30)) { lid = 0 } // open onto the field
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) { blinking = false }
             }
         }
     }
