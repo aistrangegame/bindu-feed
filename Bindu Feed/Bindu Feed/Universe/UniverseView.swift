@@ -12,23 +12,7 @@ import SwiftUI
 // Depth is read off resonance (res ≥85→8 · 60→5 · 44→3 · 28→1), exactly as the ledger
 // wires it. Nothing here is written or counted; the sky is the archive, derived.
 
-// The thirteen regions — id · colour · world-position · radius · civilisation (uni-rooms.js).
-private struct UniRoom { let id: String; let hex: String; let x, y, r: Double; let civ: String }
-private let uniRooms: [UniRoom] = [
-    .init(id: "The Forge", hex: "#D4AE4A", x: -470, y: -1010, r: 150, civ: "furnaces"),
-    .init(id: "The Signal", hex: "#3AADA8", x: 470, y: -980, r: 160, civ: "arrays"),
-    .init(id: "The Descent", hex: "#E5533C", x: -90, y: -880, r: 250, civ: "shafts"),
-    .init(id: "The Garden", hex: "#4A9E6B", x: 330, y: -620, r: 230, civ: "terraces"),
-    .init(id: "A Maya Game", hex: "#D4AE4A", x: -420, y: -430, r: 240, civ: "mirrorcities"),
-    .init(id: "The Watcher", hex: "#7B82D4", x: 110, y: -230, r: 190, civ: "towers"),
-    .init(id: "The Field", hex: "#9B6BD6", x: -200, y: 60, r: 280, civ: "weave"),
-    .init(id: "The Thread", hex: "#C4923A", x: 430, y: 150, r: 180, civ: "lines"),
-    .init(id: "The Body", hex: "#C45A50", x: -450, y: 330, r: 200, civ: "districts"),
-    .init(id: "The Forgetting", hex: "#C4A882", x: 70, y: 470, r: 215, civ: "ruins"),
-    .init(id: "The Remembering", hex: "#8AB5A0", x: 350, y: 700, r: 200, civ: "relight"),
-    .init(id: "The Circle", hex: "#D4607A", x: -330, y: 760, r: 175, civ: "rings"),
-    .init(id: "The Return", hex: "#B9AEA2", x: 60, y: 900, r: 175, civ: "ports"),
-]
+// The thirteen regions + their forms live in UniRegions.swift (ported from uni-rooms.js).
 
 struct UniverseView: View {
     let register: AxisRegister
@@ -37,6 +21,9 @@ struct UniverseView: View {
 
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
+
+    // The star the traveller approached — set by tapping a region/star (Tap to approach).
+    @State private var selectedStoryId: String? = nil
 
     // Reading distance from the register: sky far → fall close.
     private var scale: Int {
@@ -86,26 +73,39 @@ struct UniverseView: View {
         return v - floor(v)
     }
 
-    // World coords → screen, with the register's zoom pulling a region toward the frame.
-    private func regionCenter(_ rm: UniRoom, _ size: CGSize, zoom: Double, focus: CGPoint) -> CGPoint {
-        let nx = (rm.x + 490) / 980, ny = (rm.y + 1030) / 1930
-        var x = nx, y = ny
-        // zoom pulls the focused region to centre and magnifies around it
-        x = 0.5 + (nx - focus.x) * zoom
-        y = 0.5 + (ny - focus.y) * zoom
+    // World coords → screen, with the register's zoom pulling the focus region toward the frame.
+    private func worldToScreen(_ wx: Double, _ wy: Double, _ size: CGSize, zoom: Double, focus: CGPoint) -> CGPoint {
+        let nx = (wx + 490) / 980, ny = (wy + 1030) / 1930
+        let x = 0.5 + (nx - focus.x) * zoom
+        let y = 0.5 + (ny - focus.y) * zoom
         return CGPoint(x: x * size.width, y: y * size.height)
+    }
+    private func regionCenter(_ rm: UniRoom, _ size: CGSize, zoom: Double, focus: CGPoint) -> CGPoint {
+        worldToScreen(rm.x, rm.y, size, zoom: zoom, focus: focus)
+    }
+    // The star's world position: strung on its region's own armature (uni-rooms.js place()).
+    private func starWorld(_ rm: UniRoom, _ i: Int, _ story: Story) -> (Double, Double) {
+        let p = rm.place(i % max(1, rm.n))
+        let jx = (hash(story.id) - 0.5) * rm.r * 0.10
+        let jy = (hash(story.id + "j") - 0.5) * rm.r * 0.10
+        return (rm.x + p.0 + jx, rm.y + p.1 + jy)
     }
 
     // MARK: - Draw
 
+    // The story the traveller is approaching — the one they tapped, else the most-lived.
+    private func focusStoryValue() -> Story? {
+        if let id = selectedStoryId, let s = store.stories.first(where: { $0.id == id }) { return s }
+        return store.stories.filter { met($0) }.max(by: { $0.resonance < $1.resonance }) ?? store.stories.first
+    }
+    private func focusRegion() -> UniRoom { focusStoryValue().map { room($0.room) } ?? uniRooms[2] }
+
     private func draw(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
         let b = breath.value
-        // The focus region deepens as he goes in: the most-lived room fills the frame.
-        let stories = store.stories
-        let focusStory = stories.filter { met($0) }.max(by: { $0.resonance < $1.resonance }) ?? stories.first
-        let focusRoom = focusStory.map { room($0.room) } ?? uniRooms[2]
-        let fnx = (focusRoom.x + 490) / 980, fny = (focusRoom.y + 1030) / 1930
-        let focus = CGPoint(x: fnx, y: fny)
+        let W = size.width, H = size.height
+        let focusRoom = focusRegion()
+        let focusStory = focusStoryValue()
+        let focus = CGPoint(x: (focusRoom.x + 490) / 980, y: (focusRoom.y + 1030) / 1930)
         let zoom = [1.0, 2.1, 4.6, 4.6][min(scale, 3)]
 
         // ── the world scale: one story becomes an inhabited planet ──
@@ -114,62 +114,74 @@ struct UniverseView: View {
             return
         }
 
-        // ── sky / region: the thirteen regions, their stars, their company ──
+        // ── region weather: the focus region's own field, when you're inside it ──
+        if scale >= 1 {
+            RegionForm.field(ctx, focusRoom, W, H, t: t, a: 0.5, c: focusRoom.rgb)
+        }
+
+        // ── the thirteen regions: each its own figure, its stars strung on the armature ──
+        let armA = scale == 0 ? 0.9 : 0.42
         for rm in uniRooms {
             let c = regionCenter(rm, size, zoom: zoom, focus: focus)
             let color = Color(hex: rm.hex)
-            let rr = rm.r / 980 * size.width * zoom * 0.6
-            guard c.x > -rr, c.x < size.width + rr, c.y > -rr, c.y < size.height + rr else { continue }
-            // the nebula
-            ctx.fill(Path(ellipseIn: CGRect(x: c.x - rr, y: c.y - rr, width: rr * 2, height: rr * 2)),
+            let armR = rm.r / 980 * W * zoom
+            let rr = armR * 0.6
+            guard c.x > -armR, c.x < W + armR, c.y > -armR, c.y < H + armR else { continue }
+            // the nebula wash behind the figure
+            ctx.fill(UniGeo.ringPath(c.x, c.y, rr),
                      with: .radialGradient(.init(colors: [color.opacity(0.07 + 0.03 * b), .clear]),
                                            center: c, startRadius: 0, endRadius: rr))
+            // the region's OWN form, drawn alive (uni-rooms.js arm) — the whole point of the pass
+            RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: armA, c: rm.rgb)
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
             if scale == 0 {
                 ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(6)).foregroundStyle(color.opacity(0.28)),
-                         at: CGPoint(x: c.x, y: c.y - rr * 0.5))
+                         at: CGPoint(x: c.x, y: c.y - armR * 0.62))
             }
-            // its stars
+            // its stars, strung on the region's armature (not a generic circle)
             let mine = store.stories.filter { $0.room == rm.id }
             for (i, s) in mine.enumerated() {
-                let a = -Double.pi / 2 + Double(i) * (2 * .pi / Double(max(mine.count, 1)))
-                let sr = rr * 0.62
-                let sx = c.x + cos(a) * sr, sy = c.y + sin(a) * sr
-                let isMet = met(s)
-                let tw = 0.6 + 0.4 * abs(sin(t * 0.6 + Double(i)))
-                let base = isMet ? 0.9 : 0.26
-                let sz = isMet ? 2.3 : 1.3
-                ctx.fill(Path(ellipseIn: CGRect(x: sx - sz, y: sy - sz, width: sz * 2, height: sz * 2)),
-                         with: .color(color.opacity(base * tw)))
-                if isMet {
-                    let d = depth(s)
-                    // the halo = its warmth (the Resonance Voice); depth rings around it
-                    let hr = sz * 3
-                    ctx.fill(Path(ellipseIn: CGRect(x: sx - hr, y: sy - hr, width: hr * 2, height: hr * 2)),
-                             with: .color(color.opacity(0.06 * tw)))
-                    if scale >= 1 && d > 0 {
-                        for k in 1...min(d, 6) {
-                            let dr = sz * 2.0 + Double(k) * 2.4
-                            ctx.stroke(Path(ellipseIn: CGRect(x: sx - dr, y: sy - dr, width: dr * 2, height: dr * 2)),
-                                       with: .color(color.opacity(0.05)), lineWidth: 0.5)
-                        }
-                    }
-                    // ── the company: one mote per voice that spoke, each at its own phase ──
-                    // (uni-field.js §8.6 — never synchronises: per-star seed + varied period)
-                    if scale >= 1 {
-                        let voices = store.stats(for: s.id).archetypes
-                        let seed = hash(s.id)
-                        let per = 3.0 + seed * 23.0                    // 3–26s family
-                        for (v, name) in voices.prefix(6).enumerated() {
-                            let ang = Double(v) / 6 * 2 * .pi + t * (2 * .pi / per) + seed * 6.2831
-                            let orbit = sz * 5.5
-                            let mx = sx + cos(ang) * orbit, my = sy + sin(ang) * orbit
-                            let mc = store.archetype(named: name)?.color ?? color
-                            ctx.fill(Path(ellipseIn: CGRect(x: mx - 1.2, y: my - 1.2, width: 2.4, height: 2.4)),
-                                     with: .color(mc.opacity(0.7)))
-                        }
-                    }
-                }
+                let sw = starWorld(rm, i, s)
+                let sp = worldToScreen(sw.0, sw.1, size, zoom: zoom, focus: focus)
+                drawStar(ctx, at: sp, story: s, color: color, index: i, t: t)
+            }
+        }
+    }
+
+    // one star on the sky — met stars carry a halo, depth rings, and their company in orbit.
+    private func drawStar(_ ctx: GraphicsContext, at p: CGPoint, story s: Story, color: Color, index i: Int, t: Double) {
+        let sx = p.x, sy = p.y
+        let isMet = met(s)
+        let tw = 0.6 + 0.4 * abs(sin(t * 0.6 + Double(i)))
+        let base = isMet ? 0.9 : 0.26
+        let sz = isMet ? 2.3 : 1.3
+        ctx.fill(UniGeo.ringPath(sx, sy, sz), with: .color(color.opacity(base * tw)))
+        guard isMet else { return }
+        let d = depth(s)
+        let hr = sz * 3
+        ctx.fill(UniGeo.ringPath(sx, sy, hr), with: .color(color.opacity(0.06 * tw)))
+        // the approached star wears a quiet ring, so you can see which world you chose
+        if s.id == selectedStoryId {
+            ctx.stroke(UniGeo.ringPath(sx, sy, sz * 4), with: .color(color.opacity(0.5)), lineWidth: 1)
+        }
+        if scale >= 1 && d > 0 {
+            for k in 1...min(d, 6) {
+                let dr = sz * 2.0 + Double(k) * 2.4
+                ctx.stroke(UniGeo.ringPath(sx, sy, dr), with: .color(color.opacity(0.05)), lineWidth: 0.5)
+            }
+        }
+        // ── the company: one mote per voice that spoke, each at its own phase ──
+        // (uni-field.js — never synchronises: per-star seed + varied period)
+        if scale >= 1 {
+            let voices = store.stats(for: s.id).archetypes
+            let seed = hash(s.id)
+            let per = 3.0 + seed * 23.0                    // 3–26s family
+            for (v, name) in voices.prefix(6).enumerated() {
+                let ang = Double(v) / 6 * 2 * .pi + t * (2 * .pi / per) + seed * 6.2831
+                let orbit = sz * 5.5
+                let mx = sx + cos(ang) * orbit, my = sy + sin(ang) * orbit
+                let mc = store.archetype(named: name)?.color ?? color
+                ctx.fill(UniGeo.ringPath(mx, my, 1.2), with: .color(mc.opacity(0.7)))
             }
         }
     }
