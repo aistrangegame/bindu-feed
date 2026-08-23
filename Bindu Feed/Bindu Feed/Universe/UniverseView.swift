@@ -14,10 +14,33 @@ import SwiftUI
 
 // The thirteen regions + their forms live in UniRegions.swift (ported from uni-rooms.js).
 
+// ── Per-frame caches (built only when the data changes, not every frame) ──────────────────
+// The Universe redraws at 60fps; without these, draw() re-filtered all stories per region,
+// rebuilt the lanes, re-hashed every mote, and re-scanned archetypes EVERY frame — which
+// tanked the device. These hold the results so the frame does only arithmetic + fills.
+private struct UMote { let color: Color; let per: Double; let ph: Double; let orbitMul: Double; let size: Double; let wobble: Bool }
+private struct UStar {
+    let id: String
+    let wx: Double, wy: Double
+    let isMet: Bool
+    let depth: Int
+    let color: Color
+    let twSeed: Double
+    let motes: [UMote]
+}
+private struct ULane {
+    let awx: Double, awy: Double, bwx: Double, bwy: Double
+    let local: Bool; let ph: Double; let spd: Double
+    let rgb: [Double]
+}
+private struct UDust { let hx: Double, hy: Double; let layer: Int }
+
 struct UniverseView: View {
     let register: AxisRegister
     @Binding var path: [FeedRoute]
     let onFall: () -> Void
+    /// Tapping a star asks the axis to draw inward toward that world (wired by InstrumentView).
+    var onApproach: ((String) -> Void)? = nil
 
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
@@ -32,6 +55,13 @@ struct UniverseView: View {
     @State private var lens: Double = 0
     @State private var lensOn = false
     @State private var lensTimer: Timer?
+
+    // Caches (rebuilt on data change, read every frame). See the UStar/ULane/UDust types above.
+    @State private var starsByRegion: [[UStar]] = []
+    @State private var lanes: [ULane] = []
+    @State private var dust: [UDust] = []
+    @State private var focusStory: Story? = nil
+    @State private var focusRegionIdx: Int = 2
 
     // Reading distance from the register: sky far → fall close.
     private var scale: Int {
@@ -86,8 +116,98 @@ struct UniverseView: View {
         .onChange(of: register.key) { _, key in
             fallStartT = key == "fall" ? Date().timeIntervalSinceReferenceDate : nil
         }
-        .onAppear { if register.key == "fall" { fallStartT = Date().timeIntervalSinceReferenceDate } }
+        .onAppear {
+            if register.key == "fall" { fallStartT = Date().timeIntervalSinceReferenceDate }
+            rebuild()
+        }
+        .onChange(of: store.stories) { rebuild() }
+        .onChange(of: store.archetypes.count) { rebuild() }
+        .onChange(of: selectedStoryId) { rebuildFocus() }
         .onDisappear { lensTimer?.invalidate() }
+    }
+
+    // MARK: - Cache building (runs on data change, NOT per frame)
+
+    private func rebuild() {
+        guard !uniRooms.isEmpty, !store.stories.isEmpty else { return }
+        var byRegion: [[UStar]] = Array(repeating: [], count: uniRooms.count)
+        for (ri, rm) in uniRooms.enumerated() {
+            let color = Color(hex: rm.hex)
+            let mine = store.stories.filter { $0.room == rm.id }
+            for (i, s) in mine.enumerated() {
+                let sw = starWorld(rm, i, s)
+                let isMet = met(s)
+                var motes: [UMote] = []
+                if isMet {
+                    let stats = store.stats(for: s.id)
+                    var names = Array(stats.archetypes.prefix(6))
+                    if !names.contains(where: { $0.lowercased() == "lalita" }) { names.append("Lalita") }
+                    for (v, name) in names.prefix(7).enumerated() {
+                        let isL = name.lowercased() == "lalita"
+                        let ms = hash(s.id + name)
+                        motes.append(UMote(color: store.archetype(named: name)?.color ?? color,
+                                           per: 3 + ms * 23, ph: ms * 6.2831 + Double(v) * 0.7,
+                                           orbitMul: 4.6 + ms * 2.4, size: isL ? 1.4 : 1.2, wobble: isL))
+                    }
+                    if stats.commentCount > stats.archetypes.count + 1 {
+                        let ms = hash(s.id + "ash")
+                        motes.append(UMote(color: store.archetype(named: "Ash")?.color ?? BinduTheme.colorAsh,
+                                           per: 4 + ms * 20, ph: ms * 6.2831, orbitMul: 3.4, size: 1.5, wobble: false))
+                    }
+                }
+                byRegion[ri].append(UStar(id: s.id, wx: sw.0, wy: sw.1, isMet: isMet,
+                                          depth: depth(s), color: color, twSeed: Double(i), motes: motes))
+            }
+        }
+        starsByRegion = byRegion
+        rebuildLanes(byRegion)
+        if dust.isEmpty { rebuildDust() }
+        rebuildFocus()
+    }
+
+    private func rebuildLanes(_ byRegion: [[UStar]]) {
+        var metAll: [(id: String, wx: Double, wy: Double, ri: Int)] = []
+        for (ri, arr) in byRegion.enumerated() { for st in arr where st.isMet { metAll.append((st.id, st.wx, st.wy, ri)) } }
+        guard metAll.count > 1 else { lanes = []; return }
+        var out: [ULane] = []
+        for (ri, arr) in byRegion.enumerated() {
+            let here = arr.filter { $0.isMet }
+            guard here.count > 1 else { continue }
+            for i in 0..<here.count {
+                for j in (i + 1)..<here.count where nhash(Double(i) * 7.1 + Double(j) * 3.3 + Double(ri)) < 0.45 {
+                    out.append(ULane(awx: here[i].wx, awy: here[i].wy, bwx: here[j].wx, bwy: here[j].wy,
+                                     local: true, ph: nhash(Double(i + j + ri)),
+                                     spd: 0.010 + nhash(Double(i) * 2.2 + Double(j)) * 0.010, rgb: uniRooms[ri].rgb))
+                }
+            }
+        }
+        for q in 0..<9 {
+            let a = metAll[Int(nhash(Double(q) * 3.7) * Double(metAll.count)) % metAll.count]
+            let b = metAll[Int(nhash(Double(q) * 8.1 + 1) * Double(metAll.count)) % metAll.count]
+            if a.id == b.id || a.ri == b.ri { continue }
+            out.append(ULane(awx: a.wx, awy: a.wy, bwx: b.wx, bwy: b.wy, local: false,
+                             ph: nhash(Double(q) * 1.9), spd: 0.0022 + nhash(Double(q)) * 0.0026,
+                             rgb: UniGeo.mix(uniRooms[a.ri].rgb, uniRooms[b.ri].rgb, 0.5)))
+        }
+        lanes = out
+    }
+
+    private func rebuildDust() {
+        var d: [UDust] = []
+        for (L, n) in [58, 38, 38].enumerated() {
+            for i in 0..<n {
+                d.append(UDust(hx: nhash(Double(i) * 1.3 + Double(L) * 40), hy: nhash(Double(i) * 2.7 + Double(L) * 71), layer: L))
+            }
+        }
+        dust = d
+    }
+
+    private func rebuildFocus() {
+        let fs: Story?
+        if let id = selectedStoryId, let s = store.stories.first(where: { $0.id == id }) { fs = s }
+        else { fs = store.stories.filter { met($0) }.max(by: { $0.resonance < $1.resonance }) ?? store.stories.first }
+        focusStory = fs
+        focusRegionIdx = fs.flatMap { r in uniRooms.firstIndex(where: { $0.id == r.room }) } ?? 2
     }
 
     // Ramp the lens toward its toggled target over ~1s (Canvas reads `lens` each tick).
@@ -102,22 +222,26 @@ struct UniverseView: View {
         }
     }
 
-    // Map a tap to the nearest star and make it the approached focus.
+    // Map a tap to the nearest star and make it the approached focus. Uses the cached star
+    // positions (no per-tap filter/hash). Setting selectedStoryId re-runs rebuildFocus, so the
+    // camera visibly recenters on the tapped star — real feedback, where before there was none.
     private func handleTap(_ loc: CGPoint, _ size: CGSize) {
         guard scale <= 1 else { return }                  // only where stars are choosable
-        let fr = focusRegion()
-        let focus = CGPoint(x: (fr.x + 490) / 980, y: (fr.y + 1030) / 1930)
+        let focusRoom = uniRooms[min(max(0, focusRegionIdx), uniRooms.count - 1)]
+        let focus = CGPoint(x: (focusRoom.x + 490) / 980, y: (focusRoom.y + 1030) / 1930)
         let zoom = [1.0, 2.1, 4.6, 4.6][min(scale, 3)]
         var best: (id: String, d: Double)?
-        for rm in uniRooms {
-            for (i, s) in store.stories.filter({ $0.room == rm.id }).enumerated() {
-                let sw = starWorld(rm, i, s)
-                let sp = worldToScreen(sw.0, sw.1, size, zoom: zoom, focus: focus)
+        for arr in starsByRegion {
+            for st in arr {
+                let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
                 let dd = Double(hypot(sp.x - loc.x, sp.y - loc.y))
-                if dd < 44, best == nil || dd < best!.d { best = (s.id, dd) }
+                if dd < 44, best == nil || dd < best!.d { best = (st.id, dd) }
             }
         }
-        if let b = best { selectedStoryId = b.id }
+        if let b = best {
+            withAnimation(.easeInOut(duration: 0.9)) { selectedStoryId = b.id }
+            onApproach?(b.id)                              // let the axis nudge inward toward the world
+        }
     }
 
     // MARK: - Data helpers
@@ -160,18 +284,11 @@ struct UniverseView: View {
 
     // MARK: - Draw
 
-    // The story the traveller is approaching — the one they tapped, else the most-lived.
-    private func focusStoryValue() -> Story? {
-        if let id = selectedStoryId, let s = store.stories.first(where: { $0.id == id }) { return s }
-        return store.stories.filter { met($0) }.max(by: { $0.resonance < $1.resonance }) ?? store.stories.first
-    }
-    private func focusRegion() -> UniRoom { focusStoryValue().map { room($0.room) } ?? uniRooms[2] }
-
     private func draw(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
         let b = breath.value
         let W = size.width, H = size.height
-        let focusRoom = focusRegion()
-        let focusStory = focusStoryValue()
+        let focusRoom = uniRooms[min(max(0, focusRegionIdx), uniRooms.count - 1)]   // cached focus
+        let focusStory = self.focusStory
         let focus = CGPoint(x: (focusRoom.x + 490) / 980, y: (focusRoom.y + 1030) / 1930)
         let zoom = [1.0, 2.1, 4.6, 4.6][min(scale, 3)]
 
@@ -204,7 +321,7 @@ struct UniverseView: View {
         // just veiled over). Colour flattens toward bone as lens→1.
         let litDim = 1 - lens * 0.55
         let armA = (scale == 0 ? 0.9 : 0.42) * litDim
-        for rm in uniRooms {
+        for (ri, rm) in uniRooms.enumerated() {
             let c = regionCenter(rm, size, zoom: zoom, focus: focus)
             let color = Color(hex: rm.hex)
             let armR = rm.r / 980 * W * zoom
@@ -222,12 +339,12 @@ struct UniverseView: View {
                 ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(6)).foregroundStyle(color.opacity(0.28)),
                          at: CGPoint(x: c.x, y: c.y - armR * 0.62))
             }
-            // its stars, strung on the region's armature (not a generic circle)
-            let mine = store.stories.filter { $0.room == rm.id }
-            for (i, s) in mine.enumerated() {
-                let sw = starWorld(rm, i, s)
-                let sp = worldToScreen(sw.0, sw.1, size, zoom: zoom, focus: focus)
-                drawStar(ctx, at: sp, story: s, color: color, index: i, t: t)
+            // its stars — from the cache (no per-frame filtering / hashing / archetype scans)
+            if ri < starsByRegion.count {
+                for st in starsByRegion[ri] {
+                    let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
+                    drawStar(ctx, at: sp, star: st, t: t)
+                }
             }
         }
 
@@ -246,43 +363,17 @@ struct UniverseView: View {
         }
     }
 
-    // The star's world position, resolved from its story (for the lanes' endpoints).
-    private func starWorldFor(_ s: Story) -> (Double, Double) {
-        let rm = room(s.room)
-        let mine = store.stories.filter { $0.room == rm.id }
-        let i = mine.firstIndex(where: { $0.id == s.id }) ?? 0
-        return starWorld(rm, i, s)
-    }
-
     // The travellers (uni-rooms.js LANES + uni-sky.js render): life moves between his met
-    // worlds — local lanes within a region, and 9 rarer long hauls between regions — each a
-    // bowed strand with a comet trailing along it. It only travels where he has already been.
+    // worlds — bowed strands with a comet trailing along each. The lane TOPOLOGY is cached
+    // (`lanes`, rebuilt on data change); here it's only the projection + the moving comet, and
+    // the comet trails are SKIPPED while travelling so the drag stays responsive.
     private func drawLanes(_ ctx: GraphicsContext, _ size: CGSize, zoom: Double, focus: CGPoint, t: Double) {
+        guard !lanes.isEmpty else { return }
         let W = size.width, H = size.height
-        let metStories = store.stories.filter { met($0) }
-        guard metStories.count > 1 else { return }
-        var lanes: [(a: Story, b: Story, local: Bool, ph: Double, spd: Double)] = []
-        for (ri, rm) in uniRooms.enumerated() {
-            let here = metStories.filter { $0.room == rm.id }
-            guard here.count > 1 else { continue }
-            for i in 0..<here.count {
-                for j in (i + 1)..<here.count where nhash(Double(i) * 7.1 + Double(j) * 3.3 + Double(ri)) < 0.45 {
-                    lanes.append((here[i], here[j], true, nhash(Double(i + j + ri)), 0.010 + nhash(Double(i) * 2.2 + Double(j)) * 0.010))
-                }
-            }
-        }
-        for q in 0..<9 {
-            let a = metStories[Int(nhash(Double(q) * 3.7) * Double(metStories.count)) % metStories.count]
-            let b = metStories[Int(nhash(Double(q) * 8.1 + 1) * Double(metStories.count)) % metStories.count]
-            if a.id == b.id || a.room == b.room { continue }
-            lanes.append((a, b, false, nhash(Double(q) * 1.9), 0.0022 + nhash(Double(q)) * 0.0026))
-        }
-        // discrete band weights (the continuous camera will re-express these as bands(z))
         let bReg = scale >= 1 ? 1.0 : 0.0, bSky = scale == 0 ? 1.0 : 0.0
         for ln in lanes {
-            let aw = starWorldFor(ln.a), bw = starWorldFor(ln.b)
-            let ap = worldToScreen(aw.0, aw.1, size, zoom: zoom, focus: focus)
-            let bp = worldToScreen(bw.0, bw.1, size, zoom: zoom, focus: focus)
+            let ap = worldToScreen(ln.awx, ln.awy, size, zoom: zoom, focus: focus)
+            let bp = worldToScreen(ln.bwx, ln.bwy, size, zoom: zoom, focus: focus)
             let far = ln.local ? 0.0 : 1.0
             let vis = ln.local ? (bReg * 0.9) : max(bSky * 0.9, 0.22)
             if vis < 0.03 { continue }
@@ -291,7 +382,7 @@ struct UniverseView: View {
             let nx = -(bp.y - ap.y), ny = (bp.x - ap.x), nl = max(1, hypot(nx, ny))
             let bow = (far > 0 ? 0.16 : 0.10) * hypot(bp.x - ap.x, bp.y - ap.y)
             let qx = mx + nx / nl * bow, qy = my + ny / nl * bow
-            let col = UniGeo.mix(UniGeo.mix(room(ln.a.room).rgb, room(ln.b.room).rgb, 0.5), UniGeo.BONE, 0.35 + lens * 0.3)
+            let col = UniGeo.mix(ln.rgb, UniGeo.BONE, 0.35 + lens * 0.3)
             var path = Path(); path.move(to: ap); path.addQuadCurve(to: bp, control: CGPoint(x: qx, y: qy))
             ctx.stroke(path, with: .color(UniGeo.col(col, vis * (far > 0 ? 0.10 : 0.14))), lineWidth: 0.7)
             let count = far > 0 ? 2 : 1
@@ -317,20 +408,17 @@ struct UniverseView: View {
             Gradient(stops: [.init(color: Color(hex: "#080711"), location: 0),
                              .init(color: Color(hex: "#040307"), location: 1)]),
             center: CGPoint(x: W / 2, y: H * 0.42), startRadius: 0, endRadius: max(W, H) * 0.85))
-        let counts = [58, 38, 38]
-        for (L, n) in counts.enumerated() {
-            let par = 0.30 + Double(L) * 0.40
-            let a = 0.10 + Double(L) * 0.05
-            let sz = 0.6 + Double(L) * 0.5
-            for i in 0..<n {
-                let hx = nhash(Double(i) * 1.3 + Double(L) * 40)
-                let hy = nhash(Double(i) * 2.7 + Double(L) * 71)
-                var px = hx * W - (focus.x - 0.5) * W * par * 0.35
-                px = px.truncatingRemainder(dividingBy: W); if px < 0 { px += W }
-                let y = hy * H
-                let tw = 0.5 + 0.5 * abs(sin(t * 0.5 + hx * 6.2831))
-                ctx.fill(UniGeo.ringPath(px, y, sz), with: .color(Color(hex: "#C9CEDA").opacity(a * tw)))
-            }
+        // positions cached (no per-frame hashing); only the parallax + twinkle are per-frame
+        let dustColor = Color(hex: "#C9CEDA")
+        for dm in dust {
+            let par = 0.30 + Double(dm.layer) * 0.40
+            let a = 0.10 + Double(dm.layer) * 0.05
+            let sz = 0.6 + Double(dm.layer) * 0.5
+            var px = dm.hx * W - (focus.x - 0.5) * W * par * 0.35
+            px = px.truncatingRemainder(dividingBy: W); if px < 0 { px += W }
+            let y = dm.hy * H
+            let tw = 0.5 + 0.5 * abs(sin(t * 0.5 + dm.hx * 6.2831))
+            ctx.fill(UniGeo.ringPath(px, y, sz), with: .color(dustColor.opacity(a * tw)))
         }
     }
 
@@ -377,54 +465,36 @@ struct UniverseView: View {
     }
 
     // one star on the sky — met stars carry a halo, depth rings, and their company in orbit.
-    private func drawStar(_ ctx: GraphicsContext, at p: CGPoint, story s: Story, color: Color, index i: Int, t: Double) {
+    // All per-star data (met, depth, colour, mote descriptors) is precomputed in the cache; this
+    // does only the per-frame arithmetic + fills.
+    private func drawStar(_ ctx: GraphicsContext, at p: CGPoint, star st: UStar, t: Double) {
         let sx = p.x, sy = p.y
-        let isMet = met(s)
-        let tw = 0.6 + 0.4 * abs(sin(t * 0.6 + Double(i)))
-        let base = isMet ? 0.9 : 0.26
-        let sz = isMet ? 2.3 : 1.3
+        let color = st.color
+        let tw = 0.6 + 0.4 * abs(sin(t * 0.6 + st.twSeed))
+        let base = st.isMet ? 0.9 : 0.26
+        let sz = st.isMet ? 2.3 : 1.3
         ctx.fill(UniGeo.ringPath(sx, sy, sz), with: .color(color.opacity(base * tw)))
-        guard isMet else { return }
-        let d = depth(s)
-        let hr = sz * 3
-        ctx.fill(UniGeo.ringPath(sx, sy, hr), with: .color(color.opacity(0.06 * tw)))
+        guard st.isMet else { return }
+        ctx.fill(UniGeo.ringPath(sx, sy, sz * 3), with: .color(color.opacity(0.06 * tw)))
         // the approached star wears a quiet ring, so you can see which world you chose
-        if s.id == selectedStoryId {
+        if st.id == selectedStoryId {
             ctx.stroke(UniGeo.ringPath(sx, sy, sz * 4), with: .color(color.opacity(0.5)), lineWidth: 1)
         }
-        if scale >= 1 && d > 0 {
-            for k in 1...min(d, 6) {
+        if scale >= 1 && st.depth > 0 {
+            for k in 1...min(st.depth, 6) {
                 let dr = sz * 2.0 + Double(k) * 2.4
                 ctx.stroke(UniGeo.ringPath(sx, sy, dr), with: .color(color.opacity(0.05)), lineWidth: 0.5)
             }
         }
-        // ── the company: one mote per voice that spoke, each at ITS OWN period + phase so the
-        // sky never synchronises into a mechanism (uni-field.js law). Lalita always threads and
-        // her orbit alone breathes; Ash joins when he returned more than the field spoke. ──
+        // ── the company: one mote per voice, each at ITS OWN period + phase (uni-field.js law),
+        // Lalita's orbit wobbling. Descriptors are cached; here it's just cos/sin + a fill. ──
         if scale >= 1 {
-            let stats = store.stats(for: s.id)
-            var names = Array(stats.archetypes.prefix(6))
-            if !names.contains(where: { $0.lowercased() == "lalita" }) { names.append("Lalita") }
-            let starSeed = hash(s.id)
-            for (v, name) in names.prefix(7).enumerated() {
-                let isLalita = name.lowercased() == "lalita"
-                let ms = hash(s.id + name)               // per-attendant seed → own period/phase/orbit
-                let per = 3.0 + ms * 23.0                 // 3–26s, each its own
-                let ph = ms * 6.2831 + Double(v) * 0.7
-                var orbit = sz * (4.6 + ms * 2.4)
-                if isLalita { orbit *= 1 + 0.18 * sin(t * 0.31 + starSeed * 6.2831) }  // the thread wobbles
-                let ang = t * (2 * .pi / per) + ph
-                let mx = sx + cos(ang) * orbit, my = sy + sin(ang) * orbit
-                let mc = store.archetype(named: name)?.color ?? color
-                ctx.fill(UniGeo.ringPath(mx, my, isLalita ? 1.4 : 1.2), with: .color(mc.opacity(isLalita ? 0.8 : 0.7)))
-            }
-            // Ash's own mote — when the thread ran longer than the voices that spoke.
-            if stats.commentCount > stats.archetypes.count + 1 {
-                let ms = hash(s.id + "ash")
-                let ang = t * (2 * .pi / (4.0 + ms * 20.0)) + ms * 6.2831
-                let orbit = sz * 3.4
-                let ac = store.archetype(named: "Ash")?.color ?? BinduTheme.colorAsh
-                ctx.fill(UniGeo.ringPath(sx + cos(ang) * orbit, sy + sin(ang) * orbit, 1.5), with: .color(ac.opacity(0.85)))
+            for m in st.motes {
+                var orbit = sz * m.orbitMul
+                if m.wobble { orbit *= 1 + 0.18 * sin(t * 0.31 + st.twSeed * 6.2831) }
+                let ang = t * (2 * .pi / m.per) + m.ph
+                ctx.fill(UniGeo.ringPath(sx + cos(ang) * orbit, sy + sin(ang) * orbit, m.size),
+                         with: .color(m.color.opacity(m.wobble ? 0.8 : 0.7)))
             }
         }
     }

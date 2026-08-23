@@ -220,8 +220,9 @@ struct DoorView: View {
         case .day:
             withAnimation(.easeInOut(duration: 0.8)) { showRope = false }
         case .point:
-            // "Walk the point" — the Point ships Wave 6; for now, walk on into
-            // the field (flagged). Both exits are right.
+            // "Walk the Point" — enter the Instrument at the gate (z=1), one drag inward from
+            // the Point itself. Parked, then RootView pushes it once the feed is reachable.
+            store.pendingLaunchRoute = .instrument(1)
             showRope = false
             onComplete()
         }

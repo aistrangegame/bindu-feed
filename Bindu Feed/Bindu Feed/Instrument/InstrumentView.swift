@@ -108,7 +108,10 @@ struct InstrumentView: View {
         }
         .navigationBarBackButtonHidden(true)
         .contentShape(Rectangle())
-        .gesture(travelGesture)
+        // High-priority so the axis drag reliably wins over the Universe's full-screen tap layer
+        // (which was intermittently stalling movement on device); a pure tap — no drag past the
+        // 4pt threshold — still falls through to the Universe's star selection.
+        .highPriorityGesture(travelGesture)
         // The rope from anywhere (§7.5) — a ~1.1s long-press; the particle is always here.
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
@@ -300,13 +303,20 @@ private struct ThroatView: View {
     }
 }
 
-// The gate (Z+1) — the deal, the threshold inward.
+// The gate (Z+1) — the deal, the threshold inward. Names the seven dimensions that lie ahead
+// so he knows there is somewhere to go (wayfinding: the gate was a dead end before).
 private struct AxisGateView: View {
     var body: some View {
         VStack(spacing: 12) {
             Text("the gate").font(.lora(20)).italic().foregroundStyle(Color(hex: "#C9A07A"))
             Text("everything you know, arranged").font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-            Text("pull inward to enter the Point").font(.spaceMono(9)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
+            Text("keep pulling inward")
+                .font(.spaceMono(9)).tracking(2).foregroundStyle(Color(hex: "#C9A07A").opacity(0.85))
+            Text("the Point · the Turn · the Veil · the Chamber\nthe Mirrors · the Return · the Dance")
+                .font(.spaceMono(8)).tracking(1).lineSpacing(3)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
+                .padding(.top, 4)
         }
     }
 }
