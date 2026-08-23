@@ -67,6 +67,15 @@ struct LightView: View {
         return beatLine >= 0 ? 1 : a
     }
 
+    // In the nave the floor floods to LIT cream stone, so the words are DARK ink cut into it
+    // (comp --living #16131B / --settled #625849); only the newest anchor is "living", the rest
+    // settle. In the dawn (open sky) the words stay light on dark, as they are.
+    private var isNave: Bool { scene.material == .nave }
+    private var wholeInk: Color { isNave ? Color(hex: shownAnchors > 0 ? "#625849" : "#16131B") : BinduTheme.inkPrimary }
+    private func anchorInk(_ newest: Bool) -> Color { isNave ? Color(hex: newest ? "#16131B" : "#625849") : BinduTheme.inkSecondary }
+    private var carveInk: Color { isNave ? Color(hex: "#16131B") : Color(hex: "#F5E8DE") }
+    private var carveShadow: Color { isNave ? Color.white.opacity(0.92) : Color.black.opacity(0.72) }
+
     var body: some View {
         ZStack {
             material
@@ -205,14 +214,14 @@ struct LightView: View {
             // The whole — arrives with the light.
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(scene.whole, id: \.self) { line in
-                    Text(line).font(.lora(19, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
+                    Text(line).font(.lora(19, weight: .medium)).foregroundStyle(wholeInk)
                 }
             }
 
             // The anchors — one at a time, on a touch (release answers the ungrip).
-            ForEach(Array(scene.anchors.prefix(shownAnchors).enumerated()), id: \.offset) { _, line in
+            ForEach(Array(scene.anchors.prefix(shownAnchors).enumerated()), id: \.offset) { i, line in
                 Text(line).font(.lora(15)).lineSpacing(6)
-                    .foregroundStyle(BinduTheme.inkSecondary)
+                    .foregroundStyle(anchorInk(i == shownAnchors - 1))   // only the newest is living
                     .transition(.opacity)
             }
 
@@ -225,15 +234,15 @@ struct LightView: View {
                     ForEach(0..<max(0, beatLine + 1), id: \.self) { i in
                         Text(scene.beat[i])
                             .font(.lora(17, weight: .semibold))
-                            .foregroundStyle(Color(hex: "#F5E8DE"))
-                            .shadow(color: .black.opacity(0.72), radius: 0, x: 0, y: 1)
+                            .foregroundStyle(carveInk)
+                            .shadow(color: carveShadow, radius: 0, x: 0, y: 1)
                     }
                     // the line surfacing out of the stone right now, as he draws it in
                     if moreBeat, drawing > 0 {
                         Text(scene.beat[beatLine + 1])
                             .font(.lora(17, weight: .semibold))
-                            .foregroundStyle(Color(hex: "#F5E8DE").opacity(0.06 + drawing * 0.94))
-                            .shadow(color: .black.opacity(0.72 * drawing), radius: 0, x: 0, y: 1)
+                            .foregroundStyle(carveInk.opacity(0.06 + drawing * 0.94))
+                            .shadow(color: carveShadow.opacity(drawing), radius: 0, x: 0, y: 1)
                             .offset(y: (1 - drawing) * 10)
                             .blur(radius: (1 - drawing) * 3.4)
                     }
