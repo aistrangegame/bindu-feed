@@ -78,6 +78,18 @@ struct LightNave: View {
                with: .radialGradient(Gradient(colors: [c(lgt.0, lgt.1, lgt.2, (lit > 0.5 ? 0.85 : 0.24) * A), c(lgt.0, lgt.1, lgt.2, 0)]),
                                      center: CGPoint(x: apexX, y: floorY), startRadius: 0, endRadius: pr))
 
+        // ── the conducting Bindu at the shaft's head — present throughout, never stops; it
+        // warms with calm and breathes (The Light v2 · "THE BINDU CONDUCTS") ──
+        let warm = 0.30 + calm * 0.30 + e * 0.35
+        ctx.fill(Path(ellipseIn: CGRect(x: apexX - 26, y: apexY - 26, width: 52, height: 52)),
+                 with: .radialGradient(Gradient(colors: [c(255, 244, 224, 0.45 * warm), c(255, 244, 224, 0)]),
+                                       center: CGPoint(x: apexX, y: apexY), startRadius: 0, endRadius: 26))
+        ctx.stroke(Path(ellipseIn: CGRect(x: apexX - 10, y: apexY - 10, width: 20, height: 20)),
+                   with: .color(c(255, 240, 216, 0.28 * warm)), lineWidth: 0.8)
+        let cr = 3 + e * 1.2
+        ctx.fill(Path(ellipseIn: CGRect(x: apexX - cr, y: apexY - cr, width: cr * 2, height: cr * 2)),
+                 with: .color(c(255, 250, 240, 0.9 * warm)))
+
         // ── rings worn into the floor: breaths taken here, standing as sediment ──
         let wornCount = 3 + Int(still * 8)
         for i in 0..<wornCount {
@@ -108,6 +120,20 @@ struct LightNave: View {
             let r = sz * (0.7 + e * 0.5)
             p.fill(Path(ellipseIn: CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)),
                    with: .color(c(lit > 0.5 ? 255 : 246, lit > 0.5 ? 252 : 243, lit > 0.5 ? 245 : 237, (lit > 0.5 ? 0.55 : 0.5) * (0.25 + e * 0.45) * A)))
+        }
+
+        // ── the flood: as the aperture OPENS, light pours DOWN — a transient burst (peaks
+        // ~1.26s, gone by 3s), separate from the persistent lit-stone resolve (The Light v2). ──
+        let floodP = floodStart.map { min(1, (t - $0) / 3) } ?? -1
+        if floodP >= 0 {
+            let flood = floodP < 0.42 ? floodP / 0.42 : max(0, 1 - (floodP - 0.42) / 0.58)
+            if flood > 0.01 {
+                ctx.fill(Path(CGRect(x: 0, y: 0, width: SW, height: SH)), with: .linearGradient(
+                    Gradient(stops: [.init(color: c(255, 253, 248, 0.6 * flood), location: 0),
+                                     .init(color: c(255, 253, 248, 0.18 * flood), location: 0.4),
+                                     .init(color: c(255, 253, 248, 0), location: 0.85)]),
+                    startPoint: CGPoint(x: apexX, y: 0), endPoint: CGPoint(x: apexX, y: floorY)))
+            }
         }
     }
 

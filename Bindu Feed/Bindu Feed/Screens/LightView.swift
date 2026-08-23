@@ -266,6 +266,26 @@ struct LightView: View {
         .contentShape(Rectangle())
         .gesture(sceneGesture)
         .onChange(of: breath.value) { deliverOnExhale() }
+        // The conductor's cue — the Light is a breathing exercise where words happen to appear.
+        // Bound to the breath's phase (in/hold/out/rest); shown while anchors surface, before
+        // the beat takes over its own "press · draw it in" cue.
+        .overlay(alignment: .bottom) {
+            if stage == .scene, !beatActive, !breathCue.isEmpty {
+                Text(breathCue)
+                    .font(.spaceMono(9)).tracking(3)
+                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.55))
+                    .padding(.bottom, 26)
+            }
+        }
+    }
+
+    // in .40 / hold .15 / out .40 / rest .05 (comp CYCLE), read off the master breath phase.
+    private var breathCue: String {
+        let p = breath.phase
+        if p < 0.40 { return "draw it in" }
+        if p < 0.55 { return "hold" }
+        if p < 0.95 { return "let it go" }
+        return ""
     }
 
     private var beatActive: Bool { shownAnchors >= scene.anchors.count }
