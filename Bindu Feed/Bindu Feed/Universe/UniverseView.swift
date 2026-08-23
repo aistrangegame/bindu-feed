@@ -231,6 +231,9 @@ struct UniverseView: View {
             }
         }
 
+        // ── the travellers: life on the move between his met worlds (uni-rooms LANES) ──
+        drawLanes(ctx, size, zoom: zoom, focus: focus, t: t)
+
         // ── the structure lens: the lit sky sinks back and the belief-lattice is thrown over ──
         if lens > 0.02 {
             // a light settling wash over the now-receded sky (the arms/nebulae already dimmed
@@ -240,6 +243,68 @@ struct UniverseView: View {
             // Names read only once you've come in to a region (comp fades them in on zoom-in);
             // at full sky, thirteen labelled beliefs would crowd the whole field.
             drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: scale >= 1)
+        }
+    }
+
+    // The star's world position, resolved from its story (for the lanes' endpoints).
+    private func starWorldFor(_ s: Story) -> (Double, Double) {
+        let rm = room(s.room)
+        let mine = store.stories.filter { $0.room == rm.id }
+        let i = mine.firstIndex(where: { $0.id == s.id }) ?? 0
+        return starWorld(rm, i, s)
+    }
+
+    // The travellers (uni-rooms.js LANES + uni-sky.js render): life moves between his met
+    // worlds — local lanes within a region, and 9 rarer long hauls between regions — each a
+    // bowed strand with a comet trailing along it. It only travels where he has already been.
+    private func drawLanes(_ ctx: GraphicsContext, _ size: CGSize, zoom: Double, focus: CGPoint, t: Double) {
+        let W = size.width, H = size.height
+        let metStories = store.stories.filter { met($0) }
+        guard metStories.count > 1 else { return }
+        var lanes: [(a: Story, b: Story, local: Bool, ph: Double, spd: Double)] = []
+        for (ri, rm) in uniRooms.enumerated() {
+            let here = metStories.filter { $0.room == rm.id }
+            guard here.count > 1 else { continue }
+            for i in 0..<here.count {
+                for j in (i + 1)..<here.count where nhash(Double(i) * 7.1 + Double(j) * 3.3 + Double(ri)) < 0.45 {
+                    lanes.append((here[i], here[j], true, nhash(Double(i + j + ri)), 0.010 + nhash(Double(i) * 2.2 + Double(j)) * 0.010))
+                }
+            }
+        }
+        for q in 0..<9 {
+            let a = metStories[Int(nhash(Double(q) * 3.7) * Double(metStories.count)) % metStories.count]
+            let b = metStories[Int(nhash(Double(q) * 8.1 + 1) * Double(metStories.count)) % metStories.count]
+            if a.id == b.id || a.room == b.room { continue }
+            lanes.append((a, b, false, nhash(Double(q) * 1.9), 0.0022 + nhash(Double(q)) * 0.0026))
+        }
+        // discrete band weights (the continuous camera will re-express these as bands(z))
+        let bReg = scale >= 1 ? 1.0 : 0.0, bSky = scale == 0 ? 1.0 : 0.0
+        for ln in lanes {
+            let aw = starWorldFor(ln.a), bw = starWorldFor(ln.b)
+            let ap = worldToScreen(aw.0, aw.1, size, zoom: zoom, focus: focus)
+            let bp = worldToScreen(bw.0, bw.1, size, zoom: zoom, focus: focus)
+            let far = ln.local ? 0.0 : 1.0
+            let vis = ln.local ? (bReg * 0.9) : max(bSky * 0.9, 0.22)
+            if vis < 0.03 { continue }
+            if max(ap.x, bp.x) < -60 || min(ap.x, bp.x) > W + 60 || max(ap.y, bp.y) < -60 || min(ap.y, bp.y) > H + 60 { continue }
+            let mx = (ap.x + bp.x) / 2, my = (ap.y + bp.y) / 2
+            let nx = -(bp.y - ap.y), ny = (bp.x - ap.x), nl = max(1, hypot(nx, ny))
+            let bow = (far > 0 ? 0.16 : 0.10) * hypot(bp.x - ap.x, bp.y - ap.y)
+            let qx = mx + nx / nl * bow, qy = my + ny / nl * bow
+            let col = UniGeo.mix(UniGeo.mix(room(ln.a.room).rgb, room(ln.b.room).rgb, 0.5), UniGeo.BONE, 0.35 + lens * 0.3)
+            var path = Path(); path.move(to: ap); path.addQuadCurve(to: bp, control: CGPoint(x: qx, y: qy))
+            ctx.stroke(path, with: .color(UniGeo.col(col, vis * (far > 0 ? 0.10 : 0.14))), lineWidth: 0.7)
+            let count = far > 0 ? 2 : 1
+            for c in 0..<count {
+                let ph = (t * ln.spd + ln.ph + Double(c) / Double(count)).truncatingRemainder(dividingBy: 1)
+                for tr in 0..<5 {
+                    let p2 = max(0, ph - Double(tr) * 0.012), i2 = 1 - p2
+                    let sx = i2 * i2 * ap.x + 2 * i2 * p2 * qx + p2 * p2 * bp.x
+                    let sy = i2 * i2 * ap.y + 2 * i2 * p2 * qy + p2 * p2 * bp.y
+                    ctx.fill(UniGeo.ringPath(sx, sy, (far > 0 ? 1.5 : 1.1) * (1 - Double(tr) / 5)),
+                             with: .color(UniGeo.col(UniGeo.mix(col, [255, 250, 240], 0.6), vis * 0.75 * (1 - Double(tr) / 5))))
+                }
+            }
         }
     }
 
