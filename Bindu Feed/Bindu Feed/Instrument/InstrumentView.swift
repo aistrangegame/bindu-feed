@@ -10,10 +10,11 @@ import SwiftUI
 // renders its own content when he settles into it.
 //
 // Wave-6 rebuild (built to spine-travel.js / spine-passage.js verbatim): the membrane
-// physics, the stillness gate, the passage, the opened-surface memory, and the centre
-// bloom are here. Still ahead in this surface's own passes: the wormhole/whitehole throat
-// visuals, the seven distinct Point worlds, the four-scale Universe, the Light rendered
-// in-axis. The hand-feel constants are the design's own; the felt tuning is the Neev walk.
+// physics, the stillness gate, the passage throat, the opened-surface memory, and the centre
+// bloom are all here — and so are the content worlds: the seven distinct Point worlds
+// (PointWorldView), the Universe (UniverseView), and the Light rendered in-axis
+// (AxisLightSeam), each mounted in `content` below. The hand-feel constants are the design's
+// own; the felt tuning — and the continuous "cathedral" Universe camera — are the Neev walk.
 
 struct InstrumentView: View {
     @Binding var path: [FeedRoute]

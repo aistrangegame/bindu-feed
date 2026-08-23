@@ -8,8 +8,9 @@ import SwiftUI
 //   • every top-level surface in RootView (via `.hubOverlay`, now the turn).
 //
 // Breathing marks read the ONE master breath (offset for per-row variety, same
-// 0.1 Hz clock). Axis-depth rows (Universe/Light/Point) are absorbed until their
-// registers ship (Waves 5/6). Row marks are breathing glyphs, not the prototype's
+// 0.1 Hz clock). The axis-depth rows (Universe/Light/Point) now NAVIGATE into the
+// axis at their register — Universe→instrument(-4), Light→instrument(-5),
+// Point→instrument(1) — via FeedRoute.instrument(Int). Row marks are breathing glyphs, not the prototype's
 // hand-drawn originals (≈, ledger polish).
 
 enum TurnDestination {
@@ -35,7 +36,7 @@ let turnRows: [TurnRow] = [
     .init(id: "rooms", name: "The Rooms", sub: "thirteen ways in", glyph: "⌗", hex: "#B9AEA2", dest: .route(.rooms), unmetOnly: false),
     .init(id: "archive", name: "The Archive", sub: "everything, as it stands", glyph: "≡", hex: "#A9A29B", dest: .archive, unmetOnly: false),
     .init(id: "universe", name: "The Universe", sub: "the whole of it, from above", glyph: "✧", hex: "#9FB2C4", dest: .route(.instrument(-4)), unmetOnly: false),
-    .init(id: "light", name: "The Light", sub: "the future, already underway", glyph: "▷", hex: "#EDE3CE", dest: .route(.light), unmetOnly: false),
+    .init(id: "light", name: "The Light", sub: "the future, already underway", glyph: "▷", hex: "#EDE3CE", dest: .route(.instrument(-5)), unmetOnly: false),
     .init(id: "point", name: "The Point", sub: "everything you know, arranged", glyph: "·", hex: "#C0392B", dest: .route(.instrument(1)), unmetOnly: false),
     .init(id: "players", name: "The Players", sub: "the lenses that read", glyph: "◊", hex: "#3AADA8", dest: .route(.players), unmetOnly: false),
     .init(id: "arrive", name: "How You Arrive", sub: "name, colour, mark", glyph: "◉", hex: "#C47A52", dest: .route(.settings), unmetOnly: false),

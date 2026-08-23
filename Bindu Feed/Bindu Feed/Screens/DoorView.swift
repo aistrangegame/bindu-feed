@@ -14,11 +14,11 @@ import SwiftUI
 // The met-state is a derived read of App Activity (a `Story Met` for today), never
 // a stored flag (Law 2), and fail-safe to unmet.
 //
-// Wave-3 scope, flagged in the walk: axis-depth rows (Universe/Light/Point) have
-// no place yet (their registers ship in Waves 5/6) — selecting them is absorbed,
-// not navigated. The turn "from every top-level surface" is delivered on the Door;
-// generalizing it across RootView is a later pass. The row marks are breathing
-// glyphs, not the prototype's fully hand-drawn marks (≈).
+// The turn's axis-depth rows (Universe/Light/Point) now NAVIGATE into the axis at their
+// register (FeedRoute.instrument(Int), parked via store.pendingLaunchRoute and pushed once the
+// feed is reachable) — the old "absorbed, not navigated" Wave-3 state is gone; the `.absorbed`
+// destination is retained only as a harmless no-op nobody emits. The turn "from every top-level
+// surface" is delivered on the Door. The row marks are breathing glyphs.
 
 private enum DoorWeather { case loading, unmet, met }
 
