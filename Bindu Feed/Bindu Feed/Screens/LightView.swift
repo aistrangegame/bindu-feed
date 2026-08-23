@@ -58,6 +58,15 @@ struct LightView: View {
     private var scene: LightScene { LightCanon.scenes[sceneIndex] }
     private var still: Double { min(1, stillMs / gateMs) }
 
+    // How far the scene's arrival has come (0→1): release answers the hand opening (ungrips/3);
+    // the others fill as the anchors surface, then hold at 1 once the Declaration is being drawn.
+    private var arrivalProgress: Double {
+        guard stage == .scene else { return 0 }
+        if scene.ungripOnly { return min(1, Double(ungrips) / 3) }
+        let a = scene.anchors.isEmpty ? 1 : Double(shownAnchors) / Double(scene.anchors.count)
+        return beatLine >= 0 ? 1 : a
+    }
+
     var body: some View {
         ZStack {
             material
@@ -97,6 +106,13 @@ struct LightView: View {
                                center: UnitPoint(x: 0.5, y: 1.02), startRadius: 0, endRadius: 520)
                     .ignoresSafeArea().allowsHitTesting(false)
                 LightStars(material: .dawn, breath: breath.value)
+                // Each Future scene arrives its OWN way (spine-light.js): converge's motes
+                // drifting into one field, warmth blooming from below, kindness rising from
+                // behind onto what he built, release's rings brightening one-per-ungrip, morning
+                // thinning toward him. Only during the scene, keyed on its arrival progress.
+                if stage == .scene {
+                    LightDawnArrival(key: scene.key, p: arrivalProgress).ignoresSafeArea()
+                }
             }
         case .nave:
             ZStack {
@@ -407,6 +423,70 @@ struct LightView: View {
 }
 
 // A few quiet points of light — stars in the dawn, a dim seam in the nave.
+// The Future scenes' distinct arrivals (spine-light.js draw()), each its own way in. Additive
+// over the base dawn, keyed on the scene and its arrival progress `p`.
+private struct LightDawnArrival: View {
+    let key: String
+    let p: Double
+
+    var body: some View {
+        Canvas { ctx, size in
+            let W = size.width, H = size.height, A = 1.0
+            let bone: [Double] = [237, 227, 206]
+            func rect(_ stops: [Gradient.Stop], _ c: CGPoint, _ r: CGFloat) {
+                ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
+                         with: .radialGradient(Gradient(stops: stops), center: c, startRadius: 0, endRadius: r))
+            }
+            func vrect(_ stops: [Gradient.Stop], _ s: CGPoint, _ e: CGPoint) {
+                ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
+                         with: .linearGradient(Gradient(stops: stops), startPoint: s, endPoint: e))
+            }
+            switch key {
+            case "converge":                                      // scattered motes drift into one field
+                for i in 0..<40 {
+                    let ang = rnd(Double(i)) * .pi * 2
+                    let d0 = max(W, H) * 0.62 * (1 - p) * (0.5 + rnd(Double(i) * 1.7) * 0.8)
+                    let px = W * 0.5 + cos(ang) * d0, py = H * 0.44 + sin(ang) * d0
+                    ctx.fill(UniGeo.ringPath(px, py, 1.1), with: .color(col(bone, A * (0.20 + p * 0.45))))
+                }
+            case "warmth":                                        // the heat reaches the hand before the eye
+                rect([.init(color: col([255, 206, 150], A * 0.30 * p), location: 0),
+                      .init(color: col([255, 206, 150], 0), location: 1)],
+                     CGPoint(x: W * 0.5, y: H * 0.86), W * (0.30 + p * 0.80))
+            case "kindness":                                      // light rises from behind, onto what he built
+                vrect([.init(color: col([255, 232, 200], A * 0.16 * p), location: 0),
+                       .init(color: col([255, 232, 200], 0), location: 1)],
+                      CGPoint(x: W * 0.5, y: H), CGPoint(x: W * 0.5, y: H * 0.12))
+                for i in 0..<9 {
+                    let ry = H * (0.30 + Double(i) * 0.055), rw = W * (0.10 + rnd(Double(i) * 2.7) * 0.42)
+                    ctx.fill(Path(CGRect(x: W * 0.5 - rw / 2, y: ry, width: rw, height: 1.4)),
+                             with: .color(col([255, 236, 208], A * 0.10 * p * (1 - Double(i) / 11))))
+                }
+            case "release":                                       // brightens one ring per opened hand
+                rect([.init(color: col([255, 244, 226], A * 0.24 * p), location: 0),
+                      .init(color: col([255, 244, 226], 0), location: 1)],
+                     CGPoint(x: W * 0.5, y: H * 0.5), max(W, H) * 0.70)
+                let ungrips = p * 3
+                for i in 0..<3 {
+                    let ok = Double(i) < ungrips ? 1.0 : 0.14
+                    ctx.stroke(UniGeo.ringPath(W * 0.5, H * 0.5, W * (0.16 + Double(i) * 0.10)),
+                               with: .color(col(bone, A * 0.22 * ok)), lineWidth: 0.7)
+                }
+            default:                                              // morning: the dawn thins toward him
+                vrect([.init(color: col([255, 238, 214], A * 0.20 * p), location: 0),
+                       .init(color: col([255, 238, 214], 0), location: 1)],
+                      CGPoint(x: W * 0.5, y: H * 0.86), CGPoint(x: W * 0.5, y: H * 0.20))
+            }
+        }
+        .blendMode(.plusLighter)                                  // comp globalCompositeOperation='lighter'
+        .allowsHitTesting(false)
+    }
+    private func rnd(_ i: Double) -> Double { let x = sin(i * 127.1 + 31.4) * 43758.5453; return x - floor(x) }
+    private func col(_ c: [Double], _ a: Double) -> Color {
+        Color(.sRGB, red: c[0] / 255, green: c[1] / 255, blue: c[2] / 255, opacity: max(0, min(1, a)))
+    }
+}
+
 private struct LightStars: View {
     let material: LightMaterial
     let breath: Double
