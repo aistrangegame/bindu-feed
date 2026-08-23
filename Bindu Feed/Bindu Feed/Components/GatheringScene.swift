@@ -216,6 +216,17 @@ struct GatheringScene: View {
                                          Color(hex: "#12181F").opacity(mo)])
         ctx.fill(face, with: .linearGradient(faceGrad,
                  startPoint: CGPoint(x: lx, y: surf), endPoint: CGPoint(x: rx2, y: surf)))
+        // the seams across the face — the courses of the stone
+        for i2 in 1..<9 {
+            let yy = surf + (vpY - surf) * (Double(i2) / 9) * 0.9, ff = 1 - (Double(i2) / 9) * 0.7, hwm = mw * ff
+            var seam = Path(); seam.move(to: CGPoint(x: vpX - hwm, y: yy)); seam.addLine(to: CGPoint(x: vpX + hwm, y: yy))
+            ctx.stroke(seam, with: .color(Color(hex: "#141A22").opacity(0.5 * e)), lineWidth: 1)
+        }
+        // the lit left edge
+        var edge = Path()
+        edge.move(to: CGPoint(x: lx, y: surf + shake * 0.3)); edge.addLine(to: CGPoint(x: lx + 3, y: surf + shake * 0.3))
+        edge.addLine(to: CGPoint(x: tlx + 2, y: vpY)); edge.addLine(to: CGPoint(x: tlx, y: vpY)); edge.closeSubpath()
+        ctx.fill(edge, with: .color(Color(hex: "#D2DEEC").opacity(0.5 * e)))
         // the light band, sliding down the face
         let sl = (t * 0.14).truncatingRemainder(dividingBy: 1)
         let slY = surf + sl * (vpY - surf), slf = 1 - sl * 0.74
@@ -224,6 +235,18 @@ struct GatheringScene: View {
         // the horizon line — the floor lit at the seam
         ctx.fill(Path(CGRect(x: 0, y: surf + shake, width: W, height: 2)),
                  with: .color(Color(hex: "#EAF2FA").opacity(0.7 * e)))
+        // the keystone glow rising off the horizon
+        ctx.fill(Path(CGRect(x: 0, y: surf - 46 + shake, width: W, height: 46)), with: .linearGradient(
+            Gradient(colors: [c.opacity(0), Color(hex: "#C8D6E4").opacity(0.14 * e)]),
+            startPoint: CGPoint(x: 0, y: surf - 46), endPoint: CGPoint(x: 0, y: surf)))
+        // motes rising above the monolith
+        for i3 in 0..<16 {
+            let xx = vpX + (rnd(Double(i3)) - 0.5) * mw * 2.6
+            let yv = surf - ((t * (4 + rnd(Double(i3) + 2) * 7) + rnd(Double(i3) + 4) * 160).truncatingRemainder(dividingBy: 180))
+            let av = max(0, 1 - (surf - yv) / 180) * 0.26 * e
+            ctx.fill(Path(ellipseIn: CGRect(x: xx - 0.7, y: yv - 0.7, width: 1.4, height: 1.4)),
+                     with: .color(Color(hex: "#D2DCE8").opacity(av)))
+        }
     }
 
     // gaia — need arising. Phyllotaxis: 340 seeds each set at the 137.507° golden
@@ -389,6 +412,28 @@ struct GatheringScene: View {
                 }
             }
         }
+        // the petal tracery — a rose curve riding the same mode
+        var petal = Path()
+        let psteps = 240
+        for i in 0...psteps {
+            let a4 = Double(i) / Double(psteps) * 2 * .pi
+            let rp = Rr * (0.62 + 0.34 * cos(Double(m) * a4 - t * 1.1))
+            let pt = CGPoint(x: cos(a4) * rp, y: sin(a4) * rp)
+            if i == 0 { petal.move(to: pt) } else { petal.addLine(to: pt) }
+        }
+        petal.closeSubpath()
+        g.stroke(petal, with: .color(c.opacity(0.42 * e)), lineWidth: 1.5)
+        g.stroke(Path(ellipseIn: CGRect(x: -Rr, y: -Rr, width: Rr * 2, height: Rr * 2)),
+                 with: .color(rose.opacity(0.34 * e)), lineWidth: 1.8)
+        // the one voice, with vibrato, drawn as itself
+        var wave = Path(); var first = true; var px2 = 0.0
+        while px2 <= W {
+            let env = exp(-pow((px2 - cx) / (W * 0.5), 2))
+            let yy = cy + sin(px2 * 0.09 - t * 4) * 30 * env * e * (0.8 + 0.2 * sin(t * 4.6))
+            if first { wave.move(to: CGPoint(x: px2, y: yy)); first = false } else { wave.addLine(to: CGPoint(x: px2, y: yy)) }
+            px2 += 3
+        }
+        ctx.stroke(wave, with: .color(c.opacity(0.46 * e)), lineWidth: 1.6)
     }
 
     // shweta — the gap the sound moves through. Two circles, barely there; only the
@@ -500,6 +545,34 @@ struct GatheringScene: View {
             th += 0.05
         }
         g.stroke(spiral, with: .color(Color(hex: "#FFF0C4").opacity(0.4 * e)), lineWidth: 1.5)
+        // grace riding DOWN the spiral — the scene's literal meaning (grace descending)
+        for k in 0..<3 {
+            let ph = ((t * 0.13) + Double(k) / 3).truncatingRemainder(dividingBy: 1)
+            let th2 = Double.pi * 3.6 * (1 - ph)
+            let r3 = u * 0.055 * pow(PHI, th2 * 2 / Double.pi)
+            let gx = cos(th2) * r3, gy = sin(th2) * r3
+            let gr = 2.2 + (1 - ph) * 2.6
+            g.fill(Path(ellipseIn: CGRect(x: gx - gr, y: gy - gr, width: gr * 2, height: gr * 2)),
+                   with: .color(Color(.sRGB, red: 1, green: 250 / 255, blue: 224 / 255, opacity: 0.9 * e * (0.3 + 0.7 * ph))))
+            let hr = 9 + (1 - ph) * 8
+            g.fill(Path(ellipseIn: CGRect(x: gx - hr, y: gy - hr, width: hr * 2, height: hr * 2)),
+                   with: .color(Color(.sRGB, red: 1, green: 238 / 255, blue: 180 / 255, opacity: 0.12 * e)))
+        }
+        // the twinkling star-motes, rising
+        for i2 in 0..<56 {
+            let sp = 16 + rnd(Double(i2)) * 30
+            let xx = rnd(Double(i2) + 9) * W + sin(t * 0.5 + Double(i2)) * 16
+            let yy = ((t * sp + rnd(Double(i2) + 3) * H * 1.3).truncatingRemainder(dividingBy: H * 1.3)) - 40
+            let tw = 0.5 + 0.5 * sin(t * 3 + Double(i2))
+            let r4 = 0.9 + rnd(Double(i2) + 5) * 2
+            ctx.fill(Path(ellipseIn: CGRect(x: xx - r4, y: yy - r4, width: r4 * 2, height: r4 * 2)),
+                     with: .color(Color(.sRGB, red: 1, green: 234 / 255, blue: 160 / 255, opacity: max(0, 0.7 * e * tw))))
+            if tw > 0.92 {
+                let hr = r4 * 2.8
+                ctx.fill(Path(ellipseIn: CGRect(x: xx - hr, y: yy - hr, width: hr * 2, height: hr * 2)),
+                         with: .color(Color(.sRGB, red: 1, green: 244 / 255, blue: 200 / 255, opacity: 0.14 * e)))
+            }
+        }
     }
 
     // sakshi — the one who stays. The eye as the mandorla it geometrically is: two
