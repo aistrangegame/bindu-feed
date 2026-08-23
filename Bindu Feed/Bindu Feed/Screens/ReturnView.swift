@@ -35,11 +35,10 @@ struct ReturnView: View {
 
     var body: some View {
         ZStack {
-            Color(hex: "#0E0C12").ignoresSafeArea()
-            // A warm, low memory-wash — the room lit by what's left of a fire.
-            RadialGradient(colors: [ReturnCanon.ashColor.opacity(0.08), .clear],
-                           center: UnitPoint(x: 0.5, y: 1.05), startRadius: 0, endRadius: 480)
-                .ignoresSafeArea().allowsHitTesting(false)
+            Color(hex: "#08070B").ignoresSafeArea()
+            // The strata — the aged rings, the seed, the settling dust — living behind every
+            // movement (return-strata.js), not a static wash. His own returns, warmed by age.
+            ReturnStrata(rings: 3, age: 0.5)
 
             content.transition(.opacity)
 
