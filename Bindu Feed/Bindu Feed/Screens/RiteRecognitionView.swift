@@ -15,7 +15,9 @@ import AVFoundation
 private enum RecogStage { case prompt, listening, settling, words }
 
 struct RiteRecognitionView: View {
-    let onSealed: (String) -> Void
+    /// (transcript, kept-audio filename or nil). The filename is the Movement-IV audio
+    /// reference — present only when a recording actually landed on disk.
+    let onSealed: (String, String?) -> Void
 
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var stage: RecogStage = .prompt
@@ -53,7 +55,7 @@ struct RiteRecognitionView: View {
                     .font(.spaceMono(9)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary)
                 // Leaving a word is a CHOICE, never a requirement — seal with nothing.
-                Button { onSealed("") } label: {
+                Button { onSealed("", recorder.keptFilename) } label: {
                     Text("nothing to leave · seal ›")
                         .font(.spaceMono(8)).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
@@ -100,7 +102,7 @@ struct RiteRecognitionView: View {
                             .foregroundStyle(BinduTheme.inkTertiary)
                         Spacer()
                         Button(RiteWord.recogKeepIt) {
-                            onSealed(text.trimmingCharacters(in: .whitespacesAndNewlines))
+                            onSealed(text.trimmingCharacters(in: .whitespacesAndNewlines), recorder.keptFilename)
                         }
                         .font(.lora(15))
                         .foregroundStyle(RiteAsh.color)   // always sealable — empty is allowed
@@ -158,6 +160,14 @@ private extension View {
 final class RiteRecorder: ObservableObject {
     private var recorder: AVAudioRecorder?
     private(set) var lastURL: URL?
+
+    /// The kept recording's filename — the Movement-IV audio reference — but only if the
+    /// file actually made it to disk (a denied mic / failed session leaves this nil, so a
+    /// wordless-and-silent seal writes no dangling reference).
+    var keptFilename: String? {
+        guard let url = lastURL, FileManager.default.fileExists(atPath: url.path) else { return nil }
+        return url.lastPathComponent
+    }
 
     // The durable store for kept voices — Application Support, created on demand.
     static func recordingsDirectory() -> URL {

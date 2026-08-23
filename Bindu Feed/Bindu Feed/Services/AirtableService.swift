@@ -327,7 +327,8 @@ final class AirtableService {
         storyId: String,
         body: String,
         parentCommentId: String?,
-        archetypeName: String
+        archetypeName: String,
+        audioReference: String? = nil
     ) async throws -> AirtableRecord {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
@@ -349,6 +350,12 @@ final class AirtableService {
         ]
         if let parentCommentId {
             fields["Parent Comment"] = [parentCommentId]
+        }
+        // Movement IV — the Rite's Recognition keeps the spoken audio on-device; the
+        // filename is the durable reference to it, stored on this Ash Comment (the audio
+        // itself stays local, Airtable can't host it). Empty/absent = a written-only entry.
+        if let audioReference, !audioReference.isEmpty {
+            fields["Audio Reference"] = audioReference
         }
 
         let payload: [String: Any] = [

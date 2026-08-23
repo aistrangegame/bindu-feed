@@ -232,18 +232,24 @@ struct RiteStoryData {
     let codexId: String
     let date: String
     let body: [String]
+    /// The live Airtable record id of today's story, or "" for the canon fallback.
+    /// When non-empty, the Recognition's sealed reflection posts as an Ash Comment on
+    /// this story (carrying the Movement-IV audio reference); "" keeps it local-only.
+    let storyId: String
 
     static let canon = RiteStoryData(
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
         roomGlyph: RiteCanon.roomGlyph, codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body)
 
     init(title: String, roomName: String, roomColor: Color, roomGlyph: String,
-         codexId: String, date: String, body: [String]) {
+         codexId: String, date: String, body: [String], storyId: String = "") {
         self.title = title; self.roomName = roomName; self.roomColor = roomColor
         self.roomGlyph = roomGlyph; self.codexId = codexId; self.date = date; self.body = body
+        self.storyId = storyId
     }
 
     init(story: Story, room: Room?) {
+        storyId = story.id
         title = story.title
         roomName = story.room
         roomColor = room?.color ?? RiteCanon.roomColor

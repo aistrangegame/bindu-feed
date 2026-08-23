@@ -113,10 +113,21 @@ struct RiteView: View {
         soundEngine.riteThreshold(hz: 261, dur: 7)
         withAnimation(.easeInOut(duration: 1.2)) { movement = .recognition }
     }
-    private func toSealed(_ text: String) {
+    private func toSealed(_ text: String, _ audioRef: String?) {
         keptText = text
         withAnimation(.easeInOut(duration: 1.0)) { movement = .sealed }
-        Task { await store.logStoryMet(codexId: storyData.codexId, title: storyData.title) }
+        let sid = storyData.storyId
+        Task {
+            await store.logStoryMet(codexId: storyData.codexId, title: storyData.title)
+            // When the Rite met a LIVE story (not the canon fallback) and Ash left words,
+            // the Recognition becomes a durable Ash Comment on that story, carrying the
+            // Movement-IV audio reference. The spoken audio itself stays kept on-device
+            // (RiteRecorder's local index); the comment holds the filename that points to
+            // it. Canon Rite (empty storyId) or a wordless seal keeps everything local.
+            if !sid.isEmpty, !text.isEmpty {
+                _ = await store.postComment(storyId: sid, body: text, parentId: nil, audioReference: audioRef)
+            }
+        }
     }
     private func finish() {
         if let onFinish {

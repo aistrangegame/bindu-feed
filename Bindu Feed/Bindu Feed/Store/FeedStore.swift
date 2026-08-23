@@ -380,17 +380,18 @@ final class FeedStore: ObservableObject {
     /// (the compose ceremony completes for the user either way). Returns true if it landed
     /// now, false if it was queued for retry.
     @discardableResult
-    func postComment(storyId: String, body: String, parentId: String?) async -> Bool {
+    func postComment(storyId: String, body: String, parentId: String?, audioReference: String? = nil) async -> Bool {
         let userArchetypeName = archetype(named: "Ash")?.name ?? "Ash"
         do {
             _ = try await service.postAshComment(
                 storyId: storyId,
                 body: body,
                 parentCommentId: parentId,
-                archetypeName: userArchetypeName
+                archetypeName: userArchetypeName,
+                audioReference: audioReference
             )
         } catch {
-            queuePendingComment(PendingComment(storyId: storyId, body: body, parentId: parentId))
+            queuePendingComment(PendingComment(storyId: storyId, body: body, parentId: parentId, audioReference: audioReference))
             #if DEBUG
             print("[FeedStore] postComment failed — queued for retry: \(error)")
             #endif
@@ -416,7 +417,10 @@ final class FeedStore: ObservableObject {
 
     // MARK: - Durable comment queue (never lose an authored comment)
 
-    private struct PendingComment: Codable { let storyId: String; let body: String; let parentId: String? }
+    private struct PendingComment: Codable {
+        let storyId: String; let body: String; let parentId: String?
+        var audioReference: String? = nil   // Movement IV kept-audio filename (optional)
+    }
     private static let pendingCommentsKey = "bindu.comments.pending"
 
     private func queuePendingComment(_ c: PendingComment) {
@@ -439,7 +443,7 @@ final class FeedStore: ObservableObject {
         var remaining: [PendingComment] = []
         for c in queue {
             let name = archetype(named: "Ash")?.name ?? "Ash"
-            do { _ = try await service.postAshComment(storyId: c.storyId, body: c.body, parentCommentId: c.parentId, archetypeName: name) }
+            do { _ = try await service.postAshComment(storyId: c.storyId, body: c.body, parentCommentId: c.parentId, archetypeName: name, audioReference: c.audioReference) }
             catch { remaining.append(c) }
         }
         if let data = try? JSONEncoder().encode(remaining) {
