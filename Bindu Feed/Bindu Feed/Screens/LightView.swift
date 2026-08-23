@@ -15,7 +15,7 @@ import SwiftUI
 // One scene per visit, chosen by date-hash (like the Mirror). Two materials tell
 // you where you are with the words covered: the dawn (Near) vs the nave (Far).
 
-private enum LightStage { case approach, scene, out }
+private enum LightStage { case approach, hold, scene, out }
 
 struct LightView: View {
     @Binding var path: [FeedRoute]
@@ -34,10 +34,22 @@ struct LightView: View {
 
     // Scene
     @State private var shownAnchors = 0
-    @State private var beatDrew: Double = 0     // beat draw-in 0…1
-    @State private var carved = false
     @State private var ungrips = 0
     @State private var pendingAnchor = false      // a touch asked; the next exhale answers
+
+    // The Declaration — drawn in one line at a time, each over ~4.2s of held breath
+    // (comp The Light v2 · LitSpace). Never delivered whole.
+    @State private var beatLine = -1              // highest locked Declaration line (-1 = none yet)
+    @State private var drawing: Double = 0        // the current line's draw-in progress, 0…1
+    @State private var carveTimer: Timer?
+    @State private var landed = false             // the last line locked; the landing has arrived
+    @State private var pressing = false           // leading-edge guard for the press gesture
+
+    // The Hold — the dark beat in the shaft between the gate opening and the flood.
+    @State private var holdDimmed = false
+
+    private let holdMs: Double = 3400             // breath period × 0.34 (comp Hold dur)
+    private let carveMs: Double = 4200            // one Declaration line, drawn in (comp)
 
     private let gateMs: Double = 4600
     private let idleMs: Double = 340
@@ -50,6 +62,7 @@ struct LightView: View {
             material
             switch stage {
             case .approach: approach
+            case .hold:     holdBody
             case .scene:    sceneBody
             case .out:      backOut
             }
@@ -67,7 +80,7 @@ struct LightView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear(perform: begin)
-        .onDisappear { gate?.invalidate() }
+        .onDisappear { gate?.invalidate(); carveTimer?.invalidate() }
         .sonicContext(.base)
     }
 
@@ -139,6 +152,31 @@ struct LightView: View {
             .onEnded { _ in touching = false; lastInput = Date() })
     }
 
+    // MARK: - The Hold (standing in the shaft, before the aperture opens)
+
+    private var holdBody: some View {
+        VStack {
+            Spacer()
+            Text("hold")
+                .font(.spaceMono(9)).tracking(3)
+                .foregroundStyle(BinduTheme.inkTertiary.opacity(holdDimmed ? 0 : 0.6))
+                .padding(.bottom, 56)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+        .onAppear {
+            holdDimmed = false
+            // the "hold" word fades near the middle of the hold; then the aperture opens
+            DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000 * 0.45) {
+                withAnimation(.easeInOut(duration: 1.6)) { holdDimmed = true }
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000) {
+                soundEngine.riteBowl(hz: 174)                 // the aperture opens; light floods down
+                withAnimation(.easeInOut(duration: 1.6)) { stage = .scene }
+            }
+        }
+    }
+
     // MARK: - Scene
 
     private var sceneBody: some View {
@@ -158,23 +196,31 @@ struct LightView: View {
                     .transition(.opacity)
             }
 
-            // The beat — draws in, then the carve turns it 1st-person and cuts it.
+            // The Declaration — CUT INTO THE FLOOR one line at a time. Each is drawn in
+            // over ~4.2s of held breath (never delivered whole); it locks when he has taken
+            // the whole of it. The turn to first person happens in his body first.
             if shownAnchors >= scene.anchors.count {
                 VStack(alignment: .leading, spacing: 6) {
-                    ForEach(Array(scene.beat.enumerated()), id: \.offset) { i, line in
-                        Text(line)
-                            .font(.lora(17, weight: carved ? .semibold : .regular))
-                            .foregroundStyle(carved
-                                             ? Color(hex: "#F5E8DE")
-                                             : BinduTheme.inkPrimary.opacity(min(1, beatDrew * 1.2)))
-                            .shadow(color: carved ? .black.opacity(0.72) : .clear, radius: 0, x: 0, y: 1)
-                            .opacity(carved ? 1 : min(1, beatDrew))
-                            .id(i)
+                    // the locked lines — debossed into the floor, they never settle
+                    ForEach(0..<max(0, beatLine + 1), id: \.self) { i in
+                        Text(scene.beat[i])
+                            .font(.lora(17, weight: .semibold))
+                            .foregroundStyle(Color(hex: "#F5E8DE"))
+                            .shadow(color: .black.opacity(0.72), radius: 0, x: 0, y: 1)
+                    }
+                    // the line surfacing out of the stone right now, as he draws it in
+                    if moreBeat, drawing > 0 {
+                        Text(scene.beat[beatLine + 1])
+                            .font(.lora(17, weight: .semibold))
+                            .foregroundStyle(Color(hex: "#F5E8DE").opacity(0.06 + drawing * 0.94))
+                            .shadow(color: .black.opacity(0.72 * drawing), radius: 0, x: 0, y: 1)
+                            .offset(y: (1 - drawing) * 10)
+                            .blur(radius: (1 - drawing) * 3.4)
                     }
                 }
                 .padding(.top, 6)
 
-                if carved {
+                if landed {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(scene.landing)
                             .font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
@@ -185,8 +231,8 @@ struct LightView: View {
                         }
                     }
                     .transition(.opacity).padding(.top, 12)
-                } else if beatDrew >= 0.9 {
-                    Text(LightCanon.beatCue)
+                } else if moreBeat {
+                    Text(drawing > 0 ? "keep drawing it in" : "press · draw it in")
                         .font(.spaceMono(9)).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary)
                         .modifier(RiteBreathe())
@@ -202,12 +248,23 @@ struct LightView: View {
         .onChange(of: breath.value) { deliverOnExhale() }
     }
 
-    // A touch reveals the next anchor (for `release`, the ungrip = the lift). Once
-    // the beat is drawn, a held press ≥900ms carves it.
+    private var beatActive: Bool { shownAnchors >= scene.anchors.count }
+    private var moreBeat: Bool { beatLine + 1 < scene.beat.count }
+
+    // A press ASKS for the next anchor (the exhale answers); once the anchors are done,
+    // a press-and-hold DRAWS the next Declaration line in. Releasing early lets it sink.
     private var sceneGesture: some Gesture {
-        LongPressGesture(minimumDuration: 0.9)
-            .onEnded { _ in tryCarve() }
-            .simultaneously(with: TapGesture().onEnded { advanceAnchor() })
+        DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                guard !pressing else { return }
+                pressing = true
+                if beatActive && moreBeat && !landed { beginCarve() }
+                else { advanceAnchor() }
+            }
+            .onEnded { _ in
+                pressing = false
+                releaseCarve()
+            }
     }
 
     // MARK: - Flow
@@ -234,16 +291,15 @@ struct LightView: View {
 
     private func openTheLight() {
         gate?.invalidate()
-        soundEngine.riteBowl(hz: 174)               // the register frequency; the room opens
         Task { await store.logVeilLifted() }
-        withAnimation(.easeInOut(duration: 1.6)) { stage = .scene }
-        // The beat draws in once the anchors are done (see advanceAnchor).
+        // Stand in the shaft first (the Hold), then the aperture opens into the scene.
+        withAnimation(.easeInOut(duration: 1.0)) { stage = .hold }
     }
 
     // A touch ASKS; the next exhale answers (the interior's core law). Except `release`,
     // which answers only the hand leaving the glass — each ungrip advances it directly.
     private func advanceAnchor() {
-        guard stage == .scene, !carved, shownAnchors < scene.anchors.count else { return }
+        guard stage == .scene, shownAnchors < scene.anchors.count else { return }
         if scene.ungripOnly {
             ungrips += 1
             soundEngine.axisUngrip()              // the field answers the opened hand
@@ -256,7 +312,8 @@ struct LightView: View {
     private func revealAnchor() {
         guard shownAnchors < scene.anchors.count else { return }
         withAnimation(.easeInOut(duration: 1.4)) { shownAnchors += 1 }
-        if shownAnchors == scene.anchors.count { startBeatDraw() }
+        // When the anchors are done the Declaration is ready to be DRAWN IN — nothing
+        // surfaces on its own; the first press starts the first line (comp phase 'beat').
     }
 
     // The exhale answers what the touch asked (delivered near the breath's turn).
@@ -266,20 +323,43 @@ struct LightView: View {
         revealAnchor()
     }
 
-    private func startBeatDraw() {
-        // The beat draws itself in over ~1s, then waits to be meant (carved).
-        Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { t in
-            beatDrew = min(1, beatDrew + 0.05)
-            if beatDrew >= 1 { t.invalidate() }
+    // A press draws the next Declaration line in over ~4.2s; releasing early lets it sink
+    // back (comp `release`). It locks only when he has taken the whole of it.
+    private func beginCarve() {
+        guard stage == .scene, beatActive, moreBeat, carveTimer == nil else { return }
+        soundEngine.inkOn(hz: 196)                    // the field leans in while he draws breath
+        let start = Date()
+        carveTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
+            let p = min(1, Date().timeIntervalSince(start) / (carveMs / 1000))
+            drawing = p
+            if p >= 1 { lockCarveLine() }
         }
     }
 
-    private func tryCarve() {
-        guard stage == .scene, !carved, shownAnchors >= scene.anchors.count, beatDrew >= 0.9 else { return }
-        withAnimation(.easeInOut(duration: 1.2)) { carved = true }
-        // The Vow loop — the Declaration, crystallized, returns via the Mirror.
-        let declaration = scene.beat.joined(separator: " ")
-        Task { await store.writeVow(text: declaration) }
+    private func releaseCarve() {
+        guard carveTimer != nil, drawing < 1 else { return }
+        carveTimer?.invalidate(); carveTimer = nil
+        soundEngine.inkOff()
+        withAnimation(.easeOut(duration: 0.4)) { drawing = 0 }
+    }
+
+    private func lockCarveLine() {
+        carveTimer?.invalidate(); carveTimer = nil
+        soundEngine.inkOff()
+        soundEngine.axisUngrip()                       // the line locks — a small confirming rise
+        withAnimation(.easeInOut(duration: 0.6)) {
+            beatLine += 1
+            drawing = 0
+        }
+        // The last line locked — crystallize the whole Declaration into the Vow (it returns
+        // via the Mirror), then the landing arrives a breath and a half later (comp).
+        if beatLine >= scene.beat.count - 1 {
+            let declaration = scene.beat.joined(separator: " ")
+            Task { await store.writeVow(text: declaration) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+                withAnimation(.easeInOut(duration: 1.0)) { landed = true }
+            }
+        }
     }
 
     // MARK: - Walk back out
@@ -308,7 +388,9 @@ struct LightView: View {
     }
 
     private func restart() {
-        stillMs = 0; shownAnchors = 0; beatDrew = 0; carved = false; ungrips = 0
+        carveTimer?.invalidate(); carveTimer = nil
+        stillMs = 0; shownAnchors = 0; ungrips = 0
+        beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }
         begin()
     }
