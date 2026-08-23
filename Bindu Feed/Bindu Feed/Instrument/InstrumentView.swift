@@ -50,6 +50,18 @@ struct InstrumentView: View {
     private var here: AxisRegister { Axis.nearest(z) }
     private var atSky: Bool { abs(z + 4) < 0.45 }
 
+    // Content presence. The Universe band is ONE continuous camera: full across −4…−1, fading
+    // only toward the feed (z→−0.5) and the Light (z→−4.6). Every other register keeps the
+    // per-register crossfade.
+    private var contentOpacity: Double {
+        if z <= -0.5 && z >= -4.6 {
+            let feedFade = max(0, min(1, (-0.5 - z) / 0.5))    // fades in from the feed edge
+            let lightFade = max(0, min(1, (z + 4.6) / 0.6))    // fades out toward the Light edge
+            return min(feedFade, lightFade)
+        }
+        return Axis.presence(here.i, z)
+    }
+
     var body: some View {
         ZStack {
             Color(hex: "#050408").ignoresSafeArea()
@@ -58,10 +70,12 @@ struct InstrumentView: View {
                 shells
             }
 
-            // The register content, brightening as he settles into it.
+            // The register content, brightening as he settles into it. The Universe band
+            // (−4…−1) stays continuously present as one camera (fading only at its feed/light
+            // edges) so the flowing camera doesn't pulse dim between the four registers.
             content
-                .opacity(Axis.presence(here.i, z))
-                .allowsHitTesting(Axis.presence(here.i, z) > 0.6 && !travel.crossing)
+                .opacity(contentOpacity)
+                .allowsHitTesting(contentOpacity > 0.55 && !travel.crossing)
 
             // The stillness gate — at the sky, the way on thins with stillness, not force.
             if travel.thin > 0.01 {
@@ -260,7 +274,8 @@ struct InstrumentView: View {
             AxisGateView()
         case "sky", "region", "world", "fall":
             UniverseView(register: here, path: $path,
-                         onFall: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) })
+                         onFall: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) },
+                         continuousZ: z)     // the continuous "cathedral" camera reads the live z
         case "feed":
             AxisFeedSeam { if !path.isEmpty { $path.popToRootDissolve() } }
         case "light":

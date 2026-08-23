@@ -41,6 +41,12 @@ struct UniverseView: View {
     let onFall: () -> Void
     /// Tapping a star asks the axis to draw inward toward that world (wired by InstrumentView).
     var onApproach: ((String) -> Void)? = nil
+    /// The continuous axis position (travel.z, −4…−1 across the Universe band). When present and
+    /// `flowing` is on, the camera zooms continuously — nothing snaps (the "cathedral").
+    var continuousZ: Double? = nil
+
+    @State private var flowing = true          // continuous camera by default; the toggle A/Bs it
+    @State private var fallFired = false        // one-shot guard for the z-driven fall → Return
 
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
@@ -73,10 +79,15 @@ struct UniverseView: View {
             ZStack {
                 TimelineView(.animation) { tl in
                     let t = tl.date.timeIntervalSinceReferenceDate
-                    Canvas { ctx, size in draw(ctx, size, t) }
-                        .allowsHitTesting(false)          // the Canvas never eats hits
+                    Canvas { ctx, size in
+                        if flowing, let z = continuousZ { drawFlowing(ctx, size, t, z) }   // the cathedral
+                        else { draw(ctx, size, t) }                                        // the stepped camera
+                    }
+                    .allowsHitTesting(false)          // the Canvas never eats hits
                 }
-                if register.key == "fall" {
+                // In the stepped camera the fall has an explicit door; in the flowing camera the
+                // fall opens by continuing to draw inward (no button), so this is stepped-only.
+                if register.key == "fall" && !(flowing && continuousZ != nil) {
                     VStack {
                         Spacer()
                         Text("the fall").font(.lora(18)).italic().foregroundStyle(Color(hex: "#9FB2C4"))
@@ -87,6 +98,21 @@ struct UniverseView: View {
                                 .foregroundStyle(Color(hex: "#9FB2C4")).padding(.top, 10)
                         }
                         Spacer().frame(height: 60)
+                    }
+                }
+                // The camera A/B — flowing (continuous, nothing snaps) vs stepped (the discrete
+                // registers). Top-left, quiet; only meaningful when the axis feeds a continuous z.
+                if continuousZ != nil {
+                    VStack {
+                        HStack {
+                            Button { flowing.toggle() } label: {
+                                Text(flowing ? "flowing" : "stepped")
+                                    .font(.spaceMono(8)).tracking(2)
+                                    .foregroundStyle(Color(hex: "#AAB2BC").opacity(0.5)).padding(14)
+                            }
+                            Spacer()
+                        }
+                        Spacer()
                     }
                 }
                 // The structure lens toggle — only where the regions are legible (sky/region).
@@ -462,6 +488,78 @@ struct UniverseView: View {
                          at: CGPoint(x: head.x + 11, y: head.y + 3), anchor: .leading)
             }
         }
+    }
+
+    // MARK: - The flowing (continuous "cathedral") camera
+
+    private func ssmooth(_ x: Double, _ a: Double, _ b: Double) -> Double {
+        let t = max(0, min(1, (x - a) / (b - a)))
+        return t * t * (3 - 2 * t)
+    }
+    // axis z (−4 sky … −1 fall) → a continuous zoom, smoothly interpolated between the register
+    // anchors so nothing snaps as he draws inward.
+    private func flowingZoom(_ z: Double) -> Double {
+        let pts: [(Double, Double)] = [(-4, 1.0), (-3, 2.1), (-2, 4.6), (-1, 8.0)]
+        let zc = max(-4, min(-1, z))
+        for k in 0..<(pts.count - 1) {
+            let (z0, v0) = pts[k], (z1, v1) = pts[k + 1]
+            if zc <= z1 { let f = (zc - z0) / (z1 - z0); return v0 + (v1 - v0) * (f * f * (3 - 2 * f)) }
+        }
+        return 8.0
+    }
+
+    // The continuous camera: the same regions/stars/planet/fall, but the reading distance flows
+    // with `z` and the close states (world, fall) CROSSFADE in over the wide sky instead of
+    // snapping. Reuses the cached data + the existing draw primitives.
+    private func drawFlowing(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double, _ z: Double) {
+        let b = breath.value, W = size.width, H = size.height
+        let focusRoom = uniRooms[min(max(0, focusRegionIdx), uniRooms.count - 1)]
+        let focus = CGPoint(x: (focusRoom.x + 490) / 980, y: (focusRoom.y + 1030) / 1930)
+        let zoom = flowingZoom(z)
+        let wWorld = ssmooth(z, -2.7, -2.05)     // the planet fades in approaching the world
+        let wFall = ssmooth(z, -1.7, -1.02)      // the fall fades in past the world
+
+        drawDeepSky(ctx, size, t, focus: focus, zoom: zoom)
+        let regW = ssmooth(z, -3.7, -2.7)
+        if regW > 0.02 { RegionForm.field(ctx, focusRoom, W, H, t: t, a: 0.5 * regW, c: focusRoom.rgb) }
+
+        let litDim = 1 - lens * 0.55
+        let armA = (0.9 - 0.5 * ssmooth(z, -4, -2.6)) * litDim
+        for (ri, rm) in uniRooms.enumerated() {
+            let c = regionCenter(rm, size, zoom: zoom, focus: focus)
+            let color = Color(hex: rm.hex)
+            let armR = rm.r / 980 * W * zoom
+            let rr = armR * 0.6
+            guard c.x > -armR, c.x < W + armR, c.y > -armR, c.y < H + armR else { continue }
+            ctx.fill(UniGeo.ringPath(c.x, c.y, rr),
+                     with: .radialGradient(.init(colors: [color.opacity((0.07 + 0.03 * b) * (1 - lens * 0.5)), .clear]),
+                                           center: c, startRadius: 0, endRadius: rr))
+            RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: armA, c: UniGeo.mix(rm.rgb, UniGeo.BONE, lens * 0.5))
+            if ri < starsByRegion.count {
+                for st in starsByRegion[ri] {
+                    let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
+                    drawStar(ctx, at: sp, star: st, t: t)
+                }
+            }
+        }
+        drawLanes(ctx, size, zoom: zoom, focus: focus, t: t)
+        if lens > 0.02 {
+            ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
+                     with: .color(Color(.sRGB, red: 8 / 255, green: 7 / 255, blue: 11 / 255, opacity: 0.20 * lens)))
+            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: z > -3.4)
+        }
+        // the world — the focus star grows into a planet, crossfading over the region
+        if wWorld > 0.01, wFall < 0.85, let s = focusStory {
+            var p = ctx; p.opacity = wWorld * (1 - wFall)
+            drawPlanet(p, size, story: s, rm: focusRoom, t: t, b: b)
+        }
+        // the fall — opens by continuing to draw inward; d flows with z, then the mouth → Return
+        if wFall > 0.01, let s = focusStory {
+            var f = ctx; f.opacity = min(1, wFall * 1.3)
+            drawFall(f, size, story: s, rm: focusRoom, t: t, d: max(0.05, wFall))
+            if wFall >= 0.92, !fallFired { fallFired = true; DispatchQueue.main.async { onFall() } }
+        }
+        if wFall < 0.5, fallFired { DispatchQueue.main.async { fallFired = false } }
     }
 
     // one star on the sky — met stars carry a halo, depth rings, and their company in orbit.
