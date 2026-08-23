@@ -168,6 +168,7 @@ struct ReturnStoryData {
     var returnCount: Int = 1       // rings already sealed here (each seal = one ring); ≥1
     var firstMet: String = ReturnCanon.firstMetDate(fromDay: RiteCanon.date)  // "you first met this · <date>"
     var audioReference: String? = nil   // Movement IV — the kept voice of the sealed self, if any
+    var roomRGB: [Double] = [155, 107, 214]   // the room colour as [r,g,b] 0…255, for the four-layer fall
 
     static let canon = ReturnStoryData(
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,

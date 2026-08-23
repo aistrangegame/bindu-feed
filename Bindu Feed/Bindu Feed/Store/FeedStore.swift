@@ -649,7 +649,8 @@ final class FeedStore: ObservableObject {
             storyId: story.id, record: record,
             returnCount: ringCount,
             firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay),
-            audioReference: sealed.audioReference)
+            audioReference: sealed.audioReference,
+            roomRGB: UniGeo.hx(room?.hexColor ?? "#9B6BD6"))
     }
 
     /// The Door's weather read: is today already met? True if the local same-day cache is
