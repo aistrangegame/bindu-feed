@@ -63,7 +63,11 @@ struct ContentCoordinator: View {
                 .allowsHitTesting(true)   // swallow taps during the crossing
             }
         }
-        .animation(.easeInOut(duration: 1.0), value: doorCrossed)
+        // While blinking, the Door→feed swap is INSTANT (hidden behind the shut lids) — the
+        // blink is the transition, so the 1.0s crossfade must not run underneath and leave
+        // the field ghosted as the lids open. The crossfade still governs non-blink changes
+        // (e.g. the sign-out reset of doorCrossed).
+        .animation(blinking ? nil : .easeInOut(duration: 1.0), value: doorCrossed)
         .animation(.easeInOut(duration: 0.6), value: showTokenEntry)
         .onAppear {
             Self.removeRetiredUserDefaultsKeys()
