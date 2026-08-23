@@ -47,6 +47,11 @@ struct RiteGatheringView: View {
     private func dim(_ v: RiteVoice) -> Double {
         tiers[v.key] == .passing ? 0.42 : 1.0
     }
+    private func hintText(_ v: RiteVoice) -> String {
+        if tiers[v.key] == .passing { return RiteWord.promptPassing }
+        if shown >= lines(v).count { return RiteWord.promptNext }
+        return RiteWord.promptContinue
+    }
 
     var body: some View {
         TimelineView(.animation) { _ in
@@ -76,6 +81,16 @@ struct RiteGatheringView: View {
                 // from the timer). Lives in the Gathering only.
                 if phase == .playing {
                     heartbeatBar
+                }
+
+                // The touch hint — it changes with state (comp The Rite v3): passing voices
+                // say "touch to move on", a finished voice "the next presence", else "continue".
+                if phase == .playing, let v = current {
+                    Text(hintText(v))
+                        .font(.spaceMono(9)).tracking(2)
+                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.28 + 0.28 * breath.value))
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .padding(.bottom, 30)
                 }
             }
             .contentShape(Rectangle())
@@ -256,6 +271,12 @@ private struct VoiceText: View {
                     Text(voice.role)
                         .font(.spaceMono(8)).tracking(1.2)
                         .foregroundStyle(BinduTheme.inkTertiary)
+                    // "answering Sakshi" — the one who speaks in reply (comp The Rite v3).
+                    if let answering = voice.answering {
+                        Text("answering \(answering)")
+                            .font(.spaceMono(8)).tracking(1)
+                            .foregroundStyle(voice.color.opacity(0.6))
+                    }
                 }
             }
             .frame(maxWidth: .infinity, alignment: voice.isCenter ? .center : .leading)

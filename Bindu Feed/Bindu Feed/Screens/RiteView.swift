@@ -143,6 +143,9 @@ private struct RiteArrival: View {
             Text(RiteWord.arrivalMeeting)
                 .font(.lora(15)).italic()
                 .foregroundStyle(BinduTheme.inkSecondary)
+            // The breathing, glowing room glyph — the Arrival's centerpiece (comp The Rite v3).
+            GlyphView(glyph: data.roomGlyph, size: 44, color: data.roomColor, animation: .glyphBreathe, glow: 20)
+                .padding(.vertical, 4)
             VStack(spacing: 10) {
                 Text(data.title)
                     .font(.lora(28, weight: .medium))
