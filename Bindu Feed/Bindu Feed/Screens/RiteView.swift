@@ -5,11 +5,12 @@ import SwiftUI
 // chrome-free ceremony (modelled on PracticeDoorView) reached via the `.rite`
 // route. Wave 2.
 //
-// Wave-2 scope note (flagged in the conformance walk): the Rite plays the CANON
-// story (C-1052, "The Two Who Were One") with the ten authored voices, exactly as
-// the prototype does. Wiring it to meet a live feed story — with each archetype's
-// actual field comments as the Gathering's voices, and a real return-depth — is a
-// larger dynamic system, deferred.
+// The Rite meets TODAY's live story-of-the-day: RootView's `.rite` route and the Door both
+// build `RiteStoryData(story: store.storyOfDay())` and pull the real voices via
+// `store.riteMeeting(for:)` → `riteVoices(from: field)` — each archetype's ACTUAL field
+// comments become the Gathering's voices (their real lines/colour/glyph), and the return-depth
+// is the user's own Ash-comment count on that story. The canon story (C-1052) + the ten
+// authored voices remain only as the offline fallback when the feed can't be reached.
 
 enum RiteMovement { case arrival, reading, gathering, recognition, sealed }
 

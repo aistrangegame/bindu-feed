@@ -62,23 +62,32 @@ enum RiteBudget {
         var left = budgetMs - pastSelfSpend(depth)
         let byKey = Dictionary(uniqueKeysWithValues: voices.map { ($0.key, $0) })
 
-        // The claim — always-full pair + one rotated "heard least".
-        let claim = kept + [rota[(depth - 1) % rota.count]]
+        // The claim — always-full pair + one rotated "heard least". (What a recognition
+        // "touches" is, for now, the KEPT pair whose thread stays lit plus a depth-rotated
+        // "heard least" — a stable proxy until the last Ash comment's actual replied-to
+        // archetypes are threaded in.)
+        let rotIdx = (depth - 1) % rota.count
+        let claim = kept + [rota[rotIdx]]
         var full = Set<String>()
         for (i, k) in claim.enumerated() {
             guard let v = byKey[k] else { continue }
             let cost = costOf(v)
-            // The first claimed voice is always taken; the rest only if affordable.
+            // The first claimed voice is always taken; the rest only if affordable — and once
+            // one is unaffordable, stop (the comp breaks; the budget only shrinks from here).
             if i == 0 || left - cost >= passingMs {
                 tier[k] = .full
                 full.insert(k)
                 left -= cost
+            } else {
+                break
             }
         }
 
-        // The queue — Bindu first, then the rest of ROTA, granted a passing line
-        // while budget remains. Bindu bypasses the check (never silent).
-        let queue = ["bindu"] + rota.filter { !full.contains($0) }
+        // The queue — Bindu first, then the rest of ROTA depth-ROTATED (so a different voice
+        // passes on each return, not always the same order), granted a passing line while
+        // budget remains. Bindu bypasses the check (never silent).
+        let rotatedRota = Array(rota[rotIdx...] + rota[..<rotIdx])
+        let queue = ["bindu"] + rotatedRota.filter { !full.contains($0) }
         for k in queue where !full.contains(k) {
             if k != "bindu" && left < passingMs { break }
             tier[k] = .passing

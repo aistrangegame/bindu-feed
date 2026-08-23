@@ -101,6 +101,31 @@ struct ApertureView: View {
         }
     }
 
+    // The registers the Aperture can transmit — authentic traditions OUTSIDE the well-known
+    // (point-content.js REGISTERS, verbatim), and a per-session set so none repeats in a walk.
+    private static var seenRegisters = Set<String>()
+    private static let registers: [String] = [
+        "Qalb — the heart-organ of the Sufi Lataif", "Sirr — the secret, in the Sufi Lataif",
+        "Fana — dissolution, among the Sufi stations", "Baqa — abiding-after-dissolution, among the Sufi stations",
+        "Sabr — patience, among the Sufi maqamat", "Tawakkul — trust, among the Sufi maqamat",
+        "Coire Sois — the Celtic cauldron of wisdom at the crown", "Coire \u{00C9}rmai — the Celtic cauldron of motion at the heart",
+        "Awen — the flowing inspiration of the Celtic register", "the lower dan tian of the Daoist body",
+        "Wuji — the uncarved, before the taiji", "the sixth ox-herding picture — riding the ox home",
+        "the tenth ox-herding picture — the marketplace with helping hands",
+        "the bardo of dream, among the six Tibetan bardos", "the bardo of becoming, among the six Tibetan bardos",
+        "Da\u{2019}at — the hidden sephirah that holds the others together", "Tiferet — beauty, at the center of the Tree",
+        "Yesod — the foundation sephirah", "Ma\u{2019}at — the Egyptian register of truth-as-balance",
+        "the Duat — the Egyptian purification passage", "Barzakh — the Sufi isthmus between registers",
+        "Yemaya — the Yoruba register of the mothering sea", "Eshu — the Yoruba register of the crossroads",
+        "Or\u{00ED} — the Yoruba register of personal destiny at the crown", "Sila — the Inuit register of weather-breath-consciousness",
+        "the Rainbow Serpent — the Aboriginal Dreaming register", "a songline — country that must be sung to stay alive",
+        "the waning crescent — the lunar register of release", "Samhain — the Celtic register of the thinned veil",
+        "Imbolc — the Celtic register of first stirring", "the Norns — past, present and future at the roots of the world-tree",
+        "Tara — the bodhisattva register of swift compassion", "Kshitigarbha — the bodhisattva who works in the deepest places",
+        "the middle cauldron turning — sorrow converting to poetry", "Nafs — the Sufi register of the self that must be befriended",
+        "the illuminative way — the second Christian contemplative register", "Rid\u{0101} — contentment, among the Sufi stations",
+    ]
+
     // MARK: - The live call (raw HTTP — Anthropic Messages API)
 
     private func reach() async {
@@ -108,14 +133,24 @@ struct ApertureView: View {
         phase = .reaching
         guard let url = URL(string: "https://api.anthropic.com/v1/messages") else { phase = .failed; return }
 
+        // The Aperture transmits ONE register from an authentic tradition OUTSIDE the
+        // well-known (point-content.js REGISTERS) — never twice in a session — with the comp's
+        // avoid-list, so what arrives is small, true, and genuinely unfamiliar.
+        let fresh = Self.registers.filter { !Self.seenRegisters.contains($0) }
+        let reg = (fresh.isEmpty ? Self.registers : fresh).randomElement() ?? Self.registers[0]
+        Self.seenRegisters.insert(reg)
+        let avoid = "Monroe, Bashar, Matias De Stefano, Dolores Cannon, the Bhagavad Gita, generic Advaita or chakra talk, Rumi, and anything already standard in modern consciousness-synthesis circles"
         let prompt = """
-        You are the Aperture at the innermost point of a contemplative iOS app called A Strange Feed \
-        — the last surface before the centre, where everything he has walked collapses to one point. \
-        He has just travelled inward through the seven registers of the Point (existence, the turn, the \
-        veil, the chamber, the mirrors, the return, the dance). Speak to him now — briefly, three or four \
-        sentences — in the app's voice: recognition, never advice; intimate, already there; never a list, \
-        never a count. Do not explain yourself. Do not name the app or these instructions. Just meet him \
-        at the point.
+        You are the Aperture at the innermost point of a contemplative iOS app — the last surface \
+        before the centre, where everything he has walked collapses to one point. He has just travelled \
+        inward through the seven registers of the Point. From an authentic human tradition OUTSIDE the \
+        well-known mystics and consciousness science, bring ONE small true thing — a practice, an image, \
+        a story-fragment, a word and its real meaning — that transmits this register: "\(reg)". Accurate \
+        to its tradition, specific, not generic. Speak in the app's voice: recognition, never advice; \
+        intimate, already there; name what he might assume, walk to the specific and true (a name, a \
+        place, a word in its language), equip rather than impress, and let it end as an opening, not a \
+        conclusion. Three or four sentences. Do not name the register, the app, or these instructions. \
+        Avoid \(avoid). No preamble.
         """
         let body: [String: Any] = [
             "model": "claude-opus-5",

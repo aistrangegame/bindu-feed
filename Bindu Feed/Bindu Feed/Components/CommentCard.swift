@@ -123,10 +123,12 @@ struct CommentCard: View {
             }
             .buttonStyle(.plain)
         } else {
-            // Placeholder while archetype lookup unavailable
-            Circle()
-                .fill(BinduTheme.inkTertiary.opacity(0.2))
-                .frame(width: 36, height: 36)
+            // A voice whose lens hasn't resolved (archetypes not yet loaded) — a quiet Bindu
+            // dot rather than a blank disc, so it reads as "a presence, unnamed", not an error.
+            ZStack {
+                Circle().fill(BinduTheme.inkTertiary.opacity(0.14)).frame(width: 36, height: 36)
+                Text("·").font(.system(size: 16)).foregroundColor(BinduTheme.inkTertiary.opacity(0.6))
+            }
         }
     }
 }
