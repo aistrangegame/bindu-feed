@@ -90,8 +90,10 @@ struct ReturnView: View {
             Text("\(storyData.codexId) · sealed \(storyData.sealedWhen)")
                 .font(.spaceMono(9)).tracking(1).foregroundStyle(BinduTheme.inkTertiary)
                 .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)
-            Text("you first met this · \(storyData.firstMet)")
-                .font(.spaceMono(9)).tracking(1).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
+            if !storyData.firstMet.isEmpty {
+                Text("you first met this · \(storyData.firstMet)")
+                    .font(.spaceMono(9)).tracking(1).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
+            }
             hint(ReturnCanon.summonsHint)
         }
         .contentShape(Rectangle())

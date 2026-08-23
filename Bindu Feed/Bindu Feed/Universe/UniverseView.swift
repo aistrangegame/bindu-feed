@@ -195,19 +195,24 @@ struct UniverseView: View {
         }
 
         // ── the thirteen regions: each its own figure, its stars strung on the armature ──
-        let armA = scale == 0 ? 0.9 : 0.42
+        // Under the structure lens the lit layers RECEDE — dimmed and mixed toward BONE, so
+        // the belief-lattice reads through them (uni-sky.js: the light sinks back, it isn't
+        // just veiled over). Colour flattens toward bone as lens→1.
+        let litDim = 1 - lens * 0.55
+        let armA = (scale == 0 ? 0.9 : 0.42) * litDim
         for rm in uniRooms {
             let c = regionCenter(rm, size, zoom: zoom, focus: focus)
             let color = Color(hex: rm.hex)
             let armR = rm.r / 980 * W * zoom
             let rr = armR * 0.6
             guard c.x > -armR, c.x < W + armR, c.y > -armR, c.y < H + armR else { continue }
-            // the nebula wash behind the figure
+            // the nebula wash behind the figure — fades under the lens
             ctx.fill(UniGeo.ringPath(c.x, c.y, rr),
-                     with: .radialGradient(.init(colors: [color.opacity(0.07 + 0.03 * b), .clear]),
+                     with: .radialGradient(.init(colors: [color.opacity((0.07 + 0.03 * b) * (1 - lens * 0.5)), .clear]),
                                            center: c, startRadius: 0, endRadius: rr))
             // the region's OWN form, drawn alive (uni-rooms.js arm) — the whole point of the pass
-            RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: armA, c: rm.rgb)
+            RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: armA,
+                           c: UniGeo.mix(rm.rgb, UniGeo.BONE, lens * 0.5))
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
             if scale == 0 {
                 ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(6)).foregroundStyle(color.opacity(0.28)),
@@ -224,16 +229,19 @@ struct UniverseView: View {
 
         // ── the structure lens: the lit sky sinks back and the belief-lattice is thrown over ──
         if lens > 0.02 {
-            // the light dims — two ways of standing in the same place (uni-sky.js lens)
+            // a light settling wash over the now-receded sky (the arms/nebulae already dimmed
+            // toward bone above) — two ways of standing in the same place (uni-sky.js lens)
             ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
-                     with: .color(Color(.sRGB, red: 8 / 255, green: 7 / 255, blue: 11 / 255, opacity: 0.36 * lens)))
-            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens)
+                     with: .color(Color(.sRGB, red: 8 / 255, green: 7 / 255, blue: 11 / 255, opacity: 0.20 * lens)))
+            // Names read only once you've come in to a region (comp fades them in on zoom-in);
+            // at full sky, thirteen labelled beliefs would crowd the whole field.
+            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: scale >= 1)
         }
     }
 
     // The belief-lattices, beneath the light (uni-sky.js STRUCTURES): a wobbling held-edge
     // strand through each region's nodes, proof-nodes pulsing, the belief named at the head.
-    private func drawStructures(_ ctx: GraphicsContext, _ size: CGSize, t: Double, zoom: Double, focus: CGPoint, lens: Double) {
+    private func drawStructures(_ ctx: GraphicsContext, _ size: CGSize, t: Double, zoom: Double, focus: CGPoint, lens: Double, labels: Bool) {
         let W = size.width, H = size.height, z = zoom
         for (i, st) in uniStructures.enumerated() {
             let soft = st.loose
@@ -265,8 +273,8 @@ struct UniverseView: View {
                 let r = (1.6 + (nd.proof ? 1.6 : 0)) * min(2, max(0.8, z))
                 ctx.fill(UniGeo.ringPath(p.x, p.y, r), with: .color(UniGeo.col(col, lens * (0.20 + gl * 0.44 - soft * 0.12))))
             }
-            // the belief, named at the head node
-            if z > 0.85, z < 6, let head = pts.first {
+            // the belief, named at the head node — only once you've come in to a region
+            if labels, z > 0.85, z < 6, let head = pts.first {
                 ctx.draw(Text(st.name).font(.spaceMono(9)).foregroundStyle(UniGeo.col(col, lens * min(0.42, (z - 0.85) * 0.7))),
                          at: CGPoint(x: head.x + 11, y: head.y + 3), anchor: .leading)
             }

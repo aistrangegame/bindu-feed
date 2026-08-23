@@ -47,6 +47,7 @@ struct LightView: View {
 
     // The Hold — the dark beat in the shaft between the gate opening and the flood.
     @State private var holdDimmed = false
+    @State private var holdWork: [DispatchWorkItem] = []   // cancellable on leave
 
     private let holdMs: Double = 3400             // breath period × 0.34 (comp Hold dur)
     private let carveMs: Double = 4200            // one Declaration line, drawn in (comp)
@@ -166,15 +167,18 @@ struct LightView: View {
         .allowsHitTesting(false)
         .onAppear {
             holdDimmed = false
-            // the "hold" word fades near the middle of the hold; then the aperture opens
-            DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000 * 0.45) {
-                withAnimation(.easeInOut(duration: 1.6)) { holdDimmed = true }
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000) {
+            // Cancellable, so leaving during the hold doesn't ring the bowl or flip the stage
+            // on a torn-down view (the comp clears both timers on unmount).
+            let dim = DispatchWorkItem { withAnimation(.easeInOut(duration: 1.6)) { holdDimmed = true } }
+            let open = DispatchWorkItem {
                 soundEngine.riteBowl(hz: 174)                 // the aperture opens; light floods down
                 withAnimation(.easeInOut(duration: 1.6)) { stage = .scene }
             }
+            holdWork = [dim, open]
+            DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000 * 0.45, execute: dim)
+            DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000, execute: open)
         }
+        .onDisappear { holdWork.forEach { $0.cancel() } }
     }
 
     // MARK: - Scene
@@ -259,11 +263,15 @@ struct LightView: View {
                 guard !pressing else { return }
                 pressing = true
                 if beatActive && moreBeat && !landed { beginCarve() }
-                else { advanceAnchor() }
+                // A press ASKS for the next anchor (the exhale answers) — but the `release`
+                // scene answers ONLY the hand opening, so it waits for .onEnded below.
+                else if !beatActive && !scene.ungripOnly { advanceAnchor() }
             }
             .onEnded { _ in
                 pressing = false
-                releaseCarve()
+                releaseCarve()                                   // no-op unless mid-carve
+                // the hand opened — the `release` scene's anchors advance on the lift
+                if !beatActive && scene.ungripOnly && !landed { advanceAnchor() }
             }
     }
 
@@ -389,8 +397,10 @@ struct LightView: View {
 
     private func restart() {
         carveTimer?.invalidate(); carveTimer = nil
+        holdWork.forEach { $0.cancel() }
         stillMs = 0; shownAnchors = 0; ungrips = 0
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
+        pendingAnchor = false; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }
         begin()
     }
