@@ -35,16 +35,14 @@ struct GameView: View {
         ZStack(alignment: .top) {
             BinduTheme.bgDeep.ignoresSafeArea()
 
-            // Hero gradient wash in current room color — also cross-dissolves.
-            LinearGradient(
-                colors: [currentRoom.color.opacity(0.14),
-                         currentRoom.color.opacity(0.0)],
-                startPoint: .top,
-                endPoint: .center
-            )
-            .ignoresSafeArea()
-            .opacity(heroVisible ? 1 : 0)
-            .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
+            // Each room's OWN atmosphere — the distinct multi-layer gradient from the comp
+            // (Game View.html), not one generic wash. Descent's ember rises from the bottom,
+            // Thread washes sideways, Maya stacks three ellipses, the Forgetting glows from
+            // its edges inward — each room reads as somewhere before it's named.
+            heroBackground(currentRoom)
+                .ignoresSafeArea()
+                .opacity(heroVisible ? 1 : 0)
+                .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -145,9 +143,10 @@ struct GameView: View {
         VStack(spacing: BinduTheme.space16) {
             GlyphView(
                 glyph: currentRoom.glyph,
-                size: 92,
+                size: max(52, currentRoom.glyphSize * 1.15),   // per-room size (comp 44–78), not uniform 92
                 color: currentRoom.color,
-                animation: currentRoom.animation
+                animation: currentRoom.animation,
+                glow: max(52, currentRoom.glyphSize * 1.15) * 0.30   // the hero glow reads strong
             )
             .id(currentRoom.id)
 
@@ -345,6 +344,53 @@ struct GameView: View {
                 }
             }
         }
+    }
+
+    // Each room's distinct hero atmosphere (comp Game View.html gradient fns). Radial ellipses
+    // → EllipticalGradient at the comp's centre; linear washes → LinearGradient in the comp's
+    // direction; alphas are the comp's hex/255. Maya layers three; the Forgetting inverts.
+    @ViewBuilder private func heroBackground(_ room: Room) -> some View {
+        let c = room.color
+        switch room.id {
+        case "A Maya Game":
+            ZStack {
+                ellip(c, UnitPoint(x: 0.25, y: -0.15), [(0.157, 0), (0, 0.55)], end: 1.1)
+                ellip(c, UnitPoint(x: 0.78, y: 0.25), [(0.094, 0), (0, 0.52)], end: 0.8)
+                ellip(c, UnitPoint(x: 0.50, y: 0.70), [(0.063, 0), (0, 0.60)], end: 0.55)
+            }
+        case "The Garden":   // grows up from the floor
+            LinearGradient(stops: [.init(color: c.opacity(0.149), location: 0), .init(color: c.opacity(0.063), location: 0.40), .init(color: .clear, location: 0.72)],
+                           startPoint: .bottom, endPoint: .top)
+        case "The Descent":  // the ember rises from the bottom
+            LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: c.opacity(0.031), location: 0.45), .init(color: c.opacity(0.133), location: 1)],
+                           startPoint: .top, endPoint: .bottom)
+        case "The Thread":   // the loom washes horizontally across the middle
+            LinearGradient(stops: [.init(color: .clear, location: 0.05), .init(color: c.opacity(0.086), location: 0.35), .init(color: c.opacity(0.149), location: 0.50), .init(color: c.opacity(0.086), location: 0.65), .init(color: .clear, location: 0.95)],
+                           startPoint: .leading, endPoint: .trailing)
+        case "The Forgetting":  // dim at the centre, brightening at the edges
+            ellip(c, UnitPoint(x: 0.5, y: 0.5), [(0.024, 0), (0.086, 0.6), (0.141, 1)], end: 1.0)
+        case "The Watcher":
+            ellip(c, UnitPoint(x: 0.5, y: -0.08), [(0.196, 0), (0.031, 0.48), (0, 0.70)], end: 0.65)
+        case "The Return":
+            ellip(c, UnitPoint(x: 0.5, y: 0.05), [(0.157, 0), (0.063, 0.38), (0, 0.65)], end: 1.0)
+        case "The Remembering":
+            ellip(c, UnitPoint(x: 0.5, y: 0.15), [(0.141, 0), (0.063, 0.48), (0, 0.72)], end: 0.72)
+        case "The Body":
+            ellip(c, UnitPoint(x: 0.5, y: 0.25), [(0.188, 0), (0.071, 0.50), (0, 0.75)], end: 0.90)
+        case "The Circle":
+            ellip(c, UnitPoint(x: 0.5, y: 0.20), [(0.157, 0), (0.063, 0.45), (0, 0.70)], end: 0.80)
+        case "The Signal":
+            ellip(c, UnitPoint(x: 0.5, y: -0.05), [(0.157, 0), (0.031, 0.50), (0, 0.75)], end: 0.60)
+        case "The Forge":
+            ellip(c, UnitPoint(x: 0.25, y: 0.10), [(0.188, 0), (0.071, 0.50), (0, 0.75)], end: 0.90)
+        default:            // The Field (and any fallback)
+            ellip(c, UnitPoint(x: 0.5, y: 0.15), [(0.196, 0), (0.078, 0.45), (0, 0.72)], end: 0.80)
+        }
+    }
+
+    private func ellip(_ c: Color, _ center: UnitPoint, _ stops: [(Double, Double)], end: Double) -> some View {
+        EllipticalGradient(stops: stops.map { Gradient.Stop(color: c.opacity($0.0), location: $0.1) },
+                           center: center, startRadiusFraction: 0, endRadiusFraction: end)
     }
 
     private func archetypes(for storyId: String) -> [Archetype] {

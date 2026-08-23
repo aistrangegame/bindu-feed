@@ -83,14 +83,16 @@ struct GlyphView: View {
             }
 
         case .glyphStutter:
-            // 12 steps of rotation with a brief pause between each.
-            // ~1.0s rotate + ~0.6s pause = ~1.6s per step × 12 ≈ 19s full cycle.
+            // The Forgetting jitters its POSITION in small twitches, mostly still (comp
+            // glyphStutter). It was rotating — but rotating a circle (○) is invisible, so
+            // the glyph looked static. Now it twitches sideways and settles.
             while !Task.isCancelled {
-                for _ in 0..<12 {
-                    withAnimation(.easeOut(duration: 1.0)) { rotation += 30 }
-                    try? await Task.sleep(nanoseconds: 1_600_000_000)
-                    if Task.isCancelled { return }
-                }
+                withAnimation(.easeOut(duration: 0.14)) { offsetX = CGFloat.random(in: -3...3) }
+                try? await Task.sleep(nanoseconds: 260_000_000)
+                if Task.isCancelled { return }
+                withAnimation(.easeOut(duration: 0.5)) { offsetX = 0 }
+                try? await Task.sleep(nanoseconds: UInt64.random(in: 900_000_000...2_200_000_000))
+                if Task.isCancelled { return }
             }
 
         case .glyphDawn:
