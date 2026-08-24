@@ -38,6 +38,10 @@ final class AxisTravel: ObservableObject {
     private var mem = [Bool](repeating: false, count: 14)
     private var push = 0.0, curS = -1, dir = 1.0, gave = -1
 
+    /// The fourteen surfaces' opened state (surface s sits between register s and s+1), read by
+    /// the ladder rail. Mutated on the display-link tick; the rail reads it from a per-frame body.
+    var openedSurfaces: [Bool] { mem }
+
     // The stillness gate (surface 0, sky→Light).
     private var gateAcc = 0.0                            // milliseconds accumulated
     private let GATE = 0, GATE_MS = 4600.0

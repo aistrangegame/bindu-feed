@@ -92,6 +92,12 @@ struct InstrumentView: View {
             // The one particle — rides centre → crown, and blooms into the world at +9.
             particle
 
+            // The particle's self-name at this scale (#pname), floated just beneath it.
+            particleNameLabel
+
+            // The ladder (#rail) — where he is on the fifteen-register axis.
+            ladderRail
+
             // The passage throat — a wormhole inward, a whitehole outward.
             if travel.crossing {
                 ThroatView(t: travel.passageT, dir: travel.passageDir, hue: here.color)
@@ -191,6 +197,84 @@ struct InstrumentView: View {
                 lastDragY = 0
                 travel.setDown(false)
             }
+    }
+
+    // MARK: - The ladder (#rail) — where he is on the fifteen-register axis
+
+    // The right-edge rail (v3 #rail, verbatim): 15 register ticks + 14 surface-dots between
+    // them, column-reverse (register 0 the Light at the bottom, register 14 the centre at the
+    // top — up is inward, matching travel). Ticks are bone hairlines, right-anchored; the
+    // current register is a widened red needle (17px), its neighbours half-lit (13px). A
+    // surface is a hollow bone point until it has been MEANT — then filled red and kept.
+    private var ladderRail: some View {
+        Canvas { ctx, size in
+            let regs = Axis.registers
+            let n = regs.count                                   // 15
+            let step = 21.0
+            let railH = Double(n - 1) * step
+            let top = (size.height - railH) / 2
+            let edge = size.width - 14                           // right:13px
+            let curI = Axis.nearest(z).i
+            let opened = travel.openedSurfaces
+            let bone = Color(hex: "#EDE8E3")
+            let red = Color(hex: "#E5533C")
+            // register ticks — right-anchored hairlines; the current one a red needle
+            for reg in regs {
+                let yy = top + railH - Double(reg.i) * step
+                let d = abs(reg.i - curI)
+                let w: Double = reg.i == curI ? 17 : (d == 1 ? 13 : 9)
+                let col: Color = reg.i == curI ? red.opacity(0.85) : bone.opacity(d == 1 ? 0.42 : 0.16)
+                ctx.fill(Path(CGRect(x: edge - w, y: yy - 0.5, width: w, height: 1)), with: .color(col))
+            }
+            // surface-dots (14) at the midpoints, aligned to the edge; hollow until opened
+            for s in 0..<(n - 1) {
+                let yA = top + railH - Double(s) * step
+                let yB = top + railH - Double(s + 1) * step
+                let ym = (yA + yB) / 2
+                let cxs = edge - 3.0, r = 1.5
+                let rect = CGRect(x: cxs - r, y: ym - r, width: r * 2, height: r * 2)
+                if s < opened.count && opened[s] {
+                    ctx.fill(Path(ellipseIn: rect), with: .color(red.opacity(0.55)))     // meant → filled, kept
+                } else {
+                    ctx.stroke(Path(ellipseIn: rect), with: .color(bone.opacity(0.20)), lineWidth: 0.5)
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .ignoresSafeArea()
+        .opacity(travel.crossing ? 0 : 1)
+        .animation(.easeInOut(duration: 0.5), value: here.i)
+    }
+
+    // The particle's self-name at the current scale (v3 Spine.bindu.name — 9 strings by Z, not
+    // one per register: the whole interior reads "the point at the centre of the enclosure").
+    private func particleName(_ z: Double) -> String {
+        switch z {
+        case ..<(-4.4): return "a light that has not yet risen"
+        case ..<(-3.4): return "a dot in the sky"
+        case ..<(-2.4): return "a light in the room"
+        case ..<(-1.4): return "the story, close"
+        case ..<(-0.4): return "the seed of the well"
+        case ..<0.6:    return "the dot in the post"
+        case ..<1.6:    return "the dot at the gate"
+        case ..<8.6:    return "the point at the centre of the enclosure"
+        default:        return "the point"
+        }
+    }
+
+    // #pname — the name floats just under the particle in red mono; hidden on the Feed ground
+    // and once the particle begins to become the centre (Z > 7.9).
+    private var particleNameLabel: some View {
+        let hidden = travel.crossing || z > 7.9 || (here.key == "feed" && abs(z) < 0.4)
+        return GeometryReader { geo in
+            Text(particleName(z).uppercased())
+                .font(.spaceMono(7.5)).tracking(1.5)
+                .foregroundStyle(Color(hex: "#E5533C").opacity(0.52))
+                .position(x: geo.size.width / 2, y: geo.size.height * 0.5 + 22)
+        }
+        .allowsHitTesting(false)
+        .opacity(hidden ? 0 : 1)
+        .animation(.easeInOut(duration: 1.0), value: hidden)
     }
 
     // MARK: - The field (the Metal multi-shell atmosphere)
