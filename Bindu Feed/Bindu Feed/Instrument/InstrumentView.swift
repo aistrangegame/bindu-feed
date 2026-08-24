@@ -66,6 +66,13 @@ struct InstrumentView: View {
         ZStack {
             Color(hex: "#050408").ignoresSafeArea()
 
+            // THE FIELD — the Metal multi-shell atmosphere (InstrumentField.metal). All 15
+            // register-shells composited additively every frame at their own scale, so the
+            // register forming ahead and the one receding behind are BOTH present as glow.
+            // This is the rich "background" that was missing; the CPU shells below are now
+            // only the interaction meniscus.
+            fieldBackground
+
             TimelineView(.animation) { _ in
                 shells
             }
@@ -186,23 +193,43 @@ struct InstrumentView: View {
             }
     }
 
-    // MARK: - Shells (the atmosphere)
+    // MARK: - The field (the Metal multi-shell atmosphere)
+
+    // Hosts InstrumentField.metal as the base layer. `position` arrives in the view's own
+    // point-space; the shader recentres it and composites every shell. Uniforms are fed live
+    // from travel.z, the clock, and the breath. The interaction-driven uniforms (sweep, hand,
+    // sync, dwell) rest at neutral here and are raised in Phase 2 as those gestures land.
+    private var fieldBackground: some View {
+        GeometryReader { geo in
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 100000)
+                Rectangle()
+                    .fill(Color.black)
+                    .colorEffect(ShaderLibrary.instrumentField(
+                        .float2(geo.size),                 // uRes
+                        .float(Float(t)),                  // uT
+                        .float(Float(z)),                  // uZ  — the live axis coordinate
+                        .float(Float(breath.value)),       // uBr
+                        .float(0),                         // uSync   (dance sync — Phase 2)
+                        .float(0),                         // uSpin
+                        .float(0),                         // uReveal (light bloom — Phase 2)
+                        .float(0),                         // uDwell  (sky dwell — Phase 2)
+                        .float2(0, 0),                     // uSweep  (memory sweep — Phase 2)
+                        .float3(0.4, 0.02, 0.2),           // uWx     (weather default)
+                        .float3(0, 0, 0)                   // uHand   (veil parting — Phase 2)
+                    ))
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+    }
+
+    // MARK: - Shells (the interaction meniscus only — the shader owns the atmosphere)
 
     private var shells: some View {
         Canvas { ctx, size in
             let R0 = min(size.width, size.height) * 0.5
             let cx = size.width / 2, cy = size.height / 2
-            let b = breath.value
-            // Draw far → near so nearer registers sit on top.
-            for reg in Axis.registers {
-                let p = Axis.presence(reg.i, z)
-                guard p > 0.01 else { continue }
-                let rim = R0 * pow(2, (z + 5) - Double(reg.i)) * (0.98 + 0.04 * b)
-                guard rim > 6, rim < R0 * 6 else { continue }
-                let op = p * 0.5
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - rim, y: cy - rim, width: rim * 2, height: rim * 2)),
-                           with: .color(reg.color.opacity(op)), lineWidth: 0.8)
-            }
             // The near membrane, felt as a meniscus that tightens as he leans into it.
             let ten = travel.tension
             if ten > 0.02 {
