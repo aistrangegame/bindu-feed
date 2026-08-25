@@ -2,11 +2,6 @@ import SwiftUI
 
 // MARK: - Airtable wire format
 
-struct AirtableResponse: Codable {
-    let records: [AirtableRecord]
-    let offset: String?
-}
-
 struct AirtableRecord: Codable, Identifiable {
     let id: String
     let createdTime: String
@@ -51,7 +46,6 @@ struct RecordFields: Codable {
     var sentenceSource: String?
 
     var closingLine: String?
-    var lastDepthDate: String?
     var sourceType: String?
     var cardRegister: String?
 
@@ -96,7 +90,6 @@ struct RecordFields: Codable {
         case sentenceWeight    = "Sentence Weight"
         case sentenceSource    = "Sentence Source"
         case closingLine       = "Closing Line"
-        case lastDepthDate     = "Last Depth Date"
         case sourceType        = "Source Type"
         case cardRegister      = "Card Register"
 

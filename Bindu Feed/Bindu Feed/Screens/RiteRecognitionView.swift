@@ -209,6 +209,10 @@ final class RiteRecorder: ObservableObject {
         let session = AVAudioSession.sharedInstance()
         do {
             // Allow record while the bed keeps playing; restored on stop.
+            // `.allowBluetooth` is the iOS 8-era spelling; the iOS 26 SDK renamed it to
+            // `.allowBluetoothHFP`, but that symbol requires iOS 26 while this app deploys to
+            // iOS 17.6 — so we keep the compatible name and accept its deprecation notice until
+            // the deployment target is raised. Behaviour (HFP Bluetooth mic capture) is identical.
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
             // A UUID suffix keeps two takes started in the same wall-clock second distinct.

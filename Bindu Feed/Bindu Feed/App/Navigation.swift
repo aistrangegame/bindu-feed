@@ -37,7 +37,6 @@ enum FeedRoute: Hashable {
     case mirror
     case signal
     case players
-    case practiceDoor
     case compose(Story)
     case rite            // the daily meeting (Wave 2)
     case light           // the fifteenth register, reached by stillness (Wave 5)

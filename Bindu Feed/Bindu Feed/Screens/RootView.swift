@@ -176,13 +176,6 @@ struct RootView: View {
             SignalView(path: $path)
         case .players:
             PlayersView(path: $path)
-        case .practiceDoor:
-            // Hub-launched Practice Door — crossing returns to home (pops
-            // the entire stack). The launch-time door lives outside the
-            // NavigationStack in ContentCoordinator.
-            PracticeDoorView(onComplete: {
-                $path.popToRootDissolve()
-            })
         case .compose(let story):
             // AshComposeView handles its own post + refresh flag; this
             // closure just pops back to Story Detail.

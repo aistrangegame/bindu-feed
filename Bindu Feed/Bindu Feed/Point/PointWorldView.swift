@@ -29,7 +29,7 @@ struct PointWorldView: View {
             if let star = openStar {
                 // LEVEL 2 — the star reading + descent.
                 PointStarDescent(star: star, hue: hue, onClose: { withAnimation { openStar = nil } })
-            } else if let dim, let u = selectedUniverse {
+            } else if let u = selectedUniverse {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).
                 PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue) { s in
