@@ -2,12 +2,30 @@
 
 > **Standing instruction: Never reduce. Always emerge. If you see a better way, take it.**
 
-This file is the persistent memory for Bindu Feed. A fresh Claude Code session reading this should know what the app is, what's already decided, and what cannot be undone. **Phase 9 landed 2026-06-14**; this document is its true record — written after a code-side structural audit ([`bindu-feed-phase9-audit.md`](../bindu-feed-phase9-audit.md)) and a data-side inventory were reconciled, the punch list was resolved, and both halves saw the thing whole.
+This file is the persistent, in-repo memory for Bindu Feed — the one document a fresh reader (human or AI) should read **first**. It is authoritative on the **build state** and routes you to the authoritative **design canon** below. (§4–§15 describe the Phase-9 layer in detail and remain accurate for it; the Instrument era, Aug 2026, sits on top — see the precedence section and §3.)
 
-**The Instrument era (Aug 2026) builds on top of this** — the `phase-9` + `sound-layer` frontier is now merged into `main`. Its sources of truth:
-- The design bundle: `Claude Design Round 1/` (`The Instrument v3.html` at its center) + `~/Downloads/a-strange-feed-CLAUDE-CODE-HANDOFF.md` (read with its branch-reality correction — the frontier the handoff missed is this merge).
-- Extracted canon, do not paraphrase: `canon/` — `spine-light.js` (the Light's six scenes), `spine-sound.js` (the 9 travel/stillness calls), `point-content.js` (the 66 Point stars).
-- The old `BINDU_FEED_CLAUDE_CODE.md` and the `A Strange Feed/` comps are retired to `archive/` (Phase 1–7 history only).
+## ⚠️ SOURCE OF TRUTH & CANON PRECEDENCE — read this before building anything
+
+The most expensive mistake on this project is **building to the wrong source** — e.g. rendering the Instrument from *prose descriptions* of the design instead of the actual *rendered* design file, which produced a "pale comparison" that had to be torn out and rebuilt (Aug 2026). To avoid repeating it, resolve every design question in **this order**, and never build from anything below the line:
+
+1. **`canon/`** — frozen, verbatim, non-paraphrasable: exact wording, Hz / number tables, the 66 Point stars (`spine-light.js`, `spine-sound.js`, `point-content.js`). Wins on literal text and numbers.
+2. **`Claude Design Round 1/The Instrument v3.html`** — the blessed, **shader-driven, unified** design: the whole app as one continuous 15-register axis. Wins on feel, geometry, interaction. It is a *rendered artifact* — **open it and read the actual shader / JS; do not build from a prose summary of it.** Governed by `Claude Design Round 1/docs/` (the UNIFIED-MASTER-DESIGN-BRIEF wins on feel; the BUILD-LEDGER wins on mechanics; AMENDMENT-01 + FINAL-DESIGN-INSTRUCTIONS layer in). Where a number appears, it **is** the number.
+3. **`Claude Design Round 1/comps/`** and the CDR1 per-register HTML — single-register detail only, always **subordinate** to the unified Instrument.
+
+— **do not build from anything below this line** —
+
+4. **`archive/`** (incl. `archive/bindu-feed-phase9-handoff/`, `BINDU_FEED_CLAUDE_CODE.md`, `A Strange Feed/`) — retired history. The handoff still *reads* like a live build spec; it is **not**. See `archive/README.md`.
+
+### Code ↔ design map — where the Instrument design lives in the app
+- shader atmosphere (spine-field.js: the 15-shell additive multi-shell glow) → `Instrument/InstrumentField.metal` (Metal fragment shader; renders on the Simulator)
+- the axis model + membrane physics → `Instrument/AxisModel.swift`, `Instrument/AxisTravel.swift`
+- the host + particle + ladder rail (#rail) + particle-name (#pname) + header (#where) → `Instrument/InstrumentView.swift`
+- the seven Point worlds + their universes → `Point/PointWorlds.swift`, `Point/PointWorldView.swift`
+- the Universe side (sky / region / world / fall) → `Universe/UniverseView.swift`, `Universe/UniRegions.swift`
+- the Light / Rite / Return registers → `Light/`, `Rite/`, `Return/` (+ their `Screens/*View.swift` hosts)
+- the 66 stars / 7 dimensions content → `canon/point-content.js` (verbatim) mirrored into the `Point/` content types
+
+**Reach the Instrument on the Simulator without a PAT:** a `#if DEBUG` "⟿ walk the Instrument" door on `TokenEntryView` opens `InstrumentView(startZ: 0)`. (The keychain token persists across app reinstall on the sim; `xcrun simctl keychain booted reset` clears it so the token gate — and the dev door — reappears.) Metal renders on the sim, so the shader IS sim-verifiable.
 
 ---
 
@@ -19,7 +37,7 @@ Bindu Feed is a living consciousness feed — an iOS SwiftUI app that renders on
 
 ## 2. Current build state
 
-**Phases 1–9 complete** as of 2026-06-14. **Sound Layer landed 2026-06-15** on branch `sound-layer` (cut off `phase-9`). Merge order: `phase-9` → `main` → `sound-layer` → `main` — timing is Ashrey's call.
+**Phases 1–9 complete** as of 2026-06-14. **Sound Layer landed 2026-06-15**. **The Instrument era (Aug 2026) is built and on `main`** — the whole app rebuilt as one continuous fifteen-register axis (the Universe, the seven Point worlds, the Light, the Rite, the Return, the Metal multi-shell shader, the ladder + particle-name chrome, the centre bloom). It is structure-complete and sim-verified end-to-end; the *felt* layer (drag physics, motion timing, binaural sound) is validated on Ashrey's device "Neev", not the sim. See the source-of-truth section above and §3 for where it lives.
 
 - iOS 17.6 deployment target (project.pbxproj); spec/intent is iOS 16+ — see §11
 - iPhone only, portrait only, dark mode only
@@ -47,7 +65,7 @@ Source root: `Bindu Feed/Bindu Feed/Bindu Feed/`
 ### `App/`
 - `BinduFeedApp.swift` — `@main` entry point
 - `ContentCoordinator.swift` — Token gate → Practice Door (every open) → Root
-- `Navigation.swift` — `FeedRoute` enum, 11 cases
+- `Navigation.swift` — `FeedRoute` enum, **15 cases** (the Phase-9 set — note `.archetype` was renamed `.turning` — plus the Instrument era's `.rite`, `.light`, `.returnCeremony(Story?)`, `.instrument(Int)`, `.aperture`). NOT a `NavigationStack`: RootView renders a `ZStack` of `[FeedRoute]` layers with cross-dissolves (see the file header)
 
 ### `Services/`
 - `AirtableService.swift` — single source for all network calls; weighted threshold-sentence picker
@@ -66,21 +84,30 @@ Source root: `Bindu Feed/Bindu Feed/Bindu Feed/`
 ### `Components/` (15 files)
 Shared SwiftUI subviews. All reachable; nothing orphaned. Notable: `HubTrigger` + `HubOverlay` (`.hubOverlay()` modifier) on every screen except Practice Door; `FieldSurfacePortalCard` for the Mirror/Signal tier; `StaggeredReveal` for field-comment + Signal arrivals; `AshPostedCard` renders with the user's arrival identity (name/glyph/color).
 
-### `Screens/` (13 files)
-One file per screen — see §5 for the full screen↔route map.
+### `Screens/` (the Phase-9 thirteen + the Instrument-era hosts)
+The original thirteen (see the §5 screen↔route map) plus the Instrument-era full-screen hosts: `DoorView`, `RiteView`, `RiteGatheringView`, `RiteRecognitionView`, `ReturnView`, `LightView`, `LightNave`. ~20 files total.
 
 ### `Sound/` (5 files)
-The audio engine — continuous Breath voice that morphs across rooms via equal-power crossfade, transient threshold blooms over the Breath, no recorded audio anywhere. `SoundEngine.swift` (control plane) · `SoundSnapshot.swift` (lock-free-in-practice holders) · `BreathVoice.swift` (Voice A — 6 textures, 0.1Hz LFO, binaural dual-osc or single centered tone) · `ThresholdTone.swift` (Voice B — Bowl bloom-and-decay) · `SonicContext.swift` (resolver + view modifier). See §15.
+The audio engine — continuous Breath voice that morphs across rooms via equal-power crossfade, transient threshold blooms over the Breath, no recorded audio anywhere. `SoundEngine.swift` (control plane) · `SoundSnapshot.swift` (lock-free-in-practice holders) · `BreathVoice.swift` (Voice A — 6 textures, 0.1Hz LFO, binaural dual-osc or single centered tone) · `ThresholdTone.swift` (Voice B — Bowl bloom-and-decay) · `SonicContext.swift` (resolver + view modifier). See §15. The Instrument adds `Sound/AxisTones.swift` (the nine travel sound calls) + `Sound/AudioAnchorPlayer.swift` (Movement IV playback).
+
+### The Instrument-era folders (Aug 2026) — the one-axis rebuild
+Six folders that implement the continuous axis (see the code↔design map at the top for what each maps to):
+- `Instrument/` — `AxisModel.swift` (the 15 registers), `AxisTravel.swift` (membrane physics), `InstrumentView.swift` (host + particle + `#rail` ladder + `#pname` + `#where`), **`InstrumentField.metal`** (the Metal multi-shell shader — the atmospheric background), `Breath.swift` (the one launch-anchored breath clock), `BinduParticle.swift` (the particle colours; `BinduParticleView`/`BinduState` are preview-only forward-scaffolding).
+- `Point/` — the seven Point worlds + universes + the 66-star content + the live "descend one layer deeper" + the Aperture.
+- `Universe/` — the outward side (sky / region / world / fall), the 13 room-regions, the structure lens.
+- `Light/` · `Rite/` · `Return/` — the Light register, the daily Rite/Gathering ceremony, the Return ceremony (each with model + tones + its `Screens/*View.swift` host).
 
 ---
 
 ## 4. Navigation
 
-`RootView` owns the `NavigationPath`. `FeedRoute` cases:
+`RootView` owns the route stack. **It is NOT a `NavigationStack`/`NavigationPath`** — it renders its own `ZStack` of `[FeedRoute]` layers, each pushed layer carrying `.transition(.opacity)` (see `Navigation.swift`'s header + the `pushDissolve`/`popDissolve` helpers). Every level stays mounted, so feed scroll, story scroll, in-progress compose text, and the Instrument axis all survive a push/pop. `FeedRoute` cases (15):
 
-`rooms · room(Room) · story(Story) · archetype(Archetype) · ash · settings · mirror · signal · players · practiceDoor · compose(Story)`
+`rooms · room(Room) · story(Story) · turning(Archetype) · ash · settings · mirror · signal · players · compose(Story) · rite · light · returnCeremony(Story?) · instrument(Int) · aperture`
 
-Every screen takes `@Binding var path: NavigationPath`. **All transitions are cross-dissolves; nothing slides.**
+*(Note: `.archetype` was renamed `.turning`; the old `.practiceDoor` route was removed — the Practice Door is reached at launch via `ContentCoordinator` and from `DoorView`, not as a pushed route.)*
+
+Every screen takes `@Binding var path: [FeedRoute]`. **All transitions are cross-dissolves; nothing slides.**
 
 **Launch flow:** `BinduFeedApp` → `ContentCoordinator` → either `TokenEntryView` (first launch) or `PracticeDoorView` (every open) → `RootView`.
 
@@ -94,12 +121,14 @@ Every screen takes `@Binding var path: NavigationPath`. **All transitions are cr
 
 ---
 
-## 5. The 13 screens
+## 5. The screens (the Phase-9 thirteen)
+
+*This table is the Phase-9 screen set and remains accurate. The **Instrument era** adds the axis and its full-screen ceremonies on top — the Instrument itself (`.instrument(Int)`), the Rite (`.rite`), the Return (`.returnCeremony`), the Light (`.light`), and the Aperture (`.aperture`) — reached as documented in §3–§4, not listed again here.*
 
 | Screen | Role | Reached via |
 |---|---|---|
 | `TokenEntryView` | First-launch PAT entry | `ContentCoordinator` if `!store.hasToken` |
-| `PracticeDoorView` | Threshold every open; 5 weighted kinds (threshold 40 / practice 23 / gaiaSeed 20 / story 12 / binduDot 5); tap-anywhere-to-cross | (a) launch surface (b) `.practiceDoor` route |
+| `PracticeDoorView` | Threshold every open; 5 weighted kinds (threshold 40 / practice 23 / gaiaSeed 20 / story 12 / binduDot 5); tap-anywhere-to-cross | (a) launch surface via `ContentCoordinator` (b) from `DoorView` |
 | `RootView` | Home Feed — story river, room filter, sort, hub + Ash mark in header | After Practice Door |
 | `RoomSelectionView` | 12 portals 2-col + The Field full-width + "AND THE FIELD TURNS TO YOU" divider + Mirror/Signal Space horizontal cards | `.rooms` (hub) |
 | `GameView` | One room at a time; prev/next chevrons cycle all 13 in Sort Order; 0.28s cross-dissolve between rooms | `.room(Room)` |
@@ -495,10 +524,16 @@ The AVAudioSourceNode blocks (BreathVoice, ThresholdTone) run on the audio threa
 
 ## 16. Related docs
 
-- [`BINDU_FEED_CLAUDE_CODE.md`](../BINDU_FEED_CLAUDE_CODE.md) — original master spec, Phases 1–8
-- [`bindu-feed-phase9-handoff/`](../bindu-feed-phase9-handoff/) — Phase 9 design handoff bundle (`00-START-HERE.md`, `DESIGN_HANDOFF.md`, `BINDU_FEED_PHASE_9_NEW_LAYER.md`, `AIRTABLE-DATA-TRUTH.md`, `BINDU_FEED_CONTENT_INVENTORY.md`, `DESIGN-WORKING-AGREEMENT.md`, prototypes/, soul/)
-- [`bindu-feed-phase9-audit.md`](../bindu-feed-phase9-audit.md) — the moment-of-truth structural audit; reconciled with the data-side inventory; punch list resolved
-- [`bindu-feed-snapshot.md`](../bindu-feed-snapshot.md) — point-in-time code dump pre-Phase-9; historical reference
+**Live design canon** (see the source-of-truth precedence at the top of this file):
+- [`Claude Design Round 1/`](../Claude%20Design%20Round%201/) — the blessed design bundle; `The Instrument v3.html` at its centre, governed by its `docs/` (Brief + BUILD-LEDGER + Amendment-01). `comps/` = per-register source material, subordinate.
+- [`canon/`](../canon/) — frozen verbatim wording / numbers / the 66 Point stars (`spine-light.js`, `spine-sound.js`, `point-content.js`).
+
+**Retired / historical** (all under `archive/` — do NOT build from; see [`archive/README.md`](../archive/README.md)):
+- `archive/bindu-feed-phase9-handoff/` — the June-2026 Phase-9 design handoff (still reads like a live spec; it is not — banner-marked). Its `soul/` skill (tone/ethic) and `AIRTABLE-DATA-TRUTH.md` (schema mirrored live in §6) remain worth reading.
+- `archive/BINDU_FEED_CLAUDE_CODE.md` — the original May master spec (Phases 1–8).
+- `archive/bindu-feed-phase9-audit.md` — the Phase-9 structural code audit (its punch list is folded into this doc).
+- `archive/bindu-feed-snapshot.md` — pre-Phase-9 code dump.
+- [`DEFERRED-AND-FIX-BUILD-PLAN.md`](../DEFERRED-AND-FIX-BUILD-PLAN.md) — the Aug-2026 punch list, partly-superseded (banner-marked); the still-open items are the Neev-walk feel-gated ones.
 
 ---
 
