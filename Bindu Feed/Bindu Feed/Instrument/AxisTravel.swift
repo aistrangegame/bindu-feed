@@ -46,6 +46,10 @@ final class AxisTravel: ObservableObject {
     private var gateAcc = 0.0                            // milliseconds accumulated
     private let GATE = 0, GATE_MS = 4600.0
 
+    // True while the Universe's own free 2-D camera owns navigation — the axis drag is locked
+    // by InstrumentView and the sky→Light stillness gate is suspended (see step()).
+    private var universeMode = false
+
     // The passage (a give hands the camera a glide across the membrane).
     private var glideFrom = 0.0, glideTo = 0.0, glideT = 0.0, glideDur = 2.9
 
@@ -82,6 +86,18 @@ final class AxisTravel: ObservableObject {
     }
 
     func stop() { link?.invalidate(); link = nil; proxy = nil }
+
+    // MARK: - The Universe (its own camera owns navigation while it's up)
+
+    /// InstrumentView sets this when a Universe register is showing. Suspends the stillness gate.
+    func setUniverseMode(_ v: Bool) { universeMode = v; if v { gateAcc = 0 } }
+
+    /// Leave the Universe: release universe mode and glide the axis back to the Feed (Z=0) via
+    /// the passage throat — an explicit exit, replacing the old auto-eject.
+    func exitToFeed() {
+        universeMode = false
+        beginPassage(toZ: 0, dir: 1)
+    }
 
     // MARK: - Input (the hand)
 
@@ -132,7 +148,9 @@ final class AxisTravel: ObservableObject {
         if gave >= 0 { beginPassage(surface: gave, dir: dir); gave = -1; zv = 0 }
 
         // The stillness gate: at the sky's edge, the way on opens by not being asked for.
-        if atSky && !mem[GATE] && !crossing {
+        // SUSPENDED while the Universe's own free camera is active (`universeMode`) — otherwise
+        // simply looking around the Universe (which is not-moving) silently ejected you to the Light.
+        if atSky && !mem[GATE] && !crossing && !universeMode {
             let busy = down || (now - lastInput) < 0.34
             if !busy { gateAcc = Swift.min(GATE_MS, gateAcc + dt * 1000) }
             if gateAcc >= GATE_MS {
@@ -140,10 +158,10 @@ final class AxisTravel: ObservableObject {
                 z = -4; zv = 0
                 beginPassage(toZ: -5, dir: -1)           // the sky un-collapses; he is in the Light
             }
-        } else if !atSky {
+        } else if !atSky || universeMode {
             gateAcc = 0
         }
-        thin = (atSky && !mem[GATE]) ? gateAcc / GATE_MS : 0
+        thin = (atSky && !mem[GATE] && !universeMode) ? gateAcc / GATE_MS : 0
 
         flash = Swift.max(0, flash - dt / 0.9)
         detectCross()

@@ -53,6 +53,7 @@ struct InstrumentView: View {
     private var z: Double { travel.z }
     private var here: AxisRegister { Axis.nearest(z) }
     private var atSky: Bool { abs(z + 4) < 0.45 }
+    private var inUniverse: Bool { ["sky", "region", "world", "fall"].contains(here.key) }
 
     // Content presence. The Universe band is ONE continuous camera: full across −4…−1, fading
     // only toward the feed (z→−0.5) and the Light (z→−4.6). Every other register keeps the
@@ -116,25 +117,34 @@ struct InstrumentView: View {
                     .ignoresSafeArea().allowsHitTesting(false)
             }
 
-            // Where he is + the exit.
-            VStack {
-                HStack {
-                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                        Text("‹").font(.system(size: 22)).foregroundStyle(BinduTheme.inkTertiary)
-                    }
-                    Spacer()
-                    Text(here.name.uppercased())
-                        .font(.spaceMono(9)).tracking(2)
-                        .foregroundStyle(here.color.opacity(0.7))
-                    Spacer()
-                    Color.clear.frame(width: 22)
+            // The header — pinned to the TOP via a full-height top-aligned frame (a VStack+Spacer
+            // collapses to centre inside this ZStack). In the Universe the ‹ leaves the sky (glides
+            // back to the Feed) and the header reads THE UNIVERSE — the free camera owns the scale.
+            HStack {
+                Button {
+                    if inUniverse { travel.exitToFeed() }
+                    else if !path.isEmpty { $path.popToRootDissolve() }
+                } label: {
+                    Text("‹").font(.system(size: 22)).foregroundStyle(BinduTheme.inkTertiary)
+                        .frame(width: 40, height: 40)          // a real hit target
                 }
-                .padding(.horizontal, 20).padding(.top, 8)
                 Spacer()
+                Text(inUniverse ? "THE UNIVERSE" : here.name.uppercased())
+                    .font(.spaceMono(9)).tracking(2)
+                    .foregroundStyle(here.color.opacity(0.7))
+                Spacer()
+                Color.clear.frame(width: 40, height: 40)
+            }
+            .padding(.horizontal, 16).padding(.top, 4)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+
+            // the how-to line — pinned to the bottom (the Universe shows its own inside UniverseView)
+            if !inUniverse {
                 Text(atSky && !travel.crossing ? "be still — the way opens" : "pull to travel")
                     .font(.spaceMono(8)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.3 + 0.3 * breath.value))
                     .padding(.bottom, 20)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -160,7 +170,14 @@ struct InstrumentView: View {
                 .transition(.opacity)
             }
         }
-        .onChange(of: here.key) { _, _ in axisLocked = false }   // leaving a register frees the axis
+        .onChange(of: here.key) { _, key in
+            // The Universe registers hand ALL gestures to UniverseCamera (pan/pinch/tap), so lock
+            // the axis drag and suspend the sky→Light stillness gate while it's up. Point worlds
+            // manage `axisLocked` themselves via their binding; everything else frees the axis.
+            let universe = ["sky", "region", "world", "fall"].contains(key)
+            axisLocked = universe
+            travel.setUniverseMode(universe)
+        }
         .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
         }
@@ -273,7 +290,7 @@ struct InstrumentView: View {
     // #pname — the name floats just under the particle in red mono; hidden on the Feed ground
     // and once the particle begins to become the centre (Z > 7.9).
     private var particleNameLabel: some View {
-        let hidden = travel.crossing || z > 7.9 || (here.key == "feed" && abs(z) < 0.4)
+        let hidden = travel.crossing || z > 7.9 || inUniverse || (here.key == "feed" && abs(z) < 0.4)
         return GeometryReader { geo in
             Text(particleName(z).uppercased())
                 .font(.spaceMono(7.5)).tracking(1.5)
@@ -392,9 +409,12 @@ struct InstrumentView: View {
         case "gate":
             AxisGateView()
         case "sky", "region", "world", "fall":
+            // The Universe now runs its OWN free 2-D camera (UniverseCamera) — pan/pinch/tap —
+            // decoupled from the axis. The axis is locked while it's up (below), and `onExit`
+            // glides back to the Feed.
             UniverseView(register: here, path: $path,
                          onFall: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) },
-                         continuousZ: z)     // the continuous "cathedral" camera reads the live z
+                         onExit: { travel.exitToFeed() })
         case "feed":
             AxisFeedSeam { if !path.isEmpty { $path.popToRootDissolve() } }
         case "light":
