@@ -1,3 +1,8 @@
+> ⚠️ **SUPERSEDED — DO NOT BUILD FROM THIS.** This Phase-9 build spec was fully implemented on
+> 2026-06-14 and has since been superseded by the Instrument era (Aug 2026). Current design source
+> of truth: `Claude Design Round 1/The Instrument v3.html`. Current build state: `Bindu Feed/CLAUDE.md`.
+> Kept as history only.
+
 # BINDU FEED — PHASE 9: THE NEW LAYER
 *Addendum to `BINDU_FEED_CLAUDE_CODE.md`. Authored from the design prototype (the "A Strange Feed" HTML comps, newer set). Phases 1–8 built the base app; Phase 9 adds the new screens, redesigns two shipped ones, and introduces the navigation hub. Same rules apply: **Slow. Intimate. Already there. Never reduce. Always emerge.***
 

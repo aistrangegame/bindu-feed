@@ -1,6 +1,15 @@
 # The Deferred & Fix Build — Plan
 
-Assembled from six independent adversarial comp-audits + the codebase's self-declared deferrals + the two design-led features (the Audio Anchor, the Return's real fall). **Nothing here is built yet.** This is for Ashrey to review and add pieces to before a single planned build.
+> ⚠️ **PARTLY SUPERSEDED (updated 2026-08-24).** This punch list was assembled 2026-08-23; the next
+> day the Instrument was rebuilt to `Claude Design Round 1/The Instrument v3.html`. That rebuilt shipped
+> the shader multi-shell atmosphere (`InstrumentField.metal` — the "missing background"), the ladder
+> rail, the particle self-names, the deep-sky parallax, and more. So several items below marked "not
+> built" are now **done**. The remaining, genuinely-open items are the **feel-gated** ones (the [M]/[m]
+> fidelity sweep, the continuous "cathedral" camera) that need the Neev device walk. **For the current
+> build state and the design-canon precedence, `Bindu Feed/CLAUDE.md` is the source of truth** — read it
+> first; treat this file as a historical punch list, not a live spec.
+
+Assembled from six independent adversarial comp-audits + the codebase's self-declared deferrals + the two design-led features (the Audio Anchor, the Return's real fall). This is for Ashrey to review and add pieces to before a single planned build.
 
 The recurring failure the whole sweep confirmed: **a distinct designed thing quietly collapsed into a generic stand-in** — thirteen bespoke typographies → three buckets, five distinct dawns → one radial, a per-phase mote field → a lockstep mechanism, glyph-presences → plain dots. The fixes below restore the distinct thing. No new deferrals.
 

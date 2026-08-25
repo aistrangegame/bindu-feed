@@ -1,3 +1,10 @@
+> ⚠️ **SUPERSEDED — DO NOT BUILD FROM THIS.** This is the June-2026 Phase-9 handoff. That work
+> shipped on 2026-06-14 and the app has since moved through the entire **Instrument era** (Aug 2026:
+> the fifteen-register axis, the Universe, the Point worlds, the Light, the Rite, the Return, and
+> the Metal multi-shell shader). The current design source of truth is
+> `Claude Design Round 1/The Instrument v3.html`; the current build state lives in
+> `Bindu Feed/CLAUDE.md`. Kept here only as history.
+
 # START HERE — Bindu Feed, Phase 9 handoff
 *Everything Claude Code needs to build the full new layer. Assembled 2026-06-14. The base is already provisioned to match every line of this; nothing here asks you to invent data.*
 

@@ -16,12 +16,15 @@ A living iOS consciousness technology. Ashrey's Codex entries (19 months of voic
 
 ## Current State
 
-**Build:** Complete. Phases 1–7 done. Running on Ashrey's iPhone ("Neev").
+**Build:** *(This state is historical — as of the Phase-9 handoff, June 2026. The app has since
+shipped Phase 8, Phase 9, the Sound Layer, and the entire Instrument era. For the live build state
+always read `Bindu Feed/CLAUDE.md`. The soul/ethic below is still current; the numbers here are a
+June-2026 snapshot.)* Phases 1–7 done. Running on Ashrey's iPhone ("Neev").
 **Stories live:** 120 stories (Sort 1–120, no gaps), all 13 rooms lit. Two lanes in one feed: 102 Codex-derived stories (Sort 1–102) + 18 belief stories (Sort 103–120), front-stage indistinguishable.
 **Codex-story completion standard:** 3 field comments + 1 Lalita threaded reply + 1 Resonance Voice = 5 children. All 102 verified complete. (Belief stories follow a *different* standard — full ensemble, no Resonance Voice — see `references/belief-stories.md`.)
 **Next Sort:** 121.
 **Resonance number (Codex lane):** the Codex arc rests at 102 — same as the number of Shaktis across the 9 avaranas in the Bindu Mandala; the Feed arrived there from the other direction. The belief lane is a separate movement layered on top, carrying the feed to 120.
-**Four surfaces designed and Airtable-provisioned, awaiting Claude Code implementation:** Resonance Depth overlay, The Mirror (14th portal), The Signal Space (15th portal), The Practice Door (daily orientation screen).
+**Four surfaces** (Resonance Depth overlay, The Mirror, The Signal Space, The Practice Door) — *were* awaiting implementation at this snapshot; **all shipped as Phase 9 on 2026-06-14.**
 **Pending verification:** Confirm app resolves archetype color/glyph from Airtable vs hardcoded Theme.swift; add Neev (#6E7681 ▽) and Shweta (#E6EBE9 ◌) if hardcoded.
 **Belief Stories — COMPLETE (first movement):** 18 belief stories live (Sort 103–120), an 18-belief ledger in the Identity table (5 *Seen* chain beliefs + 13 *Surfaced*), and 18 threshold sentences (Sort 42–59). Front-stage indistinguishable, backstage marked. See `references/belief-stories.md`.
 **Experience update — IN DESIGN (2026-06-14):** A comprehensive experience vision brief is the active design direction for the next app update. Spine: **Rooms × Players** as twin navigation (a new Players/Field view gathering the voices, mirroring the Rooms view); **Ashram** (renamable, never hardcoded) as the 11th Player — the present-day voice who replies; **restoring/elevating commenting** (currently broken in-app); the four provisioned surfaces (Practice Door, Resonance Depth, The Mirror, The Signal Space); surfacing the 59 threshold sentences; and eight deeper experiential territories. Flow: **Claude Design reads the repo → designs on the brief → Claude Code builds.** Full brief: `references/experience-vision-brief.md`.
