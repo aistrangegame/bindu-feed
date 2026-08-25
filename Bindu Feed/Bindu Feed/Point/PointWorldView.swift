@@ -11,6 +11,7 @@ import SwiftUI
 struct PointWorldView: View {
     let dimensionN: Int          // 1…7 → m1…m7
     @Binding var path: [FeedRoute]
+    @Binding var axisLocked: Bool    // told UP to InstrumentView: true while a world body / star reading is open
     let onReturn: () -> Void
 
     @EnvironmentObject private var soundEngine: SoundEngine
@@ -93,7 +94,12 @@ struct PointWorldView: View {
                 }
             }
         }
+        // Lock the axis whenever a world body (selectedUniverse) or a star reading (openStar)
+        // is open, so their own drag/scroll wins over the axis travel gesture.
+        .onChange(of: openStar != nil) { _, _ in syncAxisLock() }
+        .onChange(of: selectedUniverse != nil) { _, _ in syncAxisLock() }
         .onAppear {
+            syncAxisLock()
             if let dim { PointJourney.enteredDims.append(dim.name) }
             if !PointGoodnight.shown.contains(dimensionN) {
                 PointGoodnight.shown.insert(dimensionN)
@@ -103,7 +109,10 @@ struct PointWorldView: View {
                 }
             }
         }
+        .onDisappear { axisLocked = false }
     }
+
+    private func syncAxisLock() { axisLocked = openStar != nil || selectedUniverse != nil }
 }
 
 // The goodnights are said once per dimension per session, then gone.
@@ -245,7 +254,7 @@ private struct PointStarDescent: View {
            let content = json["content"] as? [[String: Any]] {
             let text = content.compactMap { ($0["type"] as? String) == "text" ? $0["text"] as? String : nil }.joined()
             let cleaned = text.replacingOccurrences(of: "```json", with: "").replacingOccurrences(of: "```", with: "")
-            if let lo = cleaned.firstIndex(of: "{"), let hi = cleaned.lastIndex(of: "}"),
+            if let lo = cleaned.firstIndex(of: "{"), let hi = cleaned.lastIndex(of: "}"), lo <= hi,
                let d = try? JSONDecoder().decode(PointDeeper.self, from: Data(cleaned[lo...hi].utf8)) {
                 result = d
                 UserDefaults.standard.set(try? JSONEncoder().encode(d), forKey: cacheKey)   // kept

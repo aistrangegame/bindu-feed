@@ -266,12 +266,31 @@ private struct ReturnRoute: View {
     @Binding var path: [FeedRoute]
     var story: Story? = nil          // a specific sealed story (from its page), or nil = daily
     @EnvironmentObject private var store: FeedStore
-    @State private var data: ReturnStoryData = .canon
+    @State private var data: ReturnStoryData?     // nil until resolved; never the canon demo online
     @State private var loaded = false
+    @State private var empty = false              // online, but nothing real has been sealed to return to
 
     var body: some View {
         Group {
-            if loaded {
+            if empty {
+                // Online and reachable, but nothing has been sealed yet — the honest state,
+                // NOT the C-1052 canon demo (which only stands in when genuinely offline).
+                ZStack {
+                    BinduTheme.bgDeep.ignoresSafeArea()
+                    VStack(spacing: 14) {
+                        Text("nothing has returned yet")
+                            .font(.loraItalic(16)).foregroundStyle(BinduTheme.inkSecondary)
+                        Text("a story returns once you have sealed your own words on it.")
+                            .font(.spaceMono(9)).tracking(1).lineSpacing(3)
+                            .multilineTextAlignment(.center)
+                            .foregroundStyle(BinduTheme.inkTertiary).padding(.horizontal, 44)
+                        Button { $path.popDissolve() } label: {
+                            Text("‹ leave").font(.spaceMono(10)).tracking(2)
+                                .foregroundStyle(BinduTheme.inkTertiary)
+                        }.padding(.top, 10)
+                    }
+                }
+            } else if loaded, let data {
                 ReturnView(path: $path, storyData: data)
             } else {
                 ZStack {
@@ -286,7 +305,13 @@ private struct ReturnRoute: View {
             if store.stories.isEmpty { await store.loadStories() }
             // THIS story when one was tapped; otherwise the daily standalone rotation.
             let d = story != nil ? await store.returnData(for: story!) : await store.returnData()
-            if let d { data = d }
+            if let d {
+                data = d
+            } else if !store.stories.isEmpty {
+                empty = true              // reachable but nothing sealed → honest empty, not the demo
+            } else {
+                data = .canon             // genuinely offline (e.g. the DEBUG door) → the canon stand-in
+            }
             loaded = true
         }
     }

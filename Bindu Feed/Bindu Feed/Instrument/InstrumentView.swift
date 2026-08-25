@@ -28,6 +28,10 @@ struct InstrumentView: View {
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
     @State private var thinSounded = false
+    // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
+    // so the axis drag stands down and the card's own scroll/pan works. Without this, the
+    // outer `.highPriorityGesture` steals every drag from the presented card.
+    @State private var axisLocked = false
 
     // The travelling pitch — log-interpolated between adjacent registers (hzAt(Z)).
     private func hzAt(_ z: Double) -> Double {
@@ -138,7 +142,10 @@ struct InstrumentView: View {
         // High-priority so the axis drag reliably wins over the Universe's full-screen tap layer
         // (which was intermittently stalling movement on device); a pure tap — no drag past the
         // 4pt threshold — still falls through to the Universe's star selection.
-        .highPriorityGesture(travelGesture)
+        // While a front card is open, `.subviews` disables this axis drag and lets the card's
+        // own ScrollView/pan gestures win; otherwise `.all` keeps the axis drag high-priority
+        // (so it still beats the Universe's full-screen tap layer, the original reason for it).
+        .highPriorityGesture(travelGesture, including: axisLocked ? .subviews : .all)
         // The rope from anywhere (§7.5) — a ~1.1s long-press; the particle is always here.
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
@@ -153,6 +160,7 @@ struct InstrumentView: View {
                 .transition(.opacity)
             }
         }
+        .onChange(of: here.key) { _, _ in axisLocked = false }   // leaving a register frees the axis
         .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
         }
@@ -377,7 +385,7 @@ struct InstrumentView: View {
     @ViewBuilder private var content: some View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
-            PointWorldView(dimensionN: here.z - 1, path: $path,
+            PointWorldView(dimensionN: here.z - 1, path: $path, axisLocked: $axisLocked,
                            onReturn: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) })
         case "centre":
             PointRevealView(path: $path)
