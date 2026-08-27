@@ -86,6 +86,13 @@ final class UniverseCamera: ObservableObject {
 
     func clearMouthMeant() { mouthMeant = false }
 
+    /// Reported to the axis when the pan inertia starts or stops — the `|turnV| < 0.001`
+    /// term of the design's `still` (`The Instrument v3.html:5518`). The stillness gate has
+    /// to know that the register's OWN gesture has come to rest too, not just the axis's.
+    /// Fires only on a change, never per frame.
+    var onDriftChange: ((Bool) -> Void)?
+    private var drifting = false
+
     // Pan velocity (inertia). No `vz` — the scale is not a thing the hand throws here.
     private var vfx = 0.0, vfy = 0.0
     private var tfx: Double?, tfy: Double?
@@ -214,6 +221,10 @@ final class UniverseCamera: ObservableObject {
             vfx *= d; vfy *= d
         }
         clampPan()
+
+        // the register's own motion, for the stillness gate — coasting is not stillness
+        let nowDrifting = tfx != nil || abs(vfx) > 6e-5 || abs(vfy) > 6e-5
+        if nowDrifting != drifting { drifting = nowDrifting; onDriftChange?(nowDrifting) }
 
         // ── the fall's own integration ──
         if inFall {

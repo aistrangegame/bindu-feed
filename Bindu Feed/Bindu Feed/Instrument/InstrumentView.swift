@@ -57,16 +57,26 @@ struct InstrumentView: View {
     private var atSky: Bool { abs(z + 4) < 0.45 }
     private var inUniverse: Bool { ["sky", "region", "world", "fall"].contains(here.key) }
 
-    // Content presence. The Universe band is ONE continuous camera: full across −4…−1, fading
-    // only toward the feed (z→−0.5) and the Light (z→−4.6). Every other register keeps the
-    // per-register crossfade.
+    // Content presence. `here` is always the NEAREST register, so `presence` never drops
+    // below 0.65 in a register (0.494 in the centre's +0.62 overshoot) — a mounted register
+    // is by construction visible.
+    //
+    // The Universe band is ONE continuous camera: full across −4…−1, so it does NOT crossfade
+    // between its own four registers, only at the band's outer edges. That override used to
+    // REPLACE presence, and at each edge it fell far below it — `(z+4.6)/0.6` is 0.17 at
+    // z = −4.5 — which is where the dead band came from: the sky on screen, and dead to the
+    // hand across z ∈ (−4.6, −4.27), with the feed edge doing the same across (−0.775, −0.5).
+    // That second one is `B0.3` still standing in its other form.
+    //
+    // It is a floor now, not a replacement. The band still keeps the four Universe registers
+    // continuously lit (which is its whole job); it can no longer take a register below the
+    // presence it would have had on its own.
     private var contentOpacity: Double {
-        if z <= -0.5 && z >= -4.6 {
-            let feedFade = max(0, min(1, (-0.5 - z) / 0.5))    // fades in from the feed edge
-            let lightFade = max(0, min(1, (z + 4.6) / 0.6))    // fades out toward the Light edge
-            return min(feedFade, lightFade)
-        }
-        return Axis.presence(here.i, z)
+        let presence = Axis.presence(here.i, z)
+        guard inUniverse else { return presence }
+        let feedFade = max(0, min(1, (-0.5 - z) / 0.5))    // fades in from the feed edge
+        let lightFade = max(0, min(1, (z + 4.6) / 0.6))    // fades out toward the Light edge
+        return max(presence, min(feedFade, lightFade))
     }
 
     var body: some View {
@@ -89,7 +99,18 @@ struct InstrumentView: View {
             // edges) so the flowing camera doesn't pulse dim between the four registers.
             content
                 .opacity(contentOpacity)
-                .allowsHitTesting(contentOpacity > 0.55 && !travel.crossing)
+                // No opacity threshold. `content` is a `switch` on `here.key`, so exactly ONE
+                // register is ever mounted and it is always the nearest — and with the floor
+                // above, a mounted register is never dimmer than 0.494. There is no state in
+                // which content is on screen but invisible, so a threshold could only ever
+                // take away something visible, which is what the old `> 0.55` did at both
+                // edges of the Universe band.
+                //
+                // The design gates interaction PER AFFORDANCE and never by a global opacity —
+                // the door by its four conditions (`:1549-1573`), the mouth by `desc ≥ 0.84`
+                // (`uni-fall.js:24`), the lens by its own band. Those all still stand. What
+                // you can see, you can touch; while a passage carries you, you can't.
+                .allowsHitTesting(!travel.crossing)
 
             // The stillness gate — at the sky, the way on thins with stillness, not force.
             if travel.thin > 0.01 {
@@ -455,6 +476,7 @@ struct InstrumentView: View {
                          axisZ: travel.z,
                          onDrawIn: { travel.drawIn($0) },
                          onHandVertical: { travel.handVerticalToRegister($0) },
+                         onRegisterDrift: { travel.setRegisterDrifting($0) },
                          path: $path,
                          onFall: { story in
                              // It carries the story he descended into. It used to pass `nil`,

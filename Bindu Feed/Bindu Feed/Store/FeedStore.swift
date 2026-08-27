@@ -515,18 +515,39 @@ final class FeedStore: ObservableObject {
         }
     }
 
-    /// The Rite met a story. A pulse into App Activity — never a count. Resolves
-    /// the live Story record by Codex ID when the feed is loaded (to link it);
-    /// logs without a link otherwise (the canon Rite can run before stories load).
+    /// The Rite met a story. A pulse into App Activity — never a count.
+    ///
+    /// THE WRITER DEFECT, and why both `Story Met` rows in the base were wrong.
+    ///
+    /// This used to resolve the record with `stories.first { $0.codexId == codexId }`, and
+    /// `Story.codexId` normalises a missing Codex ID to `""`. Fifteen Live stories carry a
+    /// blank Codex ID, so meeting any one of them matched the FIRST blank-Codex story in the
+    /// array instead — an arbitrary record, and a different one day to day because the feed
+    /// is sorted by `Last Activity Date`. That is the row that pointed at the wrong story.
+    /// And when `stories` had not loaded (it is not in `bootstrap()`, so a cold launch
+    /// straight into the Rite always hits this), the lookup returned nil and the row was
+    /// written with no link at all. That is the row that pointed at nothing.
+    ///
+    /// `Ash Replied` and `Story Resonated` were never affected because they pass the record
+    /// id straight through — which is why the pair written in the same second diverged.
+    ///
+    /// The fix is §10's rule, applied to stories: **resolve by record id, never by a soft
+    /// key.** `RiteStoryData` has carried `storyId` all along — the line below this call
+    /// already uses it for `postComment`. Codex ID survives only as a NON-EMPTY exact
+    /// fallback; a blank key resolves to nothing rather than to whatever sorts first.
+    ///
+    /// A row with no link is still written, and is still correct: the canon Rite (C-1052)
+    /// meets no live story, and `isTodayMet()` reads these rows by DATE, not by link. What
+    /// must never happen is a GUESSED link.
     /// Fire-and-forget: a failed activity row never affects the ceremony.
-    func logStoryMet(codexId: String, title: String) async {
+    func logStoryMet(storyId: String, codexId: String, title: String) async {
         // Mark today met LOCALLY first, synchronously — so a completed Rite can never
         // re-prompt on this device even if the Airtable write is slow, fails, or the
         // read is flaky. App Activity remains the cross-device source of truth; this is a
         // same-day reliability cache, not a replacement (it is the exact failure the user
         // hit — the ceremony completed but the day still read "unmet").
         UserDefaults.standard.set(true, forKey: Self.metCacheKey(AirtableService.localDayString()))
-        let recordId = stories.first { $0.codexId == codexId }?.id
+        let recordId = resolveMetRecordId(storyId: storyId, codexId: codexId)
         do {
             _ = try await service.logActivity(
                 type: .storyMet,
@@ -540,6 +561,16 @@ final class FeedStore: ObservableObject {
             print("[FeedStore] logStoryMet write failed (local met-cache still set): \(error)")
             #endif
         }
+    }
+
+    /// The one place a `Story Met` link is decided. Record id first, because that is what
+    /// the Rite already knows; a non-empty Codex ID second, for a caller that only has one;
+    /// nil last — an unlinked pulse, never a guessed one.
+    private func resolveMetRecordId(storyId: String, codexId: String) -> String? {
+        if !storyId.isEmpty { return storyId }
+        let key = codexId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { return nil }        // `""` matches 15 blank-Codex stories
+        return stories.first { $0.codexId == key }?.id
     }
 
     private static func metCacheKey(_ day: String) -> String { "bindu.met.\(day)" }

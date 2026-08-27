@@ -52,6 +52,9 @@ struct UniverseView: View {
     /// the axis reclaiming z mid-fall, which would walk him out of the register he is
     /// descending inside.
     var onHandVertical: ((Bool) -> Void)? = nil
+    /// The register's pan inertia, starting and stopping — the third term of the stillness
+    /// gate's `still`. See `UniverseCamera.onDriftChange`.
+    var onRegisterDrift: ((Bool) -> Void)? = nil
     @Binding var path: [FeedRoute]
     /// The fall completed and he MEANT it — carries the story he descended into, never nil.
     let onFall: (Story) -> Void
@@ -157,6 +160,7 @@ struct UniverseView: View {
         }
         .ignoresSafeArea()
         .onAppear {
+            cam.onDriftChange = { onRegisterDrift?($0) }
             cam.reset()          // the focus only — the scale is the axis's
             cam.setAxisZ(axisZ)
             cam.start()
@@ -187,6 +191,8 @@ struct UniverseView: View {
         .onChange(of: store.archetypes.count) { rebuild() }
         .onDisappear {
             cam.stop(); lensTimer?.invalidate()
+            cam.onDriftChange = nil
+            onRegisterDrift?(false)     // never leave the gate believing the camera still coasts
             closeFall()                 // never leave the axis standing down
         }
     }

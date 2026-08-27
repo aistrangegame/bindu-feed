@@ -42,13 +42,14 @@ final class AxisTravel: ObservableObject {
     /// the ladder rail. Mutated on the display-link tick; the rail reads it from a per-frame body.
     var openedSurfaces: [Bool] { mem }
 
-    // The stillness gate (surface 0, sky→Light).
-    private var gateAcc = 0.0                            // milliseconds accumulated
-    private let GATE = 0, GATE_MS = 4600.0
+    // THE STILLNESS GATE (surface 0, sky→Light) — one accumulator, not a countdown.
+    // `dwell` is 0…1; see the block in step() for the law and the numbers.
+    private var dwell = 0.0
+    private let GATE = 0
 
-    // True while the Universe's own free 2-D camera owns navigation — the axis drag is locked
-    // by InstrumentView and the sky→Light stillness gate is suspended (see step()).
-    private var universeMode = false
+    /// The `|turnV| < 0.001` term of the design's `still` — the register's OWN gesture, which
+    /// has to have stopped too. Fed by `UniverseCamera` when its pan inertia starts or ends.
+    private var registerDrifting = false
 
     // The passage (a give hands the camera a glide across the membrane).
     private var glideFrom = 0.0, glideTo = 0.0, glideT = 0.0, glideDur = 5.4
@@ -120,10 +121,17 @@ final class AxisTravel: ObservableObject {
 
     func stop() { link?.invalidate(); link = nil; proxy = nil }
 
-    // MARK: - The Universe (its own camera owns navigation while it's up)
+    // MARK: - The Universe (it asks; the axis travels)
 
-    /// InstrumentView sets this when a Universe register is showing. Suspends the stillness gate.
-    func setUniverseMode(_ v: Bool) { universeMode = v; if v { gateAcc = 0 } }
+    /// The register is drifting under its own inertia — the Universe's pan glide. Part of
+    /// `still`: a camera that is still coasting is not stillness.
+    ///
+    /// (`setUniverseMode` used to live here, suspending the gate whenever a Universe register
+    /// was up. It was called from the `axisLocked` arming block, and when that block went with
+    /// the seam nothing set it any more — so the flag read false for ever and the suspension
+    /// it documented had silently stopped existing. Deleted rather than re-wired: the design
+    /// has no such mode, and the gate's own band and asymmetry are what keep it off you.)
+    func setRegisterDrifting(_ v: Bool) { registerDrifting = v }
 
     /// The tap's inward impulse. The Universe never moves the scale itself — it asks, and
     /// the axis travels, so there stays exactly one scale in the instrument.
@@ -137,7 +145,6 @@ final class AxisTravel: ObservableObject {
     /// Leave the Universe: release universe mode and glide the axis back to the Feed (Z=0) via
     /// the passage throat — an explicit exit, replacing the old auto-eject.
     func exitToFeed() {
-        universeMode = false
         beginPassage(toZ: 0, dir: 1)
     }
 
@@ -204,21 +211,42 @@ final class AxisTravel: ObservableObject {
 
         if gave >= 0 { beginPassage(surface: gave, dir: dir); gave = -1; zv = 0 }
 
-        // The stillness gate: at the sky's edge, the way on opens by not being asked for.
-        // SUSPENDED while the Universe's own free camera is active (`universeMode`) — otherwise
-        // simply looking around the Universe (which is not-moving) silently ejected you to the Light.
-        if atSky && !mem[GATE] && !crossing && !universeMode {
-            let busy = down || (now - lastInput) < 0.34
-            if !busy { gateAcc = Swift.min(GATE_MS, gateAcc + dt * 1000) }
-            if gateAcc >= GATE_MS {
-                gateAcc = 0; mem[GATE] = true
-                z = -4; zv = 0
-                beginPassage(toZ: -5, dir: -1)           // the sky un-collapses; he is in the Light
-            }
-        } else if !atSky || universeMode {
-            gateAcc = 0
+        // ── THE STILLNESS GATE ─────────────────────────────────────────────────────────────
+        // `The Instrument v3.html:5518-5520`, verbatim in its numbers:
+        //
+        //     const still = !down && |zv| < 0.0016 && |turnV| < 0.001;
+        //     if (still && Z < -2.3) dwell = min(1, dwell + dt*0.30);
+        //     else                   dwell = max(0, dwell - dt*1.30);
+        //
+        // It was a flat 4600 ms countdown, armed by `atSky` and by a 340 ms time-since-input
+        // proxy for stillness. Three things that timer could not do, and the asymmetry is the
+        // whole mechanism:
+        //
+        //   · `still` is a VELOCITY test, not a since-you-last-touched test. A camera that is
+        //     still gliding is not still. The proxy counted it as still 340 ms after the hand
+        //     left the glass, which is why the gate fired on a hand that had only just let go.
+        //   · it builds over 1/0.30 = 3.33 s, not 4.6.
+        //   · it decays over 1/1.30 = 0.77 s — 4.3× faster than it builds. Looking at the
+        //     screen for a moment costs almost nothing; only deciding to be still carries you.
+        //
+        // Band: `Z < −2.3`, the literal reading of "stillness at the sky's edge" (:1024) —
+        // wider than the sky alone, and it is the accumulator, not the band, that holds it off.
+        let still = !down && abs(zv) < 0.0016 && !registerDrifting
+        if still && z < -2.3 && !mem[GATE] && !crossing {
+            dwell = Swift.min(1, dwell + dt * 0.30)
+        } else {
+            dwell = Swift.max(0, dwell - dt * 1.30)
         }
-        thin = (atSky && !mem[GATE] && !universeMode) ? gateAcc / GATE_MS : 0
+        if dwell >= 1 && !mem[GATE] && !crossing {
+            dwell = 0
+            // The passage carries him from where he STANDS — there is no snap to the sky
+            // first. Arriving at a register means you are past every surface below it (the
+            // rule `init(startZ:)` already applies to the Turn's Light row), so mark what
+            // the passage carries him through rather than leaving a closed surface behind.
+            for sfc in 0..<mem.count where Double(sfc) + 0.5 < z + 5 { mem[sfc] = true }
+            beginPassage(toZ: -5, dir: -1)               // the sky un-collapses; he is in the Light
+        }
+        thin = mem[GATE] ? 0 : dwell
 
         flash = Swift.max(0, flash - dt / 0.9)
         detectCross()
