@@ -66,7 +66,7 @@ struct PlayersView: View {
 
                     if let ash {
                         AshramCard(archetype: ash) {
-                            $path.pushDissolve(FeedRoute.turning(ash))
+                            $path.pushDissolve(FeedRoute.home(ash))
                         }
                         .padding(.horizontal, BinduTheme.space16)
                     }
@@ -116,7 +116,7 @@ struct PlayersView: View {
             ForEach(Array(lenses.enumerated()), id: \.element.id) { i, archetype in
                 StaggeredReveal(triggered: true, delay: Double(i) * 0.075, duration: 0.8, rise: 10) {
                     PlayerCard(archetype: archetype, isSubstrate: false) {
-                        $path.pushDissolve(FeedRoute.turning(archetype))
+                        $path.pushDissolve(FeedRoute.home(archetype))
                     }
                 }
             }
@@ -127,7 +127,7 @@ struct PlayersView: View {
         LazyVGrid(columns: columns, spacing: 14) {
             ForEach(roots) { archetype in
                 PlayerCard(archetype: archetype, isSubstrate: true) {
-                    $path.pushDissolve(FeedRoute.turning(archetype))
+                    $path.pushDissolve(FeedRoute.home(archetype))
                 }
             }
         }

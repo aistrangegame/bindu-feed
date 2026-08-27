@@ -166,6 +166,8 @@ struct RootView: View {
             StoryDetailView(path: $path, story: story)
         case .turning(let archetype):
             TheTurningView(path: $path, archetype: archetype)
+        case .home(let archetype):
+            RoomView(archetype: archetype, path: $path)
         case .ash:
             AshVoiceView(path: $path)
         case .settings:

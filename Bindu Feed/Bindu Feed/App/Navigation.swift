@@ -32,6 +32,7 @@ enum FeedRoute: Hashable {
     case room(Room)
     case story(Story)
     case turning(Archetype)      // was .archetype — the view is TheTurningView
+    case home(Archetype)         // a voice's ROOM — its own mathematics at four registers (Pass 4)
     case ash
     case settings
     case mirror

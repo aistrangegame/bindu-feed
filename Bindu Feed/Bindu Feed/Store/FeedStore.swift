@@ -241,6 +241,42 @@ final class FeedStore: ObservableObject {
         storyStats[storyId] ?? StoryStats(commentCount: 0, archetypes: [])
     }
 
+    // MARK: - The rooms (Pass 4)
+
+    /// Ash's spine: his real days, flecked with the voices who actually spoke on each one.
+    /// The comp filled this with 117 invented days and `rnd()` flecks; this is the record.
+    @Published var ashDays: [AshDay] = []
+
+    /// A voice's whole archive, resolved in ONE bulk story lookup — never N+1 (§10).
+    /// Returns the comments, a story-id → title map, and the earliest day the voice has
+    /// spoken on (derived: Field Comments carry no date of their own).
+    func roomArchive(for archetype: Archetype) async
+        -> (comments: [FieldComment], titles: [String: String], since: String) {
+        let comments = (try? await service.fetchArchetypeComments(archetypeName: archetype.name)) ?? []
+        let ids = comments.compactMap(\.linkedStoryId)
+        guard !ids.isEmpty else { return (comments, [:], "") }
+        let found = (try? await service.fetchStoriesByIds(ids)) ?? []
+        var titles: [String: String] = [:]
+        var days: [String] = []
+        for s in found {
+            titles[s.id] = s.title
+            let d = String(s.sourceDate.prefix(10))
+            if !d.isEmpty { days.append(d) }
+        }
+        return (comments, titles, days.min() ?? "")
+    }
+
+    /// Built from the stories already loaded plus their per-story archetype stats, so it
+    /// costs no extra fetch. A day with no voice on it is a real position with no words
+    /// behind it, and draws as exactly that.
+    func loadAshSpine() async {
+        if stories.isEmpty { await loadStories() }
+        if storyStats.isEmpty { await loadStoryStats() }
+        var byStory: [String: [String]] = [:]
+        for s in stories { byStory[s.id] = stats(for: s.id).archetypes }
+        ashDays = AshSpine.build(stories: stories, commentsByStory: byStory)
+    }
+
     // MARK: - Card surfaces (Mirror / Signal / Practice)
 
     func loadMirrorCards() async {
