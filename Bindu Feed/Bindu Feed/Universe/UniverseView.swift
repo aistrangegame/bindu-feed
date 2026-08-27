@@ -166,11 +166,7 @@ struct UniverseView: View {
             cam.setAxisZ(z)
             // Travelling away from the fall's register closes it — the axis always wins, and
             // a fall is never something he can be stuck inside.
-            if z < UniverseCamera.axisZNear - 0.6, fallStarID != nil {
-                fallStarID = nil
-                cam.setInFall(false)
-                onHandVertical?(false)
-            }
+            if z < UniverseCamera.axisZNear - 0.6 { closeFall() }
         }
         // THE CROSSING. It fires here and only here — when the ring has closed, which only
         // happens while the hand keeps asking. Never from inside `draw()`, never on a zoom
@@ -178,8 +174,9 @@ struct UniverseView: View {
         .onChange(of: cam.mouthMeant) { _, meant in
             guard meant else { return }
             cam.clearMouthMeant()
-            onHandVertical?(false)
-            guard let id = fallStarID,
+            let crossed = fallStarID
+            closeFall()                                   // the fall is over the moment it is meant
+            guard let id = crossed,
                   let story = store.stories.first(where: { $0.id == id })
             else { return }
             soundEngine.riteThreshold(hz: 126, dur: 9)          // DOORS[0].tone — spine-axis.js:62
@@ -190,7 +187,7 @@ struct UniverseView: View {
         .onChange(of: store.archetypes.count) { rebuild() }
         .onDisappear {
             cam.stop(); lensTimer?.invalidate()
-            onHandVertical?(false)      // never leave the axis standing down
+            closeFall()                 // never leave the axis standing down
         }
     }
 
@@ -322,7 +319,7 @@ struct UniverseView: View {
         if loc.y < 78 { return }
 
         // The door takes precedence: if a world is offering its story, the tap reads it.
-        if let d = doorway(size), hypot(Double(loc.x) - d.px, Double(loc.y) - d.py) < 150 {
+        if let d = doorway(size), Self.doorBox(size).contains(loc) {
             openStory(d.story, room: d.room)
             return
         }
@@ -349,9 +346,7 @@ struct UniverseView: View {
         // instead of drawing closer. Everything else recentres and draws in.
         let R = b.st.pr * zoom
         if R > 34, b.st.depth > 0 {
-            fallStarID = b.st.id
-            cam.setInFall(true)
-            onHandVertical?(true)
+            openFall(b.st)
             soundEngine.riteThreshold(hz: room(story(for: b.st)?.room ?? "").hz, dur: 9)
             return
         }
@@ -362,12 +357,44 @@ struct UniverseView: View {
 
     private func story(for st: UStar) -> Story? { store.stories.first { $0.id == st.id } }
 
+    // MARK: - Opening and closing the fall
+
+    /// Every way IN. The fall is opened on one chosen star, and the vertical is handed to it.
+    private func openFall(_ st: UStar) {
+        fallStarID = st.id
+        cam.setInFall(true)
+        onHandVertical?(true)
+    }
+
+    /// Every way OUT — and there are four: travelling off the register, the view going away,
+    /// the crossing into the Return, and the ‹ exit. All three pieces of state must move
+    /// together or the fall half-closes: `fallStarID` still routes the vertical to the
+    /// descent while the axis has taken it back, which is the double-feed re-armed.
+    ///
+    /// This is why it is one function. The crossing used to release the vertical and leave
+    /// `fallStarID` set — and because RootView is a ZStack of layers, pushing the Return does
+    /// NOT unmount this view, so coming back from the ceremony re-armed the bug.
+    private func closeFall() {
+        guard fallStarID != nil else { return }
+        fallStarID = nil
+        cam.setInFall(false)
+        onHandVertical?(false)
+    }
+
     // MARK: - The door into a story (B6.1)
 
     /// A world offers its story once he is standing close enough to see its lights.
     /// `The Universe v3.html:1549-1573` — four conditions, all required, and an unmet world
     /// offers nothing. Its silence is the point.
-    private struct Doorway { let story: Story; let room: UniRoom; let px: Double; let py: Double }
+    private struct Doorway { let story: Story; let room: UniRoom }
+
+    /// The door's own box. `.door{position:absolute;left:0;right:0;bottom:62px}` — it is
+    /// anchored to the FRAME, not to the world. Anchoring it at `py + 96` (as the first cut
+    /// did) put it on top of the planet's own label the moment the world grew large enough
+    /// to offer it, which is how two names ended up printed over each other.
+    private static func doorBox(_ size: CGSize) -> CGRect {
+        CGRect(x: 0, y: size.height - 140, width: size.width, height: 88)
+    }
 
     private func doorway(_ size: CGSize) -> Doorway? {
         let zoom = cam.zoom, focus = CGPoint(x: cam.fx, y: cam.fy)
@@ -379,7 +406,7 @@ struct UniverseView: View {
         let sp = worldToScreen(fs.star.wx, fs.star.wy, size, zoom: zoom, focus: focus)
         let off = hypot(Double(sp.x) - size.width / 2, Double(sp.y) - size.height * 0.44)
         guard R > 36, off < size.width * 0.42 else { return nil }
-        return Doorway(story: story, room: uniRooms[fs.ri], px: Double(sp.x), py: Double(sp.y))
+        return Doorway(story: story, room: uniRooms[fs.ri])
     }
 
     /// Cross into the story. `threshold(room.hz, 6)`, then 620ms, then the surface itself —
@@ -398,17 +425,26 @@ struct UniverseView: View {
     /// It is NOT one of the invented instruction strings the sweep removed. Those exist
     /// nowhere in the design; this one is authored, and deleting it would be the same error
     /// inverted.
-    private func drawDoor(_ ctx: GraphicsContext, _ d: Doorway) {
-        let y = d.py + 96
-        ctx.draw(Text("\(d.story.codexId) · \(d.room.id.uppercased())")
-                    .font(.spaceMono(8)).foregroundStyle(BinduTheme.inkTertiary),
-                 at: CGPoint(x: d.px, y: y))
+    ///
+    /// Type, from `.door` at `:1389-1392`: `.codex` mono 9 / `.2em` / `rgba(237,232,227,.34)`
+    /// · `.title` Lora 21 / `-.012em` / `#EDE8E3` · `.go` mono 8 / `.22em` / uppercase /
+    /// `rgba(237,232,227,.4)`, `gap:9`, centred, `bottom:62`.
+    private func drawDoor(_ ctx: GraphicsContext, _ size: CGSize, _ d: Doorway) {
+        let cx = size.width / 2, bottom = size.height - 62
+        // The codex line names the world. When a story carries no Codex ID the line is the
+        // room's name alone — never a separator with nothing in front of it (§10: an unwired
+        // slot renders absence). `:1560` uses the room's NAME, not its id.
+        let codex = d.story.codexId.isEmpty ? d.room.id : "\(d.story.codexId) · \(d.room.id)"
+        ctx.draw(Text(codex).font(.spaceMono(9)).tracking(0.2 * 9)
+                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34)),
+                 at: CGPoint(x: cx, y: bottom - 58))
         ctx.draw(Text(d.story.title)
-                    .font(.lora(21, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
-                 at: CGPoint(x: d.px, y: y + 24))
-        ctx.draw(Text("TOUCH TO READ")
-                    .font(.spaceMono(8)).foregroundStyle(BinduTheme.inkPrimary.opacity(0.4)),
-                 at: CGPoint(x: d.px, y: y + 48))
+                    .font(.lora(21, weight: .medium)).tracking(-0.012 * 21)
+                    .foregroundStyle(BinduTheme.inkPrimary),
+                 at: CGPoint(x: cx, y: bottom - 30))
+        ctx.draw(Text("TOUCH TO READ").font(.spaceMono(8)).tracking(0.22 * 8)
+                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.4)),
+                 at: CGPoint(x: cx, y: bottom - 5))
     }
 
     /// The mouth of the return, and the consent that opens it.
@@ -556,7 +592,7 @@ struct UniverseView: View {
             drawMouth(ctx, size, d: cam.desc)
         } else if let d = doorway(size) {
             // ── THE DOOR. A world turns its name into the light. `B6.1`. ──
-            drawDoor(ctx, d)
+            drawDoor(ctx, size, d)
         }
 
         // ── the structure lens: the lit sky sinks back and the belief-lattice is thrown over ──
@@ -691,28 +727,38 @@ struct UniverseView: View {
         let color = st.color
         let tw = 0.6 + 0.4 * abs(sin(t * 0.6 + st.twSeed))
         let R = st.pr * zoom                                  // ← the mechanism
-        guard st.isMet else {
-            // an unmet world offers nothing, and stays a point of light
-            let r = max(0.6, 0.9 + zoom * 0.5)
-            ctx.fill(UniGeo.ringPath(sx, sy, r),
-                     with: .color(color.opacity((0.15 + 0.22 * min(1, zoom)) * tw)))
-            return
-        }
-        // The met star's core also grows: Rp = (1.6 + depth*0.15) * max(0.9, z*1.2) + 0.8
-        let sz = (1.6 + Double(st.depth) * 0.15) * max(0.9, zoom * 1.2) + 0.8
-        ctx.fill(UniGeo.ringPath(sx, sy, sz), with: .color(color.opacity(0.9 * tw)))
-        ctx.fill(UniGeo.ringPath(sx, sy, sz * 4.2), with: .color(color.opacity(0.06 * tw)))
-        // the approached star wears a quiet ring, so you can see which world you chose
-        if st.id == focusId {
-            ctx.stroke(UniGeo.ringPath(sx, sy, sz * 4), with: .color(color.opacity(0.5)), lineWidth: 1)
-        }
-        // the returns, ringed — and the rings widen with the approach too (uni-sky.js:296)
-        if zoom > 0.5 && st.depth > 0 {
-            for k in 1...min(st.depth, 8) {
-                let dr = sz + Double(k) * (4.6 * min(2.2, zoom))
-                ctx.stroke(UniGeo.ringPath(sx, sy, dr),
-                           with: .color(color.opacity(0.28 * (1 - Double(k) / 12) * (0.62 + 0.38 * breath.value))),
-                           lineWidth: 0.9)
+        // `uni-sky.js:290-308` — met-ness splits the FAR branch only. Past R = 6 both a met
+        // and an unmet world are drawn by `planet()`, which carries its own unmet body
+        // (`:41-45` — a colder, greyer gradient: a world with no lights on).
+        //
+        // This guard used to sit above the handoff and return, so 119 of the 120 stars
+        // stayed 2-pixel points however close he came, and flying into anything but the one
+        // met world arrived at empty space. `B2.2` surviving the seam in a new shape.
+        var sz = 0.0
+        if !st.isMet {
+            if R < 6 {
+                // far off, and no light has come on here yet — a point, growing with the approach
+                let r = max(0.6, 0.9 + zoom * 0.5)
+                ctx.fill(UniGeo.ringPath(sx, sy, r),
+                         with: .color(color.opacity((0.15 + 0.22 * min(1, zoom)) * tw)))
+            }
+        } else {
+            // The met star's core also grows: Rp = (1.6 + depth*0.15) * max(0.9, z*1.2) + 0.8
+            sz = (1.6 + Double(st.depth) * 0.15) * max(0.9, zoom * 1.2) + 0.8
+            ctx.fill(UniGeo.ringPath(sx, sy, sz), with: .color(color.opacity(0.9 * tw)))
+            ctx.fill(UniGeo.ringPath(sx, sy, sz * 4.2), with: .color(color.opacity(0.06 * tw)))
+            // the approached star wears a quiet ring, so you can see which world you chose
+            if st.id == focusId {
+                ctx.stroke(UniGeo.ringPath(sx, sy, sz * 4), with: .color(color.opacity(0.5)), lineWidth: 1)
+            }
+            // the returns, ringed — and the rings widen with the approach too (uni-sky.js:296)
+            if zoom > 0.5 && st.depth > 0 {
+                for k in 1...min(st.depth, 8) {
+                    let dr = sz + Double(k) * (4.6 * min(2.2, zoom))
+                    ctx.stroke(UniGeo.ringPath(sx, sy, dr),
+                               with: .color(color.opacity(0.28 * (1 - Double(k) / 12) * (0.62 + 0.38 * breath.value))),
+                               lineWidth: 0.9)
+                }
             }
         }
 
@@ -725,8 +771,9 @@ struct UniverseView: View {
 
         // ── the company: one mote per voice, each at ITS OWN period + phase (uni-field.js law),
         // Lalita's orbit wobbling. Descriptors are cached; here it's just cos/sin + a fill. ──
+        // `uni-sky.js:313` gates the company on `s.met` — no one has sat with an unmet world.
         let moteIn = max(0, min(1, (R - 3.4) / 5.0))          // uni-field.js:90 — they resolve
-        if moteIn > 0.02 {
+        if st.isMet, moteIn > 0.02 {
             for m in st.motes {
                 var orbit = sz * m.orbitMul
                 if m.wobble { orbit *= 1 + 0.18 * sin(t * 0.31 + st.twSeed * 6.2831) }
@@ -798,10 +845,7 @@ struct UniverseView: View {
             Gradient(stops: [.init(color: UniGeo.col(col, isMet ? 0.16 : 0.05), location: 0), .init(color: UniGeo.col(col, 0), location: 1)]),
             center: CGPoint(x: px, y: py), startRadius: R * 0.96, endRadius: R * 1.5))
 
-        guard isMet, detail >= 0.25 else {
-            planetTitle(ctx, story, rm, px, py, R)
-            return
-        }
+        guard isMet, detail >= 0.25 else { return }
 
         // ── the civilisation — it only exists where he has been ──
         let n = 3 + d * 4
@@ -914,14 +958,12 @@ struct UniverseView: View {
                 ctx.fill(UniGeo.ringPath(px + cos(pang) * R * 1.7, py + sin(pang) * R * 0.6, 2.4), with: .color(UniGeo.col([246, 240, 255], 0.9 * detail)))
             }
         }
-        planetTitle(ctx, story, rm, px, py, R)
-    }
-
-    private func planetTitle(_ ctx: GraphicsContext, _ story: Story, _ rm: UniRoom, _ px: Double, _ py: Double, _ R: Double) {
-        ctx.draw(Text(story.title).font(.lora(15, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
-                 at: CGPoint(x: px, y: py + R + 34))
-        ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(8)).foregroundStyle(Color(hex: rm.hex).opacity(0.7)),
-                 at: CGPoint(x: px, y: py + R + 56))
+        // NO LABEL IS DRAWN HERE. `uni-sky.js` never letters a planet: the sky's one name for
+        // a world is THE DOOR (`The Universe v3.html:1428-1436`, `.door{bottom:62px}`), and at
+        // the axis it is the turn's first face (`uni-deep.js:273-278`, `third===0`). A per-planet
+        // title was drawn here until the unmet handoff above was restored, at which point 120
+        // stories printed their names over each other across the whole sky — which is how it
+        // showed that it had never been the design's.
     }
 
     // THE FALL — the approached star's whole life opening in four descending layers
