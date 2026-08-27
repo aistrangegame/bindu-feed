@@ -193,6 +193,17 @@ final class AirtableService {
         return records.map(Signal.init(from:))
     }
 
+    /// The Gaia seed's own pool. Until 2026-08-27 the Door borrowed `fetchSignals()`,
+    /// which is how twelve Codex/business-ontology rows reached the threshold — roughly
+    /// one app open in seven. Its own Type closes that at the source.
+    func fetchGaiaSeeds() async throws -> [GaiaSeed] {
+        let records = try await fetch(
+            filter: "AND({Type}='Gaia Seed',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(GaiaSeed.init(from:))
+    }
+
     func fetchPracticeInvitations() async throws -> [PracticeInvitation] {
         let records = try await fetch(
             filter: "AND({Type}='Practice Invitation',{Status}='Live')",
@@ -444,7 +455,7 @@ final class AirtableService {
     /// Reflection/Flairs tracking (CLAUDE.md §10). First-person, authored as Ash.
     /// `typecast: true` is harmless here (all options already exist). Best-effort.
     @discardableResult
-    func writeVow(text: String) async throws -> AirtableRecord {
+    func writeVow(text: String, archetypeName: String, sortOrder: Int) async throws -> AirtableRecord {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
 
@@ -454,8 +465,12 @@ final class AirtableService {
             "Type": "Mirror Card",
             "Status": "Live",
             "Body": text,
-            "Archetype": "Ash",
+            "Archetype": archetypeName,
             "Card Register": "Vow",
+            // The 900 band. Runtime-written rows sort AFTER every authored one; without
+            // this the vow lands at the front (Airtable sorts empty first on asc) and
+            // shifts the Mirror's day-hash index for every past and future day.
+            "Sort Order": sortOrder,
         ]
         let payload: [String: Any] = [
             "records": [["fields": fields]],
@@ -537,6 +552,45 @@ final class AirtableService {
         }
     }
 
+    /// WHICH WORLDS HE HAS MET. `A4.1`.
+    ///
+    /// Brief §8.5 is explicit — *"Met-ness and depth derive from App Activity (`Story Met`
+    /// events)"* — and the wiring table says the same. The Universe was instead deriving it
+    /// from `commentCount > 0 || resonance > 0`, and because the field gathers on essentially
+    /// every story that lit almost the whole sky, which is the one distinction the sky exists
+    /// to make. §8.6: *"Unmet stars have no attendants — they wait faint and alone."*
+    ///
+    /// Returns the set of Feed record ids carrying a `Story Met`. Fail-safe: an error returns
+    /// an empty set, so the sky reads unmet rather than inventing a life.
+    func fetchMetStoryIDs() async -> Set<String> {
+        guard !token.isEmpty else { return [] }
+        var comps = URLComponents(string: appActivityURLString)
+        comps?.queryItems = [
+            URLQueryItem(name: "filterByFormula", value: "{Activity Type}='Story Met'"),
+            URLQueryItem(name: "pageSize", value: "100"),
+            URLQueryItem(name: "fields[]", value: "Activity Type"),
+            URLQueryItem(name: "fields[]", value: "Link to Feed"),
+        ]
+        guard let url = comps?.url else { return [] }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, response) = try await session.data(for: req)
+            try Self.validate(response: response, data: data)
+            let page = try decoder.decode(ActivityMetPage.self, from: data)
+            var out = Set<String>()
+            for r in page.records where r.fields.type == "Story Met" {
+                for id in r.fields.link ?? [] { out.insert(id) }
+            }
+            return out
+        } catch {
+            #if DEBUG
+            print("[AirtableService] fetchMetStoryIDs failed (sky reads unmet): \(error)")
+            #endif
+            return []
+        }
+    }
+
     /// Is today "met"? A day is met when a `Story Met` activity record exists
     /// dated today — a derived read of lived activity, never a stored local flag
     /// (Law 2). Fail-safe: any error returns `false` (unmet), so the Door offers
@@ -597,9 +651,11 @@ final class AirtableService {
         struct Fields: Decodable {
             let type: String?
             let date: String?
+            let link: [String]?
             enum CodingKeys: String, CodingKey {
                 case type = "Activity Type"
                 case date = "Activity Date"
+                case link = "Link to Feed"
             }
         }
     }

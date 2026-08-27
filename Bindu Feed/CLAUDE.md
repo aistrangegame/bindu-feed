@@ -168,6 +168,7 @@ Page size:  100 records max; follow `offset` token for pagination
 | Mirror Card | `selOPdnOomjXCHyJP` | `fetchMirrorCards` |
 | Signal | `selpEUJq8wI5Q1xDJ` | `fetchSignals` |
 | Practice Invitation | `selzvCCfVhU6Co8dm` | `fetchPracticeInvitations` |
+| Gaia Seed | (created 2026-08-27 via typecast) | `fetchGaiaSeeds` |
 
 **Every read gates on `{Status}='Live'`. No exceptions** (post-audit fix to `fetchStoriesByIds` and `fetchFieldCommentsByIds`). The `Status` singleSelect has Draft / Live / Archived; only Live surfaces.
 
@@ -246,6 +247,8 @@ The user's chosen name / glyph / color in Settings ("HOW YOU ARRIVE") is the **a
 
 **The two are independent.** Renaming yourself in Settings to "Mr. Ashrey" changes the display in those four places; the Airtable `Archetype` value stays `Ash` forever. Airtable reads (filters by `Archetype='Ash'`) and writes are untouched by the rename. **Renaming is safe and fully propagated.**
 
+**One exception remains:** `AirtableService.writeVow` (`:457`) still hardcodes `"Archetype": "Ash"` — the last surviving instance of the defect §10 says not to re-introduce. Resolve it the way `postComment` does.
+
 The arrival-identity fallback (when Settings is empty) is the `ArrivalSettings` struct defaults: Lalita violet `#9B6BD6` + Bindu dot `·`. The display-name fallback specifically is `"Ash"` — the canonical identity, because the struct's default name is empty by intent (not a display value).
 
 The word "Ashram" appears only in design prose (handoff docs, prototypes); it is **not in the data and not in the code**. PlayersView and TheTurningView render `archetype.name` → "Ash".
@@ -263,8 +266,12 @@ A single held card per day, terra `#C47A52`. Reads `Type='Mirror Card'`, determi
 
 One **Bindu Draw** per day reveals one alternate; spends to a hollow ring. Per-day state in `UserDefaults` (`mirror.draw.<date>.drawn` / `.idx`). No tracking, no graduation; every card is Live from day one — only which surfaces today changes.
 
+Pool is 24 Live, **12 vow / 12 koan**, one cohort, every card carrying authored `\n`. The foreign ASG Value/Mantra/Practice/Game/Tree-of-Life cohort was retired to `Archived` on 2026-08-27. `ReflectionCard` honours `\n` but cannot invent it — **the break is the form on this surface.**
+
 ### Signal Space (`.signal`)
-One ceremonial transmission per day, teal `#3AADA8`. Reads `Type='Signal'`, date-hash same as Mirror. Three phases: arriving (faint teal antenna point, "A SIGNAL IS ARRIVING") → received (lines resolve from the dark via a sentence + em-dash splitter) → gone ("The signal was received. The field is quiet now."). Signs **"— THE FIELD"** between lines and leave. One clean exit.
+One ceremonial transmission per day, teal `#3AADA8`. Reads `Type='Signal'`, date-hash same as Mirror. Three phases: arriving (faint teal antenna point, "A SIGNAL IS ARRIVING") → received (lines resolve from the dark, **one per authored `\n`**) → gone ("The signal was received. The field is quiet now."). Signs **"— THE FIELD"** between lines and leave. One clean exit.
+
+All six Signals carry authored `\n`, and their breaks fall **inside** sentences (`"You keep asking the field\nfor a sign."`). The splitter's derived path is **deleted, not kept as a fallback** — kept, it runs forever and silently, and it can never produce a break inside a sentence, which is exactly what the design authored.
 
 The Signal room (✧ teal) and the Signal Space portal (⊙ teal) share teal **deliberately** — same current at two depths.
 
@@ -274,8 +281,8 @@ The threshold every open. Five weighted kinds:
 | Kind | Weight | Source |
 |---|---|---|
 | threshold sentence | 40 | `Type=Threshold Sentence`, `Sentence Source ≠ Bindu` |
-| practice invitation | 23 | `Type=Practice Invitation` |
-| Gaia seed | 20 | `Type=Signal` (reused — the 16 transmissions ARE the field's second-person voice) |
+| practice invitation | 23 | `Type=Practice Invitation` (8 Live) — renders `Body` + `Practice Sub-line` (`fldWcHyZDGcytIdJg`). Blank sub-line → render nothing, never a substitute. |
+| Gaia seed | 20 | `Type=Gaia Seed` (6 Live, authored 2026-08-27 — its own pool, NOT Signals) |
 | story that found you | 12 | random Live `Type=Story` (unavailable on cold launch — stories aren't in bootstrap) |
 | Bindu dot | 5 | `Type=Threshold Sentence`, `Sentence Source = Bindu` |
 
@@ -343,6 +350,11 @@ Every "is this still today?" check uses **local time**, not UTC. Mirror's day-ke
 - **`Status='Live'` gate on every reader.** Including the two that Phase 9 added it to (`fetchStoriesByIds`, `fetchFieldCommentsByIds`). No exceptions.
 - **Hub on every screen except Practice Door.** PracticeDoor's tap-anywhere-to-cross gesture would conflict.
 - **Identity split.** Authorship = "Ash" (canonical, always). Display = arrival settings (device-local). See §7.
+- **Airtable holds what accumulates; `canon/` holds what was authored once.** Stories, comments, resonance, App Activity, the field surfaces and the Return write-back live in the base. The 66 stars, the 67 Light lines, the 87 Rite strings, the 5 DEALS and the 37 REGISTERS live in `canon/`, ship as a verified Swift copy, and are **never read from the base**. The base's 138 Point records are the staging area they were authored in. This line did not exist before 2026-08-27 and its absence is why the Point appeared to live in three places.
+- **Sort bands are a contract.** 201–220 Mirror · 301–306 Signal · 401–408 Practice · 501–506 Gaia Seed · 601 Threshold canon · **900+ runtime-written, always.** `writeVow` MUST write in the 900 band, or every carved Declaration sorts to the front and shifts the day-hash for every past and future day.
+- **Age comes from days, never from rank.** `Sealed At` (`fldlg5Vmh0BbpWise`) stores the date; `days = today − Sealed At` is computed **at read time**. `Ring Index` (`fldo6gU5Q9L4XDyoX`) is position only and must never derive age. A stored `days` integer is stale the next morning.
+- **An unwired slot renders absence, never an invention.** Every invented string in the app sits exactly where a content slot was never wired — the gate with no DEALS, the Light's declared-but-uncalled `beatCue`, the Universe with no `say()`. Before writing any string, grep `canon/` and the design files for the slot it would fill. **The rule cuts both ways:** deleting an authored string is the same error inverted — `touch to read` (`The Universe v3.html:1434`) is canon and ships.
+- **A voice is resolved by record, never by name.** The eleventh voice is one identity: Archetype `rec9BUbHMuylYiVwH` (Ash · ◉ · `#C47A52` · *Physical Synthesis · the one who lives it*), select option `selMpHCRiAWAVJocZ`, 198 Hz from `The Instrument v3.html:415`, timbre from `field-sound.js` `CHAR['ash']`. The display string is device-local and changeable at any time; nothing in the app may key off it.
 
 ---
 

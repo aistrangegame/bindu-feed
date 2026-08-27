@@ -11,7 +11,6 @@ import SwiftUI
 struct PointWorldView: View {
     let dimensionN: Int          // 1…7 → m1…m7
     @Binding var path: [FeedRoute]
-    @Binding var axisLocked: Bool    // told UP to InstrumentView: true while a world body / star reading is open
     let onReturn: () -> Void
 
     @EnvironmentObject private var soundEngine: SoundEngine
@@ -109,10 +108,13 @@ struct PointWorldView: View {
                 }
             }
         }
-        .onDisappear { axisLocked = false }
     }
 
-    private func syncAxisLock() { axisLocked = openStar != nil || selectedUniverse != nil }
+    /// Was: told the axis to lock itself while a reading was open. The axis is never locked
+    /// now — the vertical always walks it, which is what makes a register reachable at all
+    /// (`B0.2`). A reading that needs to keep the vertical claims it locally, the way the
+    /// fall does; nothing reaches up and disables the instrument.
+    private func syncAxisLock() { }
 }
 
 // The goodnights are said once per dimension per session, then gone.
@@ -152,10 +154,10 @@ private struct PointStarDescent: View {
                     }
                     .transition(.opacity)
                 }
-                if beat < 3 {
-                    Text("touch to walk further").font(.spaceMono(9)).tracking(2)
-                        .foregroundStyle(BinduTheme.inkTertiary).padding(.top, 4)
-                }
+                // No hint here. The design's star sheet renders all four sections AT ONCE
+                // (point-levels.js:167-171) — there is no per-tap gate, so there is no slot
+                // for a line telling him to tap. Pass 5 replaces this generic sheet entirely:
+                // the four sections arrive by each world's own gesture, never by a tap.
 
                 // Past the OPEN — the descent one true layer deeper, generated and kept.
                 if beat >= 3 {

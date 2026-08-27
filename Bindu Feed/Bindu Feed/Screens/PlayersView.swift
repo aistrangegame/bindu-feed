@@ -83,7 +83,7 @@ struct PlayersView: View {
             // item used to sit — the router has no toolbar to host either.
             ZStack {
                 Text("THE PLAYERS")
-                    .font(.spaceMono(10)).tracking(2.2).foregroundColor(BinduTheme.inkTertiary)
+                    .spaceMonoTracked(10, em: 0.14).foregroundColor(BinduTheme.inkTertiary)
                 HStack(spacing: 4) {
                     BackChevron { $path.popDissolve() }
                     HubTrigger(open: $showHub)
@@ -153,7 +153,7 @@ struct PlayersView: View {
             if let label {
                 Text(label)
                     .font(.spaceMono(9))
-                    .tracking(2.0)
+                    .tracking(1.26)
                     .foregroundColor(BinduTheme.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, BinduTheme.space20)
@@ -167,6 +167,20 @@ struct PlayersView: View {
 private struct PlayerCard: View {
     let archetype: Archetype
     let isSubstrate: Bool
+
+    /// Players View.html:155-177 — the border alpha is PER-PRESENCE, and it is the only
+    /// thing that lights the Zeroth and the Meta differently from the eight. Flattening it
+    /// to one value loses that signal entirely.
+    ///   zeroth (Bindu) `42` = 25.9%  ·  meta (Lalita) `38` = 22%
+    ///   substrate       `1C` = 11%   ·  everything else `26` = 14.9%
+    private var borderAlpha: Double {
+        if isSubstrate { return 0.11 }
+        switch archetype.name {
+        case "Bindu":  return 0.259
+        case "Lalita": return 0.22
+        default:       return 0.149
+        }
+    }
     let onTap: () -> Void
 
     @State private var pressed = false
@@ -184,7 +198,7 @@ private struct PlayerCard: View {
                         .lineLimit(1)
                     Text(archetype.role.uppercased())
                         .font(.spaceMono(8))
-                        .tracking(1.6)
+                        .tracking(0.8)
                         .foregroundColor(isSubstrate ? archetype.color.opacity(0.50) : BinduTheme.inkTertiary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
@@ -200,7 +214,7 @@ private struct PlayerCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(archetype.color.opacity(isSubstrate ? 0.18 : 0.26), lineWidth: 1)
+                    .strokeBorder(archetype.color.opacity(borderAlpha), lineWidth: 1)
             )
             .scaleEffect(pressed ? 0.96 : 1.0)
             .animation(.easeOut(duration: 0.18), value: pressed)
@@ -233,8 +247,8 @@ private struct PlayerCard: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            archetype.color.opacity(0.18),
-                            archetype.color.opacity(0.06),
+                            archetype.color.opacity(0.118),   // ${color}1E
+                            archetype.color.opacity(0.039),   // ${color}0A
                             .clear
                         ],
                         center: .center,
@@ -244,7 +258,7 @@ private struct PlayerCard: View {
                 )
                 .frame(width: size, height: size)
                 .overlay(
-                    Circle().strokeBorder(archetype.color.opacity(0.32), lineWidth: 1)
+                    Circle().strokeBorder(archetype.color.opacity(0.196), lineWidth: 1)  // ${color}32
                 )
 
             // Glyph — each presence at its own breath cadence (comp)
@@ -300,7 +314,7 @@ private struct AshramCard: View {
                         .foregroundColor(archetype.color.opacity(0.94))
                     Text(archetype.role.uppercased())
                         .font(.spaceMono(9))
-                        .tracking(1.6)
+                        .tracking(0.9)
                         .foregroundColor(BinduTheme.inkTertiary)
                     Text("the one who replies")
                         .font(.loraItalic(11))

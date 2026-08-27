@@ -133,6 +133,8 @@ struct ContentCoordinator: View {
         Task { await store.loadFoundation() }
         Task { await store.loadPracticeInvitations() }
         Task { await store.loadSignals() }
+        Task { await store.loadGaiaSeeds() }          // the Door's own pool, not the Signal pool
+        Task { await store.loadMetStories() }         // the sky's met-ness, from Story Met
         Task { await store.loadFieldSounds() }
         Task { await store.flushPendingVows() }       // retry any vow that failed to write earlier
         Task { await store.flushPendingComments() }    // retry any comment that failed to write earlier

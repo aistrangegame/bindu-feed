@@ -28,6 +28,13 @@ final class FeedStore: ObservableObject {
 
     @Published var signals: [Signal] = []
 
+    /// The Gaia seed's own pool — NOT Signals. See CLAUDE.md §8.
+    @Published var gaiaSeeds: [GaiaSeed] = []
+
+    /// Feed record ids carrying a `Story Met`. The sky's met-ness, from its specified source
+    /// (Brief §8.5) rather than the comment/resonance proxy it used to infer. `A4.1`.
+    @Published var metStoryIDs: Set<String> = []
+
     @Published var practiceInvitations: [PracticeInvitation] = []
 
     // Sound Layer — up to 3 records (Breath / Arrival / Practice Door).
@@ -76,6 +83,8 @@ final class FeedStore: ObservableObject {
         storyStats = [:]
         mirrorCards = []
         signals = []
+        gaiaSeeds = []
+        metStoryIDs = []
         practiceInvitations = []
         fieldSounds = []
         pendingStoryRefreshes = []
@@ -171,6 +180,16 @@ final class FeedStore: ObservableObject {
         archetypes.first { $0.name == name }
     }
 
+    /// The physical user's archetype record. Resolved by RECORD ID, never by name:
+    /// the display string is device-local (`ArrivalSettings`) and may be changed at any
+    /// time, while the record cannot. See CLAUDE.md §7 and §10.
+    static let ashRecordID = "rec9BUbHMuylYiVwH"
+    var ashArchetype: Archetype? { archetypes.first { $0.id == Self.ashRecordID } }
+
+    /// The next Sort Order in the runtime band. Sort bands are a contract (CLAUDE.md §10):
+    /// 900+ is always runtime-written, so a carved Declaration can never sort to the front.
+    var nextRuntimeSortOrder: Int { 900 + mirrorCards.filter { $0.sortOrder >= 900 }.count }
+
     func room(named name: String) -> Room? {
         rooms.first { $0.name == name }
     }
@@ -227,6 +246,19 @@ final class FeedStore: ObservableObject {
     func loadMirrorCards() async {
         do {
             self.mirrorCards = try await service.fetchMirrorCards()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    func loadMetStories() async {
+        self.metStoryIDs = await service.fetchMetStoryIDs()
+    }
+
+    func loadGaiaSeeds() async {
+        do {
+            self.gaiaSeeds = try await service.fetchGaiaSeeds()
             self.error = nil
         } catch {
             self.error = error
@@ -342,7 +374,7 @@ final class FeedStore: ObservableObject {
         switch kind {
         case .threshold: return thresholdSentences.contains { $0.source != "Bindu" }
         case .practice:  return !practiceInvitations.isEmpty
-        case .gaiaSeed:  return !signals.isEmpty
+        case .gaiaSeed:  return !gaiaSeeds.isEmpty
         case .story:     return !stories.isEmpty
         case .binduDot:  return thresholdSentences.contains { $0.source == "Bindu" }
         }
@@ -355,7 +387,7 @@ final class FeedStore: ObservableObject {
             guard let chosen = practiceInvitations.randomElement() else { return nil }
             return .practice(chosen)
         case .gaiaSeed:
-            guard let chosen = signals.randomElement() else { return nil }
+            guard let chosen = gaiaSeeds.randomElement() else { return nil }
             return .gaiaSeed(chosen)
         case .story:
             guard let chosen = stories.randomElement() else { return nil }
@@ -674,7 +706,11 @@ final class FeedStore: ObservableObject {
 
     func writeVow(text: String) async {
         do {
-            _ = try await service.writeVow(text: text)
+            _ = try await service.writeVow(
+                text: text,
+                archetypeName: ashArchetype?.name ?? "Ash",
+                sortOrder: nextRuntimeSortOrder
+            )
         } catch {
             // A carved Declaration is durable user content the Mirror promises to hand
             // back — never lose it on a failed write. Queue it and retry on next launch.
@@ -693,7 +729,13 @@ final class FeedStore: ObservableObject {
         guard !pending.isEmpty else { return }
         var remaining: [String] = []
         for text in pending {
-            do { _ = try await service.writeVow(text: text) }
+            do {
+                _ = try await service.writeVow(
+                    text: text,
+                    archetypeName: ashArchetype?.name ?? "Ash",
+                    sortOrder: nextRuntimeSortOrder
+                )
+            }
             catch { remaining.append(text) }
         }
         UserDefaults.standard.set(remaining, forKey: Self.pendingVowsKey)

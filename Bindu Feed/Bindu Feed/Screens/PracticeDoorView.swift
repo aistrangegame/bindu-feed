@@ -175,11 +175,23 @@ struct PracticeDoorView: View {
                 proseBody(sentence.text, italic: true)
             }
         case .practice(let p):
-            proseBody(p.body, italic: false)
-        case .gaiaSeed(let signal):
-            // The door renders the signal as one prose block — line-by-line
+            // Practice Door.html:146,155-159 — the sub-line is the last child of the
+            // SAME centred stack as the body, at the container's own gap of 22, so it
+            // rises with the body on the shared fade rather than on a timer of its own.
+            VStack(spacing: 22) {
+                proseBody(p.body, italic: false)
+                if let sub = p.subLine {
+                    Text(sub)
+                        .font(.loraItalic(14))
+                        .tracking(0.7)                     // 0.05em x 14
+                        .foregroundColor(accent.opacity(0.70))
+                        .multilineTextAlignment(.center)
+                }
+            }
+        case .gaiaSeed(let seed):
+            // The door renders the seed as one prose block — line-by-line
             // arrival is the Signal Space's ceremony, not the door's.
-            proseBody(signal.body, italic: false)
+            proseBody(seed.body, italic: false)
         case .story(let story):
             storyDoor(story)
         case .binduDot:

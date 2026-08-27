@@ -40,11 +40,11 @@ struct RoomPortalCard: View {
         .frame(maxWidth: .infinity, minHeight: h, maxHeight: h, alignment: .center)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(room.color.opacity(0.08))
+                .fill(room.color.opacity(0.051))          // ${color}0D
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(room.color.opacity(0.22), lineWidth: 0.6)
+                .strokeBorder(room.color.opacity(0.133), lineWidth: 1)   // ${color}22, 1px
         )
         .background(
             GeometryReader { proxy in

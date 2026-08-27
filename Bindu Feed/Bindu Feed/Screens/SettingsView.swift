@@ -75,7 +75,7 @@ struct SettingsView: View {
         VStack(spacing: 6) {
             Text("HOW YOU ARRIVE")
                 .font(.spaceMono(11))
-                .tracking(2.6)
+                .tracking(1.54)
                 .foregroundColor(BinduTheme.inkSecondary)
             Text("Personal to this device.")
                 .font(.loraItalic(12))
@@ -117,7 +117,7 @@ struct SettingsView: View {
 
             Text(selectedMoodName)
                 .font(.spaceMono(10))
-                .tracking(2.2)
+                .tracking(0.8)
                 .foregroundColor(selectedColor)
         }
         .padding(.vertical, BinduTheme.space12)
@@ -336,7 +336,7 @@ struct SettingsView: View {
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
             .font(.spaceMono(9))
-            .tracking(2.0)
+            .tracking(0.9)
             .foregroundColor(BinduTheme.inkSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)
     }

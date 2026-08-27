@@ -231,8 +231,8 @@ struct GameView: View {
                 .font(.lora(18, weight: .medium))
                 .foregroundColor(BinduTheme.inkPrimary)
             Text(label)
-                .font(.spaceMono(9))
-                .tracking(1.6)
+                .font(.spaceMono(8))
+                .tracking(0.56)     // 0.07em x 8 — Game View.html:526-533
                 .foregroundColor(BinduTheme.inkTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -277,7 +277,7 @@ struct GameView: View {
             VStack(spacing: 6) {
                 Text(text)
                     .font(.spaceMono(9))
-                    .tracking(1.6)
+                    .tracking(0.72)
                     .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkTertiary)
                 Rectangle()
                     .fill(active ? currentRoom.color : Color.clear)

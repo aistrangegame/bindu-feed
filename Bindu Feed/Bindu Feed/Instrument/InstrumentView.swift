@@ -31,7 +31,6 @@ struct InstrumentView: View {
     // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
     // so the axis drag stands down and the card's own scroll/pan works. Without this, the
     // outer `.highPriorityGesture` steals every drag from the presented card.
-    @State private var axisLocked = false
 
     // The travelling pitch — log-interpolated between adjacent registers (hzAt(Z)).
     private func hzAt(_ z: Double) -> Double {
@@ -49,6 +48,9 @@ struct InstrumentView: View {
         self.startZ = startZ
         self._travel = StateObject(wrappedValue: AxisTravel(startZ: Double(startZ)))
     }
+
+    /// 393 / the live frame width — see `travelGesture`.
+    @State private var designScale: Double = 1
 
     private var z: Double { travel.z }
     private var here: AxisRegister { Axis.nearest(z) }
@@ -117,9 +119,9 @@ struct InstrumentView: View {
                     .ignoresSafeArea().allowsHitTesting(false)
             }
 
-            // The header — pinned to the TOP via a full-height top-aligned frame (a VStack+Spacer
-            // collapses to centre inside this ZStack). In the Universe the ‹ leaves the sky (glides
-            // back to the Feed) and the header reads THE UNIVERSE — the free camera owns the scale.
+            // The back affordance — pinned to the TOP via a full-height top-aligned frame (a
+            // VStack+Spacer collapses to centre inside this ZStack). In the Universe the ‹ leaves
+            // the sky (glides back to the Feed).
             HStack {
                 Button {
                     if inUniverse { travel.exitToFeed() }
@@ -129,33 +131,27 @@ struct InstrumentView: View {
                         .frame(width: 40, height: 40)          // a real hit target
                 }
                 Spacer()
-                Text(inUniverse ? "THE UNIVERSE" : here.name.uppercased())
-                    .font(.spaceMono(9)).tracking(2)
-                    .foregroundStyle(here.color.opacity(0.7))
-                Spacer()
-                Color.clear.frame(width: 40, height: 40)
             }
             .padding(.horizontal, 16).padding(.top, 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
-            // the how-to line — pinned to the bottom (the Universe shows its own inside UniverseView)
-            if !inUniverse {
-                Text(atSky && !travel.crossing ? "be still — the way opens" : "pull to travel")
-                    .font(.spaceMono(8)).tracking(2)
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.3 + 0.3 * breath.value))
-                    .padding(.bottom, 20)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            }
+            // #where — the words for where he is. Never a number, never a progress bar.
+            whereBlock
         }
+        .background(GeometryReader { g in
+            Color.clear.onAppear { designScale = 393 / max(1, Double(g.size.width)) }
+                       .onChange(of: g.size.width) { _, w in designScale = 393 / max(1, Double(w)) }
+        })
         .navigationBarBackButtonHidden(true)
         .contentShape(Rectangle())
-        // High-priority so the axis drag reliably wins over the Universe's full-screen tap layer
-        // (which was intermittently stalling movement on device); a pure tap — no drag past the
-        // 4pt threshold — still falls through to the Universe's star selection.
-        // While a front card is open, `.subviews` disables this axis drag and lets the card's
-        // own ScrollView/pan gestures win; otherwise `.all` keeps the axis drag high-priority
-        // (so it still beats the Universe's full-screen tap layer, the original reason for it).
-        .highPriorityGesture(travelGesture, including: axisLocked ? .subviews : .all)
+        // NOT high-priority any more, and never locked. The vertical belongs to the axis and
+        // the horizontal to the register, so there is nothing to win: `.simultaneously` lets
+        // both run and each takes the component that is its own. Deleting `axisLocked` is
+        // what closes B0.1 (it armed only in `.onChange(of:)`, which SwiftUI does not fire on
+        // first appearance, so entering directly at the sky arrived un-armed), B0.2 (the lock
+        // made the four Universe registers mutually unreachable) and B0.3 (the dead band at
+        // the Feed edge, where the axis was locked and the Universe not yet hit-testable).
+        .simultaneousGesture(travelGesture)
         // The rope from anywhere (§7.5) — a ~1.1s long-press; the particle is always here.
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
@@ -169,14 +165,6 @@ struct InstrumentView: View {
                 })
                 .transition(.opacity)
             }
-        }
-        .onChange(of: here.key) { _, key in
-            // The Universe registers hand ALL gestures to UniverseCamera (pan/pinch/tap), so lock
-            // the axis drag and suspend the sky→Light stillness gate while it's up. Point worlds
-            // manage `axisLocked` themselves via their binding; everything else frees the axis.
-            let universe = ["sky", "region", "world", "fall"].contains(key)
-            axisLocked = universe
-            travel.setUniverseMode(universe)
         }
         .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
@@ -210,13 +198,20 @@ struct InstrumentView: View {
 
     // MARK: - Travel (the hand feeds AxisTravel; the engine owns the physics)
 
+    /// The axis drag. VERTICAL ONLY — the horizontal belongs to whichever register is up
+    /// (The Instrument v3.html:5906-5926), so this never reads `translation.width`.
+    ///
+    /// `K = 393/frameWidth` normalises the delta to the design's own frame (:5904) so a
+    /// gesture means the same thing on every screen size; without it a 430pt Pro Max
+    /// travelled ~9% further per swipe than the 393pt frame the constants were tuned on.
+    /// `C2.8`.
     private var travelGesture: some Gesture {
         DragGesture(minimumDistance: 4)
             .onChanged { v in
                 let delta = v.translation.height - lastDragY
                 lastDragY = v.translation.height
                 travel.setDown(true)
-                travel.applyDrag(Double(delta))
+                travel.applyDrag(Double(delta) * designScale)
             }
             .onEnded { _ in
                 lastDragY = 0
@@ -225,6 +220,50 @@ struct InstrumentView: View {
     }
 
     // MARK: - The ladder (#rail) — where he is on the fifteen-register axis
+
+    // #where (v3 :4348-4351 + paintWhere :4979-4992, and The Chrome.html:12-16) — a CENTRED
+    // BLOCK at top:100px, not a top-edge label. Three lines, and the register's name is in
+    // ITS OWN CASING: "the Light", "a region", "The Chamber" — never uppercased.
+    //
+    //   .top  Space Mono 9 · .3em · uppercase · rgba(237,232,227,.34)   ("III · 3 of 7")
+    //   .nm   serif 23 · -.01em · #EDE8E3 · margin-top 5
+    //   .sub  italic 13 · line-height 1.6 · rgba(237,232,227,.48) · max-width 300 · margin-top 9
+    //
+    // Repainted only when the register KEY changes (`.id`), crossfading over 1.1s — it does
+    // not re-tick with Z. Hidden on the ground, past the centre, and inside a passage.
+    private var whereBlock: some View {
+        let w = here.whereBlock
+        let hidden = abs(travel.z) < 0.42 || travel.z > 8.6 || travel.crossing
+        return VStack(spacing: 0) {
+            if let top = w.top {
+                Text(top.uppercased())
+                    .font(.spaceMono(9)).tracking(2.7)          // .3em × 9
+                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34))
+            }
+            Text(w.name)                                        // its own casing
+                .font(.lora(23))
+                .tracking(-0.23)                                // -.01em × 23
+                .foregroundStyle(BinduTheme.inkPrimary)
+                .padding(.top, w.top == nil ? 0 : 5)
+            if let sub = w.sub {
+                Text(sub)
+                    .font(.loraItalic(13))
+                    .lineSpacing(13 * 0.6)                      // line-height 1.6
+                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.48))
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 300)
+                    .padding(.top, 9)
+            }
+        }
+        .id(here.key)
+        .frame(maxWidth: .infinity)
+        .padding(.top, 100)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .opacity(hidden ? 0 : 1)
+        .animation(.easeInOut(duration: 1.1), value: here.key)
+        .animation(.easeInOut(duration: 1.1), value: hidden)
+        .allowsHitTesting(false)
+    }
 
     // The right-edge rail (v3 #rail, verbatim): 15 register ticks + 14 surface-dots between
     // them, column-reverse (register 0 the Light at the bottom, register 14 the centre at the
@@ -402,18 +441,27 @@ struct InstrumentView: View {
     @ViewBuilder private var content: some View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
-            PointWorldView(dimensionN: here.z - 1, path: $path, axisLocked: $axisLocked,
+            PointWorldView(dimensionN: here.z - 1, path: $path,
                            onReturn: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) })
         case "centre":
             PointRevealView(path: $path)
         case "gate":
             AxisGateView()
         case "sky", "region", "world", "fall":
-            // The Universe now runs its OWN free 2-D camera (UniverseCamera) — pan/pinch/tap —
-            // decoupled from the axis. The axis is locked while it's up (below), and `onExit`
-            // glides back to the Feed.
-            UniverseView(register: here, path: $path,
-                         onFall: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) },
+            // The Universe's scale IS the axis (`axisZ`), so nothing is locked and nothing
+            // competes: the vertical walks the axis, the horizontal is the register's own.
+            // `onDrawIn` is the tap's inward impulse — the Universe asks, the axis travels.
+            UniverseView(register: here,
+                         axisZ: travel.z,
+                         onDrawIn: { travel.drawIn($0) },
+                         onHandVertical: { travel.handVerticalToRegister($0) },
+                         path: $path,
+                         onFall: { story in
+                             // It carries the story he descended into. It used to pass `nil`,
+                             // and the Return then fell back to its daily rotation — he
+                             // arrived somewhere he had not been going. `B5.3`.
+                             $path.pushDissolve(FeedRoute.returnCeremony(story))
+                         },
                          onExit: { travel.exitToFeed() })
         case "feed":
             AxisFeedSeam { if !path.isEmpty { $path.popToRootDissolve() } }
@@ -459,31 +507,34 @@ private struct ThroatView: View {
 
 // The gate (Z+1) — the deal, the threshold inward. Names the seven dimensions that lie ahead
 // so he knows there is somewhere to go (wayfinding: the gate was a dead end before).
+/// The gate (Z+1).
+///
+/// It used to draw four things, all of them invented: its own name (which `#where` now
+/// renders from the register), a sub-line — *"everything you know, arranged"* where canon
+/// is **"the deal"** — an instruction, *"keep pulling inward"*, and a listing of the seven
+/// dimension names. None exists in any design file.
+///
+/// What belongs here is the gate's DEAL: five canon strings at `canon/point-content.js:422-428`,
+/// pinned to `DEALS[0]` by `The Instrument v3.html:5098`. The register is literally named
+/// *"the gate · the deal"* and the deal is the one thing it did not say (`D2.1`, BLOCKER).
+///
+/// Porting them is Pass 5 (`HANDOFF-BUILD-LIST.md` §3). Until then this renders ABSENCE —
+/// which is the rule: an unwired slot renders nothing, never an invention.
 private struct AxisGateView: View {
-    var body: some View {
-        VStack(spacing: 12) {
-            Text("the gate").font(.lora(20)).italic().foregroundStyle(Color(hex: "#C9A07A"))
-            Text("everything you know, arranged").font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-            Text("keep pulling inward")
-                .font(.spaceMono(9)).tracking(2).foregroundStyle(Color(hex: "#C9A07A").opacity(0.85))
-            Text("the Point · the Turn · the Veil · the Chamber\nthe Mirrors · the Return · the Dance")
-                .font(.spaceMono(8)).tracking(1).lineSpacing(3)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
-                .padding(.top, 4)
-        }
-    }
+    var body: some View { EmptyView() }
 }
 
+/// The Feed seam (Z 0).
+///
+/// The name and the sub-line are `#where`'s now — the register carries them, and canon for
+/// this one is **"the turn"**, not the *"life size — the turn"* that was invented here. Both
+/// duplicated lines are gone; what is left is the affordance, which is a door, not a label.
 private struct AxisFeedSeam: View {
     let onEnter: () -> Void
     var body: some View {
-        VStack(spacing: 14) {
-            Text("the Feed").font(.lora(20, weight: .medium)).foregroundStyle(BinduTheme.colorBindu)
-            Text("life size — the turn").font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-            Button(action: onEnter) {
-                Text("enter the feed ›").font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.colorBindu)
-            }
+        Button(action: onEnter) {
+            Text("enter the feed ›")
+                .font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.colorBindu)
         }
     }
 }

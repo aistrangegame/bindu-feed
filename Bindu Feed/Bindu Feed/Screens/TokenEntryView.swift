@@ -12,6 +12,11 @@ struct TokenEntryView: View {
     // content, no PAT needed), so both can be verified without a live token.
     @State private var showInstrument = false
     @State private var showRite = false
+    /// Where the Instrument door opens. `HANDOFF-VERIFICATION.md` requires EVERY entry path
+    /// to be walked, not one — a prior session verified only the Feed→Universe drag and
+    /// missed the menu path, which is how `B0.1` shipped. These are the axis depths the Turn
+    /// deep-links to (`A Strange Feed.html:426-428`): the sky, the Light, the Point.
+    @State private var demoStartZ = 0
     @State private var demoPath = [FeedRoute]()
     #endif
 
@@ -72,12 +77,24 @@ struct TokenEntryView: View {
                 .disabled(!canBegin)
 
                 #if DEBUG
-                Button { showInstrument = true } label: {
+                Button { demoStartZ = 0; showInstrument = true } label: {
                     Text("⟿ walk the Instrument")
                         .font(.spaceMono(10)).tracking(2)
                         .foregroundColor(BinduTheme.inkTertiary)
                         .padding(.top, BinduTheme.space16)
                 }
+                // The three deep-link entries the Turn offers. Each ARRIVES at its register
+                // rather than travelling to it, which is the case `.onChange` never saw.
+                HStack(spacing: 14) {
+                    ForEach([("sky", -4), ("light", -5), ("point", 1)], id: \.0) { name, z in
+                        Button { demoStartZ = z; showInstrument = true } label: {
+                            Text("⟿ \(name)")
+                                .font(.spaceMono(9)).tracking(1.8)
+                                .foregroundColor(BinduTheme.inkTertiary.opacity(0.7))
+                        }
+                    }
+                }
+                .padding(.top, BinduTheme.space8)
                 Button { showRite = true } label: {
                     Text("⟿ the Rite")
                         .font(.spaceMono(10)).tracking(2)
@@ -94,7 +111,7 @@ struct TokenEntryView: View {
         #if DEBUG
         .fullScreenCover(isPresented: $showInstrument) {
             ZStack(alignment: .topTrailing) {
-                InstrumentView(path: $demoPath, startZ: 0)
+                InstrumentView(path: $demoPath, startZ: demoStartZ)
                 Button { showInstrument = false } label: {
                     Text("✕").font(.spaceMono(15))
                         .foregroundColor(BinduTheme.inkSecondary)

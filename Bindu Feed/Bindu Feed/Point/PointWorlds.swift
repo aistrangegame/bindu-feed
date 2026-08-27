@@ -158,7 +158,9 @@ struct PointUniversesView: View {
                 .padding(.top, 46).allowsHitTesting(false)
                 VStack {
                     Spacer()
-                    Text("a universe opens · a constellation within")
+                    // Canon — The Point v9.html:890. The slot exists; the invented line
+                    // that was here did not.
+                    Text("enter a universe")
                         .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
                         .padding(.bottom, 40)
                 }
@@ -205,9 +207,12 @@ private struct WorldPoint: View {
                                 if pressing { lastStir = Date() }
                             }, perform: { onOpen(p.star); dwell = nil })
                     }
-                    Text(still > 0.6 ? "hold one until it opens" : "be still · the points come to you")
-                        .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4))
-                        .position(x: geo.size.width / 2, y: geo.size.height - 40)
+                    // World I's prompt is canon — `TOUCH ONE · THEN LET GO AND STAY`
+                    // (world-one.js:183), and its four states at :185-186. It is deliberately
+                    // NOT ported here: it names the design's gesture (rest and stay, where
+                    // touching *reverses* progress at 0.55/s) and this world still opens on a
+                    // 0.9s long-press. Canon words over the wrong gesture is still a lie.
+                    // Pass 5 brings the prompt and the gesture together.
                 }
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastStir = Date() })

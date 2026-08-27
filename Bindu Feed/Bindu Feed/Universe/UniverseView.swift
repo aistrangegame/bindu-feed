@@ -26,6 +26,10 @@ private struct UStar {
     let depth: Int
     let color: Color
     let twSeed: Double
+    /// The star's OWN radius, in world units — `pr: 7 + hash(k*29.7)*4` (uni-rooms.js:303),
+    /// so 7…11. Screen radius is `pr · zoom`, which is the whole of `B4.1`: the point of
+    /// light at the sky and the planet you land on are one object at two distances.
+    let pr: Double
     let motes: [UMote]
 }
 private struct ULane {
@@ -37,19 +41,36 @@ private struct UDust { let hx: Double, hy: Double; let layer: Int }
 
 struct UniverseView: View {
     let register: AxisRegister
+    /// The live axis Z. THE SCALE. `UniverseCamera.zoom` is derived from it every frame;
+    /// nothing here mutates a zoom of its own. See UniverseCamera's header.
+    let axisZ: Double
+    /// Ask the axis to move — the tap's inward impulse (The Universe v3.html:1664,1668).
+    /// The Universe never moves the scale itself; it asks, and the axis travels.
+    var onDrawIn: ((Double) -> Void)? = nil
+    /// Tell the axis to stand down while the fall owns the vertical, and to take it back the
+    /// moment the fall closes. Without this, one drag drives BOTH the descent and the axis —
+    /// the axis reclaiming z mid-fall, which would walk him out of the register he is
+    /// descending inside.
+    var onHandVertical: ((Bool) -> Void)? = nil
     @Binding var path: [FeedRoute]
-    let onFall: () -> Void
+    /// The fall completed and he MEANT it — carries the story he descended into, never nil.
+    let onFall: (Story) -> Void
     /// Leave the Universe back to the Feed (wired by InstrumentView — unlocks + glides the axis).
     var onExit: (() -> Void)? = nil
 
     // THE FREE 2-D CAMERA — pan / pinch / tap-to-fly. Replaces the welded 1-D axis scroll.
     @StateObject private var cam = UniverseCamera()
     @State private var lastPan: CGSize = .zero       // per-drag incremental tracking
-    @State private var lastMag: CGFloat = 1          // per-pinch incremental tracking
-    @State private var fallFired = false             // one-shot guard for the zoom-driven fall
+    /// The live frame, so the crossing can resolve which world he descended into without
+    /// reaching into a GeometryReader it does not own.
+    @State private var frameSize: CGSize = .zero
+    /// The star whose life is open. nil = no fall; the vertical stays with the axis.
+    @State private var fallStarID: String?
+
 
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
+    @EnvironmentObject private var soundEngine: SoundEngine
 
     // The structure lens — 0 lit sky … 1 the belief-lattice thrown over the regions.
     @State private var lens: Double = 0
@@ -61,8 +82,20 @@ struct UniverseView: View {
     @State private var lanes: [ULane] = []
     @State private var dust: [UDust] = []
 
-    // The reading scale is derived from the camera's zoom ALONE (bands): 0 sky·1 region·2 world·3 fall.
-    private var scale: Int { cam.scale }
+    // The reading distances are OVERLAPPING BANDS, not a scale integer. `uni-sky.js:18-23`.
+    // Nothing branches on them; they only weight alphas, which is why one continuous
+    // descent is possible at all. `B2.1`.
+    private var bands: UniverseCamera.Bands { cam.bands }
+    /// Wayfinding only — never a mode. `The Universe v3.html:1531`.
+    private var scaleName: String { cam.scaleName }
+    /// A fall is OPEN — on one particular star, chosen. Only then does the vertical belong to
+    /// the register rather than the axis (:1621, "in the fall, pulling up is descending").
+    ///
+    /// This is not the same as standing at the fall's register. Keying it to Z alone claimed
+    /// the vertical the moment he arrived at Z −1, which walled off everything beyond it —
+    /// the same class of trap `axisLocked` was, one register wide. `The Universe v3.html:1668`
+    /// is explicit: the fall opens from a star (`R > 34 && depth > 0 → openFall(hit)`).
+    private var inFall: Bool { fallStarID != nil }
 
     var body: some View {
         GeometryReader { geo in
@@ -72,8 +105,10 @@ struct UniverseView: View {
                     Canvas { ctx, size in draw(ctx, size, t) }
                         .allowsHitTesting(false)          // the Canvas never eats hits
                 }
+                .onAppear { frameSize = geo.size }
+                .onChange(of: geo.size) { _, sz in frameSize = sz }
                 // The structure lens toggle — only where the regions are legible (sky/region).
-                if cam.scale <= 1 {
+                if bands.world < 0.4 {
                     VStack {
                         Spacer()
                         HStack {
@@ -87,53 +122,76 @@ struct UniverseView: View {
                         }
                     }
                 }
-                // the quiet how-to (fades with the register)
-                VStack {
-                    Spacer()
-                    Text(cam.scale >= 2 ? "a world — keep zooming to fall in" : "drag to fly · pinch to zoom · tap to approach")
-                        .font(.spaceMono(8)).tracking(2)
-                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4))
-                        .padding(.bottom, 40)
-                }
+                // No standing how-to. The design has none: `say()` (The Universe v3.html:1470-1474)
+                // is transient — 3400ms, then gone — and it names WHERE he is, never how to move.
+                // The instrument is built on the claim that discovery is the content.
             }
             .contentShape(Rectangle())
             // The free camera's three gestures. These are the Universe's own (subview) gestures;
-            // InstrumentView locks the axis drag (`including: .subviews`) while the Universe is up,
-            // so pan/pinch here win instead of the background axis travel.
+            // THE LAW (The Instrument v3.html:5906-5926): vertical always walks the axis;
+            // horizontal is the register's own gesture. So this drag takes the HORIZONTAL
+            // only and lets the vertical fall through to the axis behind it. There is no
+            // lock, and nothing competes: the two axes of the hand do two different jobs.
+            //
+            // In the fall the vertical is the register's own gesture — pulling UP descends
+            // (:1621) — so there it is claimed here instead.
             .gesture(
                 DragGesture(minimumDistance: 2)
                     .onChanged { v in
                         let dx = v.translation.width - lastPan.width
                         let dy = v.translation.height - lastPan.height
                         lastPan = v.translation
-                        cam.panBy(Double(dx), Double(dy), geo.size)
+                        if inFall {
+                            cam.descendBy(dx: Double(dx), dy: Double(dy))
+                        } else {
+                            cam.panBy(Double(dx), 0, geo.size)
+                        }
                     }
-                    .onEnded { v in
-                        cam.flingPan(Double(v.predictedEndTranslation.width - v.translation.width),
-                                     Double(v.predictedEndTranslation.height - v.translation.height), geo.size)
+                    .onEnded { _ in
+                        cam.endPan()
+                        cam.stopAsking()
                         lastPan = .zero
                     }
-            )
-            .simultaneousGesture(
-                MagnifyGesture()
-                    .onChanged { v in
-                        let f = lastMag == 0 ? 1 : v.magnification / lastMag
-                        lastMag = v.magnification
-                        cam.pinchBy(Double(f))
-                    }
-                    .onEnded { _ in lastMag = 1 }
             )
             .simultaneousGesture(SpatialTapGesture().onEnded { v in handleTap(v.location, geo.size) })
         }
         .ignoresSafeArea()
         .onAppear {
-            cam.reset()          // enter at the sky, whole field visible
+            cam.reset()          // the focus only — the scale is the axis's
+            cam.setAxisZ(axisZ)
             cam.start()
             rebuild()
         }
+        .onChange(of: axisZ) { _, z in
+            cam.setAxisZ(z)
+            // Travelling away from the fall's register closes it — the axis always wins, and
+            // a fall is never something he can be stuck inside.
+            if z < UniverseCamera.axisZNear - 0.6, fallStarID != nil {
+                fallStarID = nil
+                cam.setInFall(false)
+                onHandVertical?(false)
+            }
+        }
+        // THE CROSSING. It fires here and only here — when the ring has closed, which only
+        // happens while the hand keeps asking. Never from inside `draw()`, never on a zoom
+        // threshold, and it carries the story he descended into. `B5.3`.
+        .onChange(of: cam.mouthMeant) { _, meant in
+            guard meant else { return }
+            cam.clearMouthMeant()
+            onHandVertical?(false)
+            guard let id = fallStarID,
+                  let story = store.stories.first(where: { $0.id == id })
+            else { return }
+            soundEngine.riteThreshold(hz: 126, dur: 9)          // DOORS[0].tone — spine-axis.js:62
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { onFall(story) }
+        }
         .onChange(of: store.stories) { rebuild() }
+        .onChange(of: store.metStoryIDs) { rebuild() }   // met-ness arrives async; relight
         .onChange(of: store.archetypes.count) { rebuild() }
-        .onDisappear { cam.stop(); lensTimer?.invalidate() }
+        .onDisappear {
+            cam.stop(); lensTimer?.invalidate()
+            onHandVertical?(false)      // never leave the axis standing down
+        }
     }
 
     // MARK: - Cache building (runs on data change, NOT per frame)
@@ -166,7 +224,8 @@ struct UniverseView: View {
                     }
                 }
                 byRegion[ri].append(UStar(id: s.id, wx: sw.0, wy: sw.1, isMet: isMet,
-                                          depth: depth(s), color: color, twSeed: Double(i), motes: motes))
+                                          depth: depth(s), color: color, twSeed: Double(i),
+                                          pr: 7 + hash(s.id + "pr") * 4, motes: motes))
             }
         }
         starsByRegion = byRegion
@@ -249,30 +308,134 @@ struct UniverseView: View {
         }
     }
 
-    // Tap the sky: fly the camera toward the nearest star and draw inward one step (design
-    // tap() — fly-to + zoom). Tapping empty space nudges toward that point and zooms a touch.
-    // Continued zoom on a lived-on world reaches the fall; nothing snaps.
+    /// A tap. `The Universe v3.html:1638-1673`.
+    ///
+    /// The design does NOT ease to a fitted zoom — `uni-sky.js:1033`, "nothing snaps, nothing
+    /// zooms to fit". It recentres by a fixed FRACTION, instantly, and hands the SCALE a small
+    /// impulse which the axis then carries. The old `flyTo(zoom: max(zoom*1.7, 3.4))` was a
+    /// zoom-to-fit by another name, and it orphaned the whole inertia model.
+    ///
+    /// The hit radius grows with the approach — `max(16, pr·z·1.2)` — so a far star stays
+    /// tappable and a near one is easy to hit.
     private func handleTap(_ loc: CGPoint, _ size: CGSize) {
-        // Leave the top-left corner to the ‹ header chevron (the exit) so a tap there doesn't
-        // also fly the camera; likewise the bottom-right "the structure" toggle.
+        // Leave the top-left corner to the ‹ chevron and the bottom-right to the lens toggle.
         if loc.y < 78 { return }
+
+        // The door takes precedence: if a world is offering its story, the tap reads it.
+        if let d = doorway(size), hypot(Double(loc.x) - d.px, Double(loc.y) - d.py) < 150 {
+            openStory(d.story, room: d.room)
+            return
+        }
+
         let zoom = cam.zoom, focus = CGPoint(x: cam.fx, y: cam.fy)
-        var best: (wx: Double, wy: Double, d: Double)?
+        var best: (st: UStar, d: Double)?
         for arr in starsByRegion {
             for st in arr {
                 let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
+                let R = max(16, st.pr * zoom * 1.2)
                 let dd = Double(hypot(sp.x - loc.x, sp.y - loc.y))
-                if dd < 46, best == nil || dd < best!.d { best = (st.wx, st.wy, dd) }
+                if dd < R, best == nil || dd < best!.d { best = (st, dd) }
             }
         }
-        if let b = best {
-            let nx = (b.wx + 490) / 980, ny = (b.wy + 1030) / 1930
-            cam.flyTo(fx: nx, fy: ny, zoom: min(UniverseCamera.ZMAX, max(zoom * 1.7, 3.4)))
-        } else {
+        guard let b = best else {
+            // empty sky — recentre halfway on the point, and draw in a touch
             let nx = focus.x + (Double(loc.x) / size.width - 0.5) / zoom
             let ny = focus.y + (Double(loc.y) / size.height - 0.5) / zoom
-            cam.flyTo(fx: nx, fy: ny, zoom: min(UniverseCamera.ZMAX, zoom * 1.28))
+            cam.recentre(fx: nx, fy: ny, fraction: 0.5)
+            onDrawIn?(0.06)
+            return
         }
+        // `The Universe v3.html:1668` — a star already large and lived-on opens its fall
+        // instead of drawing closer. Everything else recentres and draws in.
+        let R = b.st.pr * zoom
+        if R > 34, b.st.depth > 0 {
+            fallStarID = b.st.id
+            cam.setInFall(true)
+            onHandVertical?(true)
+            soundEngine.riteThreshold(hz: room(story(for: b.st)?.room ?? "").hz, dur: 9)
+            return
+        }
+        let nx = (b.st.wx + 490) / 980, ny = (b.st.wy + 1030) / 1930
+        cam.recentre(fx: nx, fy: ny, fraction: 0.7)
+        onDrawIn?(0.085)
+    }
+
+    private func story(for st: UStar) -> Story? { store.stories.first { $0.id == st.id } }
+
+    // MARK: - The door into a story (B6.1)
+
+    /// A world offers its story once he is standing close enough to see its lights.
+    /// `The Universe v3.html:1549-1573` — four conditions, all required, and an unmet world
+    /// offers nothing. Its silence is the point.
+    private struct Doorway { let story: Story; let room: UniRoom; let px: Double; let py: Double }
+
+    private func doorway(_ size: CGSize) -> Doorway? {
+        let zoom = cam.zoom, focus = CGPoint(x: cam.fx, y: cam.fy)
+        guard let fs = nearestStarToCenter(size, zoom: zoom, focus: focus) else { return nil }
+        guard fs.star.isMet else { return nil }
+        guard let story = store.stories.first(where: { $0.id == fs.star.id }),
+              !story.title.isEmpty else { return nil }
+        let R = fs.star.pr * zoom
+        let sp = worldToScreen(fs.star.wx, fs.star.wy, size, zoom: zoom, focus: focus)
+        let off = hypot(Double(sp.x) - size.width / 2, Double(sp.y) - size.height * 0.44)
+        guard R > 36, off < size.width * 0.42 else { return nil }
+        return Doorway(story: story, room: uniRooms[fs.ri], px: Double(sp.x), py: Double(sp.y))
+    }
+
+    /// Cross into the story. `threshold(room.hz, 6)`, then 620ms, then the surface itself —
+    /// which is `StoryDetailView`, bit-exact and protected: we route to it, we do not touch it.
+    private func openStory(_ story: Story, room: UniRoom) {
+        soundEngine.riteThreshold(hz: room.hz, dur: 6)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.62) {
+            $path.pushDissolve(FeedRoute.story(story))
+        }
+    }
+
+    /// The door's three lines. `The Universe v3.html:1428-1436`, and the third is canon:
+    /// `<span class="go">touch to read</span>` at :1434, styled at :1394 — Space Mono 8px,
+    /// letter-spacing .22em, uppercase, rgba(237,232,227,.4).
+    ///
+    /// It is NOT one of the invented instruction strings the sweep removed. Those exist
+    /// nowhere in the design; this one is authored, and deleting it would be the same error
+    /// inverted.
+    private func drawDoor(_ ctx: GraphicsContext, _ d: Doorway) {
+        let y = d.py + 96
+        ctx.draw(Text("\(d.story.codexId) · \(d.room.id.uppercased())")
+                    .font(.spaceMono(8)).foregroundStyle(BinduTheme.inkTertiary),
+                 at: CGPoint(x: d.px, y: y))
+        ctx.draw(Text(d.story.title)
+                    .font(.lora(21, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
+                 at: CGPoint(x: d.px, y: y + 24))
+        ctx.draw(Text("TOUCH TO READ")
+                    .font(.spaceMono(8)).foregroundStyle(BinduTheme.inkPrimary.opacity(0.4)),
+                 at: CGPoint(x: d.px, y: y + 48))
+    }
+
+    /// The mouth of the return, and the consent that opens it.
+    ///
+    /// `B5.3`. The ring closes only WHILE the hand keeps asking and stops the instant he
+    /// stops; release and it holds and breathes. It never fires itself. The old code called
+    /// `onFall()` from inside `draw()` the moment zoom crossed a threshold — a ceremony
+    /// entered by pinching too far, carrying `nil` where the story should have been.
+    private func drawMouth(_ ctx: GraphicsContext, _ size: CGSize, d: Double) {
+        let open = max(0, min(1, (d - 0.84) / 0.12))          // uni-fall.js:24 seg(.84,.96)
+        guard open > 0.01 else { return }
+        let cx = size.width / 2, cy = size.height * 0.62
+        let r = 34.0
+        ctx.stroke(UniGeo.ringPath(cx, cy, r),
+                   with: .color(BinduTheme.inkTertiary.opacity(0.20 * open)), lineWidth: 1)
+        if cam.mouthPull > 0.01 {
+            var arc = Path()
+            arc.addArc(center: CGPoint(x: cx, y: cy), radius: r, startAngle: .degrees(-90),
+                       endAngle: .degrees(-90 + 360 * cam.mouthPull), clockwise: false)
+            ctx.stroke(arc, with: .color(Color(hex: "#E5533C").opacity(0.85)), lineWidth: 2)
+        }
+        ctx.draw(Text("You came down to it yourself.")
+                    .font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary.opacity(open)),
+                 at: CGPoint(x: cx, y: cy - 64))
+        ctx.draw(Text("OPEN THE RETURN")
+                    .font(.spaceMono(9)).foregroundStyle(Color(hex: "#E5533C").opacity(0.7 * open)),
+                 at: CGPoint(x: cx, y: cy + r + 26))
     }
 
     // MARK: - Data helpers
@@ -281,9 +444,16 @@ struct UniverseView: View {
         let r = story.resonance
         return r >= 85 ? 8 : (r >= 60 ? 5 : (r >= 44 ? 3 : (r >= 28 ? 1 : 0)))
     }
-    private func met(_ story: Story) -> Bool {
-        store.stats(for: story.id).commentCount > 0 || story.resonance > 0
-    }
+    /// `A4.1`. Brief §8.5: *"Met-ness and depth derive from App Activity (`Story Met`
+    /// events)"*. It used to read `commentCount > 0 || resonance > 0` — a proxy that lights
+    /// nearly every star, because the field gathers on essentially all of them, and so erases
+    /// the one distinction the sky exists to draw.
+    ///
+    /// EXPECT TWO LIT STARS. There are two `Story Met` records against ~120 stories. That is
+    /// §8.6 working — *"the sky itself shows the field's slow settling around a life"* — not
+    /// a bug, and not something to soften with a fallback.
+    private func met(_ story: Story) -> Bool { store.metStoryIDs.contains(story.id) }
+
     private func room(_ name: String) -> UniRoom { uniRooms.first { $0.id == name } ?? uniRooms[6] }
     private func hash(_ s: String) -> Double {
         var h: UInt32 = 2166136261
@@ -326,31 +496,14 @@ struct UniverseView: View {
         let focusRoom = uniRooms[min(max(0, nearestRegionToCenter(focus)), uniRooms.count - 1)]
         let focusId = fstar?.star.id
 
-        // ── the fall: keep zooming a lived-on world to fill the frame → its life opens, then Return ──
-        if scale == 3 {
-            if let s = focusStory {
-                let d = max(0.05, min(0.95, (zoom - 6.2) / (UniverseCamera.ZMAX - 6.2)))
-                drawFall(ctx, size, story: s, rm: (fstar.map { uniRooms[$0.ri] } ?? focusRoom), t: t, d: d)
-                if zoom > UniverseCamera.ZMAX * 0.94, depth(s) > 0, !fallFired {
-                    fallFired = true; DispatchQueue.main.async { onFall() }
-                }
-            }
-            return
-        }
-        if zoom < UniverseCamera.ZMAX * 0.8, fallFired { fallFired = false }
-        // ── the world scale: one story becomes an inhabited planet ──
-        if scale == 2, let s = focusStory {
-            drawPlanet(ctx, size, story: s, rm: (fstar.map { uniRooms[$0.ri] } ?? focusRoom), t: t, b: b)
-            return
-        }
-
         // ── the deep sky: a coloured ground + three parallax depths of dust, so the sky has
         // thickness (uni-sky.js) — drawn behind everything at the sky/region distances ──
         drawDeepSky(ctx, size, t, focus: focus, zoom: zoom)
 
-        // ── region weather: the focus region's own field, when you're inside it ──
-        if scale >= 1 {
-            RegionForm.field(ctx, focusRoom, W, H, t: t, a: 0.5, c: focusRoom.rgb)
+        // ── region weather: weighted by the band, never gated by an if (uni-sky.js:187-203).
+        // It used to snap on at a scale boundary; now it comes up with the region itself. ──
+        if bands.region > 0.02 {
+            RegionForm.field(ctx, focusRoom, W, H, t: t, a: bands.region * 0.85, c: focusRoom.rgb)
         }
 
         // ── the thirteen regions: each its own figure, its stars strung on the armature ──
@@ -358,7 +511,7 @@ struct UniverseView: View {
         // the belief-lattice reads through them (uni-sky.js: the light sinks back, it isn't
         // just veiled over). Colour flattens toward bone as lens→1.
         let litDim = 1 - lens * 0.55
-        let armA = (scale == 0 ? 0.9 : 0.42) * litDim
+        let armA = max(0, min(1, (2.6 - zoom) / 1.6)) * 0.72 * litDim   // uni-sky.js:220
         for (ri, rm) in uniRooms.enumerated() {
             let c = regionCenter(rm, size, zoom: zoom, focus: focus)
             let color = Color(hex: rm.hex)
@@ -373,21 +526,38 @@ struct UniverseView: View {
             RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: armA,
                            c: UniGeo.mix(rm.rgb, UniGeo.BONE, lens * 0.5))
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
-            if scale == 0 {
-                ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(6)).foregroundStyle(color.opacity(0.28)),
-                         at: CGPoint(x: c.x, y: c.y - armR * 0.62))
+            let nameShow = max(0, min(1, (0.60 - zoom) / 0.24))          // uni-sky.js:320-330
+            if nameShow > 0.02 {
+                ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(9))
+                            .foregroundStyle(color.opacity(0.44 * nameShow)),
+                         at: CGPoint(x: c.x, y: c.y + rm.r * zoom / 980 * W * 0.10 + 4))
             }
             // its stars — from the cache (no per-frame filtering / hashing / archetype scans)
             if ri < starsByRegion.count {
                 for st in starsByRegion[ri] {
                     let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
-                    drawStar(ctx, at: sp, star: st, t: t, focusId: focusId)
+                    drawStar(ctx, size, at: sp, star: st, t: t, zoom: zoom, focusId: focusId)
                 }
             }
         }
 
         // ── the travellers: life on the move between his met worlds (uni-rooms LANES) ──
         drawLanes(ctx, size, zoom: zoom, focus: focus, t: t)
+
+        // ── THE FALL — a star's whole life, opened. It composites OVER the same scene
+        // rather than replacing it (uni-sky.js:332 — the fall renders on top; the sky does
+        // not stop existing). Its descent is `desc`, its own gesture with its own momentum,
+        // NOT derived from zoom. The old `d` came off zoom and capped at 0.807, which put
+        // layer four (`mouth`, seg(0.84, 0.96)) permanently out of reach and left the WORDS
+        // table — C-1052's four verbatim paragraphs — unreferenced anywhere in the app.
+        // `B5.1` `B5.2`. ──
+        if inFall, let fs = fallStarID.flatMap({ id in store.stories.first { $0.id == id } }) {
+            drawFall(ctx, size, story: fs, rm: (fstar.map { uniRooms[$0.ri] } ?? focusRoom), t: t, d: cam.desc)
+            drawMouth(ctx, size, d: cam.desc)
+        } else if let d = doorway(size) {
+            // ── THE DOOR. A world turns its name into the light. `B6.1`. ──
+            drawDoor(ctx, d)
+        }
 
         // ── the structure lens: the lit sky sinks back and the belief-lattice is thrown over ──
         if lens > 0.02 {
@@ -397,7 +567,7 @@ struct UniverseView: View {
                      with: .color(Color(.sRGB, red: 8 / 255, green: 7 / 255, blue: 11 / 255, opacity: 0.20 * lens)))
             // Names read only once you've come in to a region (comp fades them in on zoom-in);
             // at full sky, thirteen labelled beliefs would crowd the whole field.
-            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: scale >= 1)
+            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: zoom > 0.85 && zoom < 6)
         }
     }
 
@@ -408,12 +578,12 @@ struct UniverseView: View {
     private func drawLanes(_ ctx: GraphicsContext, _ size: CGSize, zoom: Double, focus: CGPoint, t: Double) {
         guard !lanes.isEmpty else { return }
         let W = size.width, H = size.height
-        let bReg = scale >= 1 ? 1.0 : 0.0, bSky = scale == 0 ? 1.0 : 0.0
+        let B = bands   // uni-sky.js:256 — vis = local ? reg*0.9 + wld*0.4 : max(sky*0.9, 0.22)
         for ln in lanes {
             let ap = worldToScreen(ln.awx, ln.awy, size, zoom: zoom, focus: focus)
             let bp = worldToScreen(ln.bwx, ln.bwy, size, zoom: zoom, focus: focus)
             let far = ln.local ? 0.0 : 1.0
-            let vis = ln.local ? (bReg * 0.9) : max(bSky * 0.9, 0.22)
+            let vis = ln.local ? (B.region * 0.9 + B.world * 0.4) : max(B.sky * 0.9, 0.22)
             if vis < 0.03 { continue }
             if max(ap.x, bp.x) < -60 || min(ap.x, bp.x) > W + 60 || max(ap.y, bp.y) < -60 || min(ap.y, bp.y) > H + 60 { continue }
             let mx = (ap.x + bp.x) / 2, my = (ap.y + bp.y) / 2
@@ -505,34 +675,64 @@ struct UniverseView: View {
     // one star on the sky — met stars carry a halo, depth rings, and their company in orbit.
     // All per-star data (met, depth, colour, mote descriptors) is precomputed in the cache; this
     // does only the per-frame arithmetic + fills.
-    private func drawStar(_ ctx: GraphicsContext, at p: CGPoint, star st: UStar, t: Double, focusId: String? = nil) {
+    /// A star, at whatever distance he is standing.
+    ///
+    /// `B4.1`, and the whole of the continuity. The radius is `pr · zoom` — the star's own
+    /// world size, projected — so it grows without bound as he comes in. It used to be a
+    /// FIXED 2.3 screen points at every distance, and that is precisely why the draw path
+    /// needed `if scale == 2 { drawPlanet; return }`: a star that never grows can only
+    /// become a planet by being swapped for one. Grow it, and the swap has nothing to do.
+    ///
+    /// The point-of-light branch itself still scales with zoom (uni-sky.js:291-309) — even
+    /// far away, nothing here is fixed.
+    private func drawStar(_ ctx: GraphicsContext, _ size: CGSize, at p: CGPoint, star st: UStar,
+                          t: Double, zoom: Double, focusId: String? = nil) {
         let sx = p.x, sy = p.y
         let color = st.color
         let tw = 0.6 + 0.4 * abs(sin(t * 0.6 + st.twSeed))
-        let base = st.isMet ? 0.9 : 0.26
-        let sz = st.isMet ? 2.3 : 1.3
-        ctx.fill(UniGeo.ringPath(sx, sy, sz), with: .color(color.opacity(base * tw)))
-        guard st.isMet else { return }
-        ctx.fill(UniGeo.ringPath(sx, sy, sz * 3), with: .color(color.opacity(0.06 * tw)))
+        let R = st.pr * zoom                                  // ← the mechanism
+        guard st.isMet else {
+            // an unmet world offers nothing, and stays a point of light
+            let r = max(0.6, 0.9 + zoom * 0.5)
+            ctx.fill(UniGeo.ringPath(sx, sy, r),
+                     with: .color(color.opacity((0.15 + 0.22 * min(1, zoom)) * tw)))
+            return
+        }
+        // The met star's core also grows: Rp = (1.6 + depth*0.15) * max(0.9, z*1.2) + 0.8
+        let sz = (1.6 + Double(st.depth) * 0.15) * max(0.9, zoom * 1.2) + 0.8
+        ctx.fill(UniGeo.ringPath(sx, sy, sz), with: .color(color.opacity(0.9 * tw)))
+        ctx.fill(UniGeo.ringPath(sx, sy, sz * 4.2), with: .color(color.opacity(0.06 * tw)))
         // the approached star wears a quiet ring, so you can see which world you chose
         if st.id == focusId {
             ctx.stroke(UniGeo.ringPath(sx, sy, sz * 4), with: .color(color.opacity(0.5)), lineWidth: 1)
         }
-        if scale >= 1 && st.depth > 0 {
-            for k in 1...min(st.depth, 6) {
-                let dr = sz * 2.0 + Double(k) * 2.4
-                ctx.stroke(UniGeo.ringPath(sx, sy, dr), with: .color(color.opacity(0.05)), lineWidth: 0.5)
+        // the returns, ringed — and the rings widen with the approach too (uni-sky.js:296)
+        if zoom > 0.5 && st.depth > 0 {
+            for k in 1...min(st.depth, 8) {
+                let dr = sz + Double(k) * (4.6 * min(2.2, zoom))
+                ctx.stroke(UniGeo.ringPath(sx, sy, dr),
+                           with: .color(color.opacity(0.28 * (1 - Double(k) / 12) * (0.62 + 0.38 * breath.value))),
+                           lineWidth: 0.9)
             }
         }
+
+        // ── THE HANDOFF. Past R = 6 this same star is a planet, drawn here, at its own
+        // position (uni-sky.js:284-312). No renderer is swapped and nothing is centred. ──
+        if R >= 6, let story = store.stories.first(where: { $0.id == st.id }) {
+            drawPlanet(ctx, size, story: story, rm: room(story.room), t: t, b: breath.value,
+                       px: sx, py: sy, R: R, seedStar: st)
+        }
+
         // ── the company: one mote per voice, each at ITS OWN period + phase (uni-field.js law),
         // Lalita's orbit wobbling. Descriptors are cached; here it's just cos/sin + a fill. ──
-        if scale >= 1 {
+        let moteIn = max(0, min(1, (R - 3.4) / 5.0))          // uni-field.js:90 — they resolve
+        if moteIn > 0.02 {
             for m in st.motes {
                 var orbit = sz * m.orbitMul
                 if m.wobble { orbit *= 1 + 0.18 * sin(t * 0.31 + st.twSeed * 6.2831) }
                 let ang = t * (2 * .pi / m.per) + m.ph
                 ctx.fill(UniGeo.ringPath(sx + cos(ang) * orbit, sy + sin(ang) * orbit, m.size),
-                         with: .color(m.color.opacity(m.wobble ? 0.8 : 0.7)))
+                         with: .color(m.color.opacity((m.wobble ? 0.8 : 0.7) * moteIn)))
             }
         }
     }
@@ -542,12 +742,22 @@ struct UniverseView: View {
     // CIVILISATION with each region's own civ signature (towers face out, arrays speak up,
     // shafts/terraces ring, mirrorcities double, furnaces rift, weave net, rings orbit,
     // ports send ships) — the detail the old first pass dropped.
-    private func drawPlanet(_ ctx: GraphicsContext, _ size: CGSize, story: Story, rm: UniRoom, t: Double, b: Double) {
-        let px = size.width / 2, py = size.height * 0.42
-        let R = min(size.width, size.height) * 0.26
-        let col = rm.rgb, isMet = met(story), d = depth(story), detail = 1.0
+    /// The inhabited planet — drawn AT THE STAR, at the radius the star already has.
+    ///
+    /// `B2.2`. It used to be teleported to (W/2, H*0.42) at a FIXED `min(W,H)*0.26`, which
+    /// meant the world neither grew as he kept coming nor stayed where he had flown to, and
+    /// its neighbours vanished. `uni-sky.js:1336` draws each planet at its own projected
+    /// position, and `detail` ramps `clamp((R-4)/26)` so the civilisation arrives with the
+    /// approach instead of all at once.
+    private func drawPlanet(_ ctx: GraphicsContext, _ size: CGSize, story: Story, rm: UniRoom,
+                            t: Double, b: Double, px: Double, py: Double, R: Double, seedStar: UStar?) {
+        let col = rm.rgb, isMet = met(story), d = depth(story)
+        let detail = max(0, min(1, (R - 4) / 26))
         let seed = hash(story.id) * 1000                       // stable per-story seed
-        let spin = t * 0.05, tilt = (UniGeo.hash(seed * 23.3) - 0.5) * 0.7
+        // each world turns at its OWN rate — uni-rooms.js:303 `spin: 0.02 + hash(k*19.1)*0.05`
+        let spin = t * (0.02 + UniGeo.hash(seed * 19.1) * 0.05)
+        let tilt = (UniGeo.hash(seed * 23.3) - 0.5) * 0.7
+        _ = seedStar
         let SUN = (x: -0.58, y: -0.34, z: 0.74)
         func H(_ n: Double) -> Double { UniGeo.hash(n) }
         func proj(_ lat: Double, _ lon: Double) -> (Double, Double, Double, Double, Double) {

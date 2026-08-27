@@ -25,7 +25,11 @@ enum LightCanon {
     // Verbatim once-ever line the gate speaks — the inversion of a normal surface's
     // "It holds until you mean it."
     static let gateLine = "It holds until you stop meaning it."
-    static let touchOnce = "touch once, then do nothing"
+    // Canon is exactly this — The Light v2.html:688. The longer form ("touch once, then do
+    // nothing") is the review-bench caption at :914, OUTSIDE the phone frame. The design
+    // deliberately says nothing more after the touch: "it never tells him to be still; he
+    // discovers it by stopping" (:685-686).
+    static let touchOnce = "touch once"
     static let approachSubtitle = "Not to be wanted. To be stood inside."
     static let beatCue = "hold to mean it"          // the beat's one instruction (canonical)
     static let walkBackOut = "walk back out ›"

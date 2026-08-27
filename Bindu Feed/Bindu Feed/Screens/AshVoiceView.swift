@@ -127,7 +127,7 @@ struct AshVoiceView: View {
 
             Text("PHYSICAL SYNTHESIS")
                 .font(.spaceMono(11))
-                .tracking(2.2)
+                .tracking(1.32)
                 .foregroundColor(terra.opacity(0.75))
         }
         .frame(maxWidth: .infinity)
@@ -162,7 +162,7 @@ struct AshVoiceView: View {
                 .minimumScaleFactor(0.7)
             Text(label)
                 .font(.spaceMono(9))
-                .tracking(1.4)
+                .tracking(0.63)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .multilineTextAlignment(.center)
         }

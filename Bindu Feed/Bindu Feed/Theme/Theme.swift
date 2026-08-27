@@ -111,3 +111,20 @@ extension View {
         modifier(PanelModifier(cornerRadius: cornerRadius, fill: fill))
     }
 }
+
+// MARK: - Tracking, in the unit the design authors it in
+
+extension View {
+    /// Space Mono at the design's own tracking.
+    ///
+    /// The comps author `letter-spacing` in **em**, and em is a multiple of the font size:
+    /// `0.14em` on a 10pt label is **1.4pt**, not 14. Passing the em value through as points
+    /// is what made ~20 chrome labels 55–85% too wide. `RoomStyle.heroTracking` (`:20`) has
+    /// always done this multiply for the room heroes; nothing else did.
+    ///
+    /// Pass the size and the em straight off the comp — `spaceMonoTracked(10, em: 0.14)` —
+    /// and let this do the arithmetic, so the call site keeps the design's own numbers.
+    func spaceMonoTracked(_ size: CGFloat, em: CGFloat) -> some View {
+        self.font(.spaceMono(size)).tracking(em * size)
+    }
+}

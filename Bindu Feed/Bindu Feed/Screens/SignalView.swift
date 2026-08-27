@@ -271,36 +271,22 @@ struct SignalView: View {
         return h
     }
 
-    // Splits a transmission body into reveal-lines. Honors explicit \n
-    // breaks first (lets a future Airtable edit override the heuristic
-    // for a specific signal), otherwise splits on sentence boundaries and
-    // em-dashes — the two natural pause points in this register.
+    // The lines of a transmission, as authored.
+    //
+    // The design's unit of content here is an ORDERED ARRAY OF DISPLAY LINES
+    // (The Signal Space.html:60-67) — broken by hand, and broken INSIDE sentences:
+    //   'You keep asking the field' / 'for a sign.'
+    //   'The door was never locked —' / 'you have been holding it shut' / 'from the inside.'
+    // A sentence-and-em-dash splitter cannot produce those breaks and never could.
+    // It used to run as a fallback whenever a body arrived flat, which was most of
+    // them; all six Signals now carry their authored \n, so the derived path is
+    // DELETED rather than kept. Kept, it would run forever and silently, and the
+    // prosody it invents is not the prosody that was written.
     static func splitIntoLines(_ body: String) -> [String] {
-        let explicit = body
+        body
             .components(separatedBy: "\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        if explicit.count > 1 { return explicit }
-
-        let pattern = "(?<=[.!?—])\\s+"
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
-            return [body]
-        }
-        let nsBody = body as NSString
-        let matches = regex.matches(in: body, range: NSRange(location: 0, length: nsBody.length))
-        if matches.isEmpty { return [body] }
-
-        var result: [String] = []
-        var lastEnd = 0
-        for match in matches {
-            let segRange = NSRange(location: lastEnd, length: match.range.location - lastEnd)
-            let segment = nsBody.substring(with: segRange).trimmingCharacters(in: .whitespacesAndNewlines)
-            if !segment.isEmpty { result.append(segment) }
-            lastEnd = match.range.location + match.range.length
-        }
-        let tail = nsBody.substring(from: lastEnd).trimmingCharacters(in: .whitespacesAndNewlines)
-        if !tail.isEmpty { result.append(tail) }
-        return result.isEmpty ? [body] : result
     }
 }
 

@@ -28,6 +28,8 @@ struct RecordFields: Codable {
     var resonance: Int?
 
     var commentBody: String?
+
+    var practiceSubLine: String?
     var archetype: String?
     var linkedStory: [String]?
     var parentComment: [String]?
@@ -75,6 +77,7 @@ struct RecordFields: Codable {
         case lastActivityDate  = "Last Activity Date"
         case resonance         = "Resonance"
         case commentBody       = "Comment Body"
+        case practiceSubLine   = "Practice Sub-line"
         case archetype         = "Archetype"
         case linkedStory       = "Linked Story"
         case parentComment     = "Parent Comment"
@@ -252,7 +255,11 @@ struct ThresholdSentence: Identifiable, Hashable {
     init(from record: AirtableRecord) {
         let f = record.fields
         self.id = record.id
-        self.text = f.name ?? ""
+        // `Name` is singleLineText and silently strips \n — the canon threshold
+        // ("You are not late. / The field kept your place.") loses its break there.
+        // `Body` is multiline and is populated on the canon rows. Same defensive
+        // shape Signal / MirrorCard / PracticeInvitation already use.
+        self.text = f.body ?? f.name ?? ""
         self.weight = f.sentenceWeight ?? 1
         self.source = f.sentenceSource ?? ""
     }
@@ -309,6 +316,9 @@ struct PracticeInvitation: Identifiable, Hashable {
     let body: String
     let sourceType: String
     let sortOrder: Int
+    /// `Practice Sub-line` (fldWcHyZDGcytIdJg). Rendered under the body per
+    /// Practice Door.html:155-159. Blank -> render nothing, never a substitute.
+    let subLine: String?
 
     init(from record: AirtableRecord) {
         let f = record.fields
@@ -318,6 +328,26 @@ struct PracticeInvitation: Identifiable, Hashable {
         // under either "Comment Body" or "Body" depending on field name.
         self.body = f.commentBody ?? f.body ?? ""
         self.sourceType = f.sourceType ?? ""
+        self.sortOrder = f.sortOrder ?? 0
+        let sl = f.practiceSubLine?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.subLine = (sl?.isEmpty == false) ? sl : nil
+    }
+}
+
+/// The field's second-person voice at the threshold. Its own Type since 2026-08-27 —
+/// it used to borrow the Signal pool, which is how twelve Codex/business-ontology rows
+/// reached the Practice Door. Same shape as `Signal`; a different door.
+struct GaiaSeed: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let body: String
+    let sortOrder: Int
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        self.id = record.id
+        self.name = f.name ?? ""
+        self.body = f.commentBody ?? f.body ?? ""
         self.sortOrder = f.sortOrder ?? 0
     }
 }
@@ -361,7 +391,7 @@ enum PracticeDoorKind: String, CaseIterable {
 enum PracticeDoorContent {
     case threshold(ThresholdSentence)
     case practice(PracticeInvitation)
-    case gaiaSeed(Signal)
+    case gaiaSeed(GaiaSeed)
     case story(Story)
     case binduDot(ThresholdSentence)
 

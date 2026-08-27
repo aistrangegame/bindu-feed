@@ -51,10 +51,27 @@ final class AxisTravel: ObservableObject {
     private var universeMode = false
 
     // The passage (a give hands the camera a glide across the membrane).
-    private var glideFrom = 0.0, glideTo = 0.0, glideT = 0.0, glideDur = 2.9
+    private var glideFrom = 0.0, glideTo = 0.0, glideT = 0.0, glideDur = 5.4
 
     // spine-travel.js T — the numbers are the instrument.
-    private let DRAG = 0.00015, DAMP = 0.945, K = 30.0, RES = 0.58, span = 0.36
+    //
+    // These are TWK_DIST['immense'] (The Instrument v3.html:4923), which is what the
+    // runtime actually applies: applyMode() (:4936-4940) runs Object.assign(TR, …) at
+    // boot (:5985) over the module defaults at :3429-3431. The defaults were ported
+    // here previously and are 17% light on DRAG and a full 0.011 light on DAMP.
+    //
+    // The trap: the default LONG experience uses the preset named `immense`, NOT the
+    // one named `long`. Reading the `long` row gives a plausible-looking wrong answer
+    // (DRAG .00024 · DAMP .950 · span .34 · DUR 2.9).
+    //
+    // DAMP compounds: 0.945^60 = 0.033 against 0.956^60 = 0.068 — one second after a
+    // release the old numbers had half the glide left. K and RES are TWK_SURF.held
+    // (:4925) and were already right.
+    //
+    // WHEEL 0.00008 and PINCH 0.0020 belong to the same preset but have no input path
+    // in the app yet (no wheel, no pinch-to-travel — C2.7). Recorded here, not declared,
+    // so they arrive with the gesture rather than sitting dead.
+    private let DRAG = 0.00018, DAMP = 0.956, K = 30.0, RES = 0.58, span = 0.42
     private let MINZ = -5.0, MAXZ = 9.62                 // +0.62 overshoot so the centre can bloom past +9
 
     private var lastRegister: Int
@@ -73,6 +90,22 @@ final class AxisTravel: ObservableObject {
         let clamped = Swift.min(Swift.max(startZ, -5), 9.62)
         z = clamped
         lastRegister = Axis.nearest(clamped).i
+
+        // `B0.4` — THE LIGHT MUST BE ESCAPABLE.
+        //
+        // Surface 0 (sky↔Light) is a one-way valve: it answers only the ABSENCE of the hand,
+        // so drag can never reopen it. Walk in through the stillness gate and it is marked
+        // open on the way. But the Turn offers the Light directly — `A Strange Feed.html:426`,
+        // `?z=-5`, which is canon and stays — and arriving that way lands you PAST a surface
+        // that was never opened. The gate branch then zeroes `push`, damps 92%/frame and
+        // pushes back: trapped.
+        //
+        // (The audit suggested deleting the Turn's row instead. That would delete an authored
+        // string — the same error as inventing one. The row is the design's; the unopened
+        // surface is the defect.)
+        //
+        // Arriving at a register means you are past the surface below it, so mark it open.
+        if clamped <= -4.5 { mem[GATE] = true }
     }
 
     func start() {
@@ -92,6 +125,15 @@ final class AxisTravel: ObservableObject {
     /// InstrumentView sets this when a Universe register is showing. Suspends the stillness gate.
     func setUniverseMode(_ v: Bool) { universeMode = v; if v { gateAcc = 0 } }
 
+    /// The tap's inward impulse. The Universe never moves the scale itself — it asks, and
+    /// the axis travels, so there stays exactly one scale in the instrument.
+    /// `The Universe v3.html:1664,1668` — 0.06 on empty sky, 0.085 on a star.
+    func drawIn(_ dz: Double) {
+        guard !crossing else { return }
+        zv += dz
+        lastInput = CACurrentMediaTime()
+    }
+
     /// Leave the Universe: release universe mode and glide the axis back to the Feed (Z=0) via
     /// the passage throat — an explicit exit, replacing the old auto-eject.
     func exitToFeed() {
@@ -101,8 +143,23 @@ final class AxisTravel: ObservableObject {
 
     // MARK: - Input (the hand)
 
+    /// True while the register that is up has claimed the vertical for its own gesture.
+    ///
+    /// The fall is the one register that does (`The Universe v3.html:1616-1622` — in the sky
+    /// the drag pans, in the fall it descends; an if/else, one owner at a time). The design
+    /// uses the same shape for a passage: something else owns the camera, so the hand stands
+    /// down (`applyDrag` already guards `!crossing` for exactly this reason).
+    ///
+    /// This is NOT `axisLocked` returning. That was global, armed on a `.onChange` that never
+    /// fired on first appearance, and walled off whole registers. This is scoped to an OPEN
+    /// FALL on a chosen star, released the moment the fall closes, and it is enforced HERE at
+    /// the source rather than at a gesture — so no call path can route around it.
+    private var handedToRegister = false
+    func handVerticalToRegister(_ v: Bool) { handedToRegister = v }
+
     func applyDrag(_ deltaY: Double) {
         guard !crossing else { return }                 // inside a passage the hand is ignored
+        guard !handedToRegister else { return }         // the register owns the vertical
         zv += (-deltaY) * DRAG
         force += (-deltaY) * DRAG
         lastInput = CACurrentMediaTime()
@@ -228,7 +285,7 @@ final class AxisTravel: ObservableObject {
     private func beginPassage(toZ target: Double, dir d: Double) {
         glideFrom = z
         glideTo = Swift.min(Swift.max(target, MINZ), MAXZ)
-        glideT = 0; glideDur = 2.9
+        glideT = 0; glideDur = 5.4
         dir = d; passageDir = d; passageT = 0
         crossing = true
         flash = 1

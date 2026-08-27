@@ -154,7 +154,7 @@ struct TheTurningView: View {
             if !archetype.role.isEmpty {
                 Text(archetype.role.uppercased())
                     .font(.spaceMono(11))
-                    .tracking(2.0)
+                    .tracking(1.32)
                     .foregroundColor(BinduTheme.inkSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -276,7 +276,7 @@ struct TheTurningView: View {
 
             Text(caption.uppercased())
                 .font(.spaceMono(9))
-                .tracking(1.4)
+                .tracking(1.08)
                 .foregroundColor(archetype.color.opacity(captionOpacity))
                 .modifier(HintPulse(active: !done && progress < 0.04))
         }
