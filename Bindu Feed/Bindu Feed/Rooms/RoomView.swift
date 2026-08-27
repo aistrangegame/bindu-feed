@@ -433,7 +433,11 @@ struct RoomView: View {
         VStack {
             Spacer(minLength: 0)
             Group {
-                if archive.isEmpty {
+                if let fault = archive.fault, sub == 0 {
+                    // loud, in the error hue — the map below it drew only what is real
+                    Text(fault)
+                        .foregroundStyle(Color(hex: "#C0392B"))
+                } else if archive.isEmpty {
                     Text("nothing in the record yet")
                 } else if sub == 0 {
                     let ns = archive.stories.count

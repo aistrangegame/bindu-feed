@@ -247,6 +247,23 @@ final class FeedStore: ObservableObject {
     /// The comp filled this with 117 invented days and `rnd()` flecks; this is the record.
     @Published var ashDays: [AshDay] = []
 
+#if DEBUG
+    /// A WALK HOOK, NOT A SURFACE. `simctl spawn booted defaults write <bundle>
+    /// bindu.debug.room Shweta` parks that voice's room, which `RootView` then pushes the
+    /// way it pushes any other `pendingLaunchRoute`. It exists because the simulator's
+    /// synthetic touches do not drive a SwiftUI ScrollView, so the three voices below
+    /// PlayersView's fold cannot otherwise be reached on the sim. One-shot: the key is
+    /// cleared as it is read, and nothing in a release build compiles this at all.
+    func parkDebugRoomIfRequested() {
+        let key = "bindu.debug.room"
+        guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty,
+              let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })
+        else { return }
+        UserDefaults.standard.removeObject(forKey: key)
+        pendingLaunchRoute = .home(a)
+    }
+#endif
+
     /// A voice's whole archive, resolved in ONE bulk story lookup — never N+1 (§10).
     /// Returns the comments, a story-id → title map, and the earliest day the voice has
     /// spoken on (derived: Field Comments carry no date of their own).

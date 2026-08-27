@@ -130,7 +130,12 @@ struct ContentCoordinator: View {
     // Stories isn't in bootstrap — see the loadFieldSounds comment in
     // the data layer commit.
     private func bootstrap() {
-        Task { await store.loadFoundation() }
+        Task {
+            await store.loadFoundation()
+            #if DEBUG
+            store.parkDebugRoomIfRequested()
+            #endif
+        }
         Task { await store.loadPracticeInvitations() }
         Task { await store.loadSignals() }
         Task { await store.loadGaiaSeeds() }          // the Door's own pool, not the Signal pool

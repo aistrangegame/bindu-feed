@@ -34,6 +34,9 @@ struct RoomArchive {
     /// no gap this is the identity; when there is one, the real marks sit evenly through
     /// the sequence so the map reads as an archive across time, not a clump at the start.
     let at: [Int]
+    /// Set when a lens's declared count EXCEEDS its live archive. The map then draws only
+    /// what is real and says so, loudly — see `build`.
+    let fault: String?
 
     var isEmpty: Bool { real.isEmpty }
 
@@ -43,12 +46,27 @@ struct RoomArchive {
     /// first Return in Pass 6 changes the legend by itself.
     var returnedCount: Int { stories.filter { $0.items.count > 1 }.count }
 
-    static let empty = RoomArchive(n: 0, real: [], stories: [], at: [])
+    static let empty = RoomArchive(n: 0, real: [], stories: [], at: [], fault: nil)
 
     /// `archiveOf(v)` — `The Rooms v4.html:814-823`.
+    ///
     /// - Parameter titles: story record id → title, resolved in bulk by the caller.
     ///   §10 forbids the N+1 per-comment lookup this replaces.
-    static func build(comments: [FieldComment], titles: [String: String]) -> RoomArchive {
+    /// - Parameter declared: an independent count of what the voice is SAID to have, when
+    ///   one exists. Today no lens has one — the record is the archive — so this is nil and
+    ///   `n` is simply the comment count.
+    /// - Parameter allowsGap: whether a shortfall between `declared` and the record is a
+    ///   real thing to draw, or a fault.
+    ///
+    /// RULE 6, ON A PATH THAT CANNOT MISBEHAVE YET. `n` used to be `max(declared, real)`
+    /// unconditionally, and with `n == real.count` that is the identity — correct today and
+    /// latent. The moment any lens acquired a stat larger than its live archive it would
+    /// have quietly drawn phantom dim marks: real positions with no words behind them is a
+    /// TRUE statement about Ash's days and a LIE about a lens, because a lens's stat is
+    /// derived from the same rows the marks are. A map that lies is worse than one that
+    /// fails, so the lens path fails loud and draws only what it has.
+    static func build(comments: [FieldComment], titles: [String: String],
+                      declared: Int? = nil, allowsGap: Bool = false) -> RoomArchive {
         let real = comments.filter { !$0.body.trimmingCharacters(in: .whitespaces).isEmpty }
         guard !real.isEmpty else { return .empty }
 
@@ -63,7 +81,15 @@ struct RoomArchive {
                 groups.append(RoomStoryGroup(id: sid, title: titles[sid] ?? "", items: [c]))
             }
         }
-        let n = real.count
+        var n = real.count
+        var fault: String?
+        if let declared, declared > real.count {
+            if allowsGap {
+                n = declared                       // a real gap — Ash's days, honestly drawn
+            } else {
+                fault = "ARCHIVE SHORT · \(declared) CLAIMED · \(real.count) IN THE RECORD"
+            }
+        }
         let count = Double(real.count)
         let span = Double(n)
         var at: [Int] = []
@@ -72,7 +98,7 @@ struct RoomArchive {
             let f: Double = (Double(i) + 0.5) / count
             at.append(Int((f * span).rounded(.down)))
         }
-        return RoomArchive(n: n, real: real, stories: groups, at: at)
+        return RoomArchive(n: n, real: real, stories: groups, at: at, fault: fault)
     }
 }
 
