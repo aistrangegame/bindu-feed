@@ -69,6 +69,12 @@ struct UniverseView: View {
     @State private var frameSize: CGSize = .zero
     /// The star whose life is open. nil = no fall; the vertical stays with the axis.
     @State private var fallStarID: String?
+    /// Everything touchable inside the fall, rebuilt every frame. `uni-fall.js:42`.
+    @State private var fallHits: [FallHit] = []
+    /// The presence whose word is open, and the stratum whose ink is lit. Both are
+    /// single-slot: touching another closes the first, touching the same one closes it.
+    @State private var openWord: (name: String, word: String?)?
+    @State private var ringLit: Int?
 
 
     @EnvironmentObject private var store: FeedStore
@@ -117,6 +123,9 @@ struct UniverseView: View {
                 }
                 .onAppear { frameSize = geo.size }
                 .onChange(of: geo.size) { _, sz in frameSize = sz }
+                // `.word` — what one presence left, or that it left nothing.
+                if let w = openWord { wordPanel(w) }
+
                 // The structure lens toggle — only where the regions are legible (sky/region).
                 if bands.world < 0.4 {
                     VStack {
@@ -175,6 +184,25 @@ struct UniverseView: View {
             cam.setAxisZ(axisZ)
             cam.start()
             rebuild()
+            #if DEBUG
+            // A WALK HOOK, NOT A SURFACE. The fall opens only on a tap that lands on a star
+            // with `R > 34 && depth > 0`, and only six of the 120 stories have any depth at
+            // all — so a scripted hand has to hit one specific hash-placed star among its
+            // neighbours, and `handleTap`'s radius grows with the approach, which makes the
+            // wrong star win. Suspending the stillness gate fixed the INTERRUPTION; this
+            // fixes the TARGETING, and without both the fall cannot be walked at all.
+            //
+            // `defaults write <bundle> bindu.debug.fallstar "The Two Who Were One"`.
+            if let want = UserDefaults.standard.string(forKey: "bindu.debug.fallstar"), !want.isEmpty {
+                UserDefaults.standard.removeObject(forKey: "bindu.debug.fallstar")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    if let st = starsByRegion.flatMap({ $0 }).first(where: { s in
+                        store.stories.first { $0.id == s.id }?.title
+                            .localizedCaseInsensitiveContains(want) == true
+                    }) { openFall(st) }
+                }
+            }
+            #endif
         }
         .onChange(of: axisZ) { _, z in
             cam.setAxisZ(z)
@@ -334,6 +362,31 @@ struct UniverseView: View {
         // Leave the top-left corner to the ‹ chevron and the bottom-right to the lens toggle.
         if loc.y < 78 { return }
 
+        // ── INSIDE THE FALL, THE TOUCHABLE THINGS COME FIRST. `uni-fall.js:163-167` tests
+        // BACK TO FRONT — the thing drawn last is the thing nearest, and it wins. Without
+        // this the seated company was drawn and the strata's ink was drawn and neither could
+        // be touched, so `uni-field.js`'s WORDS were wired and unreachable. `B5.3`.
+        if inFall {
+            for h in fallHits.reversed() where hypot(h.x - Double(loc.x), h.y - Double(loc.y)) < h.r {
+                switch h.kind {
+                case .presence(_, let name):
+                    let story = fallStarID.flatMap { id in store.stories.first { $0.id == id } }
+                    let w = UniWords.word(codex: story?.codexId ?? "", voice: name)
+                    withAnimation(.easeInOut(duration: 1.1)) {
+                        openWord = (openWord?.name == name) ? nil : (name, w)
+                    }
+                    soundEngine.riteVoice(hz: store.archetype(named: name).map { _ in 198 } ?? 198, dur: 9)
+                case .ring(let k, let age):
+                    ringLit = (ringLit == k) ? nil : k
+                    if ringLit != nil { soundEngine.riteVoice(hz: 150 + Double(k) * 18, dur: 8) }
+                    _ = age
+                }
+                return
+            }
+            // a touch on the ground of the fall closes what is open
+            if openWord != nil { withAnimation(.easeInOut(duration: 0.8)) { openWord = nil }; return }
+        }
+
         // The door takes precedence: if a world is offering its story, the tap reads it.
         if let d = doorway(size), Self.doorBox(size).contains(loc) {
             openStory(d.story, room: d.room)
@@ -393,8 +446,56 @@ struct UniverseView: View {
     private func closeFall() {
         guard fallStarID != nil else { return }
         fallStarID = nil
+        fallHits = []; openWord = nil; ringLit = nil
         cam.setInFall(false)
         onHandVertical?(false)
+    }
+
+    /// `.word` — `The Universe v3.html:1404-1414`, bottom-anchored with a gradient ground
+    /// so the words sit on something, `padding:26px 30px 104px`.
+    ///
+    /// The paragraph is Lora 15 / 1.74 at 0.88 when the Archive holds the words. When it
+    /// does not, `:1586` puts the ONE permitted stand-in in the `.quiet` face — italic 13.5
+    /// at 0.40 — so it can never be mistaken for something a voice said: the presence is
+    /// shown and stays silent. NEVER INVENT A WORD.
+    @ViewBuilder private func wordPanel(_ w: (name: String, word: String?)) -> some View {
+        let a = store.archetype(named: w.name)
+        let c = a?.color ?? BinduTheme.inkPrimary
+        VStack {
+            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 9) {
+                    Text(a?.glyph ?? "◌").font(.lora(15)).foregroundStyle(c)
+                    Text(w.name.uppercased()).spaceMonoTracked(9, em: 0.2).foregroundStyle(c)
+                }
+                .padding(.bottom, 3)
+                // the role from the live Archetype row, as everywhere else (§10)
+                Text((a?.role ?? "").uppercased()).spaceMonoTracked(8, em: 0.14)
+                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34))
+                    .padding(.leading, 24).padding(.bottom, 12)
+                if let word = w.word {
+                    Text(word).font(.lora(15)).lineSpacing(15 * 0.74)
+                        .foregroundStyle(BinduTheme.inkPrimary.opacity(0.88))
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(UniWords.silence(w.name))
+                        .font(.loraItalic(13.5)).lineSpacing(13.5 * 0.7)
+                        .foregroundStyle(BinduTheme.inkPrimary.opacity(0.40))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 30).padding(.top, 26).padding(.bottom, 104)
+            .background(
+                LinearGradient(stops: [
+                    .init(color: Color(hex: "#050408").opacity(0), location: 0),
+                    .init(color: Color(hex: "#050408").opacity(0.86), location: 0.26),
+                    .init(color: Color(hex: "#050408").opacity(0.96), location: 1)],
+                    startPoint: .top, endPoint: .bottom))
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)      // the tap is the Canvas's; this is only the reading
+        .transition(.opacity)
     }
 
     // MARK: - The door into a story (B6.1)
@@ -604,8 +705,9 @@ struct UniverseView: View {
         // table — C-1052's four verbatim paragraphs — unreferenced anywhere in the app.
         // `B5.1` `B5.2`. ──
         if inFall, let fs = fallStarID.flatMap({ id in store.stories.first { $0.id == id } }) {
-            drawFall(ctx, size, story: fs, rm: (fstar.map { uniRooms[$0.ri] } ?? focusRoom), t: t, d: cam.desc)
+            let hits = drawFall(ctx, size, story: fs, rm: (fstar.map { uniRooms[$0.ri] } ?? focusRoom), t: t, d: cam.desc)
             drawMouth(ctx, size, d: cam.desc)
+            DispatchQueue.main.async { if fallHits.count != hits.count { fallHits = hits } else { fallHits = hits } }
         } else if let d = doorway(size) {
             // ── THE DOOR. A world turns its name into the light. `B6.1`. ──
             drawDoor(ctx, size, d)
@@ -986,7 +1088,9 @@ struct UniverseView: View {
     // (uni-fall.js). 3·strata (his own rings, every return aged), 1·approach (the sun,
     // its halo the Resonance Voice), 2·gathering (the company settling orbit → seats +
     // the story), 4·mouth (the Return opening). Drawn back-to-front; d is the descent 0→1.
-    private func drawFall(_ ctx: GraphicsContext, _ size: CGSize, story: Story, rm: UniRoom, t: Double, d: Double) {
+    @discardableResult
+    private func drawFall(_ ctx: GraphicsContext, _ size: CGSize, story: Story, rm: UniRoom, t: Double, d: Double) -> [FallHit] {
+        var hits: [FallHit] = []
         let W = size.width, H = size.height
         func seg(_ a: Double, _ b: Double) -> Double { max(0, min(1, (d - a) / (b - a))) }
         let app = 1 - seg(0.16, 0.34), gath = seg(0.14, 0.30) * (1 - seg(0.52, 0.74))
@@ -1009,8 +1113,17 @@ struct UniverseView: View {
                 if a <= 0.004 { continue }
                 ctx.stroke(Path(ellipseIn: CGRect(x: cx - rr, y: cy - rr * 0.9, width: rr * 2, height: rr * 1.8)),
                            with: .color(UniGeo.col(UniGeo.mix(col, UniGeo.BONE, age * 0.7), a)), lineWidth: (1.6 - age * 0.9) * (1 + local))
+                // the ink of that stratum — recent selves clear, far ones faded. His own
+                // voice can be raised out of a ring by touching its ink (`uni-fall.js:66-71`).
                 let ix = cx + rr * 0.72, iy = cy - rr * 0.30
-                ctx.fill(UniGeo.ringPath(ix, iy, 1.6 + (1 - age) * 1.6), with: .color(UniGeo.col(UniGeo.mix(col, UniGeo.BONE, age * 0.8), min(1, a * 1.8))))
+                let lit = ringLit == k ? 1.0 : 0.0
+                ctx.fill(UniGeo.ringPath(ix, iy, 1.6 + (1 - age) * 1.6 + lit * 2.2),
+                         with: .color(UniGeo.col(UniGeo.mix(col, UniGeo.BONE, age * 0.8), min(1, a * 1.8 + lit * 0.5))))
+                if lit > 0 {
+                    ctx.stroke(UniGeo.ringPath(ix, iy, 9 + br * 4),
+                               with: .color(UniGeo.col(UniGeo.mix(col, UniGeo.BONE, 0.5), 0.34)), lineWidth: 0.8)
+                }
+                if a > 0.05 { hits.append(FallHit(x: ix, y: iy, r: 16, kind: .ring(k: k, age: age))) }
             }
         }
 
@@ -1059,11 +1172,24 @@ struct UniverseView: View {
                 ctx.draw(Text(glyph).font(.lora(isAsh ? 19 : 17)).foregroundStyle(mc.opacity(seatAlpha)),
                          at: CGPoint(x: px2, y: py2))
                 if set > 0.6 {
+                    let na = gath * (set - 0.6) / 0.4
                     ctx.draw(Text(name.uppercased()).font(.spaceMono(8))
-                                .foregroundStyle(mc.opacity(0.7 * (set - 0.6) / 0.4)),
+                                .foregroundStyle(mc.opacity(0.74 * na)),
                              at: CGPoint(x: px2, y: py2 + 15))
+                    // a word waits near the presence, where the Archive holds one
+                    if UniWords.word(codex: story.codexId, voice: name) != nil, openWord == nil {
+                        let wy = py2 + 27 + sin(t * 0.24 + Double(i)) * 1.6
+                        ctx.draw(Text("touch").font(.spaceMono(7.5))
+                                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.30 * na)),
+                                 at: CGPoint(x: px2, y: wy))
+                    }
+                }
+                if seatAlpha > 0.10 {
+                    hits.append(FallHit(x: px2, y: py2, r: 30,
+                                        kind: .presence(index: i, name: name)))
                 }
             }
+            // who was silent is simply not here. Nothing marks the absence.
         }
 
         // ── 4 · the mouth — the deepest stratum opens the Return ──
@@ -1076,5 +1202,6 @@ struct UniverseView: View {
                 center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: mr * 3))
             ctx.stroke(UniGeo.ringPath(cx, cy, mr * (1.5 + br * 0.14)), with: .color(UniGeo.col(UniGeo.mix(col, [236, 206, 150], 0.8), 0.20 * mouth)), lineWidth: 1)
         }
+        return hits
     }
 }
