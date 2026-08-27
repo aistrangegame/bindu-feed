@@ -261,6 +261,8 @@ final class FeedStore: ObservableObject {
         // a route keyword, or a voice's name — the same hook, one key
         switch name.lowercased() {
         case "aperture": pendingLaunchRoute = .aperture
+        case "sky":      pendingLaunchRoute = .instrument(-4)     // the Universe, at the sky
+        case "fall":     pendingLaunchRoute = .instrument(-1)     // the fall's register
         case "point":    pendingLaunchRoute = .instrument(8)      // d7, where the Aperture's door is
         case let r where r.hasPrefix("point") && Int(r.dropFirst(5)) != nil:
             pendingLaunchRoute = .instrument(1 + (Int(r.dropFirst(5)) ?? 1))   // point1…point7 → d1…d7
