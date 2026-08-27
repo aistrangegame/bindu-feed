@@ -1,0 +1,520 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Seam — one continuous descent</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0c;min-height:100vh;display:grid;place-items:center;padding:40px 20px;font-family:'Lora',Georgia,serif;color:#EDE8E3}
+#desk{display:flex;gap:48px;align-items:flex-start}
+#phone{position:relative;width:393px;height:852px;border-radius:44px;overflow:hidden;background:#040307;box-shadow:0 0 0 1px rgba(237,232,227,.09),0 40px 120px rgba(0,0,0,.8);touch-action:none;cursor:grab;flex:0 0 auto}
+#phone.pulling{cursor:grabbing}
+#sky{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ovl{position:absolute;pointer-events:none;user-select:none}
+#where{top:64px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.72);opacity:0;transition:opacity 1.8s}
+#where.on{opacity:1;transition:opacity .5s}
+#door{bottom:96px;left:26px;right:26px;text-align:center;opacity:0;transition:opacity .9s;pointer-events:none}
+#door.on{opacity:1}
+#door .cx{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.24em;color:rgba(201,206,218,.5);display:block;margin-bottom:9px}
+#door .ti{font-size:19px;font-weight:500;letter-spacing:-.012em;line-height:1.3}
+#back{position:absolute;top:20px;left:16px;width:34px;height:34px;display:grid;place-items:center;font-size:19px;color:rgba(237,232,227,.42);cursor:pointer;z-index:6;border-radius:50%}
+#back:hover{color:rgba(237,232,227,.8)}
+#band{position:absolute;right:0;top:0;bottom:0;width:2px;z-index:5}
+#band i{position:absolute;right:0;width:2px;display:block}
+#handoff{bottom:34px;left:0;right:0;text-align:center;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);opacity:0;transition:opacity 1.2s}
+#handoff.on{opacity:1}
+#ab{position:absolute;bottom:0;left:0;right:0;height:34px;display:flex;justify-content:center;align-items:center;gap:14px;z-index:7;font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:.2em;text-transform:uppercase}
+#ab span{cursor:pointer;color:rgba(201,206,218,.26);transition:color .4s}
+#ab span.on{color:rgba(237,232,227,.66)}
+#notes{width:352px;font-size:13.5px;line-height:1.72;color:rgba(237,232,227,.62)}
+#notes h1{font-size:21px;font-weight:500;letter-spacing:-.014em;color:#EDE8E3;margin-bottom:4px}
+#notes .sub{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);margin-bottom:26px}
+#notes h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.6);margin:26px 0 9px}
+#notes p{margin-bottom:11px;text-wrap:pretty}
+#notes em{color:rgba(237,232,227,.9);font-style:italic}
+#notes code{font-family:'Space Mono',monospace;font-size:11px;color:rgba(212,174,74,.86)}
+#notes .k{display:flex;gap:10px;margin-bottom:7px}
+#notes .k b{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:400;color:rgba(201,206,218,.5);flex:0 0 96px;padding-top:3px}
+#notes .k span{flex:1}
+</style></head><body>
+<div id="desk">
+<div id="phone">
+  <canvas id="sky"></canvas>
+  <div class="ovl" id="where"></div>
+  <div class="ovl" id="door"><span class="cx"></span><span class="ti"></span></div>
+  <div class="ovl" id="handoff"></div>
+  <div id="band"></div>
+  <div id="back">‹</div>
+  <div id="ab"><span id="abD" class="on">as designed</span><span id="abB">as built</span></div>
+</div>
+<div id="notes">
+  <h1>The Seam</h1>
+  <div class="sub">one continuous descent · comp 1 of the upgrade</div>
+  <p>The audit's finding, rendered: the sky, a region, a world and the fall are <em>not four screens</em>. They are four reading distances on one <code>z</code>, and the object you touch never changes.</p>
+  <h2>What this comp is authoritative for</h2>
+  <div class="k"><b>continuity</b><span>One camera, <code>z 0.22 → 34</code>. A star's radius is <code>R = pr · z</code> — the point of light at the sky <em>grows into</em> the planet you land on. Nothing swaps renderers. <code>bands()</code> overlap; they never switch.</span></div>
+  <div class="k"><b>the door</b><span>A world offers its story by <em>turning its name into the light</em>. The name rides the sphere: you can always see where it is — a bright point — but it is only legible, and only a door, on the day side. <em>Drag sideways on a world and you turn it</em> — the design's own law (<code>vertical walks the axis, horizontal is the register's own gesture</code>) arriving at the distance where the register is one body. Its own spin is 90–290s; the hand never waits for it. An unmet world offers nothing. The story surface itself is out of scope here — the door proves a world can offer its story, not what opens.</span></div>
+  <div class="k"><b>consent</b><span>In the fall, pulling up descends. The mouth opens only <em>while the hand keeps asking</em>: the ring closes as you pull, and stops the instant you stop. Release and the mouth breathes and holds — it never fires by itself, and it carries the story with it.</span></div>
+  <h2>What it is deliberately not</h2>
+  <p>Region armatures, the thirteen region forms and the planet's civilisation signatures are <em>already verbatim</em> in <code>UniRegions.swift</code> and <code>drawPlanet</code>. Placement here is schematic on purpose. Do not port this file over those — keep them.</p>
+  <h2>Constants, as read from the design</h2>
+  <div class="k"><b>camera</b><span><code>ZMIN .22 · ZMAX 34 · z₀ .30</code>; pan friction <code>.945</code>, zoom <code>.90</code>; velocity set on <em>every</em> move at <code>dx/z · .55</code>; span clamp <code>520/max(.3,z)</code></span></div>
+  <div class="k"><b>bands</b><span><code>sky 1−((z−.55)/.5)</code> · <code>reg ((z−.45)/.5)·(1−(z−3.2)/2.2)</code> · <code>wld (z−2.6)/2.0</code></span></div>
+  <div class="k"><b>the door</b><span><code>R &gt; 36</code> and offset <code>&lt; W·.42</code> from <code>(W/2, H·.44)</code></span></div>
+  <div class="k"><b>the fall</b><span>opens at <code>z &gt; ZMAX·.93</code>, <code>depth &gt; 0</code>, offset <code>&lt; W·.36</code>; flight <code>z → ZMAX·1.6 @ .03</code>, <code>fall += .011</code>; descent <code>descV += −dy·.00042</code>, <code>descV ×= .935</code></span></div>
+  <div class="k"><b>layers</b><span><code>approach 1−seg(.16,.34)</code> · <code>gathering seg(.14,.30)·(1−seg(.52,.74))</code> · <code>strata seg(.44,.66)</code> · <code>mouth seg(.84,.96)</code></span></div>
+  <h2>As built</h2>
+  <p>Toggle it. Stars stop growing, the four distances become three hard cuts, the world loses its door, and the fall becomes a pinch-scrub that fires the Return without asking and drops the story on the way.</p>
+  <p style="margin-top:20px;color:rgba(201,206,218,.4);font-size:12px">Silent by design — the eleven sound events are a separate pass, after the bed is ruled.</p>
+</div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   THE SEAM — the one continuous descent.
+   Constants and mechanism read directly from `The Universe v3.html`
+   (bands :1043-1048 · camera :1462-1502 · star radius :1311 · doorway
+   :1554-1559 · fall open :1537,1506-1509 · descent :1621-1622 · tap :1637).
+   Data (13 rooms, 26 stories, 102 slots) verbatim from :376-659.
+   Two things here are NEW and are the upgrade, marked ★ below:
+     ★ the terminator door  — a world turns its name into the light
+     ★ consent-as-continuation — the mouth opens only while the hand asks
+   ═══════════════════════════════════════════════════════════════════════ */
+const TAU=Math.PI*2, BONE=[232,228,222];
+const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const mix=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];
+const rgba=(c,a)=>'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+a+')';
+const hash=n=>{const v=Math.sin(n*127.1+31.4)*43758.5453;return v-Math.floor(v);};
+const cl=(a,b,x)=>Math.max(0,Math.min(1,(x-a)/(b-a)));
+const sm=(a,b,x)=>{const t=cl(a,b,x);return t*t*(3-2*t);};
+
+/* the thirteen regions — x,y,r,n,hex,civ verbatim */
+const ROOMS=[
+ {id:'forge',      name:'The Forge',       hex:'#D4AE4A',x:-470,y:-1010,r:150,n:7},
+ {id:'signal',     name:'The Signal',      hex:'#3AADA8',x:470, y:-980, r:160,n:5},
+ {id:'descent',    name:'The Descent',     hex:'#E5533C',x:-90, y:-880, r:250,n:11},
+ {id:'garden',     name:'The Garden',      hex:'#4A9E6B',x:330, y:-620, r:230,n:10},
+ {id:'maya',       name:'A Maya Game',     hex:'#D4AE4A',x:-420,y:-430, r:240,n:9},
+ {id:'watcher',    name:'The Watcher',     hex:'#7B82D4',x:110, y:-230, r:190,n:7},
+ {id:'field',      name:'The Field',       hex:'#9B6BD6',x:-200,y:60,   r:280,n:12},
+ {id:'thread',     name:'The Thread',      hex:'#C4923A',x:430, y:150,  r:180,n:6},
+ {id:'body',       name:'The Body',        hex:'#C45A50',x:-450,y:330,  r:200,n:8},
+ {id:'forgetting', name:'The Forgetting',  hex:'#C4A882',x:70,  y:470,  r:215,n:8},
+ {id:'remembering',name:'The Remembering', hex:'#8AB5A0',x:350, y:700,  r:200,n:7},
+ {id:'circle',     name:'The Circle',      hex:'#D4607A',x:-330,y:760,  r:175,n:6},
+ {id:'return',     name:'The Return',      hex:'#9B6BD6',x:140, y:1020, r:165,n:6}];
+ROOMS.forEach(r=>r.rgb=hx(r.hex));
+
+/* the stories that exist — [codex, title, resonance, voices, comments] verbatim */
+const STORIES={
+ maya:[['C-1052','The Two Who Were One',89,['sakshi','lalita','gaia'],14],['C-1061','Still Life with Cold Coffee',34,['sakshi','sid','lalita'],6]],
+ garden:[['C-1047','The Smile While Making Eggs',52,['gaia','karishma','bindu'],8],['C-1033','The Heart-Shaped Patch',71,['gaia','lalita'],11]],
+ watcher:[['C-1038','The One Who Sees',67,['sakshi','lalita','ashrey'],11],['C-1029','Turning Around to Look',28,['sakshi'],4]],
+ descent:[['C-1055','Further In Than Last Time',44,['bindu','gaia'],7],['C-1041','What\u2019s at the Bottom',19,['bindu','lalita'],3]],
+ return:[['C-1058','Everything Was Waiting',63,['lalita','gaia','sakshi'],9],['C-1044','The Lobby',38,['lalita','sid'],5]],
+ forgetting:[['C-1064','The Recording That Loops',41,['sakshi','lalita'],7],['C-1066','The Tool That Became the Wall',22,['sakshi','sid'],4]],
+ remembering:[['C-1068','The Pattern Simply Seen',37,['sakshi','gaia'],6],['C-1070','Before the Lightning',29,['gaia','lalita'],4]],
+ body:[['C-1072','Four Hours Unable to Sleep',58,['gaia','bindu'],9],['C-1074','What the Chest Knew First',34,['gaia','sakshi'],5]],
+ thread:[['C-1076','Three Generations',48,['gaia','sid'],7],['C-1078','The Sacred in the Invoice',31,['sid','lalita'],4]],
+ circle:[['C-1080','These Faces',62,['gaia','arch','karishma'],10],['C-1082','The Original School',44,['gaia','arch'],6]],
+ signal:[['C-1084','The Dallas Night',55,['lalita','ashrey'],8],['C-1086','The Akash-Gaia Downloads',38,['lalita','sakshi','ashrey'],6]],
+ forge:[['C-1088','The Strange Game',72,['lalita','sid','ashrey'],12],['C-1090','The Joy of Form',41,['lalita','sid'],6]],
+ field:[['C-1092','The Watcher Watching the Watcher',88,['sakshi','lalita','bindu'],14],['C-1094','The Game Built the Room',61,['lalita','sakshi'],9]]};
+const depthOf=r=>r>=85?8:r>=60?5:r>=44?3:r>=28?1:0;
+const VOICE={sakshi:'#7B82D4',lalita:'#9B6BD6',gaia:'#4A9E6B',sid:'#C4923A',bindu:'#EDE6D6',ashrey:'#3AADA8',arch:'#D4AE4A',karishma:'#D4607A',ash:'#C45A50',neev:'#8AB5A0',shweta:'#C4A882'};
+
+/* the hundred and two. NOTE: placement is schematic here — the real
+   per-region place() armatures are verbatim in UniRegions.swift. Keep those. */
+const STARS=[];let k=0;
+ROOMS.forEach((room,ri)=>{
+  const picks=[Math.floor(hash(ri*7.7)*room.n),0];
+  picks[1]=(picks[0]+2+Math.floor(hash(ri*3.3)*(room.n-3)))%room.n;
+  const mine=STORIES[room.id]||[];
+  for(let i=0;i<room.n;i++,k++){
+    const a=i*2.399963+ri, rr=room.r*(0.34+0.52*Math.sqrt((i+0.6)/room.n));
+    const jx=(hash(k*5.1)-0.5)*room.r*0.10, jy=(hash(k*6.3)-0.5)*room.r*0.10;
+    const slot=picks.indexOf(i), st=slot>=0?mine[slot]:null;
+    STARS.push({room:ri,x:room.x+Math.cos(a)*rr+jx,y:room.y+Math.sin(a)*rr*0.82+jy,
+      met:!!st,depth:st?depthOf(st[2]):0,codex:st?st[0]:null,title:st?st[1]:null,
+      spoke:st?st[3]:null,seed:k,tw:0.45+hash(k*17.3)*0.55,
+      spin:0.02+hash(k*19.1)*0.05,tilt:(hash(k*23.3)-0.5)*0.7,pr:7+hash(k*29.7)*4,
+      nameLon:hash(k*31.7)*TAU,nameLat:(hash(k*37.1)-0.5)*0.8,turn:0,turnV:0});
+  }});
+const DEEP=STARS.filter(s=>s.depth>=3);
+
+/* ─── the camera ─────────────────────────────────────────────── */
+const cvs=document.getElementById('sky'),ctx=cvs.getContext('2d');
+let W=393,H=852,DPR=Math.min(2,devicePixelRatio||1);
+function fit(){W=cvs.clientWidth||393;H=cvs.clientHeight||852;cvs.width=W*DPR;cvs.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+const cam={x:0,y:0,z:0.30,vx:0,vy:0,vz:0};
+const ZMIN=0.22,ZMAX=34;
+let mode='sky',fallStar=null,fall=0,desc=0,descV=0,driftX=0,driftY=0;
+let consent=0,asking=0,curRoom=-1,curScale='sky',focus=null,AB='designed';
+const SX=x=>(x-cam.x)*cam.z+W/2, SY=y=>(y-cam.y)*cam.z+H/2;
+const built=()=>AB==='built';
+function bands(z){return{sky:1-cl(0.55,1.05,z),reg:cl(0.45,0.95,z)*(1-cl(3.2,5.4,z)),wld:cl(2.6,4.6,z)};}
+const breath=t=>(Math.sin((t/10)*TAU)+1)/2;
+
+const whereEl=document.getElementById('where');let wTimer=null;
+function say(txt){whereEl.textContent=txt;whereEl.classList.add('on');clearTimeout(wTimer);
+  wTimer=setTimeout(()=>whereEl.classList.remove('on'),1800);}
+
+/* ─── the frame ──────────────────────────────────────────────── */
+function frame(){
+  const t=performance.now()/1000;
+  if(cvs.clientWidth!==W||cvs.clientHeight!==H)fit();
+  if(mode==='sky'){
+    cam.x-=cam.vx;cam.y-=cam.vy;
+    cam.vx*=0.945;cam.vy*=0.945;
+    cam.z*=(1+cam.vz);cam.vz*=0.90;
+    cam.vz=Math.max(-0.10,Math.min(0.10,cam.vz));
+    cam.z=Math.max(ZMIN,Math.min(ZMAX,cam.z));
+    const span=520/Math.max(0.3,cam.z);
+    cam.x=Math.max(-900-span,Math.min(900+span,cam.x));
+    cam.y=Math.max(-1500-span,Math.min(1500+span,cam.y));
+    /* ★ the world you are on keeps whatever turn your hand gave it */
+    if(focus){focus.turn+=focus.turnV;focus.turnV*=0.90;}
+    /* :1537 — coming close enough IS the opening. The fall is reached by
+       continuing, never by lifting the hand to tap. Consent guards the
+       Return at the mouth, not the entrance. */
+    if(cam.z>ZMAX*0.93&&focus&&focus.depth>0&&
+       Math.hypot(SX(focus.x)-W/2,SY(focus.y)-H*0.44)<W*0.36)openFall(focus);
+  }else{
+    if(mode==='falling'){
+      fall=Math.min(1,fall+0.011);
+      cam.x+=(fallStar.x-cam.x)*0.05;cam.y+=(fallStar.y-cam.y)*0.05;
+      cam.z+=(ZMAX*1.6-cam.z)*0.03;
+      if(fall>=1)mode='well';
+    }
+    desc=Math.max(0,Math.min(1,desc+descV));descV*=0.935;
+    driftX*=0.93;driftY*=0.93;
+    /* ★ consent-as-continuation. The mouth closes the ring only while the
+       hand is still pulling. Release and it holds, breathing. It never fires
+       by itself — and when it does fire it carries the story. */
+    asking=Math.max(0,asking-1);
+    const atMouth=sm(0.84,0.96,desc);
+    if(built()){ if(desc>0.80){arrive();} }
+    else{
+      if(atMouth>0.35&&asking>0)consent=Math.min(1,consent+0.0075);
+      else consent=Math.max(0,consent-0.012);
+      if(consent>=1)arrive();
+    }
+  }
+  draw(t);
+  requestAnimationFrame(frame);
+}
+
+function arrive(){
+  const s=fallStar;mode='arrived';
+  const h=document.getElementById('handoff');
+  h.textContent='→ the Return · '+(built()?'no story carried':s.codex);
+  h.classList.add('on');
+  setTimeout(()=>{h.classList.remove('on');back();},2600);
+}
+
+/* ─── the draw ───────────────────────────────────────────────── */
+const DUST=[];for(let L=0;L<3;L++)for(let i=0;i<[58,38,38][L];i++)DUST.push({hx:hash(i*1.3+L*40),hy:hash(i*2.7+L*71),L:L});
+
+function draw(t){
+  const z=cam.z,B=bands(z),br=breath(t);
+  ctx.clearRect(0,0,W,H);
+  if(mode==='sky'||mode==='falling'){deepSky(t,br);}
+  if(mode==='sky'){
+    /* regions — a wash and, close in, a name. (Forms live in UniRegions.) */
+    ROOMS.forEach(rm=>{
+      const px=SX(rm.x),py=SY(rm.y),pr=rm.r*z*(1.5+br*0.10);
+      if(px+pr<-80||px-pr>W+80||py+pr<-80||py-pr>H+80)return;
+      const g=ctx.createRadialGradient(px,py,0,px,py,pr);
+      g.addColorStop(0,rgba(rm.rgb,0.085+0.03*br));g.addColorStop(1,rgba(rm.rgb,0));
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(px,py,pr,0,TAU);ctx.fill();
+      const show=B.sky*0.55+B.reg*0.5;
+      if(show>0.06&&pr>26){
+        ctx.font='9px "Space Mono", monospace';ctx.textAlign='center';
+        ctx.fillStyle=rgba(rm.rgb,show*0.46);
+        ctx.fillText(rm.name.toUpperCase(),px,py-rm.r*z*0.64);
+      }});
+    /* the hundred and two — one body, growing. THIS is the seam. */
+    focus=null;let bestD=1e9;
+    for(const s of STARS){
+      const px=SX(s.x),py=SY(s.y);
+      const R=built()?2.3:s.pr*z;                 /* B4.1 — the whole mechanism */
+      if(px+R*1.6<-30||px-R*1.6>W+30||py+R*1.6<-30||py-R*1.6>H+30)continue;
+      const d=Math.hypot(px-W/2,py-H*0.44);
+      if(s.met&&d<bestD){bestD=d;focus=s;}
+      if(!built()&&R>7)planet(s,px,py,R,t,br);
+      else point(s,px,py,Math.max(1.1,Math.min(R,3.2)),t);
+      if(!built()&&R>3&&R<64&&s.met)company(s,px,py,R,t);
+    }
+    doorway(t);
+  }else{ theFall(t,br); }
+  bandRail(B);
+}
+
+function deepSky(t,br){
+  const g=ctx.createRadialGradient(W/2,H*0.42,0,W/2,H*0.42,Math.max(W,H)*0.85);
+  g.addColorStop(0,'#080711');g.addColorStop(1,'#040307');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  for(const d of DUST){
+    const par=0.30+d.L*0.40;
+    let px=d.hx*W-(cam.x/900)*W*par*0.35;px=((px%W)+W)%W;
+    const tw=0.5+0.5*Math.abs(Math.sin(t*0.5+d.hx*TAU));
+    ctx.beginPath();ctx.arc(px,d.hy*H,0.6+d.L*0.5,0,TAU);
+    ctx.fillStyle=rgba([201,206,218],(0.10+d.L*0.05)*tw);ctx.fill();
+  }}
+
+function point(s,px,py,R,t){
+  const col=ROOMS[s.room].rgb,tw=0.6+0.4*Math.abs(Math.sin(t*0.6+s.seed));
+  ctx.beginPath();ctx.arc(px,py,R,0,TAU);ctx.fillStyle=rgba(col,(s.met?0.9:0.26)*tw);ctx.fill();
+  if(s.met){ctx.beginPath();ctx.arc(px,py,R*3,0,TAU);ctx.fillStyle=rgba(col,0.06*tw);ctx.fill();}
+}
+
+/* one voice per mote, each at its own period and phase */
+function company(s,px,py,R,t){
+  if(!s.spoke)return;
+  s.spoke.forEach((v,i)=>{
+    const ms=hash(s.seed*7.7+i*3.1),per=3+ms*23,orb=R*(3.2+ms*2.4)+6;
+    const ang=t*(TAU/per)+ms*TAU+i*0.7;
+    ctx.beginPath();ctx.arc(px+Math.cos(ang)*orb,py+Math.sin(ang)*orb,1.2,0,TAU);
+    ctx.fillStyle=rgba(hx(VOICE[v]||'#C9CEDA'),0.7);ctx.fill();
+  });}
+
+/* ─── an inhabited world · the offset-lit body + ★ the terminator door ─── */
+const SUN=[-0.58,-0.34,0.74];
+function planet(s,px,py,R,t,br){
+  const rm=ROOMS[s.room],col=rm.rgb;
+  const spin=t*s.spin+s.turn, tilt=s.tilt;
+  const proj=(lat,lon)=>{const a=lon+spin,ux=Math.cos(lat)*Math.sin(a),uy=Math.sin(lat),uz=Math.cos(lat)*Math.cos(a),
+    c=Math.cos(tilt),n=Math.sin(tilt);return[ux*c-uy*n,ux*n+uy*c,uz,ux,uy];};
+  const g=ctx.createRadialGradient(px-R*0.36,py-R*0.34,R*0.05,px,py,R*1.05);
+  if(s.met){g.addColorStop(0,rgba(mix(col,[255,250,242],0.34),0.72));
+    g.addColorStop(0.45,rgba(mix(col,[20,18,26],0.30),0.62));
+    g.addColorStop(1,rgba(mix(col,[6,5,10],0.82),0.96));}
+  else{g.addColorStop(0,rgba(mix(col,[168,168,178],0.55),0.34));
+    g.addColorStop(0.5,rgba(mix(col,[80,80,92],0.6),0.24));g.addColorStop(1,'rgba(8,8,12,.9)');}
+  ctx.beginPath();ctx.arc(px,py,R,0,TAU);ctx.fillStyle=g;ctx.fill();
+  if(R>14)for(let i=0;i<7;i++){
+    const lat=(hash(s.seed*3.1+i)-0.5)*2.2,lon=hash(s.seed*5.7+i)*TAU,p=proj(lat,lon);
+    if(p[2]<=0.06)continue;
+    const rr=R*(0.10+hash(s.seed*7.3+i)*0.22)*p[2];
+    ctx.beginPath();ctx.ellipse(px+p[0]*R,py+p[1]*R,rr,rr*0.72,0,0,TAU);
+    ctx.fillStyle=rgba(mix(col,[16,14,20],0.55),0.30*p[2]);ctx.fill();}
+  ctx.save();ctx.beginPath();ctx.arc(px,py,R,0,TAU);ctx.clip();
+  const n=ctx.createRadialGradient(px+R*0.4,py+R*0.4,R*0.1,px+R*0.4,py+R*0.4,R*1.7);
+  n.addColorStop(0,'rgba(2,2,5,.94)');n.addColorStop(0.5,'rgba(2,2,5,.58)');n.addColorStop(1,'rgba(2,2,5,0)');
+  ctx.fillStyle=n;ctx.fillRect(px-R,py-R,R*2,R*2);ctx.restore();
+  ctx.beginPath();ctx.arc(px,py,R*1.02,0,TAU);
+  ctx.strokeStyle=rgba(mix(col,[255,252,246],0.5),s.met?0.30:0.12);ctx.lineWidth=1;ctx.stroke();
+  const at=ctx.createRadialGradient(px,py,R*0.96,px,py,R*1.5);
+  at.addColorStop(0,rgba(col,s.met?0.16:0.05));at.addColorStop(1,rgba(col,0));
+  ctx.beginPath();ctx.arc(px,py,R*1.5,0,TAU);ctx.fillStyle=at;ctx.fill();
+  if(!s.met||R<18)return;
+  const d=s.depth,cnt=3+d*4;
+  for(let j=0;j<cnt;j++){
+    const lat=(hash(s.seed*11.3+j*1.7)-0.5)*2.3,lon=hash(s.seed*13.1+j*2.3)*TAU,p=proj(lat,lon);
+    if(p[2]<=0.04)continue;
+    const illum=p[3]*SUN[0]+p[4]*SUN[1]+p[2]*SUN[2],night=Math.max(0,Math.min(1,(0.18-illum)/0.5));
+    const sz=(1.1+hash(s.seed*17.7+j)*1.7)*Math.max(0.6,Math.min(2.6,R/38))*(0.5+p[2]*0.5);
+    const a=(0.34+night*0.66);
+    ctx.beginPath();ctx.arc(px+p[0]*R,py+p[1]*R,sz,0,TAU);
+    ctx.fillStyle=rgba(mix(col,[255,242,214],night>0.4?0.84:0.35),a);ctx.fill();
+    if(night>0.35&&R>28){ctx.beginPath();ctx.arc(px+p[0]*R,py+p[1]*R,sz*4.6,0,TAU);
+      ctx.fillStyle=rgba(mix(col,[255,230,176],0.7),a*0.16);ctx.fill();}}
+  /* ★ the name rides the sphere. It is legible only in the light — but you
+     can always see WHERE it is, so you know which way to turn. */
+  if(R>30&&s.title){
+    const p=proj(s.nameLat,s.nameLon);
+    const illum=p[3]*SUN[0]+p[4]*SUN[1]+p[2]*SUN[2];
+    s._lit=Math.max(0,Math.min(1,(illum-0.10)/0.45))*Math.max(0,p[2]);
+    if(p[2]>0.04){
+      ctx.beginPath();ctx.arc(px+p[0]*R,py+p[1]*R,2.2,0,TAU);
+      ctx.fillStyle=rgba([255,250,240],0.13+s._lit*0.87);ctx.fill();}
+    if(s._lit>0.02){
+      ctx.font='500 '+Math.max(9,Math.min(13,R*0.10))+'px Lora, serif';ctx.textAlign='center';
+      ctx.fillStyle=rgba([255,248,238],s._lit*0.9);
+      ctx.fillText(s.title,px+p[0]*R*0.86,py+p[1]*R*0.86);
+    }}else s._lit=0;
+}
+
+/* the doorway — a world offers its story only from the light */
+const doorEl=document.getElementById('door');let doorStar=null;
+function doorway(){
+  let s=null;
+  if(mode==='sky'&&focus&&focus.met&&focus.title&&!built()){
+    const R=focus.pr*cam.z,off=Math.hypot(SX(focus.x)-W/2,SY(focus.y)-H*0.44);
+    if(R>36&&off<W*0.42&&(focus._lit||0)>0.35)s=focus;
+  }
+  if(s!==doorStar){
+    doorStar=s;
+    if(s){doorEl.querySelector('.cx').textContent=s.codex;
+      doorEl.querySelector('.ti').textContent=s.title;
+      doorEl.classList.add('on');doorEl.style.pointerEvents='auto';}
+    else{doorEl.classList.remove('on');doorEl.style.pointerEvents='none';}
+  }}
+doorEl.onclick=()=>{if(doorStar)say(doorStar.codex+' \u00b7 the story');};
+
+/* ─── the fall ───────────────────────────────────────────────── */
+function theFall(t,br){
+  const s=fallStar,rm=ROOMS[s.room],col=rm.rgb;
+  const seg=(a,b)=>cl(a,b,desc);
+  const app=1-seg(0.16,0.34),gath=seg(0.14,0.30)*(1-seg(0.52,0.74));
+  const strat=seg(0.44,0.66),mouth=seg(0.84,0.96);
+  const enter=Math.min(1,mode==='falling'?fall:1);
+  const cx=W/2+driftX*40,cy=H*(0.40-0.10*gath+0.05*strat);
+  ctx.fillStyle='rgba(4,3,7,'+(0.80*enter+0.15*strat)+')';ctx.fillRect(0,0,W,H);
+  if(strat>0.004){
+    for(let kk=s.depth;kk>=0;kk--){
+      const age=s.depth>0?kk/s.depth:0;
+      const loc=Math.max(0,Math.min(1,strat*(s.depth+1)-(s.depth-kk)));
+      const rr=(52+kk*40)*(0.5+strat*0.5)*(1+loc*1.7);
+      const a=(0.36-age*0.19)*strat*(1-loc*0.82);
+      if(a<=0.004)continue;
+      ctx.beginPath();ctx.ellipse(cx,cy,rr,rr*0.9,0,0,TAU);
+      ctx.strokeStyle=rgba(mix(col,BONE,age*0.7),a);ctx.lineWidth=(1.6-age*0.9)*(1+loc);ctx.stroke();
+      ctx.beginPath();ctx.arc(cx+rr*0.72,cy-rr*0.30,1.6+(1-age)*1.6,0,TAU);
+      ctx.fillStyle=rgba(mix(col,BONE,age*0.8),Math.min(1,a*1.8));ctx.fill();}}
+  const Sr=(6+br*2.6)*enter*(1+app*3.4+desc*2.0),hal=Sr*(7.4+app*2.2)*(0.94+br*0.10);
+  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,hal);
+  g.addColorStop(0,rgba(mix(col,[255,250,242],0.72),0.80*enter*(0.55+app*0.45)));
+  g.addColorStop(0.16,rgba(mix(col,[255,242,226],0.34),0.40*enter));
+  g.addColorStop(0.46,rgba(col,0.17*enter*(0.6+app*0.4)));g.addColorStop(1,rgba(col,0));
+  ctx.beginPath();ctx.arc(cx,cy,hal,0,TAU);ctx.fillStyle=g;ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,Sr,0,TAU);ctx.fillStyle='rgba(255,253,250,'+(0.95*enter)+')';ctx.fill();
+  if(gath>0.004){
+    const set=Math.max(0,Math.min(1,(desc-0.17)/0.16)),S=Math.min(W*0.40,158);
+    if(set>0.35){
+      ctx.textAlign='center';
+      ctx.font='9px "Space Mono", monospace';ctx.fillStyle='rgba(201,206,218,.66)';
+      ctx.fillText(s.codex,cx,cy-hal*0.42-18);
+      ctx.font='500 16px Lora, serif';ctx.fillStyle='rgba(237,232,227,.94)';
+      ctx.fillText(s.title,cx,cy-hal*0.42);}
+    const vs=s.spoke||[],m=Math.max(1,vs.length);
+    vs.forEach((v,i)=>{
+      const ang=i/m*TAU+t*(1-set*0.92)*0.3;
+      const ox=cx+Math.cos(ang)*Sr*2.2,oy=cy+Math.sin(ang)*Sr*2.2;
+      const f=m<2?0.5:(i+0.5)/m,sa=(0.11+f*0.78)*Math.PI;
+      const sx2=cx+Math.cos(sa)*S*1.06,sy2=cy+Math.sin(sa)*S*0.98;
+      const X=ox+(sx2-ox)*set,Y=oy+(sy2-oy)*set,mc=hx(VOICE[v]||'#C9CEDA');
+      if(set>0.2){ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(X,Y);
+        ctx.strokeStyle=rgba(mc,0.20*gath);ctx.lineWidth=0.6;ctx.stroke();}
+      ctx.font='17px Lora, serif';ctx.textAlign='center';
+      ctx.fillStyle=rgba(mc,0.66*gath+set*0.34);ctx.fillText('\u25cc',X,Y+6);
+      if(set>0.6){ctx.font='8px "Space Mono", monospace';
+        ctx.fillStyle=rgba(mc,0.7*(set-0.6)/0.4);ctx.fillText(v.toUpperCase(),X,Y+21);}});}
+  /* ★ the mouth. It opens while the hand asks, and closes when it stops. */
+  if(mouth>0.01){
+    const mr=(34+br*12)*mouth;
+    const g2=ctx.createRadialGradient(cx,cy,0,cx,cy,mr*3);
+    g2.addColorStop(0,rgba([255,246,230],0.44*mouth));
+    g2.addColorStop(0.34,rgba(mix(col,[218,182,112],0.7),0.26*mouth));
+    g2.addColorStop(1,rgba(col,0));
+    ctx.beginPath();ctx.arc(cx,cy,mr*3,0,TAU);ctx.fillStyle=g2;ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,mr*(1.5+br*0.14),0,TAU);
+    ctx.strokeStyle=rgba(mix(col,[236,206,150],0.8),0.20*mouth);ctx.lineWidth=1;ctx.stroke();
+    if(!built()&&consent>0.001){
+      const R2=mr*(1.5+br*0.14);
+      ctx.beginPath();ctx.arc(cx,cy,R2,-Math.PI/2,-Math.PI/2+consent*TAU);
+      ctx.strokeStyle=rgba([255,248,236],0.30+consent*0.55);ctx.lineWidth=1.4;ctx.stroke();
+    }}}
+
+/* the band rail — the four distances as overlapping washes, never ticks */
+const bandEl=document.getElementById('band');
+bandEl.innerHTML='<i></i><i></i><i></i>';
+const bi=[...bandEl.children];
+function bandRail(B){
+  const pos=[[0,0.34],[0.24,0.62],[0.52,1.0]],v=[B.sky,B.reg,B.wld];
+  const hue=['#7C8698','#8A93A6','#EDE3CE'];
+  bi.forEach((el,i)=>{el.style.top=(pos[i][0]*100)+'%';el.style.height=((pos[i][1]-pos[i][0])*100)+'%';
+    el.style.background='linear-gradient(to bottom,transparent,'+hue[i]+',transparent)';
+    el.style.opacity=(mode==='sky'?v[i]*0.5:0.06).toFixed(3);});}
+
+/* ─── the hand ───────────────────────────────────────────────── */
+const phone=document.getElementById('phone');
+const pts=new Map();let pinch0=0,movedFar=false,downAt=0;
+phone.addEventListener('pointerdown',e=>{
+  if(e.target.id==='back'||e.target.closest('#ab')||e.target.closest('#door'))return;
+  pts.set(e.pointerId,{x:e.clientX,y:e.clientY});movedFar=false;downAt=Date.now();
+  phone.classList.add('pulling');
+  if(pts.size===2){const v=[...pts.values()];pinch0=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);}
+  try{phone.setPointerCapture(e.pointerId);}catch(_){}});
+phone.addEventListener('pointermove',e=>{
+  const p=pts.get(e.pointerId);if(!p)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;
+  if(pts.size===2){const v=[...pts.values()],d=Math.hypot(v[0].x-v[1].x,v[0].y-v[1].y);
+    if(pinch0>0){cam.z=Math.max(ZMIN,Math.min(ZMAX,cam.z*(d/pinch0)));pinch0=d;}
+    movedFar=true;return;}
+  if(Math.abs(dx)+Math.abs(dy)>7)movedFar=true;
+  if(mode==='sky'){
+    /* ★ the design's law at the world's distance: vertical walks the axis,
+       horizontal is the register's own gesture — and here that gesture is
+       TURNING THE WORLD. You bring its name into the light yourself. */
+    const onWorld=focus&&focus.title&&focus.pr*cam.z>36&&
+      Math.hypot(SX(focus.x)-W/2,SY(focus.y)-H*0.44)<W*0.42;
+    if(onWorld&&Math.abs(dx)>Math.abs(dy)){focus.turnV+=dx*0.0022;cam.vx=0;}
+    else{
+      cam.x-=dx/cam.z;cam.y-=dy/cam.z;
+      cam.vx=dx/cam.z*0.55;cam.vy=dy/cam.z*0.55;   /* live velocity, every move */
+    }
+  }else if(mode==='well'||mode==='falling'){
+    if(built()){cam.z*=(1+dy*0.002);desc=Math.max(0,Math.min(0.807,cl(ZMAX*1.2,ZMAX*1.6,cam.z)));}
+    else{descV+=(-dy)*0.00042;driftX+=dx*0.0022;driftY+=dy*0.0022;asking=6;}
+  }});
+function up(e){pts.delete(e.pointerId);if(!pts.size)phone.classList.remove('pulling');
+  if(pts.size<2)pinch0=0;
+  if(!movedFar&&Date.now()-downAt<420)tap(e.clientX,e.clientY);}
+phone.addEventListener('pointerup',up);phone.addEventListener('pointercancel',up);
+phone.addEventListener('wheel',e=>{e.preventDefault();
+  if(mode==='sky')cam.vz=Math.max(-0.10,Math.min(0.10,cam.vz-e.deltaY*0.0004));
+  else if(!built()){descV+=-e.deltaY*0.00022;asking=6;}
+  else{cam.z=Math.max(ZMIN,Math.min(ZMAX*1.6,cam.z-e.deltaY*0.02));desc=Math.max(0,Math.min(0.807,cl(ZMAX*1.2,ZMAX*1.6,cam.z)));}},{passive:false});
+
+function tap(cx2,cy2){
+  const r=phone.getBoundingClientRect();
+  const px=(cx2-r.left)*(393/r.width),py=(cy2-r.top)*(852/r.height);
+  if(mode!=='sky')return;
+  let hit=null,best=1e9;
+  for(const s of STARS){
+    const R=Math.max(16,(built()?2.3:s.pr*cam.z)*1.2);
+    const d=Math.hypot(SX(s.x)-px,SY(s.y)-py);
+    if(d<R&&d<best){best=d;hit=s;}}
+  if(!hit){cam.x+=(px-W/2)/cam.z*0.5;cam.y+=(py-H/2)/cam.z*0.5;cam.vz+=0.06;return;}
+  const R=(built()?2.3:hit.pr*cam.z);
+  if(R>34&&hit.depth>0)openFall(hit);
+  else{
+    cam.x+=(hit.x-cam.x)*0.7;cam.y+=(hit.y-cam.y)*0.7;
+    /* a world already filling the frame is not pushed deeper by a touch —
+       from here the hand turns it, it does not fall through it */
+    if(R<36)cam.vz+=0.085;
+  }}
+
+function openFall(s){fallStar=s;mode='falling';fall=0;desc=0;descV=0;consent=0;
+  driftX=driftY=0;doorEl.classList.remove('on');doorStar=null;say('the fall');}
+function back(){
+  if(mode!=='sky'){mode='sky';fall=0;desc=0;descV=0;consent=0;cam.z=9;
+    document.getElementById('handoff').classList.remove('on');return;}
+  if(cam.z>3.2){cam.z=1.3;cam.vz=0;return;}
+  if(cam.z>0.55){cam.z=0.30;cam.vz=0;cam.vx=cam.vy=0;return;}
+  cam.x=0;cam.y=0;cam.z=0.30;cam.vx=cam.vy=cam.vz=0;}
+document.getElementById('back').onclick=back;
+
+/* the wayfinding the design authored — room names and the four distances */
+setInterval(()=>{
+  if(mode!=='sky')return;
+  let near=-1,best=1e9;
+  ROOMS.forEach((r,i)=>{const d=(r.x-cam.x)**2+(r.y-cam.y)**2;
+    if(d<best&&d<r.r*r.r*1.6){best=d;near=i;}});
+  if(near!==curRoom){curRoom=near;if(near>=0&&cam.z>0.5)say(ROOMS[near].name);}
+  const B=bands(cam.z);
+  const sc=B.wld>0.55?'a world, close':(B.reg>0.5?'a region':'the sky');
+  if(sc!==curScale){curScale=sc;say(sc);}
+},220);
+
+const abD=document.getElementById('abD'),abB=document.getElementById('abB');
+function setAB(m){AB=m;abD.classList.toggle('on',m==='designed');abB.classList.toggle('on',m==='built');
+  mode='sky';cam.z=m==='built'?1.3:0.30;cam.vx=cam.vy=cam.vz=0;consent=0;desc=0;
+  doorEl.classList.remove('on');doorStar=null;document.getElementById('handoff').classList.remove('on');}
+abD.onclick=()=>setAB('designed');abB.onclick=()=>setAB('built');
+
+fit();
+frame();
+say('the sky');
+</script>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#080711"/><circle cx="60" cy="60" r="6" fill="#EDE3CE"/><circle cx="60" cy="60" r="18" fill="none" stroke="#9B6BD6" stroke-width="1"/><circle cx="60" cy="60" r="30" fill="none" stroke="#7C8698" stroke-width="1" opacity=".6"/><circle cx="60" cy="60" r="42" fill="none" stroke="#7C8698" stroke-width="1" opacity=".3"/></svg></template>
+</body></html>

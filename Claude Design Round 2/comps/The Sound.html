@@ -1,0 +1,603 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Sound — the whole app, one instrument</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#EDE8E3;--dim:rgba(237,232,227,.6);--faint:rgba(237,232,227,.3);--hue:#C9A227}
+body{background:#0a0a0c;min-height:100vh;display:grid;place-items:center;padding:40px 20px;font-family:'Lora',Georgia,serif;color:var(--ink)}
+a{color:var(--hue)}a:hover{color:#E0B93C}
+#desk{display:flex;gap:42px;align-items:flex-start}
+#phone{position:relative;width:393px;height:852px;border-radius:46px;overflow:hidden;background:#08080C;box-shadow:0 0 0 1px rgba(237,232,227,.09),0 40px 120px rgba(0,0,0,.8);flex:0 0 auto;touch-action:none}
+#scope{position:absolute;inset:0;width:100%;height:100%;display:block}
+/* the wake — one gesture, because a browser requires one */
+#wake{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:0;background:rgba(8,8,12,.9);cursor:pointer;transition:opacity 1.4s}
+#wake.off{opacity:0;pointer-events:none}
+#wake .ring{width:96px;height:96px;border-radius:50%;border:1px solid rgba(201,162,39,.4);display:grid;place-items:center;animation:wb 9s ease-in-out infinite}
+@keyframes wb{0%,100%{transform:scale(.96);opacity:.6}50%{transform:scale(1.04);opacity:1}}
+#wake .ring span{font-size:30px;color:var(--hue)}
+#wake b{display:block;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.28em;text-transform:uppercase;font-weight:400;color:var(--faint);margin-top:26px}
+#wake i{display:block;font-style:italic;font-size:13px;line-height:1.6;color:var(--dim);margin-top:12px;max-width:250px;text-align:center}
+/* the places */
+#hdr{position:absolute;top:44px;left:0;right:0;z-index:6;text-align:center;pointer-events:none}
+#hdr b{display:block;font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;font-weight:400;color:var(--faint)}
+#hdr i{display:block;font-size:21px;font-style:normal;letter-spacing:-.01em;margin-top:4px}
+#hdr s{display:block;text-decoration:none;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:7px}
+#evs{position:absolute;left:24px;right:24px;top:150px;bottom:150px;z-index:6;display:flex;flex-direction:column;gap:7px;overflow-y:auto}
+#evs::-webkit-scrollbar{width:0}
+.ev{display:flex;flex-wrap:wrap;align-items:baseline;gap:11px;padding:11px 13px;border-radius:14px;cursor:pointer;border:1px solid rgba(237,232,227,.10);background:rgba(237,232,227,.03);transition:all .3s;text-align:left;font-family:inherit;color:inherit}
+.ev:hover{background:rgba(201,162,39,.10);border-color:rgba(201,162,39,.4)}
+.ev.lit{background:rgba(201,162,39,.16);border-color:rgba(201,162,39,.6)}
+.ev b{flex:1;font-size:13.5px;font-weight:500}
+.ev u{text-decoration:none;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);white-space:nowrap}
+.ev q{display:block;quotes:none;flex-basis:100%;font-size:11.5px;line-height:1.5;color:var(--dim);margin-top:4px}
+.ev q:before,.ev q:after{content:''}
+#bedline{position:absolute;bottom:104px;left:24px;right:24px;z-index:6;pointer-events:none;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);line-height:1.8;text-align:center}
+#rail{position:absolute;bottom:0;left:0;right:0;height:44px;z-index:9;display:flex;justify-content:center;align-items:center;gap:3px}
+#rail span{padding:6px 7px;border-radius:10px;cursor:pointer;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.06em;text-transform:uppercase;color:rgba(237,232,227,.28);border:1px solid transparent;transition:all .3s}
+#rail span.on{color:var(--ink);border-color:rgba(201,162,39,.45);background:rgba(201,162,39,.12)}
+#mute{position:absolute;top:19px;right:15px;width:34px;height:34px;z-index:10;display:grid;place-items:center;border-radius:50%;background:rgba(18,16,22,.6);border:1px solid rgba(255,255,255,.09);cursor:pointer;font-size:13px;color:var(--dim)}
+#mute:hover{color:var(--ink)}
+#notes{width:420px;font-size:13.5px;line-height:1.72;color:rgba(237,232,227,.62)}
+#notes h1{font-size:21px;font-weight:500;letter-spacing:-.014em;color:#EDE8E3;margin-bottom:4px}
+#notes .sub{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);margin-bottom:22px}
+#notes h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.6);margin:22px 0 9px}
+#notes p{margin-bottom:11px;text-wrap:pretty}
+#notes em{color:rgba(237,232,227,.9);font-style:italic}
+#notes code{font-family:'Space Mono',monospace;font-size:11px;color:rgba(212,174,74,.86)}
+#notes .law{border-left:1px solid rgba(212,174,74,.45);padding:2px 0 2px 15px;margin:0 0 13px;font-style:italic;color:rgba(237,232,227,.88)}
+#notes .rule{border-left:2px solid rgba(201,162,39,.6);padding:3px 0 3px 15px;margin:0 0 14px}
+#notes .warn{border-left:1px solid rgba(229,83,60,.5);padding:2px 0 2px 15px;margin:0 0 13px}
+.k{display:flex;gap:10px;margin-bottom:8px}
+.k b{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:400;flex:0 0 84px;padding-top:3px}
+.k span{flex:1}
+.ab{display:inline-flex;gap:0;margin:2px 0 10px;border-radius:10px;overflow:hidden;border:1px solid rgba(201,162,39,.32)}
+.ab button{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.12em;text-transform:uppercase;padding:7px 11px;background:none;border:none;color:rgba(237,232,227,.42);cursor:pointer;transition:all .3s}
+.ab button.on{background:rgba(201,162,39,.18);color:var(--ink)}
+</style></head><body>
+<div id="desk">
+<div id="phone">
+  <canvas id="scope"></canvas>
+  <div id="hdr"><b></b><i></i><s></s></div>
+  <div id="evs"></div>
+  <div id="bedline"></div>
+  <div id="mute">◍</div>
+  <div id="rail"></div>
+  <div id="wake"><div class="ring"><span>◍</span></div><b>the sound</b><i>Nothing samples. Nothing loops. Every tone here is generated as you ask for it.</i></div>
+</div>
+<div id="notes">
+  <h1>The Sound</h1>
+  <div class="sub">the whole app, one instrument · comp 7</div>
+  <p>Touch once to wake it. Then walk the rail: eight places, each with its own bed. <em>Moving between them is always a crossfade, never a cut.</em> Press any event to hear it in place.</p>
+  <p>The waveform is the real output on an <code>AnalyserNode</code> — so you are seeing the thing you are hearing, which is the point of <code>Snd.breath()</code> being readable by the visuals.</p>
+  <h2>Ruling 1 · the Rite Hz table</h2>
+  <p class="rule">Pitch is the <strong>Rite / Instrument v3</strong> table. Timbre is <strong>field-sound's <code>CHAR</code></strong>. They were never in competition — one is a pitch set, the other a voice set, and the build collapsed both.</p>
+  <p>Why: the Rite table draws every voice from the ladder the instrument already climbs — <code>gaia 174 · sakshi 285 · lalita 396 · karishma 528</code> are rungs of <code>FREQS</code>; <code>bindu 136</code> is OM. One tuning system for the whole app. <code>field-sound.js:27</code> is a musician's set (A2, E2, D3, F3, A3…) — lovely intervals, but it makes the field a separate instrument from the axis it lives on. It is also the older document.</p>
+  <p>But <code>field-sound.js:13-25</code>'s <code>CHAR</code> is the <em>only</em> per-presence timbre spec that exists anywhere, and it is superb: Neev's <code>partials [0.5,1]</code> and <code>4.4s</code> attack, Shweta at <code>gain 0.012</code> with a band of <code>air</code>, Arch's <code>vib 4.6</code>, Bindu's <code>flicker 6.2</code>, Karishma's <code>shimmer</code>, Lalita's <code>gliss 1.02</code>, and eleven distinct pan positions from <code>−0.4</code> to <code>+0.4</code>. Keep every value. A/B it on the Rite and hear what the collapse cost.</p>
+  <div class="ab" id="abHz"><button data-v="rite" class="on">rite pitch · CHAR timbre</button><button data-v="field">field pitch</button><button data-v="flat">collapsed (as built)</button></div>
+  <h2>Ruling 2 · the bed</h2>
+  <p class="rule">Both. They are <strong>different rooms</strong>, and the app needs both: the field's bed is <em>root + fifth</em> because it is a room you are standing in; the Point's bed is a <em>binaural pair</em> because it is a state you are being moved into. <code>BEATS</code> belongs to the Point alone.</p>
+  <p>Reading them as rivals is the error. <code>field-sound.js:53-70</code> — root, fifth at <code>0.16</code>, lowpass <code>900/Q0.6</code>, LFO on the room's own breath — is architecture: it tells you the size and warmth of where you are. <code>point-sound.js:42-58</code> — two sines at <code>f</code> and <code>f + beat</code> panned <code>∓0.6</code>, plus the octave at <code>0.06</code> — is entrainment: <code>8 → 4 Hz, alpha into theta</code>, which only means something on a ladder you are climbing. The Point climbs; the field does not.</p>
+  <div class="ab" id="abBed"><button data-v="both" class="on">both · by place</button><button data-v="field">field bed everywhere</button><button data-v="point">binaural everywhere</button></div>
+  <h2>The eleven Rite events, and the one that matters most</h2>
+  <p class="law">The stillness gate is the one place in the app where sound answers the <em>absence</em> of a hand.</p>
+  <p>E4.2: <code>thin</code> makes no sound at all in the build. Everything else in the instrument responds to touch; this one responds to your having stopped. It should be the most distinctive sound in the app and currently it is silence. It is on the axis, third from the top — press <em>be still</em> and then do nothing.</p>
+  <h2>What is restored here</h2>
+  <div class="k"><b>ladder</b><span><code>FREQS</code> and <code>BEATS</code> both, as the L/R offset — D7.2's absent narrowing</span></div>
+  <div class="k"><b>stone</b><span>procedural <code>7.5s / decay 0.6</code> impulse, <code>wet 0.42</code> — D7.3</span></div>
+  <div class="k"><b>the step</b><span><code>step(from,to)</code> glissando <code>a·2 → b·2</code> over <code>2.6s</code>, sounded not cut — D7.4</span></div>
+  <div class="k"><b>the ring</b><span><code>R=[2,3,4,4.5,6,8]</code>, entering <code>1.5% flat</code> and coming into tune over <code>4s</code> — the audible twin of the Return's eccentric ring</span></div>
+  <div class="k"><b>the aged bed</b><span>filter → <code>430</code>, root <code>×0.996</code>, tape wobble at <code>0.07 Hz</code> — the Return opens here</span></div>
+  <div class="k"><b>the bowl</b><span><code>[1, 2.004, 2.98, 4.02]</code> over <code>11s</code>, and the bed holds its breath to <code>0.006</code></span></div>
+  <div class="k"><b>the light</b><span><code>528 + 792</code> at <code>0.012</code> — the room tone the Light has never had</span></div>
+  <h2>Two rules the whole layer obeys</h2>
+  <p><strong>Felt, not heard.</strong> Master ceiling is deliberately low; no event exceeds <code>0.075</code>. <strong>Muting is a fade, never a cut</strong> — the ◍ at top right takes <code>0.5s</code>, and <code>prefers-reduced-motion</code> suppresses events while leaving the bed.</p>
+  <h2>⚠ One reconstruction</h2>
+  <p class="warn"><code>thin</code>'s exact envelope is described in the audit (<em>a sustained pair, <code>o</code> fixed at 174</em>) but I could not read the full function. What is here is built from that description and the layer's own idiom — <em>not verbatim</em>. Check it against <code>spine-sound.js</code> before porting.</p>
+</div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   THE SOUND — the app's whole sound layer, as one instrument.
+   Generated, never recorded. Nothing samples; nothing loops.
+   ladder + beats + stone + step/blip/glide/shimmer/om  `point-sound.js:10-124`
+   bed · agedBed · CHAR · voice · threshold · bowl · ring · ink
+                                                       `field-sound.js:13-232`
+   axis load/reflect idiom                             `spine-sound.js:141-160`
+   pitch table (ruling 1)                    `The Instrument v3.html:404-418`
+   ═══════════════════════════════════════════════════════════════════════ */
+const TAU=Math.PI*2;
+const FREQS=[174,285,396,417,528,639,741,852,963,136.1];
+const BEATS=[8,7.5,7,6.5,6,5.5,5,4.5,4.2,4];
+/* ruling 1 — pitch from the ladder the instrument climbs */
+const HZ_RITE={bindu:136,neev:96,gaia:174,sid:220,arch:330,shweta:342,karishma:528,
+ sakshi:285,lalita:396,ashrey:432,ashram:198};
+const HZ_FIELD={bindu:110,neev:82,gaia:146,sid:174,arch:220,shweta:329,karishma:392,
+ sakshi:285,ashrey:196,lalita:396,ashram:261};
+/* ruling 1 — timbre from field-sound's CHAR, verbatim, every value */
+const CHAR={
+ bindu:{wave:'sine',partials:[1,2,3],gain:0.055,atk:0.6,rel:5.0,flicker:6.2,pan:0},
+ neev:{wave:'sine',partials:[0.5,1],gain:0.07,atk:3.4,rel:8.0,pan:-0.15},
+ gaia:{wave:'triangle',partials:[1,1.5],gain:0.05,atk:1.6,rel:6.0,pan:-0.3},
+ sid:{wave:'sine',partials:[1,1.2],gain:0.05,atk:1.2,rel:6.5,pan:0.25},
+ arch:{wave:'triangle',partials:[1,2],gain:0.048,atk:0.9,rel:4.5,vib:4.6,pan:0.35},
+ shweta:{wave:'sine',partials:[1],gain:0.012,atk:4.0,rel:9.0,air:0.028,pan:0},
+ karishma:{wave:'sine',partials:[1,2,3.02],gain:0.036,atk:2.0,rel:7.0,shimmer:true,pan:0.4},
+ sakshi:{wave:'sine',partials:[1],gain:0.026,atk:5.0,rel:10.0,pan:-0.4},
+ ashrey:{wave:'sine',partials:[1,2],gain:0.042,atk:1.4,rel:6.0,pan:0.15},
+ lalita:{wave:'sine',partials:[1,1.5],gain:0.04,atk:2.2,rel:8.0,gliss:1.02,pan:0},
+ ashram:{wave:'sine',partials:[1,2,4],gain:0.05,atk:1.0,rel:5.5,pan:0}};
+const FLAT={wave:'sine',partials:[1,2],gain:0.05,atk:1.0,rel:5.0,pan:0};
+let hzMode='rite',bedMode='both';
+const hzOf=k=>(hzMode==='field'?HZ_FIELD:HZ_RITE)[k]||220;
+const charOf=k=>hzMode==='flat'?FLAT:(CHAR[k]||CHAR.ashram);
+
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T0=performance.now();
+
+const S={
+ ctx:null,master:null,bus:null,verb:null,bed:null,bedF:null,bedLfo:null,
+ on:false,muted:false,ink:null,ringStep:0,ana:null,thinNode:null,
+ phase(){return ((performance.now()-T0)/10000)%1;},
+ breath(){return (Math.sin(this.phase()*TAU)+1)/2;},
+ _stone(secs,decay){const sr=this.ctx.sampleRate,len=Math.floor(sr*secs),
+   b=this.ctx.createBuffer(2,len,sr);
+   for(let ch=0;ch<2;ch++){const d=b.getChannelData(ch);
+     for(let i=0;i<len;i++){const t=i/len;d[i]=(Math.random()*2-1)*Math.pow(1-t,1/decay)*0.55;}}
+   return b;},
+ _pan(v){if(!this.ctx.createStereoPanner)return null;
+   const p=this.ctx.createStereoPanner();p.pan.value=v||0;return p;},
+ ensure(){
+   if(this.ctx)return;
+   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+   this.ctx=new AC();
+   this.master=this.ctx.createGain();this.master.gain.value=0;
+   this.ana=this.ctx.createAnalyser();this.ana.fftSize=2048;
+   this.master.connect(this.ana);this.ana.connect(this.ctx.destination);
+   this.bus=this.ctx.createGain();this.bus.gain.value=1;
+   /* the size of the room, heard before it is seen */
+   const cv=this.ctx.createConvolver();cv.buffer=this._stone(7.5,0.6);
+   const wet=this.ctx.createGain();wet.gain.value=0.42;
+   this.bus.connect(this.master);this.bus.connect(cv);cv.connect(wet);wet.connect(this.master);
+   this.verb=wet;},
+ wake(){this.ensure();if(!this.ctx)return;
+   if(this.ctx.state==='suspended')this.ctx.resume();
+   this.on=true;
+   this.master.gain.setTargetAtTime(0.9,this.ctx.currentTime,0.7);},
+ /* muting is a fade, never a cut */
+ mute(m){this.muted=m;if(!this.ctx)return;
+   this.master.gain.setTargetAtTime(m?0:0.9,this.ctx.currentTime,0.5);},
+ live(){return this.on&&this.ctx&&!this.muted;},
+
+ /* ── the field's bed: a room you are standing in ─────────────── */
+ fieldBed(rootHz,breathSecs){
+   this.stopBed();
+   const t=this.ctx.currentTime;
+   const g=this.ctx.createGain();g.gain.value=0;
+   const f=this.ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=900;f.Q.value=0.6;
+   const root=this.ctx.createOscillator();root.type='sine';root.frequency.value=rootHz;
+   const fifth=this.ctx.createOscillator();fifth.type='sine';fifth.frequency.value=rootHz*1.5;
+   const fg=this.ctx.createGain();fg.gain.value=0.16;
+   const lfo=this.ctx.createOscillator();lfo.frequency.value=1/Math.max(2,breathSecs);
+   const lg=this.ctx.createGain();lg.gain.value=0.014;
+   lfo.connect(lg);lg.connect(g.gain);
+   root.connect(f);fifth.connect(fg);fg.connect(f);f.connect(g);g.connect(this.bus);
+   root.start(t);fifth.start(t);lfo.start(t);
+   g.gain.setTargetAtTime(0.030,t,1.6);          /* a crossfade, never a cut */
+   this.bed={kind:'field',root:root,fifth:fifth,g:g,rootHz:rootHz,nodes:[root,fifth,lfo]};
+   this.bedF=f;this.bedLfo=lfo;},
+ /* ── the Point's bed: a state you are moved into ─────────────── */
+ pointBed(i){
+   this.stopBed();
+   const t=this.ctx.currentTime,f=FREQS[i],b=BEATS[i];
+   const gn=this.ctx.createGain();gn.gain.value=0;
+   const lfo=this.ctx.createOscillator();lfo.frequency.value=0.1;
+   const lg=this.ctx.createGain();lg.gain.value=0.028;
+   lfo.connect(lg);lg.connect(gn.gain);lfo.start(t);
+   const nodes=[lfo];
+   const mk=(freq,pan)=>{
+     const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=freq;
+     const og=this.ctx.createGain();og.gain.value=0.5;o.connect(og);
+     const p=this._pan(pan);
+     if(p){og.connect(p);p.connect(gn);}else og.connect(gn);
+     o.start(t);nodes.push(o);return o;};
+   mk(f,-0.6);mk(f+b,0.6);                        /* the narrowing, as L/R */
+   const o3=this.ctx.createOscillator();o3.type='sine';o3.frequency.value=f*2;
+   const o3g=this.ctx.createGain();o3g.gain.value=0.06;
+   o3.connect(o3g);o3g.connect(gn);o3.start(t);nodes.push(o3);
+   gn.connect(this.bus);
+   gn.gain.setTargetAtTime(0.055,t,1.4);
+   this.bed={kind:'point',g:gn,rootHz:f,beat:b,nodes:nodes};
+   this.bedF=null;this.bedLfo=lfo;},
+ /* patina — the same bed, aged. The Return opens here. */
+ agedBed(rootHz,breathSecs){
+   this.fieldBed(rootHz,breathSecs);
+   const t=this.ctx.currentTime;
+   this.bedF.frequency.linearRampToValueAtTime(430,t+6);
+   this.bed.root.frequency.linearRampToValueAtTime(rootHz*0.996,t+8);
+   this.bed.fifth.frequency.linearRampToValueAtTime(rootHz*1.5*0.994,t+8);
+   this.bedLfo.frequency.linearRampToValueAtTime(1/(breathSecs*1.35),t+6);
+   const w=this.ctx.createOscillator();w.frequency.value=0.07;    /* tape wobble */
+   const wg=this.ctx.createGain();wg.gain.value=0.9;
+   w.connect(wg);wg.connect(this.bed.root.frequency);w.start(t);
+   this.bed.nodes.push(w);this.bed.aged=true;},
+ stopBed(){
+   if(!this.bed)return;
+   const t=this.ctx.currentTime,b=this.bed;
+   b.g.gain.cancelScheduledValues(t);
+   b.g.gain.setTargetAtTime(0,t,0.9);            /* fades out under the new one */
+   b.nodes.forEach(n=>{try{n.stop(t+4);}catch(e){}});
+   this.bed=null;this.bedF=null;this.bedLfo=null;},
+
+ /* ── BreathVoice — a presence takes the field ────────────────── */
+ voice(key,hz){
+   if(!this.live()||reduced)return;
+   const c=charOf(key),t=this.ctx.currentTime;
+   hz=hz||hzOf(key);
+   const life=c.atk+c.rel;
+   const vg=this.ctx.createGain();vg.gain.setValueAtTime(0,t);
+   vg.gain.linearRampToValueAtTime(c.gain,t+c.atk);
+   vg.gain.linearRampToValueAtTime(0,t+life);
+   const p=this._pan(hzMode==='flat'?0:c.pan);
+   if(p){vg.connect(p);p.connect(this.bus);}else vg.connect(this.bus);
+   c.partials.forEach((mult,i)=>{
+     const o=this.ctx.createOscillator();o.type=c.wave;o.frequency.value=hz*mult;
+     const pg=this.ctx.createGain();pg.gain.value=1/(i+1.6);
+     o.connect(pg);pg.connect(vg);
+     if(c.gliss&&i===1)o.frequency.linearRampToValueAtTime(hz*mult*c.gliss,t+life);
+     if(c.vib){const v=this.ctx.createOscillator();v.frequency.value=c.vib;
+       const vgn=this.ctx.createGain();vgn.gain.value=hz*0.006;
+       v.connect(vgn);vgn.connect(o.frequency);v.start(t);v.stop(t+life+0.2);}
+     o.start(t);o.stop(t+life+0.2);});
+   if(c.flicker){const fl=this.ctx.createOscillator();fl.frequency.value=c.flicker;
+     const fg=this.ctx.createGain();fg.gain.value=c.gain*0.45;
+     fl.connect(fg);fg.connect(vg.gain);fl.start(t);fl.stop(t+life+0.2);}
+   if(c.air){const n=this.ctx.createBufferSource();n.buffer=this._stone(life,0.9);
+     const nf=this.ctx.createBiquadFilter();nf.type='bandpass';
+     nf.frequency.value=hz*4;nf.Q.value=0.7;
+     const ng=this.ctx.createGain();ng.gain.setValueAtTime(0,t);
+     ng.gain.linearRampToValueAtTime(c.air,t+c.atk);
+     ng.gain.linearRampToValueAtTime(0,t+life);
+     n.connect(nf);nf.connect(ng);ng.connect(this.bus);n.start(t);n.stop(t+life);}
+   if(c.shimmer){const s=this.ctx.createOscillator();s.type='sine';s.frequency.value=hz*6;
+     const sg=this.ctx.createGain();sg.gain.setValueAtTime(0,t);
+     sg.gain.linearRampToValueAtTime(c.gain*0.18,t+c.atk*1.6);
+     sg.gain.linearRampToValueAtTime(0,t+life);
+     s.connect(sg);sg.connect(this.bus);s.start(t);s.stop(t+life+0.2);}
+   /* the bed steps back while a voice speaks, then returns */
+   if(this.bed&&this.bed.kind==='field'){const bg=this.bed.g.gain;
+     bg.cancelScheduledValues(t);
+     bg.linearRampToValueAtTime(0.018,t+c.atk);
+     bg.linearRampToValueAtTime(0.030,t+life+1.6);}},
+
+ /* ── the events ─────────────────────────────────────────────── */
+ threshold(hz,dur){
+   if(!this.live()||reduced)return;
+   hz=hz||198;dur=dur||5;
+   const t=this.ctx.currentTime;
+   const g=this.ctx.createGain();g.gain.setValueAtTime(0,t);
+   g.gain.linearRampToValueAtTime(0.032,t+dur*0.42);
+   g.gain.linearRampToValueAtTime(0,t+dur);
+   const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=hz;
+   const o2=this.ctx.createOscillator();o2.type='sine';o2.frequency.value=hz*2.002;
+   const g2=this.ctx.createGain();g2.gain.value=0.22;
+   o.connect(g);o2.connect(g2);g2.connect(g);g.connect(this.bus);
+   o.start(t);o2.start(t);o.stop(t+dur+0.2);o2.stop(t+dur+0.2);},
+ bowl(hz){
+   if(!this.live())return;
+   hz=hz||220;const t=this.ctx.currentTime,dur=11;
+   const g=this.ctx.createGain();g.gain.setValueAtTime(0,t);
+   g.gain.linearRampToValueAtTime(0.075,t+0.09);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+   [1,2.004,2.98,4.02].forEach((m,i)=>{
+     const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=hz*m;
+     const pg=this.ctx.createGain();pg.gain.value=1/(i*2.2+1);
+     o.connect(pg);pg.connect(g);o.start(t);o.stop(t+dur);});
+   g.connect(this.bus);
+   /* the bed holds its breath */
+   if(this.bed){const bg=this.bed.g.gain;bg.cancelScheduledValues(t);
+     bg.linearRampToValueAtTime(0.006,t+1.2);
+     bg.linearRampToValueAtTime(this.bed.kind==='point'?0.055:0.030,t+9);}},
+ ring(step){
+   if(!this.live())return;
+   const n=typeof step==='number'?step:++this.ringStep;
+   const base=(this.bed&&this.bed.rootHz)||84;
+   const R=[2,3,4,4.5,6,8],hz=base*R[Math.min(n,R.length-1)];
+   const t=this.ctx.currentTime,dur=9;
+   const g=this.ctx.createGain();g.gain.setValueAtTime(0,t);
+   g.gain.linearRampToValueAtTime(0.026,t+dur*0.4);
+   g.gain.linearRampToValueAtTime(0,t+dur);
+   const o=this.ctx.createOscillator();o.type='sine';
+   o.frequency.setValueAtTime(hz*0.985,t);
+   o.frequency.linearRampToValueAtTime(hz,t+4);   /* comes into tune as it lands */
+   const o2=this.ctx.createOscillator();o2.type='sine';o2.frequency.value=hz*1.5;
+   const g2=this.ctx.createGain();g2.gain.value=0.14;
+   o.connect(g);o2.connect(g2);g2.connect(g);g.connect(this.bus);
+   o.start(t);o2.start(t);o.stop(t+dur+0.2);o2.stop(t+dur+0.2);},
+ step(from,to){
+   if(!this.live())return;
+   const t=this.ctx.currentTime,a=FREQS[from],b=FREQS[to];
+   const o=this.ctx.createOscillator();o.type='sine';
+   o.frequency.setValueAtTime(a*2,t);
+   o.frequency.exponentialRampToValueAtTime(Math.max(40,b*2),t+2.6);
+   const gn=this.ctx.createGain();gn.gain.setValueAtTime(0,t);
+   gn.gain.linearRampToValueAtTime(0.035,t+0.6);
+   gn.gain.setTargetAtTime(0,t+1.6,0.6);
+   o.connect(gn);gn.connect(this.bus);o.start(t);o.stop(t+4);},
+ blip(i){
+   if(!this.live()||reduced)return;
+   const f=FREQS[Math.min(i,FREQS.length-1)]*2,t=this.ctx.currentTime;
+   const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=f;
+   const gn=this.ctx.createGain();gn.gain.setValueAtTime(0,t);
+   gn.gain.linearRampToValueAtTime(0.07,t+0.02);
+   gn.gain.exponentialRampToValueAtTime(0.0001,t+0.7);
+   o.connect(gn);gn.connect(this.bus);o.start(t);o.stop(t+0.8);},
+ glide(i,down){
+   if(!this.live())return;
+   const f=FREQS[Math.min(i,FREQS.length-1)],t=this.ctx.currentTime;
+   const o=this.ctx.createOscillator();o.type='sine';
+   o.frequency.setValueAtTime(down?f:f/2,t);
+   o.frequency.exponentialRampToValueAtTime(down?f/2:f,t+2.2);
+   const gn=this.ctx.createGain();gn.gain.setValueAtTime(0,t);
+   gn.gain.linearRampToValueAtTime(0.06,t+0.15);
+   gn.gain.setTargetAtTime(0,t+1.6,0.5);
+   o.connect(gn);gn.connect(this.bus);o.start(t);o.stop(t+3.5);},
+ shimmer(){
+   if(!this.live())return;
+   const t=this.ctx.currentTime;
+   [285,396,528,639,852].forEach((f,i)=>{
+     const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=f*2;
+     const gn=this.ctx.createGain(),st=t+i*0.18;
+     gn.gain.setValueAtTime(0,st);gn.gain.linearRampToValueAtTime(0.03,st+0.1);
+     gn.gain.exponentialRampToValueAtTime(0.0001,st+1.6);
+     o.connect(gn);gn.connect(this.bus);o.start(st);o.stop(st+1.8);});},
+ om(){
+   if(!this.live())return;
+   const t=this.ctx.currentTime;
+   [136.1,272.2,408.3].forEach((f,i)=>{
+     const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=f;
+     const gn=this.ctx.createGain();gn.gain.setValueAtTime(0,t);
+     gn.gain.linearRampToValueAtTime(0.06/(i+1),t+0.9);
+     gn.gain.exponentialRampToValueAtTime(0.0001,t+9);
+     o.connect(gn);gn.connect(this.bus);o.start(t);o.stop(t+9.5);});},
+ lightBed(){
+   if(!this.live())return;
+   const t=this.ctx.currentTime;
+   [528,792].forEach(f=>{
+     const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=f;
+     const gn=this.ctx.createGain();gn.gain.setValueAtTime(0,t);
+     gn.gain.linearRampToValueAtTime(0.012,t+6);
+     gn.gain.linearRampToValueAtTime(0,t+22);
+     o.connect(gn);gn.connect(this.bus);o.start(t);o.stop(t+22.5);});},
+ inkOn(hz){
+   if(!this.live()||this.ink||reduced)return;
+   const t=this.ctx.currentTime;
+   const g=this.ctx.createGain();g.gain.setValueAtTime(0,t);
+   g.gain.linearRampToValueAtTime(0.014,t+2.4);
+   const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=hz||174;
+   const f=this.ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=600;
+   o.connect(f);f.connect(g);g.connect(this.bus);o.start(t);
+   this.ink={o:o,g:g};
+   setTimeout(()=>this.inkOff(),5200);},
+ inkOff(){
+   if(!this.ink||!this.ctx)return;
+   const t=this.ctx.currentTime,n=this.ink;this.ink=null;
+   n.g.gain.cancelScheduledValues(t);n.g.gain.setTargetAtTime(0,t,0.8);
+   try{n.o.stop(t+3);}catch(e){}},
+ /* ★ the stillness gate — the one place sound answers the ABSENCE of a hand.
+    RECONSTRUCTED from the audit's description, not verbatim. See notes. */
+ thin(){
+   if(!this.live()||this.thinNode)return;
+   const t=this.ctx.currentTime;
+   const g=this.ctx.createGain();g.gain.setValueAtTime(0,t);
+   g.gain.linearRampToValueAtTime(0.028,t+4.6);   /* the 4600ms gate */
+   const o=this.ctx.createOscillator();o.type='sine';o.frequency.value=174;
+   const o2=this.ctx.createOscillator();o2.type='sine';
+   o2.frequency.setValueAtTime(174*1.5,t);
+   o2.frequency.linearRampToValueAtTime(174*2,t+4.6); /* the fifth opens to the octave */
+   const g2=this.ctx.createGain();g2.gain.value=0.3;
+   o.connect(g);o2.connect(g2);g2.connect(g);g.connect(this.bus);
+   o.start(t);o2.start(t);
+   this.thinNode={o:o,o2:o2,g:g};},
+ /* the instant a hand returns, it goes — that is the whole mechanism */
+ thinOff(){
+   if(!this.thinNode||!this.ctx)return;
+   const t=this.ctx.currentTime,n=this.thinNode;this.thinNode=null;
+   n.g.gain.cancelScheduledValues(t);n.g.gain.setTargetAtTime(0,t,0.22);
+   try{n.o.stop(t+1.2);n.o2.stop(t+1.2);}catch(e){}}
+};
+
+/* ── the eight places ──────────────────────────────────────────── */
+const PLACES=[
+ {id:'door',name:'the Door',rail:'door',sub:'first touch \u00b7 the room, heard before it is seen',
+  bed:['field',110,10],
+  bedline:'field bed \u00b7 root 110 + fifth 165 @ 0.16 \u00b7 lowpass 900 \u00b7 breath 10s',
+  evs:[
+   ['the room opens','openTheRoom(8.5)','the stone tail, before anything is visible',s=>s.bowl(110)],
+   ['breath in','breathIn(6)','the bed swells and then HOLDS \u2014 it does not release',s=>{
+     if(!s.live()||!s.bed)return;const t=s.ctx.currentTime,bg=s.bed.g.gain;
+     bg.cancelScheduledValues(t);bg.linearRampToValueAtTime(0.052,t+6);
+     bg.linearRampToValueAtTime(0.040,t+9);
+     if(s.bedF)s.bedF.frequency.linearRampToValueAtTime(2600,t+6);
+     if(s.bedLfo)s.bedLfo.frequency.linearRampToValueAtTime(0.001,t+6);}],
+   ['the rope','threshold(198,5)','one movement gives way to the next',s=>s.threshold(198,5)]]},
+ {id:'axis',name:'the Axis',rail:'axis',sub:'fourteen registers \u00b7 the ladder, climbed',
+  bed:['point',0],
+  bedline:'point bed \u00b7 174 + 182 panned \u2213 0.6 \u00b7 beat 8.0 Hz \u00b7 octave @ 0.06',
+  evs:[
+   ['a register passes','step(0,1)','174 \u2192 285, sounded over 2.6s, never cut',s=>{s.step(0,1);s.pointBed(1);}],
+   ['a membrane','blip(1)','the thinnest event in the app',s=>s.blip(1)],
+   ['\u2605 be still \u2014 then do nothing','thin()','the ONE place sound answers the absence of your hand. 4.6s to open. Move, and it goes.',s=>s.thin()],
+   ['the centre bloom','shimmer()','five rungs, 0.18s apart',s=>s.shimmer()]]},
+ {id:'room',name:'a Room',rail:'rooms',sub:'eleven voices \u00b7 each its own body and behaviour',
+  bed:['field',136,9],
+  bedline:'field bed \u00b7 tuned to the voice whose room it is \u00b7 breath 9s',
+  voices:true,bedline2:'press a voice \u00b7 the bed steps back to 0.018 and returns',
+  evs:[]},
+ {id:'universe',name:'the Universe',rail:'uni',sub:'thirteen rooms \u00b7 the sky side of the axis',
+  bed:['field',84,13],
+  bedline:'field bed \u00b7 room-tuned root 84 \u00b7 breath 13s \u00b7 the widest room in the app',
+  evs:[
+   ['a region takes the field','glide(2,false)','rising \u2014 you are pulling out',s=>s.glide(2,false)],
+   ['falling into a world','glide(4,true)','descending, 2.2s',s=>s.glide(4,true)],
+   ['the fall opens','bowl(174)','and the bed holds its breath to 0.006',s=>s.bowl(174)]]},
+ {id:'point',name:'the Point',rail:'point',sub:'the ladder \u00b7 8 \u2192 4 Hz, alpha into theta',
+  bed:['point',4],
+  bedline:'point bed \u00b7 528 + 534 panned \u2213 0.6 \u00b7 beat 6.0 Hz \u00b7 the narrowing, audible',
+  ladder:true,
+  evs:[
+   ['the aperture opens','shimmer()','the audible half of the flare',s=>s.shimmer()],
+   ['the reveal','om()','136.1 \u00b7 272.2 \u00b7 408.3, over nine seconds',s=>s.om()]]},
+ {id:'rite',name:'the Rite',rail:'rite',sub:'the gathering \u00b7 eleven presences, eleven timbres',
+  bed:['field',136,10],
+  bedline:'field bed \u00b7 136 (OM) \u00b7 the ceremony\u2019s own root',
+  voices:true,
+  evs:[
+   ['recognition','inkOn(174)','while you write, the field leans in \u2014 a held tone, never clicks',s=>s.inkOn(174)],
+   ['the sealing bowl','bowl(220)','[1, 2.004, 2.98, 4.02] over 11 seconds',s=>s.bowl(220)],
+   ['the three thresholds','220/6 \u2192 146/7 \u2192 261/7','exact in the build \u2014 E4.4',s=>{
+     s.threshold(220,6);setTimeout(()=>s.threshold(146,7),2200);
+     setTimeout(()=>s.threshold(261,7),4400);}]]},
+ {id:'return',name:'the Return',rail:'return',sub:'the strata \u00b7 the same bed, aged',
+  bed:['aged',84,13],
+  bedline:'aged bed \u00b7 filter \u2192 430 \u00b7 root \u00d70.996 \u00b7 tape wobble 0.07 Hz',
+  evs:[
+   ['a ring forms','ring()','enters 1.5% flat, comes into tune over 4s',s=>s.ring()],
+   ['the next ring out','ring(n+1)','R = [2, 3, 4, 4.5, 6, 8] \u00b7 each further out',s=>s.ring()],
+   ['the field answers','voice \u00d7 3','three presences, in their own timbres',s=>{
+     s.voice('lalita');setTimeout(()=>s.voice('sakshi'),2400);
+     setTimeout(()=>s.voice('ashram'),5000);}]]},
+ {id:'light',name:'the Light',rail:'light',sub:'past the sky \u00b7 the room tone it never had',
+  bed:['field',132,16],
+  bedline:'field bed \u00b7 132 \u00b7 breath 16s \u00b7 the slowest room',
+  evs:[
+   ['the lit space','lightBed(10)','528 + 792 at 0.012 \u2014 absent from the build',s=>s.lightBed()],
+   ['the dawn','om()','and the ladder lands home',s=>s.om()],
+   ['the bowl at 174','bowl(174)','one strike, eleven seconds',s=>s.bowl(174)]]}];
+
+const E=id=>document.getElementById(id);
+const cvs=E('scope'),cx2=cvs.getContext('2d');
+let W=393,H=852,DPR=Math.min(2,devicePixelRatio||1);
+function fit(){W=cvs.clientWidth||393;H=cvs.clientHeight||852;
+  cvs.width=W*DPR;cvs.height=H*DPR;cx2.setTransform(DPR,0,0,DPR,0,0);}
+let place=0,litEv=-1;
+const VOICE_KEYS=['bindu','neev','gaia','sid','arch','shweta','karishma','sakshi','lalita','ashrey','ashram'];
+const VHEX={bindu:'#E5533C',neev:'#7A8899',gaia:'#4A9E6B',sid:'#C4923A',arch:'#D4607A',
+ shweta:'#ABA7A2',karishma:'#D4AE4A',sakshi:'#7B82D4',lalita:'#9B6BD6',ashrey:'#3AADA8',ashram:'#C47A52'};
+
+PLACES.forEach((p,i)=>{const el=document.createElement('span');
+  el.textContent=p.rail;el.onclick=()=>go(i);E('rail').appendChild(el);});
+const railEl=[...E('rail').children];
+
+function startBedFor(p){
+  if(!S.live()&&!S.on)return;
+  const [kind,a,b]=p.bed;
+  if(bedMode==='field')S.fieldBed(typeof a==='number'&&kind==='point'?FREQS[a]:a||110,b||10);
+  else if(bedMode==='point')S.pointBed(kind==='point'?a:0);
+  else{
+    if(kind==='point')S.pointBed(a);
+    else if(kind==='aged')S.agedBed(a,b);
+    else S.fieldBed(a,b);}
+}
+
+function go(i){
+  place=i;litEv=-1;
+  const p=PLACES[i];
+  S.thinOff();S.inkOff();
+  E('hdr').querySelector('b').textContent='the sound of';
+  E('hdr').querySelector('i').textContent=p.name;
+  E('hdr').querySelector('s').textContent=p.sub;
+  E('bedline').innerHTML=p.bedline+(p.bedline2?'<br>'+p.bedline2:'');
+  railEl.forEach((el,k)=>el.classList.toggle('on',k===i));
+  const box=E('evs');box.innerHTML='';
+  p.evs.forEach((e,k)=>{
+    const el=document.createElement('button');el.className='ev';
+    el.innerHTML='<b>'+e[0]+'</b><u>'+e[1]+'</u><q>'+e[2]+'</q>';
+    el.onclick=()=>{if(!S.on)return;e[3](S);flash(el);};
+    box.appendChild(el);});
+  if(p.voices){
+    VOICE_KEYS.forEach(k=>{
+      const el=document.createElement('button');el.className='ev';
+      const hz=hzOf(k),c=charOf(k);
+      el.innerHTML='<b style="color:'+VHEX[k]+'">'+k+'</b><u>'+hz+' Hz \u00b7 '+
+        (hzMode==='flat'?'flat':c.wave+' \u00b7 pan '+(c.pan>0?'+':'')+c.pan)+'</u>'+
+        '<q>'+(hzMode==='flat'?'one timbre for all eleven \u2014 what the build does'
+          :'atk '+c.atk+'s \u00b7 rel '+c.rel+'s \u00b7 gain '+c.gain+
+           (c.vib?' \u00b7 vib '+c.vib:'')+(c.air?' \u00b7 air '+c.air:'')+
+           (c.flicker?' \u00b7 flicker '+c.flicker:'')+(c.shimmer?' \u00b7 shimmer':'')+
+           (c.gliss?' \u00b7 gliss '+c.gliss:''))+'</q>';
+      el.onclick=()=>{if(!S.on)return;S.voice(k);flash(el);};
+      E('evs').appendChild(el);});}
+  if(p.ladder){
+    FREQS.forEach((f,k)=>{
+      const el=document.createElement('button');el.className='ev';
+      el.innerHTML='<b>rung '+(k+1)+'</b><u>'+f+' Hz \u00b7 beat '+BEATS[k]+'</u>'+
+        '<q>'+(k===9?'and home, one octave down \u2014 OM':'beat narrows to '+BEATS[k]+' Hz')+'</q>';
+      el.onclick=()=>{if(!S.on)return;
+        const from=(S.bed&&S.bed.kind==='point')?FREQS.indexOf(S.bed.rootHz):0;
+        if(from>=0&&from!==k)S.step(from,k);
+        S.pointBed(k);flash(el);};
+      E('evs').appendChild(el);});}
+  startBedFor(p);
+}
+function flash(el){el.classList.add('lit');setTimeout(()=>el.classList.remove('lit'),900);}
+
+/* a hand returning kills the stillness tone — the mechanism, literally */
+['pointerdown','pointermove','wheel'].forEach(t=>
+  E('phone').addEventListener(t,()=>{if(S.thinNode)S.thinOff();},{passive:true}));
+
+E('wake').onclick=()=>{S.wake();E('wake').classList.add('off');startBedFor(PLACES[place]);};
+E('mute').onclick=()=>{S.mute(!S.muted);E('mute').textContent=S.muted?'○':'◍';};
+document.querySelectorAll('#abHz button').forEach(b=>b.onclick=()=>{
+  hzMode=b.dataset.v;
+  document.querySelectorAll('#abHz button').forEach(o=>o.classList.toggle('on',o===b));
+  go(place);});
+document.querySelectorAll('#abBed button').forEach(b=>b.onclick=()=>{
+  bedMode=b.dataset.v;
+  document.querySelectorAll('#abBed button').forEach(o=>o.classList.toggle('on',o===b));
+  startBedFor(PLACES[place]);});
+
+/* ── you see the thing you are hearing ─────────────────────────── */
+let buf=null;
+function frame(){
+  requestAnimationFrame(frame);
+  if(cvs.clientWidth!==W||cvs.clientHeight!==H)fit();
+  const t=performance.now()/1000,b=S.breath();
+  cx2.clearRect(0,0,W,H);
+  const g=cx2.createRadialGradient(W/2,H*0.46,0,W/2,H*0.46,Math.max(W,H)*0.8);
+  g.addColorStop(0,'rgba(24,22,16,'+(0.5+b*0.14)+')');
+  g.addColorStop(1,'rgba(7,7,10,.96)');
+  cx2.fillStyle=g;cx2.fillRect(0,0,W,H);
+  /* the breath ring — the same 0.1 Hz the sound runs on */
+  cx2.beginPath();cx2.arc(W/2,H*0.46,Math.min(W,H)*0.30*(0.88+b*0.10),0,TAU);
+  cx2.strokeStyle='rgba(201,162,39,'+(0.06+b*0.06)+')';cx2.lineWidth=1;cx2.stroke();
+  if(S.ana&&S.on){
+    if(!buf)buf=new Float32Array(S.ana.fftSize);
+    S.ana.getFloatTimeDomainData(buf);
+    let peak=0;for(let i=0;i<buf.length;i++){const v=Math.abs(buf[i]);if(v>peak)peak=v;}
+    /* the waveform, at the vertical middle */
+    cx2.beginPath();
+    const step=Math.floor(buf.length/W)||1;
+    for(let px=0;px<W;px++){
+      const v=buf[px*step]||0;
+      const y=H*0.46+v*H*0.30;
+      px?cx2.lineTo(px,y):cx2.moveTo(px,y);}
+    cx2.strokeStyle='rgba(233,214,150,'+(0.30+Math.min(0.5,peak*5))+')';
+    cx2.lineWidth=1.1;cx2.stroke();
+    /* and its envelope as a soft field, so a quiet event still shows */
+    const r=Math.min(W,H)*0.30*(1+peak*3.4);
+    const eg=cx2.createRadialGradient(W/2,H*0.46,0,W/2,H*0.46,r);
+    eg.addColorStop(0,'rgba(201,162,39,'+(0.16*Math.min(1,peak*7))+')');
+    eg.addColorStop(1,'rgba(201,162,39,0)');
+    cx2.fillStyle=eg;cx2.beginPath();cx2.arc(W/2,H*0.46,r,0,TAU);cx2.fill();
+    /* the stillness gate, while it is opening */
+    if(S.thinNode){
+      cx2.font='italic 12px Lora, serif';cx2.textAlign='center';
+      cx2.fillStyle='rgba(233,214,150,.5)';
+      cx2.fillText('nothing is being asked of you',W/2,H*0.70);}
+  }
+}
+fit();go(0);frame();
+</script>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#0E0D0A"/><g fill="none" stroke="#C9A227"><circle cx="60" cy="60" r="34" stroke-opacity=".3"/><path d="M14 60q11-22 22 0t22 0 22 0 22 0" stroke-opacity=".85" stroke-width="1.4"/></g><circle cx="60" cy="60" r="3" fill="#F0E4CC"/></svg></template>
+</body></html>

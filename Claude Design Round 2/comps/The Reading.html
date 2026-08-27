@@ -1,0 +1,636 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Reading — five worlds, five ways of reading one star</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0c;min-height:100vh;display:grid;place-items:center;padding:40px 20px;font-family:'Lora',Georgia,serif;color:#EDE8E3}
+a{color:#B9A5E8}a:hover{color:#D2C4F2}
+#desk{display:flex;gap:42px;align-items:flex-start}
+#phone{position:relative;width:393px;height:852px;border-radius:46px;overflow:hidden;background:#07060B;box-shadow:0 0 0 1px rgba(237,232,227,.09),0 40px 120px rgba(0,0,0,.8);touch-action:none;cursor:crosshair;flex:0 0 auto}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#eyebrow{position:absolute;top:46px;left:0;right:0;text-align:center;z-index:5;pointer-events:none}
+#eyebrow b{display:block;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.28em;text-transform:uppercase;font-weight:400;color:rgba(237,232,227,.36)}
+#eyebrow i{display:block;font-size:20px;font-style:normal;letter-spacing:-.01em;margin-top:4px}
+#voice{position:absolute;top:104px;left:34px;right:34px;text-align:center;z-index:5;pointer-events:none;font-style:italic;font-size:12.5px;line-height:1.62;color:rgba(237,232,227,.42);text-wrap:pretty;transition:opacity .8s}
+#verb{position:absolute;bottom:96px;left:0;right:0;text-align:center;z-index:5;pointer-events:none;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.3em;text-transform:uppercase;color:rgba(237,232,227,.3);transition:opacity .7s}
+/* the four sections — one set, five arrivals */
+#sect{position:absolute;inset:0;z-index:6;pointer-events:none}
+.sc{position:absolute;opacity:0}
+.sc .lb{display:block;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:6px}
+.sc .tx{display:block;font-size:12.5px;line-height:1.62;color:rgba(240,236,231,.93);text-wrap:pretty}
+#star{position:absolute;z-index:6;pointer-events:none;text-align:center;opacity:0;transition:opacity .5s}
+#star b{display:block;font-size:13px;font-weight:500;letter-spacing:-.008em}#star u{display:block;text-decoration:none;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:rgba(237,232,227,.4);margin-top:3px;white-space:nowrap}
+#rail{position:absolute;bottom:0;left:0;right:0;height:52px;z-index:9;display:flex;justify-content:center;align-items:center;gap:5px}
+#rail span{min-width:38px;text-align:center;padding:6px 7px;border-radius:11px;cursor:pointer;font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.1em;color:rgba(201,206,218,.3);border:1px solid transparent;transition:all .35s}
+#rail span.on{color:#EDE8E3}
+#gauge{position:absolute;right:14px;top:50%;transform:translateY(-50%);z-index:6;width:3px;height:132px;border-radius:2px;background:rgba(237,232,227,.08);overflow:hidden;opacity:0;transition:opacity .6s}
+#gauge i{position:absolute;bottom:0;left:0;right:0;display:block;height:0}
+#given{position:absolute;left:15px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+#given i{display:block;width:6px;height:6px;border-radius:6px;border:.5px solid rgba(237,232,227,.26);transition:background .5s,border-color .5s}
+#notes{width:412px;font-size:13.5px;line-height:1.72;color:rgba(237,232,227,.62)}
+#notes h1{font-size:21px;font-weight:500;letter-spacing:-.014em;color:#EDE8E3;margin-bottom:4px}
+#notes .sub{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);margin-bottom:22px}
+#notes h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.6);margin:22px 0 9px}
+#notes p{margin-bottom:11px;text-wrap:pretty}
+#notes em{color:rgba(237,232,227,.9);font-style:italic}
+#notes code{font-family:'Space Mono',monospace;font-size:11px;color:rgba(212,174,74,.86)}
+#notes .law{border-left:1px solid rgba(212,174,74,.4);padding:2px 0 2px 15px;margin:0 0 13px;font-style:italic;color:rgba(237,232,227,.86)}
+#notes .warn{border-left:1px solid rgba(229,83,60,.5);padding:2px 0 2px 15px;margin:0 0 13px}
+.k{display:flex;gap:10px;margin-bottom:8px}
+.k b{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:400;flex:0 0 96px;padding-top:3px}
+.k span{flex:1}
+</style></head><body>
+<div id="desk">
+<div id="phone">
+  <canvas id="cv"></canvas>
+  <div id="eyebrow"><b></b><i></i></div>
+  <div id="voice"></div>
+  <div id="star"><b></b><u></u></div>
+  <div id="sect"></div>
+  <div id="given"><i></i><i></i><i></i><i></i></div>
+  <div id="gauge"><i></i></div>
+  <div id="verb"></div>
+  <div id="rail"></div>
+</div>
+<div id="notes">
+  <h1>The Reading</h1>
+  <div class="sub">five worlds · five ways of reading one star · comp 4</div>
+  <p>D5.1, rendered. The four sections — <code>SAY · WALK · HAND · OPEN</code> — are the same four in every world. What differs is <em>how they arrive</em>, and the arriving is the world.</p>
+  <p class="law">The seven worlds are not seven ways of picking a star. They are seven ways of reading one.</p>
+  <h2>The five gestures</h2>
+  <div class="k"><b>I · stillness</b><span>Come to rest near a star and <em>stay</em>. Nothing opens by being acted on — the sections surface out of the white. Move and it closes, without complaint and without penalty. The inversion: the reading <em>displaces</em> the field, <code>A = p·(1−given/4·0.62)</code> — and the stack carries itself upward as it grows, so by the fourth the reading has taken the field and the star's own light is nearly all that is left.</span></div>
+  <div class="k"><b>II · following</b><span>Take hold of a ray and travel <em>out</em> along it. <code>SAY</code> near the origin, <code>OPEN</code> at the rim — reading a star <em>is</em> the movement from One to many, performed. The hand-off is exclusive: this is one reading along a continuum, so the section behind you goes dark as the next arrives. Stop and the arm reels you gently back. Spanda pulses down all nine arms on the breath clock; the light is white at the centre and separates into its hue further out. The followed arm brightens and slows; the other eight dim and hurry on.</span></div>
+  <div class="k"><b>III · parting</b><span>Press and hold: a parting opens where your hand is, and every section must be read <em>through a parting you are actively holding</em>. Let go and it closes behind you — you never lift the veil, you only part it. But each section received leaves that zone permanently <em>thinner</em>: the veil remembers what was handed back and does not take it again.</span></div>
+  <div class="k"><b>IV · bearing</b><span>Light from below — you are the magma layer. The vault descends on the breath and the walls bow inward. The reading is <em>letterpress</em>: press back, and the harder the press the deeper the strike. Below <code>0.12</code> there is no impression at all. Release and the stone relaxes — and what was struck stays struck.</span></div>
+  <div class="k"><b>VII · motion</b><span>The marketplace does not wait. Catch a star and <em>keep pace</em>: the frame turns with it while the others keep whirling, and the four sections fly in and land <em>one at a time</em> as you hold — caught in flight, never stacked; each lands as the one before it flies on. Let go early and the rest scatters — not a punishment, the tenth ox-herding picture.</span></div>
+  <h2>Constants, as read from the design</h2>
+  <div class="k"><b>I</b><span>Recognition <code>ux=(f−.5)·1.34, uy=−.10</code> · Enquiry <code>·0.86, uy=.40</code> — "slightly apart, because a question is not at rest"</span></div>
+  <div class="k"><b>II</b><span><code>twist=[2.30,1.55,0.72] · base=[−0.55,1.05,3.35] · spread=[1.02,1.34,0.62]</code></span></div>
+  <div class="k"><b>III</b><span><code>COVER=[0.72,0.94,0.44]</code> — the Inheritance is the deepest, "invisible precisely because you inherited it"</span></div>
+  <div class="k"><b>VII</b><span><code>r=0.30+ui·0.215 · sp=(1.42−ui·0.30)·0.16 · ph=(i/n)·TAU+ui·0.7</code></span></div>
+  <h2>Where the rest of the Point lives — all of it in scope</h2>
+  <p>This comp specifies <em>five</em> reading gestures. It is not a scope boundary; it is a provenance note. Every item below is required and has a source.</p>
+  <div class="k"><b>the yantra</b><span><code>point-yantra.js</code> — 188 lines, D3.1, <strong>the largest single absence in the app.</strong> Nine triangles (5 down, 4 up), three squares at <code>1.46/1.38/1.30</code>, petal rings at <code>0.88→1.00</code> (16) and <code>0.70→0.84</code> (8), the <code>BAND[10]</code> camera, the annulus of attention at <code>bandR×0.62→1.34</code>, and <code>flare()</code>. <em>The Aperture</em> draws the flare's visual half and expects this behind it.</span></div>
+  <div class="k"><b>V · turning</b><span><strong><code>world-five.js</code> — fully authored; my earlier note that V was unauthored was wrong.</strong> 639 Hz, The Mirrors. Eleven panes in a corridor, five facing pairs about one mirror line plus one guard pane standing on it. <em>The reading crosses the line every half turn</em> — a section arrives mirror-written from the far side and unflips as it settles. The regress deepens as he reads. The guard pane gives nothing and returns him to the Surface.</span></div>
+  <div class="k"><b>VI · send and wait</b><span><code>world-six.js</code> — 741 Hz, The Return. One horizon: everything he has below it, everything not yet come back above it. <em>Depth is time, not distance</em> — the near field is banded, nearest band is now. Deep Time stands on the horizon and does not belong to him.</span></div>
+  <div class="k"><b>the descent</b><span><code>point-levels.js:198</code> <code>descend()</code> — D4.1. Five stages × 3400ms, tap-to-skip, <code>‹ ascend</code>, light shaft, world-dimming.</span></div>
+  <div class="k"><b>sound</b><span>Designed — <em>The Sound.html</em>. The <code>BEATS</code> narrowing is live there as the L/R offset.</span></div>
+  <p><code>world-five.js:16-22</code> states all five gestures in the design's own words, and they match this comp exactly: <em>I admits when he stops · II gives while he goes · III gives where he holds it open · IV gives when he presses back · V gives each time a face comes round.</em> Read the seven <code>world-*.js</code> files as the deeper source for each world.</p>
+  <h2>Provenance</h2>
+  <p>All five stars' <code>say/walk/hand/open</code> are <em>verbatim</em> from <code>point-content.js</code> — <code>p-exist · t-treasure · v-inherit · c-compression · d-marketplace</code>, one per world, each in the universe the design assigns it. Section eyebrows are the authored gloss from that file's own header. World voices verbatim from <code>DIMS</code>.</p>
+  <h2>⚠ Two things I could not source</h2>
+  <p class="warn"><strong>I · the Laboratories' placement.</strong> The design says they "sit far out at the edge, arriving by their own road" but the coordinate lines fall outside what I read. Mine are approximate and marked in code — do not treat them as canon.<br><br><strong>IV · what "harder" means on a mouse.</strong> The design says <em>the harder the press, the deeper the inscription</em>. Touch and pencil report real pressure; a mouse reports none, so the fallback is sustained hold. Both feed one <code>press</code> value, shown live on the right gauge. On device, use the real thing.</p>
+</div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   THE READING — D5.1: the reading is decoupled from the world.
+   Five bespoke worlds, each declaring its own reading material.
+     I   stillness  `The Instrument v3.html:2386-2400`
+     II  following  `:2591-2612`
+     III parting    `:2846-2863`
+     IV  bearing    `:3118-3131`
+     VII motion     `:2155-2170`
+   Geometry: rays `:2620-2627` · cover `:2876` · lanes `:2178-2186`
+   Content: `point-content.js` — verbatim, one star per world.
+   ═══════════════════════════════════════════════════════════════════════ */
+const TAU=Math.PI*2;
+const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const rgba=(c,a)=>'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+Math.max(0,Math.min(1,a))+')';
+const mixc=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];
+const cl=(a,b,v)=>Math.max(0,Math.min(1,(v-a)/(b-a)));
+const sm=(a,b,v)=>{const t=cl(a,b,v);return t*t*(3-2*t);};
+const rnd=i=>{const v=Math.sin(i*127.1+31.4)*43758.5453;return v-Math.floor(v);};
+const WHITE=[255,252,246];
+
+/* the authored gloss for the four sections — point-content.js:11-14 */
+const LB={say:'the confusion the rush currently holds',
+ walk:'the evidence, specific and primary',
+ hand:'what this equips you with',
+ open:'the invitation \u00b7 always opens, never closes'};
+const ORDER=['say','walk','hand','open'];
+
+const WORLDS={
+ I:{roman:'I',name:'The Point',hz:285,hex:'#EDE6D6',verb:'stillness',
+  voice:'Before anything: I AM. The one fact that cannot stop being true, wearing every face including this one.',
+  star:{id:'p-exist',t:'You exist',ti:'The one unconditional fact.',u:'The Recognition',
+   say:'The rush says the ground itself is at stake \u2014 that if this goes wrong, something essential about you could be lost.',
+   walk:'Walk to what the walked record actually holds: existence is the one given that has no opposite you could ever experience. Non-existence is not a state \u2014 there would be no one there to be in it. Consciousness doesn\u2019t begin at birth or end at death; it changes form. Test it yourself right now: try to locate the one who would be absent. You can\u2019t \u2014 because the looker is the fact in question.',
+   hand:'This closes the deepest gap the rush exploits: the unexamined fear that you can be erased. You can lose outcomes, roles, even the body. Not the one reading this.',
+   open:'What, specifically, did today convince you was at stake? Hold it next to this fact and see which one moves.'}},
+ II:{roman:'II',name:'The Turn',hz:396,hex:'#B9A5E8',verb:'following',
+  voice:'A timeless perfection cannot know itself. So the point moved \u2014 with love \u2014 and the One became the many.',
+  star:{id:'t-treasure',t:'The hidden treasure',ti:'\u201cI longed to be known.\u201d',u:'The Longing',
+   say:'Cosmology can feel cold \u2014 mechanics of emanation, geometry of descent, nobody home.',
+   walk:'The walked Sufi thread carries the warm version, in the hadith qudsi the tradition returns to endlessly: \u201cI was a hidden treasure, and I longed to be known, so I created the worlds.\u201d Longing \u2014 not architecture \u2014 as the first cause. Rumi\u2019s completed thread in your library sings nothing else: the reed flute crying for the reed bed is the treasure remembering itself through separation.',
+   hand:'A reason the whole thing runs on love rather than physics: you exist because something wanted to be known \u2014 and you are how it happens today.',
+   open:'The Masnavi opens with eighteen lines about that reed. Read them once aloud; they are meant for the ear, not the eye.'}},
+ III:{roman:'III',name:'The Veil',hz:417,hex:'#7D74C9',verb:'parting',
+  voice:'The forgetting was the entry fee, not the malfunction. Most of what has you is inherited \u2014 and everything inherited can be handed back.',
+  star:{id:'v-inherit',t:'95% inheritance',ti:'The belief-structures.',u:'The Inheritance',cover:0.94,
+   say:'The rush presents its material as yours \u2014 your fears, your standards, your voice in your head. Ownership is assumed.',
+   walk:'The field\u2019s ontology audits the ownership and finds it mostly false: belief-structures are installed generationally, each one a limitation passed down as love or law. \u201cEat this or you\u2019ll get a headache\u201d installs the belief; the belief manufactures the headache; the child becomes the hungry-angry adult who installs it again. Multiply across a lineage. By adulthood the split is roughly ninety-five percent inheritance, five percent direct experience. The voice in your head has ancestors.',
+   hand:'A property question that changes everything mid-rush: is this fear mine, or am I holding someone else\u2019s luggage? Inherited luggage can be set down without betrayal.',
+   open:'Five of your own are already surfaced and named in the beliefs log \u2014 the Righteous Corrector chain. Worth a re-read: they dissolve faster when seen twice.'}},
+ IV:{roman:'IV',name:'The Chamber',hz:528,hex:'#E0713F',verb:'bearing',
+  voice:'You are the magma layer \u2014 pressured by every shell above. The pressure is the point; the vessel came with equipment; the rules are learnable.',
+  star:{id:'c-compression',t:'The pressure is the point',ti:'Earth as compression chamber.',u:'The Rules of Play',
+   say:'Difficulty reads as evidence you are in the wrong place \u2014 surely the path, done right, would be lighter than this.',
+   walk:'The walked nine-layer map places you deliberately: third dimension, rendered as the magma layer \u2014 pressured by every shell of reality above it. Density, contrast, linear time, forgetting: listed not as flaws but as chosen conditions, because nothing in existence generates growth at this rate. The instruments agree with unusual unanimity here: souls queue for this. The heaviest classroom is the most oversubscribed.',
+   hand:'Difficulty, re-badged: not a verdict on your path but the curriculum functioning. Magma is not failing at being rock.',
+   open:'What is the current pressure compressing you toward? Sometimes naming the diamond changes the relationship to the weight.'}},
+ VII:{roman:'VII',name:'The Dance',hz:852,hex:'#D4A94B',verb:'motion',
+  voice:'The journey ends in the marketplace, awake, with helping hands. Making is remembering; the relations are the practice; the seeker was the sought.',
+  star:{id:'d-marketplace',t:'Return to the marketplace',ti:'The tenth picture.',u:'The Marketplace',
+   say:'The spiritual imagination ends the journey on the mountain \u2014 enlightenment as elegant exit from ordinary life.',
+   walk:'The Zen tradition drew the journey as ten ox-herding pictures, and the field\u2019s own register-map holds the ending: picture ten is not the mountain. After seeking the ox, taming it, transcending both ox and self, the final image is a man walking back into the marketplace \u2014 ordinary, open-handed, \u201cwith bliss-bestowing hands.\u201d The commentary\u2019s point: the mountain was the middle of the story. The completion is re-entry, awake, useful, unremarkable to look at.',
+   hand:'Your entire ecosystem, located on the map: the family business IS picture ten. The marketplace was never the fall from the path \u2014 it is the path\u2019s last frame.',
+   open:'Where in tomorrow\u2019s ordinary commerce can the open hand operate? That is the tenth picture, practiced.'}}};
+Object.values(WORLDS).forEach(w=>w.rgb=hx(w.hex));
+
+/* ── I · the ten, as a still figure (:2410-2420) ─────────────────
+   Recognition: a settled row across the middle. Enquiry: below and
+   slightly apart, because a question is not at rest. Laboratories:
+   far out at the edge — APPROXIMATE, the design's own coords fell
+   outside what I could read. Do not treat as canon. */
+const P1=[];
+for(let i=0;i<5;i++)P1.push({ux:(i/4-0.5)*1.34,uy:-0.10,u:0,ph:i*1.7,drift:0.10+i*0.03,
+  tgt:i===0});
+for(let i=0;i<3;i++)P1.push({ux:(i/2-0.5)*0.86,uy:0.40,u:1,ph:3+i*1.3,drift:0.14+i*0.03});
+[[-1.02,-0.58],[1.02,0.66]].forEach((q,i)=>P1.push({ux:q[0],uy:q[1],u:2,ph:7+i,drift:0.08,approx:true}));
+
+/* ── II · nine rays emitted from the particle (:2620-2627) ─────── */
+const TWIST=[2.30,1.55,0.72],BASE=[-0.55,1.05,3.35],SPREAD=[1.02,1.34,0.62];
+const RAYS=[];
+[3,4,2].forEach((n,ui)=>{for(let i=0;i<n;i++){
+  const f=n<2?0.5:i/(n-1);
+  RAYS.push({ui:ui,i:i,a0:BASE[ui]+(f-0.5)*SPREAD[ui],tw:TWIST[ui],
+    reach:ui===0?1.0:(ui===1?0.74:0.86),tgt:ui===0&&i===0});}});
+const rayPt=(r,ray,R)=>{const a=ray.a0+r*ray.tw;
+  return [Math.cos(a)*r*R*ray.reach,Math.sin(a)*r*R*ray.reach];};
+
+/* ── VII · three lanes, one per universe (:2178-2186) ──────────── */
+const LANES=[];
+[3,3,3].forEach((n,ui)=>{const l={ui:ui,r:0.30+ui*0.215,sp:(1.42-ui*0.30)*0.16,stars:[]};
+  for(let i=0;i<n;i++)l.stars.push({ph:(i/n)*TAU+ui*0.7,tgt:ui===0&&i===0});
+  LANES.push(l);});
+
+const E=id=>document.getElementById(id);
+const cv=E('cv'),x=cv.getContext('2d');
+let W=393,H=852,DPR=Math.min(2,devicePixelRatio||1);
+function fit(){W=cv.clientWidth||393;H=cv.clientHeight||852;cv.width=W*DPR;cv.height=H*DPR;x.setTransform(DPR,0,0,DPR,0,0);}
+
+let world='I',given=0,down=false,pxr=196,pyr=380,vel=0,lastT=performance.now();
+let stay=0,follow=null,travel=0,press=0,struck=[],thin=[],caught=false,pace=0,scatter=0;
+let laneRot=0,arrived=[0,0,0,0],closing=0;
+const breath=t=>(Math.sin(t*TAU/5.6)+1)/2;
+
+/* the four section blocks */
+const sectEl=E('sect');
+ORDER.forEach(k=>{const d=document.createElement('div');d.className='sc';d.dataset.k=k;
+  d.innerHTML='<span class="lb"></span><span class="tx"></span>';sectEl.appendChild(d);});
+const SC={};[...sectEl.children].forEach(el=>SC[el.dataset.k]=el);
+const givenEl=[...E('given').querySelectorAll('i')];
+
+/* the rail */
+Object.keys(WORLDS).forEach(k=>{const s=document.createElement('span');
+  s.textContent=WORLDS[k].roman;s.onclick=()=>go(k);E('rail').appendChild(s);});
+const railEl=[...E('rail').children];
+
+function go(k){
+  world=k;given=0;stay=0;follow=null;travel=0;press=0;struck=[];thin=[];
+  caught=false;pace=0;scatter=0;laneRot=0;closing=0;arrived=[0,0,0,0];
+  const w=WORLDS[k];
+  E('eyebrow').querySelector('b').textContent='avarana '+w.roman+' \u00b7 dimension '+
+    (k==='VII'?7:{I:1,II:2,III:3,IV:4}[k])+' of 7';
+  E('eyebrow').querySelector('i').textContent=w.name;
+  E('eyebrow').querySelector('i').style.color=w.hex;
+  E('voice').textContent=w.voice;
+  E('verb').textContent='the reading material of this world is '+w.verb;
+  E('star').querySelector('b').textContent=w.star.t;
+  E('star').querySelector('u').textContent=w.star.u+' \u00b7 '+w.star.ti;
+  ORDER.forEach(kk=>{
+    SC[kk].querySelector('.lb').textContent=kk.toUpperCase()+' \u00b7 '+LB[kk];
+    SC[kk].querySelector('.lb').style.color=rgba(w.rgb,0.62);
+    SC[kk].querySelector('.tx').textContent=w.star[kk];});
+  railEl.forEach((el,i)=>{const on=Object.keys(WORLDS)[i]===k;
+    el.classList.toggle('on',on);
+    el.style.borderColor=on?rgba(w.rgb,0.45):'transparent';
+    el.style.background=on?rgba(w.rgb,0.10):'transparent';});
+  E('gauge').style.opacity=k==='IV'?1:0;
+  givenEl.forEach(el=>{el.style.background='transparent';el.style.borderColor='rgba(237,232,227,.26)';});
+}
+
+/* ── the loop ──────────────────────────────────────────────────── */
+function frame(){
+  requestAnimationFrame(frame);
+  const now=performance.now(),dt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+  const t=now/1000,b=breath(t);
+  if(cv.clientWidth!==W||cv.clientHeight!==H)fit();
+  vel*=0.82;
+  x.clearRect(0,0,W,H);
+  try{
+    if(world==='I')wI(t,b,dt);
+    else if(world==='II')wII(t,b,dt);
+    else if(world==='III')wIII(t,b,dt);
+    else if(world==='IV')wIV(t,b,dt);
+    else wVII(t,b,dt);
+  }catch(err){bad((err&&err.message)||'draw threw');}
+  chrome(t);
+}
+let badSaid='';
+function bad(why){if(badSaid!==why){badSaid=why;console.error('WORLD DRAW \u2014 '+why);}
+  x.save();x.strokeStyle='rgba(229,83,60,.6)';x.setLineDash([5,6]);
+  x.strokeRect(22,H*0.26,W-44,H*0.34);x.setLineDash([]);
+  x.font='9px "Space Mono", monospace';x.textAlign='center';x.fillStyle='rgba(229,83,60,.9)';
+  x.fillText('WORLD DRAW \u2014 '+why.toUpperCase(),W/2,H*0.43);x.restore();}
+
+function chrome(t){
+  const w=WORLDS[world];
+  E('voice').style.opacity=(given>0?0:1).toFixed(2);
+  /* the verb is a hint about how this world gives. Once it has begun giving,
+     the hint has served — and it is standing where the reading needs to be. */
+  E('verb').style.opacity=(given>0?0:1).toFixed(2);
+  givenEl.forEach((el,i)=>{const on=i<given;
+    el.style.background=on?w.hex:'transparent';
+    el.style.borderColor=on?'transparent':'rgba(237,232,227,.26)';});
+  const g=E('gauge').querySelector('i');
+  g.style.height=(press*100)+'%';
+  g.style.background=press<0.12?'rgba(237,232,227,.18)':w.hex;
+}
+
+/* helpers */
+function starMark(cx,cy,r,c,a){
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,r*4.6);
+  g.addColorStop(0,rgba(WHITE,0.95*a));g.addColorStop(0.2,rgba(c,0.5*a));g.addColorStop(1,rgba(c,0));
+  x.beginPath();x.arc(cx,cy,r*4.6,0,TAU);x.fillStyle=g;x.fill();
+  x.beginPath();x.arc(cx,cy,r,0,TAU);x.fillStyle=rgba(WHITE,a);x.fill();}
+/* The label is positioned from the SAME values that bound everything else:
+   the stack's real top (passed as `ceil`) and the frame's own edges. No
+   constant offsets — those are what collided and clipped. */
+function placeStar(sx,sy,show,ceil){
+  const el=E('star'),w=280;
+  el.style.width=w+'px';
+  el.style.left=Math.min(Math.max(6,sx-w/2),W-w-6)+'px';
+  let top=sy+16;
+  if(ceil!==undefined)top=Math.min(sy-56,ceil-(el.offsetHeight||32)-12);
+  el.style.top=Math.max(6,top)+'px';
+  el.style.opacity=show;}
+/* the stack is bottom-anchored against the rail: as sections arrive it
+   carries itself UPWARD rather than off the bottom of the instrument —
+   which is the displacement the design already claims is happening. */
+/* the floor is the topmost bottom-pinned chrome that is actually showing,
+   measured — never the rail alone, because #verb is pinned 96px up and a
+   reserve that clears only the rail runs the stack through it. */
+function floorY(){
+  const v=E('verb'),r=E('rail');
+  let f=H-(r?r.offsetHeight:48)-10;
+  if(parseFloat(v.style.opacity||'1')>0.01)f=Math.min(f,H-96-v.offsetHeight-10);
+  return f;}
+function stackFrom(originMax,gap){
+  let total=0,n=0;
+  ORDER.forEach((k,i)=>{if(i<given){total+=SC[k].offsetHeight+(n?gap:0);n++;}});
+  return Math.min(originMax,floorY()-total);}
+function hideSections(){ORDER.forEach(k=>{SC[k].style.opacity=0;});}
+
+/* ═══ I · STILLNESS ════════════════════════════════════════════════
+   Nothing opens by being acted on. Come to rest and the star admits
+   you — SAY, then WALK, then HAND, then OPEN, surfacing out of the
+   white. Move and it closes, without complaint and without penalty.
+   The reading DISPLACES the field: A = p·(1 − given/4·0.62). */
+function wI(t,b,dt){
+  const w=WORLDS.I,c=w.rgb,cx=W/2,cy=H*0.46;
+  const dsp=given/4, A=1-dsp*0.62;
+  const bg=x.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.8);
+  bg.addColorStop(0,rgba([22,21,26],A));bg.addColorStop(1,rgba([8,7,11],A));
+  x.fillStyle=bg;x.fillRect(0,0,W,H);
+  /* the emptiness is the subject — it is drawn, and it recedes as he reads */
+  for(let i=0;i<64;i++){
+    const px=rnd(i)*W,py=rnd(i+50)*H,tw=0.5+0.5*Math.sin(t*0.4+i);
+    x.beginPath();x.arc(px,py,0.7,0,TAU);
+    x.fillStyle=rgba([210,206,200],0.10*tw*A);x.fill();}
+  let tgt=null,tsx=0,tsy=0;
+  P1.forEach((s,i)=>{
+    const dr=Math.sin(t*s.drift+s.ph)*4;
+    const sx=cx+s.ux*W*0.34+dr,sy=cy+s.uy*H*0.30+Math.cos(t*s.drift*0.8+s.ph)*3;
+    if(s.tgt){tgt=s;tsx=sx;tsy=sy;}
+    const near=1-cl(0,120,Math.hypot(pxr-sx,pyr-sy));
+    starMark(sx,sy,s.tgt?2.6+b*1.1:1.7,c,(s.tgt?0.9:0.34+near*0.3)*(s.tgt?1:A));
+  });
+  /* stillness: near, and not moving */
+  const near=Math.hypot(pxr-tsx,pyr-tsy)<52;
+  if(near&&vel<0.9){stay+=dt;closing=0;}
+  else{stay=Math.max(0,stay-dt*0.6);if(vel>2.2)closing=1;}
+  if(stay>1.5&&given<4){given++;stay=0.2;}
+  /* the ring of staying — the only feedback, and it is not a score */
+  if(near&&given<4){
+    const p=Math.min(1,stay/1.5);
+    x.beginPath();x.arc(tsx,tsy,26+b*3,-Math.PI/2,-Math.PI/2+p*TAU);
+    x.strokeStyle=rgba(WHITE,0.14+p*0.3);x.lineWidth=1;x.stroke();}
+  /* the sections surface out of the white, stacked, displacing it */
+  const showing=(near&&vel<2.2)||given>=4&&vel<2.2;
+  let y=stackFrom(H*0.54,13);
+  placeStar(tsx,tsy,(near||given>0?1:0.28)*(given>=3?0.3:1),y);
+  ORDER.forEach((k,i)=>{
+    const el=SC[k],on=i<given&&showing;
+    arrived[i]+= ((on?1:0)-arrived[i])*0.10;
+    el.style.left='30px';el.style.width=(W-60)+'px';
+    el.style.top=(y-(1-arrived[i])*10)+'px';
+    el.style.opacity=arrived[i].toFixed(3);
+    el.style.transform='none';el.style.filter='none';el.style.mask='';el.style.webkitMask='';
+    el.style.textAlign='left';
+    if(i<given)y+=el.offsetHeight+13;});
+}
+
+/* ═══ II · FOLLOWING ══════════════════════════════════════════════
+   One thing leaving, nine times. Take hold of a ray and travel out:
+   SAY near the origin, OPEN at the rim. Stop and the arm reels you
+   back. Spanda travels down all nine arms; the light separates into
+   its hue further out; the followed arm brightens and slows. */
+function wII(t,b,dt){
+  const w=WORLDS.II,c=w.rgb,cx=W/2,cy=H*0.46,R=Math.min(W,H)*0.42;
+  x.fillStyle='#08070E';x.fillRect(0,0,W,H);
+  const gg=x.createRadialGradient(cx,cy,0,cx,cy,R*1.5);
+  gg.addColorStop(0,rgba(c,0.13));gg.addColorStop(1,rgba(c,0));
+  x.fillStyle=gg;x.fillRect(0,0,W,H);
+  if(down&&follow!==null){
+    const d=Math.hypot(pxr-cx,pyr-cy);
+    travel+=(Math.min(1,d/(R*0.94))-travel)*0.18;
+  }else travel*=0.94;                        /* reeled gently back */
+  let tsx=cx,tsy=cy;
+  RAYS.forEach((ray,ri)=>{
+    const isF=follow===ri&&down;
+    const dim=(follow!==null&&down&&!isF)?0.34:1;
+    const hurry=(follow!==null&&down&&!isF)?1.9:1;
+    x.beginPath();
+    for(let s=0;s<=40;s++){const r=s/40,q=rayPt(r,ray,R);
+      s?x.lineTo(cx+q[0],cy+q[1]):x.moveTo(cx+q[0],cy+q[1]);}
+    x.strokeStyle=rgba(mixc(WHITE,c,0.6),(isF?0.44:0.16)*dim);
+    x.lineWidth=isF?1.6:0.8;x.stroke();
+    /* the split is literal: white at the centre, its hue at the rim */
+    for(let s=0;s<26;s++){const r=0.06+s/26*0.94,q=rayPt(r,ray,R);
+      x.beginPath();x.arc(cx+q[0],cy+q[1],0.8+r*1.2,0,TAU);
+      x.fillStyle=rgba(mixc(WHITE,c,r),(0.10+r*0.30)*dim*(isF?1.7:1));x.fill();}
+    /* spanda — every pulse travels down all nine arms at once */
+    for(let k=0;k<3;k++){
+      const ph=((t*0.42*hurry)+k/3+ray.ui*0.11)%1,q=rayPt(ph,ray,R);
+      x.beginPath();x.arc(cx+q[0],cy+q[1],1.6+(1-ph)*1.8,0,TAU);
+      x.fillStyle=rgba(mixc(WHITE,c,ph),(0.72*(1-ph*0.5))*dim);x.fill();}
+    /* the star rides the arm's own reach */
+    const sr=isF?Math.max(0.16,travel):0.82;
+    const q=rayPt(ray.tgt?sr:0.82,ray,R);
+    if(ray.tgt){tsx=cx+q[0];tsy=cy+q[1];}
+    starMark(cx+q[0],cy+q[1],ray.tgt?2.4+b:1.5,c,(ray.tgt?0.92:0.4)*dim);
+  });
+  /* the particle at the centre — the same one he has been touching */
+  starMark(cx,cy,3.4+b*1.5,c,0.95);
+  const R0=WORLDS.II.rgb;
+  x.beginPath();x.arc(cx,cy,(11+b*4),0,TAU);
+  x.strokeStyle=rgba(R0,0.22);x.lineWidth=1;x.stroke();
+  placeStar(tsx,tsy,follow!==null&&down?1:0.4,H*0.62);
+  /* each section arrives one turn further out — and the hand-off is
+     EXCLUSIVE: this is one reading along a continuum, never a stack.
+     A continuum has ENDS: the first section holds from the origin to its
+     hand-off, the last holds from its hand-off out to the rim. Only the
+     two middle bands fall away on both sides. */
+  const pos=travel*4;
+  given=Math.max(given,Math.min(4,Math.floor(travel*4.4)));
+  ORDER.forEach((k,i)=>{
+    const el=SC[k];
+    let d;
+    if(i===0)d=Math.max(0,pos-0.5);
+    else if(i===3)d=Math.max(0,3.5-pos);
+    else d=Math.abs(pos-(i+0.5));
+    const o=Math.max(0,1-Math.max(0,d-0.30)/0.28);
+    el.style.left='28px';el.style.width=(W-56)+'px';
+    el.style.top=(H*0.62)+'px';
+    el.style.opacity=(o*(down&&follow!==null?1:0)).toFixed(3);
+    el.style.transform='none';el.style.mask='';el.style.webkitMask='';el.style.filter='none';
+    el.style.textAlign='left';});
+}
+
+/* ═══ III · PARTING ═══════════════════════════════════════════════
+   Four curtains at four depths, four rates, closing behind the hand
+   every time. Each section must be read THROUGH a parting he is
+   actively holding. What he has received leaves the zone thinner —
+   the veil remembers what was handed back. */
+function wIII(t,b,dt){
+  const w=WORLDS.III,c=w.rgb,cx=W/2,cy=H*0.44;
+  const cover=w.star.cover;
+  x.fillStyle='#06060C';x.fillRect(0,0,W,H);
+  const tsx=cx,tsy=cy;
+  starMark(tsx,tsy,2.6+b,c,0.9);
+  const open=down?1:0;
+  const pr=104;
+  /* v-shadow — part the veil and something of the observer shows up in
+     the observed, on the curtain behind. Schematic: a soft occlusion. */
+  if(down){
+    const sg=x.createRadialGradient(pxr+16,pyr+22,0,pxr+16,pyr+22,66);
+    sg.addColorStop(0,'rgba(6,6,14,.62)');sg.addColorStop(1,'rgba(6,6,14,0)');
+    x.fillStyle=sg;x.beginPath();x.arc(pxr+16,pyr+22,66,0,TAU);x.fill();}
+  /* the four curtains */
+  const RATE=[0.020,0.034,0.013,0.047],DEN=[0.30,0.24,0.20,0.16];
+  for(let L=0;L<4;L++){
+    const dep=(L+1)/4, drift=t*RATE[L]*260;
+    x.save();
+    for(let i=0;i<22;i++){
+      const bx=((i*W/18+drift)%(W+120))-60;
+      const wd=W/13*(0.7+rnd(i+L*9)*0.8);
+      const sway=Math.sin(t*0.22+i*0.7+L)*7;
+      /* thinning: the parting he holds, plus every zone already handed back */
+      let thinAmt=0;
+      const bcx=bx+wd/2;
+      if(down)thinAmt=Math.max(thinAmt,(1-cl(0,pr,Math.hypot(bcx-pxr,H*0.5-pyr)*0.6))*0.94);
+      thin.forEach(z=>{thinAmt=Math.max(thinAmt,(1-cl(0,z.r,Math.abs(bcx-z.x)))*0.55);});
+      const a=DEN[L]*cover*(1-thinAmt);
+      if(a<=0.004)continue;
+      const g=x.createLinearGradient(bx,0,bx+wd,0);
+      g.addColorStop(0,rgba(mixc(c,[10,10,20],dep*0.5),0));
+      g.addColorStop(0.5,rgba(mixc(c,[10,10,20],dep*0.5),a));
+      g.addColorStop(1,rgba(mixc(c,[10,10,20],dep*0.5),0));
+      x.fillStyle=g;x.fillRect(bx,-20+sway,wd,H+40);}
+    x.restore();}
+  /* the parting itself */
+  if(down){
+    const g=x.createRadialGradient(pxr,pyr,0,pxr,pyr,pr);
+    g.addColorStop(0,rgba(mixc(WHITE,c,0.3),0.13));g.addColorStop(1,rgba(c,0));
+    x.fillStyle=g;x.beginPath();x.arc(pxr,pyr,pr,0,TAU);x.fill();
+    x.beginPath();x.arc(pxr,pyr,pr*0.94,0,TAU);
+    x.strokeStyle=rgba(mixc(WHITE,c,0.4),0.16);x.lineWidth=1;x.stroke();}
+  /* he only reads what the parting is over, while he holds it */
+  const over=down&&Math.hypot(pxr-tsx,pyr-tsy)<pr*1.5;
+  if(over){stay+=dt;if(stay>1.35&&given<4){
+    given++;stay=0;thin.push({x:pxr,r:96});}}
+  else stay=Math.max(0,stay-dt);
+  let y=stackFrom(H*0.56,12);
+  placeStar(tsx,tsy,(down?1:0.3)*(given>=3?0.3:1),y);
+  ORDER.forEach((k,i)=>{
+    const el=SC[k];
+    el.style.left='28px';el.style.width=(W-56)+'px';el.style.top=y+'px';
+    el.style.textAlign='left';el.style.transform='none';el.style.filter='none';
+    const on=i<given?1:0;
+    el.style.opacity=(on*open).toFixed(3);
+    /* read THROUGH the parting: the mask is the parting, and it closes */
+    const mx=pxr-28,my=pyr-y;
+    const m='radial-gradient(circle '+pr+'px at '+mx+'px '+my+'px, #000 62%, transparent 100%)';
+    el.style.webkitMaskImage=m;el.style.maskImage=m;
+    if(i<given)y+=el.offsetHeight+12;});
+}
+
+/* ═══ IV · BEARING ════════════════════════════════════════════════
+   Light from below — he is the magma layer. The vault descends on the
+   breath, the walls bow inward, hairlines open where the load
+   concentrates. The reading is letterpress: press back, and the
+   harder the press the deeper the strike. Release and the stone
+   relaxes — what was struck stays struck. */
+function wIV(t,b,dt){
+  const w=WORLDS.IV,c=w.rgb,cx=W/2;
+  const load=0.55+b*0.45;
+  press=down?Math.min(1,press+dt*(0.55+pressure*1.1)):Math.max(0,press-dt*1.5);
+  x.fillStyle='#0A0705';x.fillRect(0,0,W,H);
+  /* the floor glows: the light is under him */
+  const fg=x.createLinearGradient(0,H,0,H*0.42);
+  fg.addColorStop(0,rgba(mixc(c,WHITE,0.3),0.34));
+  fg.addColorStop(0.4,rgba(c,0.13));fg.addColorStop(1,rgba(c,0));
+  x.fillStyle=fg;x.fillRect(0,H*0.42,W,H*0.58);
+  /* the vault, dark, descending on the breath */
+  const vy=H*0.30+load*16;
+  x.beginPath();x.moveTo(0,0);x.lineTo(W,0);x.lineTo(W,vy);
+  for(let i=W;i>=0;i-=8)x.lineTo(i,vy-Math.sin(i/W*Math.PI)*(38-load*10));
+  x.closePath();x.fillStyle='rgba(6,4,3,.94)';x.fill();
+  x.strokeStyle=rgba(mixc(c,[90,60,40],0.4),0.28);x.lineWidth=1.2;x.stroke();
+  /* hairlines where the load concentrates */
+  for(let i=0;i<7;i++){
+    const fx=W*(0.16+rnd(i)*0.68),len=(14+rnd(i+3)*30)*load;
+    x.beginPath();x.moveTo(fx,vy-Math.sin(fx/W*Math.PI)*30);
+    x.lineTo(fx+(rnd(i+7)-0.5)*16,vy-Math.sin(fx/W*Math.PI)*30+len);
+    x.strokeStyle=rgba([255,220,190],0.05+load*0.10);x.lineWidth=0.7;x.stroke();}
+  /* the walls bow inward under the shells above */
+  const bow=10+load*12;
+  [[0,1],[W,-1]].forEach(([wx,dir])=>{
+    x.beginPath();x.moveTo(wx,vy);
+    x.quadraticCurveTo(wx+dir*bow,H*0.66,wx,H*0.92);
+    x.strokeStyle=rgba(mixc(c,[120,80,50],0.4),0.34);x.lineWidth=1.4;x.stroke();});
+  /* the Rules are the floor — six flagstones, underfoot */
+  const fy=H*0.60;
+  for(let i=0;i<6;i++){
+    const row=Math.floor(i/3),col=i%3;
+    const sw=W*0.27,sh=52;
+    const sx=W*0.115+col*(sw+6),sy=fy+row*(sh+7);
+    x.beginPath();x.rect(sx,sy,sw,sh);
+    x.strokeStyle=rgba(mixc(c,[140,100,70],0.5),0.20);x.lineWidth=1;x.stroke();
+    x.fillStyle=rgba(mixc(c,[30,18,12],0.7),0.20);x.fill();}
+  /* the target flagstone, and what has been struck into it */
+  const tsx=W*0.115+sw0*0+W*0.135,tsy=fy+26;
+  starMark(tsx,tsy,2.4+b*0.9,c,0.9);
+  struck.forEach(s=>{
+    const sy=fy+8+s.i*11;
+    /* letterpress: depth is the press that struck it */
+    x.fillStyle=rgba([10,5,3],0.5*s.d);
+    x.fillRect(W*0.13,sy+1.6*s.d,W*0.74*s.w,2.2+s.d*2.2);
+    x.fillStyle=rgba(mixc(c,WHITE,0.5),0.24+s.d*0.5);
+    x.fillRect(W*0.13,sy,W*0.74*s.w,2.2+s.d*2.2);});
+  /* strike: only under pressure, and only above the floor of impression */
+  if(down&&press>=0.12){stay+=dt;
+    if(stay>0.9&&given<4){struck.push({i:given,d:press,w:0.5+press*0.5});given++;stay=0;}}
+  else stay=Math.max(0,stay-dt*0.7);
+  if(down&&press<0.12){
+    x.font='italic 12px Lora, serif';x.textAlign='center';
+    x.fillStyle=rgba([255,230,210],0.34);
+    x.fillText('without pressure there is no impression',W/2,H*0.52);}
+  placeStar(tsx,tsy-46,1);
+  let y=stackFrom(H*0.14,11);
+  ORDER.forEach((k,i)=>{
+    const el=SC[k],s=struck[i];
+    el.style.left='28px';el.style.width=(W-56)+'px';el.style.top=y+'px';
+    el.style.textAlign='left';el.style.mask='';el.style.webkitMask='';
+    el.style.opacity=(s?1:0).toFixed(2);
+    if(s){/* struck deeper = pressed further into the surface */
+      el.style.transform='scale('+(0.985+s.d*0.015)+')';
+      el.style.filter='drop-shadow(0 '+(0.6+s.d*1.4).toFixed(1)+'px 0 rgba(8,4,2,'+(0.4+s.d*0.5)+'))';
+      y+=el.offsetHeight+11;}
+    else{el.style.transform='none';el.style.filter='none';}});
+}
+const sw0=0;
+
+/* ═══ VII · MOTION ════════════════════════════════════════════════
+   The stars do not wait. Catch one and keep pace: the frame turns
+   with it, the others keep whirling, and the four sections fly in
+   and land as you hold. Let go early and the rest scatters — not a
+   punishment, the tenth ox-herding picture. */
+function wVII(t,b,dt){
+  const w=WORLDS.VII,c=w.rgb,cx=W/2,cy=H*0.46,R=Math.min(W,H)*0.40;
+  x.fillStyle='#0A0803';x.fillRect(0,0,W,H);
+  const gg=x.createRadialGradient(cx,cy,0,cx,cy,R*1.6);
+  gg.addColorStop(0,rgba(c,0.11));gg.addColorStop(1,rgba(c,0));
+  x.fillStyle=gg;x.fillRect(0,0,W,H);
+  let tsx=cx,tsy=cy;
+  /* the frame turns with the one he is holding */
+  if(caught)laneRot+=(-(LANES[0].sp)*dt);
+  x.save();x.translate(cx,cy);x.rotate(laneRot);
+  LANES.forEach(l=>{
+    x.beginPath();x.arc(0,0,l.r*R,0,TAU);
+    x.strokeStyle=rgba(c,0.10);x.lineWidth=0.8;x.stroke();
+    l.stars.forEach(s=>{
+      const a=s.ph+t*l.sp*(caught&&!s.tgt?1.5:1);
+      const px=Math.cos(a)*l.r*R,py=Math.sin(a)*l.r*R*0.94;
+      if(s.tgt){tsx=cx+px*Math.cos(laneRot)-py*Math.sin(laneRot);
+        tsy=cy+px*Math.sin(laneRot)+py*Math.cos(laneRot);}
+      starMark(px,py,s.tgt?2.5+b:1.5,c,s.tgt?0.94:0.4);
+      if(s.tgt&&caught){x.beginPath();x.arc(px,py,15+b*3,0,TAU);
+        x.strokeStyle=rgba(WHITE,0.24+pace*0.3);x.lineWidth=1;x.stroke();}});});
+  x.restore();
+  /* catching, and keeping pace */
+  const near=Math.hypot(pxr-tsx,pyr-tsy);
+  if(down&&near<56){if(!caught){caught=true;pace=0;}}
+  if(caught){
+    if(!down||near>84){caught=false;scatter=1;given=0;}
+    else{pace+=dt;if(pace>1.15&&given<4){given++;pace=0.1;}}}
+  if(scatter>0)scatter=Math.max(0,scatter-dt*1.4);
+  placeStar(tsx,tsy,caught?1:0.45);
+  ORDER.forEach((k,i)=>{
+    const el=SC[k];
+    /* one at a time: the newest has landed, the one before it flies on.
+       Sections here are caught in flight, never stacked. */
+    const on=(caught&&i===given-1)?1:0;
+    arrived[i]+=((on)-arrived[i])*0.16;
+    const fly=1-arrived[i];
+    el.style.left='28px';el.style.width=(W-56)+'px';
+    el.style.top=(H*0.60)+'px';
+    el.style.textAlign='left';el.style.mask='';el.style.webkitMask='';el.style.filter='none';
+    /* flying in, and landing as he holds; scattering if he lets go */
+    const off=fly*(i%2?1:-1)*W*0.7 + scatter*(i%2?1:-1)*W*0.5;
+    el.style.transform='translateX('+off.toFixed(1)+'px)';
+    el.style.opacity=(arrived[i]*(1-scatter)).toFixed(3);});
+}
+
+/* ── the hand ──────────────────────────────────────────────────── */
+let pressure=0;
+const phone=E('phone');
+function loc(e){const r=phone.getBoundingClientRect();
+  const nx=(e.clientX-r.left)*(W/r.width),ny=(e.clientY-r.top)*(H/r.height);
+  vel=Math.hypot(nx-pxr,ny-pyr);pxr=nx;pyr=ny;}
+phone.addEventListener('pointerdown',e=>{
+  if(e.target.closest('#rail'))return;
+  loc(e);down=true;
+  pressure=(e.pressure&&e.pressure!==0.5)?e.pressure:0;
+  if(world==='II'){/* take hold of the nearest ray */
+    const cx=W/2,cy=H*0.46,R=Math.min(W,H)*0.42;
+    let best=1e9;follow=null;
+    RAYS.forEach((ray,ri)=>{
+      for(let s=1;s<=12;s++){const r=s/12,q=rayPt(r,ray,R);
+        const d=Math.hypot(cx+q[0]-pxr,cy+q[1]-pyr);
+        if(d<best){best=d;follow=ri;}}});
+    if(best>70)follow=null;}
+  try{phone.setPointerCapture(e.pointerId);}catch(_){}});
+phone.addEventListener('pointermove',e=>{loc(e);
+  if(down&&e.pressure&&e.pressure!==0.5)pressure=e.pressure;});
+function up(){down=false;pressure=0;if(world==='II')follow=null;}
+phone.addEventListener('pointerup',up);phone.addEventListener('pointercancel',up);
+phone.addEventListener('pointerleave',()=>{if(down)up();});
+
+fit();go('I');frame();
+</script>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#07060B"/><g fill="none" stroke-width="1.1"><path d="M60 60 C74 54 88 44 96 30" stroke="#B9A5E8" opacity=".8"/><path d="M60 60 C70 74 68 92 60 104" stroke="#D4A94B" opacity=".7"/><path d="M60 60 C46 56 30 58 18 68" stroke="#7D74C9" opacity=".7"/><path d="M60 60 C52 44 38 34 24 30" stroke="#E0713F" opacity=".7"/></g><circle cx="60" cy="60" r="3.4" fill="#EDE6D6"/><circle cx="96" cy="30" r="2" fill="#B9A5E8"/><circle cx="60" cy="104" r="2" fill="#D4A94B"/><circle cx="18" cy="68" r="2" fill="#7D74C9"/><circle cx="24" cy="30" r="2" fill="#E0713F"/></svg></template>
+</body></html>

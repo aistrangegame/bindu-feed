@@ -30,3 +30,6 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# the design bundle ships unzipped; the archive does not
+*.zip

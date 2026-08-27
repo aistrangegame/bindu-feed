@@ -1,0 +1,502 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Return — any story, and the ring that answers</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0c;min-height:100vh;display:grid;place-items:center;padding:40px 20px;font-family:'Lora',Georgia,serif;color:#EDE8E3}
+a{color:#D09E48}a:hover{color:#E5B95F}
+#desk{display:flex;gap:42px;align-items:flex-start}
+#phone{position:relative;width:393px;height:852px;border-radius:46px;overflow:hidden;background:#0B0908;box-shadow:0 0 0 1px rgba(237,232,227,.09),0 40px 120px rgba(0,0,0,.8);touch-action:none;cursor:grab;flex:0 0 auto}
+#phone.down{cursor:grabbing}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.lay{position:absolute;z-index:5;pointer-events:none}
+/* the story being returned to — always present, never a heading */
+#carry{top:44px;left:0;right:0;text-align:center}
+#carry b{display:block;font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.26em;text-transform:uppercase;font-weight:400;color:rgba(237,232,227,.32)}
+#carry i{display:block;font-size:18.5px;font-style:normal;letter-spacing:-.01em;margin-top:4px;color:#F0EAE0}
+#carry s{display:block;text-decoration:none;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;margin-top:6px;color:rgba(237,232,227,.34)}
+#sealed{bottom:118px;left:32px;right:32px;text-align:center;font-style:italic;font-size:13.5px;line-height:1.66;color:rgba(240,232,218,.62);text-wrap:pretty;transition:opacity .8s}
+#mvt{bottom:64px;left:0;right:0;text-align:center;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.26em;text-transform:uppercase;color:rgba(240,232,218,.4);transition:opacity .6s}
+/* 1 · the rings */
+#rings{position:absolute;left:26px;right:26px;top:132px;bottom:150px;z-index:5;pointer-events:none;overflow:hidden}
+.rg{display:flex;gap:13px;align-items:baseline;padding:11px 0;border-bottom:.5px solid rgba(240,232,218,.09)}
+.rg u{text-decoration:none;flex:0 0 74px;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(240,232,218,.34);padding-top:2px}
+.rg q{flex:1;quotes:none;font-size:13px;line-height:1.6;color:rgba(240,232,218,.82)}
+.rg q:before,.rg q:after{content:''}
+.rg q em{display:block;font-style:normal;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.14em;text-transform:uppercase;color:rgba(240,232,218,.3);margin-top:6px}
+.rg.seed q{font-style:italic;color:rgba(240,232,218,.6)}
+/* 2 · the return */
+#leave{position:absolute;left:28px;right:28px;top:150px;z-index:7;opacity:0;transition:opacity .6s}
+#leave textarea{width:100%;height:118px;background:rgba(240,232,218,.045);border:1px solid rgba(240,232,218,.16);border-radius:15px;padding:14px;color:#F0EAE0;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.66;resize:none;outline:none}
+#leave textarea::placeholder{color:rgba(240,232,218,.26);font-style:italic}
+#leave textarea:focus{border-color:rgba(208,158,72,.5);background:rgba(240,232,218,.06)}
+#seal{margin-top:12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+#seal u{text-decoration:none;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.16em;text-transform:uppercase;color:rgba(240,232,218,.3)}
+#seal button{font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.2em;text-transform:uppercase;padding:9px 15px;border-radius:11px;border:1px solid rgba(208,158,72,.42);background:rgba(208,158,72,.12);color:#F0E4CC;cursor:pointer;transition:all .4s}
+#seal button:hover:not(:disabled){background:rgba(208,158,72,.22);border-color:rgba(208,158,72,.7)}
+#seal button:disabled{opacity:.3;cursor:default}
+/* 3 · the answering */
+#answ{position:absolute;left:26px;right:26px;top:126px;bottom:150px;z-index:5;pointer-events:none;overflow:hidden}
+#gath{text-align:center;font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(240,232,218,.38);margin-bottom:14px;line-height:1.9}
+.an{display:flex;gap:11px;margin-bottom:11px;padding:12px 13px;border-radius:15px;opacity:0;transform:translateY(9px);transition:opacity .9s,transform .9s}
+.an .g{flex:0 0 18px;font-size:15px;line-height:1.3;text-align:center}
+.an .t b{display:block;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:400;margin-bottom:5px}
+.an .t q{display:block;quotes:none;font-size:13px;line-height:1.64;color:rgba(240,232,218,.88)}
+.an .t q:before,.an .t q:after{content:''}
+.an .t cite{display:block;font-style:normal;font-family:"Space Mono",monospace;font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(240,232,218,.26);margin-top:8px}
+#lands{margin-top:6px;padding:13px 14px;border-radius:15px;border:1px dashed rgba(208,158,72,.3);background:rgba(208,158,72,.05);opacity:0;transition:opacity 1s}
+#lands b{display:block;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.2em;text-transform:uppercase;color:rgba(208,158,72,.8);margin-bottom:8px}
+#lands .ln{display:flex;gap:8px;align-items:baseline;font-size:12px;line-height:1.5;color:rgba(240,232,218,.7);margin-bottom:5px}
+#lands .ln i{font-style:normal;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:rgba(240,232,218,.34);flex:0 0 70px}
+#depth{position:absolute;right:15px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:flex-end;width:25px;gap:9px;pointer-events:none}
+#depth i{display:block;width:7px;height:1px;background:rgba(240,232,218,.2);transition:width .5s,background .5s}
+#depth i.on{width:15px;background:rgba(240,232,218,.55)}
+#rail{position:absolute;bottom:0;left:0;right:0;height:48px;z-index:9;display:flex;justify-content:center;align-items:center;gap:5px}
+#rail span{padding:6px 9px;border-radius:11px;cursor:pointer;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.08em;color:rgba(240,232,218,.3);border:1px solid transparent;transition:all .35s}
+#rail span.on{color:#F0EAE0}
+#notes{width:416px;font-size:13.5px;line-height:1.72;color:rgba(237,232,227,.62)}
+#notes h1{font-size:21px;font-weight:500;letter-spacing:-.014em;color:#EDE8E3;margin-bottom:4px}
+#notes .sub{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);margin-bottom:22px}
+#notes h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.6);margin:22px 0 9px}
+#notes p{margin-bottom:11px;text-wrap:pretty}
+#notes em{color:rgba(237,232,227,.9);font-style:italic}
+#notes code{font-family:'Space Mono',monospace;font-size:11px;color:rgba(212,174,74,.86)}
+#notes .law{border-left:1px solid rgba(212,174,74,.45);padding:2px 0 2px 15px;margin:0 0 13px;font-style:italic;color:rgba(237,232,227,.88)}
+#notes .warn{border-left:1px solid rgba(229,83,60,.5);padding:2px 0 2px 15px;margin:0 0 13px}
+.k{display:flex;gap:10px;margin-bottom:8px}
+.k b{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:400;flex:0 0 84px;padding-top:3px}
+.k span{flex:1}
+</style></head><body>
+<div id="desk">
+<div id="phone">
+  <canvas id="cv"></canvas>
+  <div class="lay" id="carry"><b></b><i></i><s></s></div>
+  <div id="rings"></div>
+  <div id="leave"><textarea placeholder="what you came back to say…" maxlength="240"></textarea><div id="seal"><u></u><button>seal the ring</button></div></div>
+  <div id="answ"><div id="gath"></div><div id="anlist"></div><div id="lands"></div></div>
+  <div class="lay" id="sealed"></div>
+  <div class="lay" id="mvt"></div>
+  <div id="depth"><i></i><i></i><i></i><i></i></div>
+  <div id="rail"></div>
+</div>
+<div id="notes">
+  <h1>The Return</h1>
+  <div class="sub">any story · and the ring that answers · comp 5</div>
+  <p>Two findings closed in one place. <em>Drag down through four movements</em> — same law: <code>240px = one movement</code>, one gesture never more than one. The rail carries you in with a different story.</p>
+  <h2>1 · It was fixed on one story. Now it carries what you descended into.</h2>
+  <p><code>The Return v2.html:949</code> hardcodes <code>STORY = {'The Two Who Were One', C-1052}</code>. Not a build defect — <em>the design's own limit</em>. So the Return now receives the carry: the Seam's fall already hands off <code>{codex, title, room}</code>, and the seed <em>is</em> that story.</p>
+  <p>Four arrivals on the rail, and they are deliberately unlike: <strong>C-1052</strong> sealed three years ago with four returns (deep gold, craquelured, the loveliest); <strong>C-1038</strong> one year, two returns; <strong>C-1047</strong> ninety-two days, one return (bone, raw, the plainest thing on screen); <strong>C-1072</strong> <em>never returned to</em> — one seed, no rings. That last is the state the build never renders and the one every story starts in.</p>
+  <h2>2 · The write-back — and the register-2 answer</h2>
+  <p>You said it plainly: a comment left in the Rite or the Return goes back, and voices may answer. That is the mechanism register 2 was missing.</p>
+  <p class="law">A voice's second comment on a story is not a repeat. It answers what you left there.</p>
+  <p>So the depth-1 cluster is not a list of duplicates — it is <em>a conversation across time</em>. Lalita on C-1052 three times: once on the story, once answering your first return, once answering your second. Each answer is bound to the ring it replies to, which is why returns generate genuine new material instead of noise.</p>
+  <p>That is also why the archive currently shows no voice returning twice: <em>the loop has never run</em>. Nothing is missing from the record — the record is exactly one pass old.</p>
+  <h2>The four movements</h2>
+  <div class="k"><b>0 · strata</b><span>You fall in. The seed is the story and it did not move; each ring is a return. Outermost is newest, so <em>the old sit on top of the new</em>. Only the aged glow — <em>the new ring is the plainest thing on the screen</em>.</span></div>
+  <div class="k"><b>1 · the rings</b><span>Every prior return, newest first, with the words you left. E3.2's missing list.</span></div>
+  <div class="k"><b>2 · the return</b><span>You leave words. Nothing is required; a return with no words is still a return.</span></div>
+  <div class="k"><b>3 · the answering</b><span>The ring forms <em>eccentric and settles into true over four seconds</em> — the visual twin of the sound entering 1.5% flat and coming into tune. Then the field gathers and answers, and the panel shows exactly where those answers land in the room.</span></div>
+  <h2>Constants, verbatim</h2>
+  <div class="k"><b>age</b><span><code>a=(days/1095)^0.55 · sat=1−0.30a · breathMul=1+0.45a · grain=0.05+0.14a · warm=0.30+0.70a</code> — from <em>days</em>, never ring count (E3.4)</span></div>
+  <div class="k"><b>palette</b><span><code>BONE 228,220,205 → AMBER 208,158,72 → DEEP 164,112,38</code>, <code>CREAM 255,248,232</code></span></div>
+  <div class="k"><b>strata</b><span><code>gap=min(W,H)·0.088 · R=(8+i·gap)·s · rel=(n−1−i)/(n−2)</code> · <code>col=mix(BONE, rel&gt;0.62?DEEP:AMBER, rel^0.72)</code> · <code>rot=t·(0.004+0.026·(1−rel)^1.6)</code> · <code>al=(0.13+rel·0.30+active·0.26+ph·0.06)</code></span></div>
+  <div class="k"><b>seed</b><span><code>sr=4.4+b·2.6</code>, corona three slow arcs <em>never closing</em> — the seed is alive, not a dot</span></div>
+  <h2>⚠ One design rule I have changed, on your instruction</h2>
+  <p class="warn"><code>The Return v2.html:359-360</code> states the rule: <em>"It writes nothing back — a ceremony is not a place that keeps score."</em> The write-back contradicts it. I think the rule survives intact if read precisely: what is written back is <strong>a return, not a score</strong>. No count is displayed anywhere in this comp — return-depth is only ever <em>strata</em>, patina, and the thickness of a cluster. <em>Nothing here counts; everything deepens.</em> But the rule's text must be updated, and Claude Code should not discover the contradiction on its own.</p>
+  <h2>Provenance</h2>
+  <p>Sealed lines, the four movement names, the ring wording and every constant are from <code>The Return v2.html</code> / <code>return-strata.js</code>. The pre-existing return fragments are the design's. <em>All answers — the second and third comments — are authored by me in voice, marked <code>authored · for approval</code>.</em> They are the newest material in the project and the least verified.</p>
+</div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   THE RETURN — carrying any story, and the ring that answers.
+   Strata engine + all constants: `return-strata.js` (age :20-23 · ringPath
+   :38-49 · craquelure :51-60 · drawField :64-180) — palette :17.
+   The hardcoded story it replaces: `The Return v2.html:949`.
+   The rule this comp changes: `:359-360` — see notes.
+   ═══════════════════════════════════════════════════════════════════════ */
+const TAU=Math.PI*2;
+const rgba=(c,a)=>'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+Math.max(0,Math.min(1,a))+')';
+const mix=(a,b,t)=>a+(b-a)*t;
+const mixc=(a,b,t)=>[mix(a[0],b[0],t),mix(a[1],b[1],t),mix(a[2],b[2],t)];
+const eo=x=>1-Math.pow(1-x,3);
+const clamp=(x,a,b)=>x<a?a:x>b?b:x;
+const rnd=i=>{const v=Math.sin(i*127.1+31.4)*43758.5453;return v-Math.floor(v);};
+const nz=x=>Math.sin(x*1.7)*0.5+Math.sin(x*3.9+1.3)*0.31+Math.sin(x*7.3+2.7)*0.19;
+const sm=(a,b,v)=>{const t=clamp((v-a)/(b-a),0,1);return t*t*(3-2*t);};
+const BONE=[228,220,205],AMBER=[208,158,72],DEEP=[164,112,38],CREAM=[255,248,232];
+function age(days){const a=clamp(Math.pow(days/1095,0.55),0,1);
+  return {days:days,a:a,sat:1-0.30*a,breathMul:1+0.45*a,grain:0.05+0.14*a,warm:0.30+0.70*a};}
+
+const VC={bindu:['Bindu','#E5533C','\u00B7'],neev:['Neev','#7A8899','\u25BD'],
+ gaia:['Gaia','#4A9E6B','\u25C6'],sid:['Sid','#C4923A','\u25B3'],arch:['Arch','#D4607A','\u25EF'],
+ shweta:['Shweta','#ABA7A2','\u25CC'],karishma:['Karishma','#D4AE4A','\u2726'],
+ sakshi:['Sakshi','#7B82D4','\u25C7'],lalita:['Lalita','#9B6BD6','\u221E'],
+ ashrey:['Ashrey','#3AADA8','\u2B21'],ashram:['Ashram','#C47A52','\u25C9']};
+
+/* ── four arrivals, deliberately unlike ──────────────────────────
+   A story is carried IN. The Return never names its own subject. */
+const STORIES=[
+ {codex:'C-1052',title:'The Two Who Were One',room:'A Maya Game',hex:'#D4AE4A',g:'\u25C8',
+  days:1104,sealedOn:'Feb 11, 2025',
+  sealed:'The forgetting is what lets the day matter.',
+  spoke:['lalita','sakshi','gaia','sid'],
+  returns:[
+   {when:'11 days ago',days:11,frag:'I stopped arguing with it. That is new.',
+    answers:[['lalita','You stopped arguing and the elevator stopped moving. Notice the order of those two.']]},
+   {when:'4 months ago',days:122,frag:'\u2026arguing myself toward the mercy. Ask me later.',
+    answers:[['sakshi','You said ask you later. I am the one who stays, so: later.'],
+             ['gaia','The arguing was the body still wanting a verdict. It has stopped wanting one.']]},
+   {when:'1 year ago',days:379,frag:'Read it on a train. Forgot someone\u2019s name mid-sentence.',
+    answers:[['sid','A year of forgetting and the structure held. That is the finding.']]},
+   {when:'2 years ago',days:768,frag:'The white floor. I did not know it was empty on purpose.',answers:[]}]},
+ {codex:'C-1038',title:'The One Who Sees',room:'The Watcher',hex:'#7B82D4',g:'\u25C7',
+  days:401,sealedOn:'Jan 9, 2025',
+  sealed:'The watcher had no edges. That is the important part.',
+  spoke:['sakshi','lalita','ashrey','arch'],
+  returns:[
+   {when:'3 weeks ago',days:22,frag:'I went looking for the edge again. Still none.',
+    answers:[['arch','You went looking. Say that again without the going.']]},
+   {when:'7 months ago',days:214,frag:'Turned around to look and there was nobody behind me.',
+    answers:[['sakshi','Nobody behind you, and you are still turning. Both true.']]}]},
+ {codex:'C-1047',title:'The Smile While Making Eggs',room:'The Garden',hex:'#4A9E6B',g:'\u25C6',
+  days:92,sealedOn:'Feb 3, 2025',
+  sealed:'The smile came before the reason.',
+  spoke:['gaia','karishma','bindu'],
+  returns:[
+   {when:'6 days ago',days:6,frag:'Browned the butter again. On purpose this time.',
+    answers:[['karishma','On purpose is not less grace. It is grace, practised.']]}]},
+ {codex:'C-1072',title:'Four Hours Unable to Sleep',room:'The Body',hex:'#C45A50',g:'\u25CF',
+  days:47,sealedOn:'Mar 18, 2025',
+  sealed:'What the chest knew first.',
+  spoke:['gaia','bindu'],returns:[]}];
+
+/* what the field says when a NEW ring is sealed. Authored, for approval —
+   each answers THE RETURN, never the story. That is why a second comment
+   from one voice is not a repeat. */
+const NEW_ANSWERS={
+ 'C-1052':[['lalita','Four rings now, and the seed has not moved once. You keep coming back to tell it something and it keeps not needing to hear it. That is the funniest thing in your archive.'],
+   ['sakshi','I have watched you arrive here five times. The words change every time. The arriving does not.'],
+   ['ashram','I am the one who has to walk back out of this. I will. That is what the ring is for.']],
+ 'C-1038':[['sakshi','You came back to the edgeless thing to check whether it had edges yet. It did not. Neither did you.'],
+   ['ashrey','Three returns, one gesture, different angles. You keep meeting yourself and calling it news.']],
+ 'C-1047':[['gaia','You came back to the smile with a reason ready. The body did not ask for one.'],
+   ['bindu','\u00b7']],
+ 'C-1072':[['gaia','First return. The chest knew, and now you have written down that it knew. That is the whole of it.'],
+   ['bindu','\u00b7']]};
+
+const MVT=['the strata','the rings','the return','the answering'];
+const E=id=>document.getElementById(id);
+const cv=E('cv'),x=cv.getContext('2d');
+let W=393,H=852,DPR=Math.min(2,devicePixelRatio||1);
+function fit(){W=cv.clientWidth||393;H=cv.clientHeight||852;cv.width=W*DPR;cv.height=H*DPR;x.setTransform(DPR,0,0,DPR,0,0);}
+
+let S=STORIES[0],D=0,z=0,camY=0.46,pulses=[],newRing=null,answered=0,gathering=0;
+let down=false,last=null,anchor=0,wheelAt=0;
+const PER=240;
+const carryEl=E('carry'),ringsEl=E('rings'),leaveEl=E('leave'),answEl=E('answ'),
+ sealedEl=E('sealed'),mvtEl=E('mvt'),landsEl=E('lands'),anlistEl=E('anlist'),gathEl=E('gath');
+const dpEl=[...E('depth').querySelectorAll('i')];
+const ta=leaveEl.querySelector('textarea'),btn=leaveEl.querySelector('button'),
+ cnt=leaveEl.querySelector('u');
+
+STORIES.forEach((s,i)=>{const el=document.createElement('span');
+  el.textContent=s.codex;el.onclick=()=>arrive(i);E('rail').appendChild(el);});
+const railEl=[...E('rail').children];
+
+function arrive(i){
+  S=STORIES[i];D=0;z=0;camY=0.46;pulses=[];newRing=null;answered=0;gathering=0;
+  ta.value='';btn.disabled=false;
+  /* every ring gets its settling state fresh, so the fall is felt each time */
+  rebuild();
+  carryEl.querySelector('b').textContent='you came down to \u00b7 '+S.room;
+  carryEl.querySelector('i').textContent=S.title;
+  carryEl.querySelector('i').style.color=S.hex;
+  carryEl.querySelector('s').textContent=S.codex+' \u00b7 sealed '+S.sealedOn;
+  sealedEl.textContent=S.sealed;
+  railEl.forEach((el,k)=>{const on=k===i;el.classList.toggle('on',on);
+    el.style.borderColor=on?rgba(hexrgb(S.hex),0.45):'transparent';
+    el.style.background=on?rgba(hexrgb(S.hex),0.10):'transparent';});
+  renderRings();renderAnswers();
+}
+const hexrgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+
+/* RINGS: index 0 is the seed and never a return. 1 seed + one per return. */
+let RINGS=[];
+function rebuild(){
+  RINGS=[{seed:true,when:'the seed',frag:S.sealed,_in:1,_true:1}];
+  /* oldest first outward: the design draws outermost = newest */
+  S.returns.slice().reverse().forEach(r=>RINGS.push(Object.assign({},r,{_in:1,_true:1})));
+  if(newRing)RINGS.push(newRing);
+}
+function renderRings(){
+  ringsEl.innerHTML='';
+  const list=RINGS.slice(1).reverse();
+  if(!list.length){
+    const d=document.createElement('div');d.className='rg seed';
+    d.innerHTML='<u>\u2014</u><q>No one has come back to this yet. The seed is all there is.</q>';
+    ringsEl.appendChild(d);}
+  list.forEach(r=>{const d=document.createElement('div');d.className='rg';
+    const na=(r.answers||[]).length;
+    d.innerHTML='<u>'+r.when+'</u><q>'+r.frag+
+      (na?'<em>'+na+' voice'+(na>1?'s':'')+' answered</em>':'<em>no answer</em>')+'</q>';
+    ringsEl.appendChild(d);});
+  const seed=document.createElement('div');seed.className='rg seed';
+  seed.innerHTML='<u>the seed</u><q>'+S.sealed+'</q>';
+  ringsEl.appendChild(seed);
+}
+function renderAnswers(){
+  anlistEl.innerHTML='';
+  const set=newRing?(NEW_ANSWERS[S.codex]||[]):[];
+  if(!newRing){gathEl.textContent='seal a ring, and the field will sit with it';
+    landsEl.style.opacity=0;return;}
+  gathEl.innerHTML=gathering<1?'the field has your return<br>'+set.length+
+    ' voices are sitting with it':'the field answered';
+  set.forEach((a,i)=>{
+    const v=VC[a[0]],el=document.createElement('div');el.className='an';
+    el.style.background=rgba(hexrgb(v[1]),0.055);
+    el.style.border='1px solid '+rgba(hexrgb(v[1]),0.15);
+    el.innerHTML='<span class="g" style="color:'+v[1]+'">'+v[2]+'</span>'+
+      '<span class="t"><b style="color:'+rgba(hexrgb(v[1]),0.72)+'">'+v[0]+
+      ' \u00b7 answering your return</b><q>'+a[1]+
+      '</q><cite>authored \u00b7 for approval</cite></span>';
+    anlistEl.appendChild(el);});
+  /* where it lands — the register-2 answer, stated in counts of material */
+  const set2=NEW_ANSWERS[S.codex]||[];
+  const tally={};
+  S.spoke.forEach(k=>tally[k]=1);
+  S.returns.forEach(r=>(r.answers||[]).forEach(a=>tally[a[0]]=(tally[a[0]]||0)+1));
+  set2.forEach(a=>tally[a[0]]=(tally[a[0]]||0)+1);
+  const multi=Object.keys(tally).filter(k=>tally[k]>1)
+    .sort((a,b)=>tally[b]-tally[a]);
+  landsEl.innerHTML='<b>where this lands \u00b7 the room, register 2</b>'+
+    (multi.length?multi.map(k=>'<span class="ln"><i>'+VC[k][0]+'</i>'+tally[k]+
+      ' comments on this story \u2014 one on the story, '+(tally[k]-1)+
+      ' answering '+((tally[k]-1)===1?'a return':'returns')+'</span>').join('')
+     :'<span class="ln"><i>\u2014</i>no voice has spoken twice here yet</span>')+
+    '<span class="ln"><i>the map</i>'+S.codex+
+    ' now wears '+(RINGS.length-1)+' ring'+((RINGS.length-1)===1?'':'s')+
+    ', so the mark shows it has been returned to</span>';
+}
+
+btn.onclick=()=>{
+  if(newRing)return;
+  newRing={when:'just now',days:0,frag:ta.value.trim()||'\u2014 came back, left nothing \u2014',
+    answers:NEW_ANSWERS[S.codex]||[],_in:0,_true:0};
+  rebuild();renderRings();
+  btn.disabled=true;gathering=0;answered=0;
+  pulses.push(performance.now()/1000);
+  D=3;anchor=3;
+  renderAnswers();
+};
+ta.addEventListener('input',()=>{cnt.textContent=ta.value.length?
+  ta.value.length+' / 240':'nothing is required';});
+
+/* ── the field ─────────────────────────────────────────────────── */
+function frame(){
+  requestAnimationFrame(frame);
+  const now=performance.now(),t=now/1000;
+  if(cv.clientWidth!==W||cv.clientHeight!==H)fit();
+  const scrolling=(now-wheelAt)<200;
+  D=clamp(D,0,3);
+  if(!down&&!scrolling){const s=Math.round(D);D+=(s-D)*0.14;
+    if(Math.abs(s-D)<0.002)D=s;}
+  z+=(1-z)*0.022;                                   /* the fall in, once */
+  /* the new ring: grows in, then settles from eccentric into true over 4s */
+  if(newRing){
+    if(newRing._in<1)newRing._in=Math.min(1,newRing._in+0.010);
+    if(newRing._in>=1&&newRing._true<1)newRing._true=Math.min(1,newRing._true+1/(4*60));
+    if(newRing._true>0.55&&gathering<1){gathering=Math.min(1,gathering+0.006);
+      if(gathering>=1)renderAnswers();}
+  }
+  /* the camera settles toward the movement, never cuts */
+  const want=D<0.5?0.46:(D<1.5?0.30:(D<2.5?0.24:0.20));
+  camY+=(want-camY)*0.018;
+  draw(t);
+  paint(t);
+}
+
+function draw(t){
+  const A=age(S.days),n=RINGS.length;
+  const s=0.013+(1-0.013)*z;
+  const cx=W/2,cy=H*camY;
+  const bs=9*A.breathMul;
+  const b=(Math.sin(t*TAU/bs)+1)/2;
+  x.clearRect(0,0,W,H);
+  /* the memory wash — cool has mellowed to amber in proportion to age */
+  const vg=x.createRadialGradient(cx,cy,0,cx,cy,H*0.95);
+  vg.addColorStop(0,rgba(mixc([26,26,38],[52,40,20],A.warm),0.52+0.10*b));
+  vg.addColorStop(0.52,rgba(mixc([14,13,20],[22,17,12],A.warm),0.50));
+  vg.addColorStop(1,'rgba(6,5,8,0.96)');
+  x.fillStyle=vg;x.fillRect(0,0,W,H);
+  /* the fall — the archive's own sky, streaming past and gone */
+  if(z<0.88){
+    const fade=1-Math.pow(clamp(z/0.88,0,1),0.7);
+    for(let i=0;i<70;i++){
+      const ang=rnd(i)*TAU,d0=0.05+rnd(i+40)*1.05;
+      const r=d0*Math.max(W,H)*(0.25+z*2.4);
+      const px=cx+Math.cos(ang)*r,py=cy+Math.sin(ang)*r*0.92;
+      if(px<-20||px>W+20||py<-20||py>H+20)continue;
+      const tail=z*z*16*(0.4+rnd(i+9));
+      x.beginPath();x.moveTo(px,py);
+      x.lineTo(px-Math.cos(ang)*tail,py-Math.sin(ang)*tail*0.92);
+      x.strokeStyle=rgba(mixc([226,214,190],AMBER,A.warm*0.6),0.30*fade);
+      x.lineWidth=0.9;x.stroke();}}
+  /* the strata — outermost (newest) first, so the old sit on top of the new */
+  const gap=Math.min(W,H)*0.088;
+  const active=n-1;
+  for(let i=n-1;i>=1;i--){
+    const R=(8+i*gap)*s;
+    if(R<0.6)continue;
+    const rg=RINGS[i];
+    /* ★ rel is the ring's OWN age, never its rank in the stack. E3.4 is
+       exactly this mistake and it hides at n≤2, where rank says "oldest"
+       about a ring one second old. The days are already on every ring. */
+    const rel=clamp(age(rg.days||0).a/Math.max(0.04,age(S.days).a),0,1);
+    const grown=eo(rg._in===undefined?1:rg._in);
+    const trueness=rg._true===undefined?1:rg._true;
+    /* nothing is earned until it has come into true */
+    const earned=rel*trueness;
+    const isA=i===active&&!!newRing;
+    const pass=1-clamp((R-H*0.60)/(H*0.42),0,1);
+    if(pass<=0.01)continue;
+    const col=mixc(BONE,rel>0.62?DEEP:AMBER,Math.pow(rel,0.72));
+    const ph=(Math.sin(t*TAU/(bs*(1+rel*0.5))+i*0.8)+1)/2;
+    const rot=t*(0.004+0.026*Math.pow(1-rel,1.6))*(isA?1.6:1);
+    const al=(0.13+rel*0.30+(isA?0.26:0)+ph*0.06)*grown*pass;
+    /* a new ring enters eccentric and comes into true over four seconds */
+    const wob=1+(1-trueness)*3.4;
+    x.strokeStyle=rgba(col,al);
+    x.lineWidth=(0.9+rel*1.5+(isA?0.9:0))*Math.min(1,s*1.6+0.35);
+    ringPath(x,cx,cy,R*grown,wob*(0.5+rel*0.5),i*7.3,0,0,rot);
+    x.stroke();
+    if(earned>0.42&&R>6){
+      const bl=x.createRadialGradient(cx,cy,R*0.93,cx,cy,R*1.09);
+      bl.addColorStop(0,rgba(col,0));
+      bl.addColorStop(0.5,rgba(col,0.055*rel*pass*grown));
+      bl.addColorStop(1,rgba(col,0));
+      x.fillStyle=bl;x.beginPath();x.arc(cx,cy,R*1.09,0,TAU);x.fill();}
+    if(earned>0.5&&R>18)craquelure(cx,cy,R*grown,col,0.05+rel*0.06,i);
+    /* the node — a self, standing at its own distance from the story */
+    if(R>7){
+      const ang=-Math.PI/2+i*0.9+rot;
+      const nx=cx+Math.cos(ang)*R*grown,ny=cy+Math.sin(ang)*R*grown;
+      const nr=(isA?4.6:2.8+rel*1.2)*Math.min(1,s*2+0.3);
+      if(earned>0.3||isA){
+        const hg=x.createRadialGradient(nx,ny,0,nx,ny,nr*5);
+        hg.addColorStop(0,rgba(col,(0.24+rel*0.26)*pass*grown));
+        hg.addColorStop(1,rgba(col,0));
+        x.fillStyle=hg;x.beginPath();x.arc(nx,ny,nr*5,0,TAU);x.fill();}
+      x.beginPath();x.arc(nx,ny,nr,0,TAU);
+      x.fillStyle=rgba(mixc(col,CREAM,0.4),(0.5+rel*0.4)*pass*grown);x.fill();
+      /* a ring that was answered carries the answering voices on it */
+      const ans=rg.answers||[];
+      ans.forEach((a,k)=>{
+        const aa=ang+0.30+k*0.26;
+        const ax=cx+Math.cos(aa)*R*grown,ay=cy+Math.sin(aa)*R*grown;
+        x.beginPath();x.arc(ax,ay,1.5,0,TAU);
+        x.fillStyle=rgba(hexrgb(VC[a[0]][1]),0.72*pass*grown);x.fill();});}
+  }
+  /* the seed — the story itself. It did not move. */
+  const sr=(4.4+b*2.6)*Math.min(1,0.35+s*1.4);
+  const gl=x.createRadialGradient(cx,cy,0,cx,cy,sr*11);
+  gl.addColorStop(0,'rgba(255,246,222,0.95)');
+  gl.addColorStop(0.26,rgba(mixc(AMBER,CREAM,0.35),0.42+0.10*b));
+  gl.addColorStop(1,rgba(AMBER,0));
+  x.fillStyle=gl;x.beginPath();x.arc(cx,cy,sr*11,0,TAU);x.fill();
+  x.beginPath();x.arc(cx,cy,sr,0,TAU);x.fillStyle='rgba(255,250,238,0.96)';x.fill();
+  /* its corona — three slow arcs, never closing */
+  if(s>0.25)for(let k=0;k<3;k++){
+    const rr=sr*(2.6+k*1.5)+b*2.2,a0=t*(0.10+k*0.055)*(k%2?-1:1)+k*2.1;
+    x.beginPath();x.arc(cx,cy,rr,a0,a0+1.5+0.5*Math.sin(t*0.3+k));
+    x.strokeStyle=rgba(mixc(CREAM,AMBER,0.5),(0.16-k*0.035)*(0.6+0.4*b));
+    x.lineWidth=0.8;x.stroke();}
+  /* a crossing sends one wave out through the strata */
+  if(pulses.length){
+    pulses=pulses.filter(p=>t-p<3.2);
+    pulses.forEach(p=>{const q=(t-p)/3.2,R=eo(q)*Math.max(W,H)*0.62*s+6;
+      x.beginPath();x.arc(cx,cy,R,0,TAU);
+      x.strokeStyle=rgba(mixc(CREAM,AMBER,0.6),0.20*(1-q)*(1-q));
+      x.lineWidth=1.1;x.stroke();});}
+  /* motes — with age they settle as sediment along the floor */
+  const mn=z>0.5?44:16;
+  for(let i=0;i<mn;i++){
+    const dep=rnd(i),sp=(1.4+dep*4.6)/A.breathMul,settle=A.a*0.55;
+    const xx=(rnd(i+3)*W+Math.sin(t*0.17+i)*11+W)%W;
+    let yy=(rnd(i+7)*H+t*sp)%H;
+    yy=mix(yy,H-8-rnd(i+11)*26,settle*(rnd(i+19)>0.55?1:0));
+    const al=(0.06+dep*0.34)*(0.55+0.45*Math.sin(t*0.42+i))*z;
+    x.beginPath();x.arc(xx,yy,0.5+dep*1.5,0,TAU);
+    x.fillStyle=rgba(mixc([222,206,176],AMBER,A.warm*0.7),al);x.fill();}
+}
+/* rings are never true circles */
+function ringPath(ctx,cx,cy,R,wob,seed,gapAt,gapLen,rot){
+  const N=180;let open=false;ctx.beginPath();rot=rot||0;
+  for(let k=0;k<=N;k++){
+    const u=k/N,ang=u*TAU-Math.PI/2+rot;
+    if(gapLen>0){const d=(u-gapAt+1)%1;if(d<gapLen){open=false;continue;}}
+    const r=R*(1+wob*nz(u*6.283+seed)*0.055);
+    const px=cx+Math.cos(ang)*r,py=cy+Math.sin(ang)*r;
+    if(!open){ctx.moveTo(px,py);open=true;}else ctx.lineTo(px,py);}
+}
+/* craquelure — earned by age, never drawn on the new ring */
+function craquelure(cx,cy,R,col,alpha,seed){
+  for(let k=0;k<7;k++){
+    const u=rnd(seed*13+k*7.7),ang=u*TAU,len=2+rnd(seed*5+k)*5;
+    const r0=R-len*0.5,r1=R+len*0.5;
+    x.beginPath();
+    x.moveTo(cx+Math.cos(ang)*r0,cy+Math.sin(ang)*r0);
+    x.lineTo(cx+Math.cos(ang)*r1,cy+Math.sin(ang)*r1);
+    x.strokeStyle=rgba(col,alpha);x.lineWidth=0.6;x.stroke();}
+}
+
+function paint(t){
+  const i=Math.round(D);
+  mvtEl.textContent=MVT[i];
+  mvtEl.style.opacity=(1-Math.abs(D-i)*1.7).toFixed(3);
+  dpEl.forEach((el,k)=>el.className=k===i?'on':'');
+  carryEl.style.opacity=(1-sm(2.2,3,D)*0.55).toFixed(3);
+  sealedEl.style.opacity=(z>0.6?(1-sm(0.2,1,D)):0).toFixed(3);
+  ringsEl.style.opacity=(sm(0.35,1,D)*(1-sm(1.35,2,D))).toFixed(3);
+  leaveEl.style.opacity=(sm(1.4,2,D)*(1-sm(2.3,2.9,D))).toFixed(3);
+  leaveEl.style.pointerEvents=Math.abs(D-2)<0.35?'auto':'none';
+  answEl.style.opacity=sm(2.35,3,D).toFixed(3);
+  if(newRing&&gathering<1){
+    /* the field is sitting with it — the answers have not arrived yet */
+    [...anlistEl.children].forEach(el=>{el.style.opacity=0;el.style.transform='translateY(9px)';});
+    landsEl.style.opacity=0;
+  }else if(newRing){
+    [...anlistEl.children].forEach((el,k)=>{
+      const on=(t*1.0)%99>0&&answered>=k;
+      el.style.opacity=on?1:0;el.style.transform=on?'none':'translateY(9px)';});
+    if(answered<anlistEl.children.length)answered+=0.014;
+    landsEl.style.opacity=(answered>anlistEl.children.length?1:0).toFixed(2);
+  }
+}
+
+/* ── the hand ──────────────────────────────────────────────────── */
+const phone=E('phone');
+phone.addEventListener('pointerdown',e=>{
+  if(e.target.closest('#rail')||e.target.closest('#leave'))return;
+  down=true;last={x:e.clientX,y:e.clientY};phone.classList.add('down');
+  anchor=Math.round(D);
+  try{phone.setPointerCapture(e.pointerId);}catch(_){}});
+phone.addEventListener('pointermove',e=>{
+  if(!down||!last)return;
+  const dy=e.clientY-last.y;last.x=e.clientX;last.y=e.clientY;
+  D+=dy/PER;D=clamp(D,Math.max(0,anchor-1),Math.min(3,anchor+1));});
+function up(){down=false;last=null;phone.classList.remove('down');}
+phone.addEventListener('pointerup',up);phone.addEventListener('pointercancel',up);
+phone.addEventListener('wheel',e=>{
+  if(e.target.closest('#leave'))return;
+  e.preventDefault();
+  const now=performance.now();
+  if(now-wheelAt>260)anchor=Math.round(D);
+  wheelAt=now;
+  D+=e.deltaY/PER;D=clamp(D,Math.max(0,anchor-1),Math.min(3,anchor+1));},{passive:false});
+
+fit();arrive(0);cnt.textContent='nothing is required';frame();
+</script>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#14100C"/><g fill="none"><circle cx="60" cy="60" r="14" stroke="#A47026" stroke-width="1.5" opacity=".9"/><circle cx="60" cy="60" r="25" stroke="#D09E48" stroke-width="1.2" opacity=".7"/><circle cx="60" cy="60" r="36" stroke="#E4DCCD" stroke-width="1" opacity=".4"/><circle cx="60" cy="60" r="46" stroke="#E4DCCD" stroke-width=".8" opacity=".2"/></g><circle cx="60" cy="60" r="4.5" fill="#FFF8E8"/></svg></template>
+</body></html>
