@@ -262,6 +262,8 @@ final class FeedStore: ObservableObject {
         switch name.lowercased() {
         case "aperture": pendingLaunchRoute = .aperture
         case "point":    pendingLaunchRoute = .instrument(8)      // d7, where the Aperture's door is
+        case let r where r.hasPrefix("point") && Int(r.dropFirst(5)) != nil:
+            pendingLaunchRoute = .instrument(1 + (Int(r.dropFirst(5)) ?? 1))   // point1…point7 → d1…d7
         default:
             if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
                 pendingLaunchRoute = .home(a)
