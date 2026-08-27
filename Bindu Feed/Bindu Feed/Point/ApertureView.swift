@@ -145,12 +145,15 @@ struct ApertureView: View {
                 .padding(.horizontal, 30).padding(.top, 68)
             }
             .scrollIndicators(.hidden)
+            // `#plate{padding:68px 30px 92px}` — from the phone's own edges.
+            .ignoresSafeArea()
 
             if !arrived && !busy {
                 VStack { Spacer()
                     Text("OPEN THE EYE").spaceMonoTracked(8.5, em: 0.26)
                         .foregroundStyle(cream.opacity(0.34)).padding(.bottom, 56)
                 }
+                .ignoresSafeArea()            // `.hint{bottom:56px}`
                 .allowsHitTesting(false)
             }
 

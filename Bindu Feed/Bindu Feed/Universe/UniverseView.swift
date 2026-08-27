@@ -101,6 +101,13 @@ struct UniverseView: View {
     private var inFall: Bool { fallStarID != nil }
 
     var body: some View {
+        // `.door{bottom:62px}` and the mouth's `H*0.62` are the comp's own coordinates, and
+        // the comp's phone has no home indicator — its numbers are from the physical edge.
+        // Laid in the safe box the door sat at 96 from the bottom instead of 62.
+        //
+        // `handleTap` is handed the SAME `geo.size` the Canvas draws into (`:159`), so the
+        // draw box and the hit box move together — which is the only reason this is safe to
+        // change. A frame fix that moves one and not the other is worse than the offset.
         GeometryReader { geo in
             ZStack {
                 TimelineView(.animation) { tl in
@@ -124,6 +131,9 @@ struct UniverseView: View {
                             }
                         }
                     }
+                    // the field is on the physical frame now; this control is not part of the
+                    // comp's coordinate system and keeps its distance from the home indicator
+                    .padding(.bottom, 34)
                 }
                 // No standing how-to. The design has none: `say()` (The Universe v3.html:1470-1474)
                 // is transient — 3400ms, then gone — and it names WHERE he is, never how to move.

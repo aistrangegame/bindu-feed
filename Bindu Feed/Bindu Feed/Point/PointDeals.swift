@@ -44,6 +44,10 @@ struct PointGateView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 34)
         .padding(.bottom, 96)
+        // `#gate{padding:0 34px 96px}` — from the phone's own bottom edge. Inside the safe
+        // area this sat 34pt higher than the comp; 96 from the physical bottom clears the
+        // home indicator by the same margin the comp's own drawn one had.
+        .ignoresSafeArea()
         .allowsHitTesting(false)
     }
 }

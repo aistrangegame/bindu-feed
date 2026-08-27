@@ -280,6 +280,12 @@ struct InstrumentView: View {
         .frame(maxWidth: .infinity)
         .padding(.top, 100)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // `#where{top:100px}` is measured from the phone's own top edge — the comp draws no
+        // status bar, so its 100 already allows for one. Laid inside the safe area this sat
+        // at 159 on this device, and had done since Pass B: the verification checked that it
+        // was IMPLEMENTED, not that it was POSITIONED, and there is nothing beside it for the
+        // error to show against. See the frame-mismatch note in `RoomView`.
+        .ignoresSafeArea()
         .opacity(hidden ? 0 : 1)
         .animation(.easeInOut(duration: 1.1), value: here.key)
         .animation(.easeInOut(duration: 1.1), value: hidden)
