@@ -52,15 +52,36 @@ struct RoomView: View {
                     Canvas { ctx, sz in draw(ctx, sz, t) }
                         .allowsHitTesting(false)
                 }
+                .ignoresSafeArea()
 
                 wash
-                greeting
-                figureText
+
+                // THE FIGURE AND THE TYPE MUST SHARE ONE ORIGIN, AND IT IS THE PHYSICAL TOP.
+                //
+                // The comp's phone draws no status bar: `#greet{position:absolute;inset:0;
+                // padding-top:96px}` measures from the phone's own top edge, and the figure's
+                // `cy = H*0.42` from the same edge. Its 96 already allows for a status bar.
+                //
+                // The app was laying the type inside the safe area and the figure across the
+                // whole screen — two origins ~59pt apart on this device. Clearance between
+                // `says` and the figure's centre fell to 19pt against the comp's 69, which is
+                // why the seed head sat on the stat row and the principle. The inset was
+                // being applied a second time, on top of a padding that already contained it.
+                //
+                // `pres` and `S` were never the fault. The probe reads d 0.000 · pres 0.340 ·
+                // S 0.620 at register 0 and 1.000 · 1.000 · 1.140 at register 1 — the comp's
+                // own curve, exactly, reaching the figure. The overlap was a frame mismatch.
+                Group {
+                    greeting
+                    figureText
+                    turn
+                    roomName
+                    registerLabel
+                    legend
+                }
+                .ignoresSafeArea()
+
                 words(size)
-                turn
-                roomName
-                registerLabel
-                legend
                 rail
             }
             .contentShape(Rectangle())
@@ -133,7 +154,12 @@ struct RoomView: View {
     private func tap(_ p: CGPoint, _ size: CGSize) {
         guard near2, !archive.isEmpty else { return }
         if sub == 0 {
-            var best = 28.0
+            // THE HIT RADIUS IS DERIVED FROM THE MARKS, NOT FIXED. A 28pt nearest-wins radius
+            // over marks 6pt apart is not merely loose — it is unaimable: every tap in the
+            // figure resolves to something, and never reliably to the thing under the finger.
+            // `clamp(median nearest-neighbour * 0.55, 9, 28)` keeps the comp's 28 at its own
+            // spacing and closes down as the archive fills.
+            var best = hitRadius
             var hit: RoomMark?
             for m in marks where m.real {
                 let dd = hypot(m.x - Double(p.x), m.y - Double(p.y))
@@ -154,6 +180,28 @@ struct RoomView: View {
         } else {
             sub = max(0, sub - 1)     // a tap on the ground rises
         }
+    }
+
+    /// The median nearest-neighbour distance across the real marks, halved a little. Marks
+    /// are laid out by `MAPGEO` at fixed positions, so this only changes when the archive or
+    /// the frame does — computed from the live `marks`, which are rebuilt each frame anyway.
+    private var hitRadius: Double {
+        let real = marks.filter(\.real)
+        guard real.count > 1 else { return 28 }
+        var nn: [Double] = []
+        nn.reserveCapacity(real.count)
+        for a in real {
+            var best = Double.greatestFiniteMagnitude
+            for b in real where b.x != a.x || b.y != a.y {
+                let d = hypot(a.x - b.x, a.y - b.y)
+                if d < best { best = d }
+            }
+            if best.isFinite { nn.append(best) }
+        }
+        guard !nn.isEmpty else { return 28 }
+        nn.sort()
+        let median = nn[nn.count / 2]
+        return max(9, min(28, median * 0.55))
     }
 
     // MARK: - the figure
@@ -181,10 +229,26 @@ struct RoomView: View {
     }
 
     /// The map — every comment as a mark, none as text. `:944-968`.
+    ///
+    /// THE COMP'S MARK SIZES ARE FOR ITS OWN N. It was drawn against `n ≈ 31` with 3 lit, and
+    /// its radii are absolute: glow 15, ring 7.6, core 2.6, over `R = min(W,H)*0.30`. The base
+    /// gives Lalita 101, Sakshi 96, Gaia 57, Karishma 48, Sid 47 — and every one of them lit.
+    /// Glow coverage goes from about half the figure to well past all of it, so above n ≈ 45
+    /// the map stops being an index and becomes a blob.
+    ///
+    /// So the mark scales with the archive: `k = clamp(sqrt(31/n), 0.5, 1.0)` on all three
+    /// radii. At 31 it is the comp exactly; at 101 it is 0.55; the floor keeps a mark visible
+    /// at any count. The GEOMETRY does not change — the index is still the figure, every mark
+    /// still sits where that voice's mathematics puts it. Only the ink does.
+    private func markScale(_ n: Int) -> Double {
+        max(0.5, min(1.0, (31.0 / Double(max(1, n))).squareRoot()))
+    }
+
     private func drawMap(_ ctx: GraphicsContext, _ size: CGSize, cy: Double, t: Double, a: Double) {
         guard let key, !archive.isEmpty, a > 0.01 else { return }
         let W = Double(size.width), H = Double(size.height)
         let R = min(W, H) * 0.30
+        let k = markScale(archive.n)
         var out: [RoomMark] = []
         out.reserveCapacity(archive.n)
         for i in 0..<archive.n {
@@ -201,17 +265,17 @@ struct RoomView: View {
             if real {
                 let tw = 0.62 + 0.38 * sin(t * 0.7 + Double(i))
                 let c = CGPoint(x: mx, y: my)
-                ctx.fill(RoomDraw.ring(mx, my, 15), with: .radialGradient(
+                ctx.fill(RoomDraw.ring(mx, my, 15 * k), with: .radialGradient(
                     Gradient(colors: [RoomGeo.col(RoomGeo.mix(rgb, [255, 255, 255], 0.4), 0.46 * a * tw),
                                       RoomGeo.col(rgb, 0)]),
-                    center: c, startRadius: 0, endRadius: 15))
-                ctx.stroke(RoomDraw.ring(mx, my, 7.6),
+                    center: c, startRadius: 0, endRadius: 15 * k))
+                ctx.stroke(RoomDraw.ring(mx, my, 7.6 * k),
                            with: .color(RoomGeo.col(RoomGeo.mix(rgb, [255, 255, 255], 0.3), 0.30 * a)),
                            lineWidth: 0.8)
-                ctx.fill(RoomDraw.ring(mx, my, 2.6), with: .color(RoomGeo.col([255, 252, 248], 0.92 * a)))
+                ctx.fill(RoomDraw.ring(mx, my, 2.6 * k), with: .color(RoomGeo.col([255, 252, 248], 0.92 * a)))
             } else {
                 // a real position with no words behind it — dim, and never filled in
-                ctx.fill(RoomDraw.ring(mx, my, 1.1), with: .color(RoomGeo.col(rgb, 0.26 * a)))
+                ctx.fill(RoomDraw.ring(mx, my, 1.1 * k), with: .color(RoomGeo.col(rgb, 0.26 * a)))
             }
         }
         DispatchQueue.main.async { if marks.count != out.count || marks.first?.x != out.first?.x { marks = out } }
