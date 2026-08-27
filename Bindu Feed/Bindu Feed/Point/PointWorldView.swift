@@ -27,8 +27,10 @@ struct PointWorldView: View {
     var body: some View {
         ZStack {
             if let star = openStar {
-                // LEVEL 2 — the star reading + descent.
-                PointStarDescent(star: star, hue: hue, onClose: { withAnimation { openStar = nil } })
+                // LEVEL 2 — the reading, in THIS world's own hand. E3: the shared sheet
+                // (`point-levels.js:161 openSheet()`) is superseded and ships nowhere.
+                PointReading(dimensionN: dimensionN, star: star, hue: hue,
+                             onClose: { withAnimation { openStar = nil } })
             } else if let u = selectedUniverse {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).
@@ -121,68 +123,41 @@ struct PointWorldView: View {
 private enum PointGoodnight { static var shown = Set<Int>() }
 
 // A deeper reading, generated live in the Arch register and kept (point-levels.js generate()).
+// Its five fields ARE the offline fallback at `point-levels.js:210-211` — verbatim-ported,
+// audit-marked correct, and explicitly kept by the E3 ruling.
 struct PointDeeper: Codable { let arrival, teaching, thread, practice, ascent: String }
 
-// The star descent — SAY → WALK → HAND → OPEN, one beat per touch (verbatim canon), and then
-// the true descent: one live layer deeper (Arch register), generated once and PERSISTED per star.
-private struct PointStarDescent: View {
+/// LEVEL 3 — the descent, one true layer deeper. Shared by all seven worlds, as it is in
+/// the design (`descent` is a single global element there). This is NOT the sheet E3 kills:
+/// the sheet was level 2's generic four-section reading; this is level 3, and its five-field
+/// offline fallback at `point-levels.js:210-211` is verbatim-ported and correct.
+struct PointDescentDoor: View {
     let star: PointStar
     let hue: Color
-    let onClose: () -> Void
-    @State private var beat = 0   // 0 say · 1 walk · 2 hand · 3 open
     @State private var deeper: PointDeeper?
     @State private var reaching = false
-    @State private var reached = false     // the descent has been asked for
-
-    private let labels = ["THE RUSH SAYS", "WALK TO WHAT IS TRUE", "WHAT THIS HANDS YOU", "THE INVITATION"]
-    private var texts: [String] { [star.say, star.walk, star.hand, star.open] }
+    @State private var reached = false
     private var cacheKey: String { "point.descent.\(star.t)" }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                HStack {
-                    Button { onClose() } label: { Text("‹").font(.system(size: 20)).foregroundStyle(BinduTheme.inkTertiary) }
-                    Spacer()
+        VStack(alignment: .leading, spacing: 0) {
+            if let d = deeper {
+                ScrollView { deeperStages(d).padding(.horizontal, 32).padding(.bottom, 40) }
+                    .frame(maxHeight: 380)
+            } else if reaching {
+                Text("descending…").spaceMonoTracked(9, em: 0.2)
+                    .foregroundStyle(hue.opacity(0.7)).padding(.bottom, 34)
+            } else {
+                Button { Task { await descend() } } label: {
+                    Text("▽ DESCEND ONE LAYER DEEPER").spaceMonoTracked(10, em: 0.2)
+                        .foregroundStyle(hue)
                 }
-                Text(star.t).font(.lora(24, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
-                Text(star.ti).font(.loraItalic(14)).foregroundStyle(hue)
-                ForEach(0...beat, id: \.self) { i in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(labels[i]).font(.spaceMono(9)).tracking(1.5).foregroundStyle(hue.opacity(0.7))
-                        Text(texts[i]).font(.lora(15.5)).lineSpacing(6).foregroundStyle(BinduTheme.inkPrimary)
-                    }
-                    .transition(.opacity)
-                }
-                // No hint here. The design's star sheet renders all four sections AT ONCE
-                // (point-levels.js:167-171) — there is no per-tap gate, so there is no slot
-                // for a line telling him to tap. Pass 5 replaces this generic sheet entirely:
-                // the four sections arrive by each world's own gesture, never by a tap.
-
-                // Past the OPEN — the descent one true layer deeper, generated and kept.
-                if beat >= 3 {
-                    if let d = deeper {
-                        deeperStages(d)
-                    } else if reaching {
-                        Text("descending…").font(.spaceMono(9)).tracking(2).foregroundStyle(hue.opacity(0.7)).padding(.top, 8)
-                    } else {
-                        Button { Task { await descend() } } label: {
-                            Text("▽ descend one layer deeper").font(.spaceMono(10)).tracking(2).foregroundStyle(hue).padding(.top, 8)
-                        }.buttonStyle(.plain)
-                    }
-                }
-                Color.clear.frame(height: 60)
-            }
-            .padding(.horizontal, 32).padding(.top, 20)
-        }
-        .scrollIndicators(.hidden)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if beat < 3 {
-                withAnimation(.easeInOut(duration: 1.0)) { beat += 1 }
-                if beat == 3 { PointJourney.descended.append(star.t) }   // walked to the OPEN — the descent
+                .buttonStyle(.plain).padding(.bottom, 34)
             }
         }
+        .frame(maxWidth: .infinity)
+        .background(LinearGradient(colors: [.clear, Color(hex: "#050408").opacity(0.9)],
+                                   startPoint: .top, endPoint: .bottom).ignoresSafeArea())
     }
 
     @ViewBuilder private func deeperStages(_ d: PointDeeper) -> some View {
@@ -225,10 +200,23 @@ private struct PointStarDescent: View {
             withAnimation(.easeInOut(duration: 1.0)) { deeper = fallback }; return
         }
         reaching = true
+        // `point-levels.js:186-196 generate()` — three things the earlier port dropped, and
+        // the third is the load-bearing one: the star's DIMENSION, its STATUS in `SM`
+        // ("walked" / "in progress" / "seeded"), and a different instruction for a SEEDED
+        // star. Fourteen of the 66 are seeded, and for those the descent is his FIRST
+        // meeting with the topic, not a layer under a reading he has already walked.
+        let dimName = PointContent.dimensions.first { d in
+            d.universes.contains { $0.stars.contains(star.key) }
+        }?.name ?? ""
+        let status = PointStatus.word(star.st)
+        let seededBranch = star.st == "s"
+            ? "This star is seeded, not yet walked — this is his FIRST TRUE MEETING with the topic: bring its actual substance accurately from its real tradition or science, going well beyond the held reading."
+            : "Go one true layer deeper than the held reading — material it did not include."
         let prompt = """
         You are the descent-voice of an instrument called The Point — a nine-enclosure walk a seeker uses \
-        to reorient when caught in mental rush. He has descended onto the star "\(star.t)" (\(star.ti)). \
-        The instrument's held reading of this star: "\(held)".
+        to reorient when caught in mental rush. He has descended onto the star "\(star.t)" (\(star.ti)) \
+        in the dimension "\(dimName)". The instrument's held reading of this star: "\(held)". \
+        Status: \(status).
 
         Write the descent in the ARCH register — devotion made audible, warmth threaded through precision. \
         Its four frequencies, all present: TEACHING — never declare; name what the reader currently holds, \
@@ -236,7 +224,7 @@ private struct PointStarDescent: View {
         original language) and trust him to arrive. PROTECTIVE — equip, never alarm; fill a gap he didn't \
         know he had. JOY — delight as substrate, legible without exclamation marks. INVITATION — the ending \
         opens a door, never closes on a conclusion. Second person, present tense, no mysticism-clichés. Go \
-        one true layer deeper than the held reading — material it did not include.
+        \(seededBranch)
 
         Respond with ONLY a JSON object, no markdown fences, keys: "arrival" (1-2 sentences), "teaching" \
         (4-6 sentences), "thread" (1-2 sentences), "practice" (1-2 sentences), "ascent" (1 sentence). No preamble.

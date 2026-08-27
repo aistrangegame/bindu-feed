@@ -1,109 +1,65 @@
 import SwiftUI
 
-// THE APERTURE (Z+8→+9) — the one surface that is not pre-authored. A live call to
-// Claude (raw HTTP; Swift has no official Anthropic SDK), the user's own key held
-// in Keychain exactly like the Airtable PAT. Never scripted — the response is
-// generated in the moment, then he crosses to the centre.
+// THE APERTURE — avarana VIII, and it is WHOLE WITHOUT A KEY.
 //
-// Wave-6 note for the completeness pass: the live call is built and real; it needs
-// the user's own Anthropic key (entered once, stored in Keychain). Without a key
-// the Aperture states plainly that it needs one — it does not fake a response.
-
+// `The Aperture.html` (comps). The surface used to be dead without a personal Anthropic
+// key: it asked for one and did nothing else. The instinct there was to design a graceful
+// failure, and the comp found the better answer by asking what the model was actually for:
+//
+//   *"the model was never supplying the unpredictability."*
+//
+// The Aperture promises two things — a register drawn from traditions this library has
+// never walked, and something arriving that you did not choose. The first is a local table
+// of 37. The second was never about generated text; it was about THIS CAME FROM OUTSIDE
+// YOUR LOOP. A random draw from 37 traditions you have never walked *is* that.
+//
+//   THE STANDARD APERTURE GIVES YOU THE REGISTER, HONESTLY,
+//   AND NEVER FABRICATES THE TEACHING.
+//
+// So every slot fills locally and none of them pretends. With a key the frame does not
+// change — same eye, same three slots, same typography — the live call fills the line and
+// the deepening, and *where this library stops* stays underneath. The key is an
+// enhancement to a complete surface, never the thing that makes it work.
+//
+// THE ORIGIN SLOT IS GONE. The comp authored a `tradition and where it lives` line for all
+// 37 and marked every one `authored · for approval` — 37 factual claims about living
+// traditions needing checking before launch. They duplicate what the register string
+// already carries: "Qalb — the heart-organ of the Sufi Lataif" states its own origin. So
+// there is nothing to approve and nothing to fact-check, in either state.
 struct ApertureView: View {
     @Binding var path: [FeedRoute]
     @EnvironmentObject private var store: FeedStore
 
     @State private var keyInput = ""
     @State private var hasKey = KeychainService.load("anthropic_api_key") != nil
-    @State private var phase: Phase = .ready
-    @State private var response = ""
+    @State private var showKeyEntry = false
+    @State private var card: VisitorCard?
+    @State private var status = ""
+    @State private var busy = false
+    @State private var flare: Double = 0
+    @State private var arrived = false
 
-    private enum Phase { case ready, reaching, answered, needKey, failed }
+    private let hue = Color(hex: "#D4A94B")
+    private let cream = Color(hex: "#F0E9DC")
+    private var dim: Color { cream.opacity(0.62) }
+    private var faint: Color { cream.opacity(0.30) }
 
-    var body: some View {
-        ZStack {
-            Color(hex: "#050408").ignoresSafeArea()
-            RadialGradient(colors: [Color(hex: "#D4A94B").opacity(0.12), .clear],
-                           center: .center, startRadius: 0, endRadius: 320)
-                .ignoresSafeArea()
-
-            VStack(spacing: 22) {
-                Spacer()
-                Text("THE APERTURE").font(.spaceMono(10)).tracking(3).foregroundStyle(Color(hex: "#D4A94B"))
-
-                switch phase {
-                case .ready:
-                    Text("Nothing here is written in advance.")
-                        .font(.lora(18)).italic().foregroundStyle(BinduTheme.inkPrimary).multilineTextAlignment(.center)
-                    if hasKey {
-                        Button { Task { await reach() } } label: {
-                            Text("reach through ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#D4A94B"))
-                        }
-                    } else {
-                        keyEntry
-                    }
-                case .reaching:
-                    Text("reaching…").font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary).modifier(RiteBreathe())
-                case .answered:
-                    ScrollView {
-                        Text(response).font(.lora(16)).lineSpacing(7).foregroundStyle(BinduTheme.inkPrimary)
-                            .multilineTextAlignment(.center).padding(.horizontal, 8)
-                    }.frame(maxHeight: 300)
-                    Button { $path.pushDissolve(FeedRoute.instrument(9)) } label: {
-                        Text("to the centre ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#D4A94B"))
-                    }
-                case .needKey:
-                    keyEntry
-                case .failed:
-                    Text("The aperture did not open. Try again when you are ready.")
-                        .font(.loraItalic(14)).foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
-                    Button { phase = .ready } label: {
-                        Text("again ›").font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
-                    }
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 40)
-
-            // The router has no nav bar; carry the back control in-view, top-left,
-            // like every other screen. (Was the app's one screen relying on the
-            // system back button.)
-            VStack {
-                HStack {
-                    Button { $path.popDissolve() } label: {
-                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
-                            .foregroundStyle(Color(hex: "#D4A94B").opacity(0.6)).padding(16)
-                    }
-                    Spacer()
-                }
-                Spacer()
-            }
-        }
-        .navigationBarBackButtonHidden(true)
+    /// The three slots. `reg` is the eyebrow, `line` the compressed sentence, `deep` the
+    /// body — and `edge`, which is always present, is where this library stops.
+    private struct VisitorCard {
+        let reg: String
+        let line: String
+        let deep: String
+        let edge: String
     }
 
-    private var keyEntry: some View {
-        VStack(spacing: 12) {
-            Text("The aperture reaches through your own key.")
-                .font(.loraItalic(12)).foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
-            SecureField("anthropic api key", text: $keyInput)
-                .font(.spaceMono(12)).foregroundStyle(BinduTheme.inkPrimary)
-                .textInputAutocapitalization(.never).autocorrectionDisabled()
-                .padding(10).background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.04)))
-            Button {
-                let k = keyInput.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !k.isEmpty else { return }
-                KeychainService.save("anthropic_api_key", value: k)
-                hasKey = true; keyInput = ""; phase = .ready
-            } label: {
-                Text("hold the key").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#D4A94B"))
-            }
-        }
-    }
-
-    // The registers the Aperture can transmit — authentic traditions OUTSIDE the well-known
-    // (point-content.js REGISTERS, verbatim), and a per-session set so none repeats in a walk.
-    private static var seenRegisters = Set<String>()
+    // The 37 unwalked registers — `The Instrument v3.html:931-951` / `canon/point-content.js`,
+    // verbatim, and already byte-identical here before this pass. Untouched.
+    private static var drawn = Set<String>()
+    /// The last six lines the model returned, for the live prompt's own avoid-list. BOTH
+    /// guards are needed and they guard different axes: the pool guard is the only one that
+    /// can work with no model; `seen` only exists once there is one. `The Aperture.html:94`.
+    private static var seen: [String] = []
     private static let registers: [String] = [
         "Qalb — the heart-organ of the Sufi Lataif", "Sirr — the secret, in the Sufi Lataif",
         "Fana — dissolution, among the Sufi stations", "Baqa — abiding-after-dissolution, among the Sufi stations",
@@ -126,37 +82,238 @@ struct ApertureView: View {
         "the illuminative way — the second Christian contemplative register", "Rid\u{0101} — contentment, among the Sufi stations",
     ]
 
-    // MARK: - The live call (raw HTTP — Anthropic Messages API)
+    var body: some View {
+        ZStack {
+            // the enclosure's own ground. `#phone{background:#0A0803}` — without it the
+            // field's gradient is translucent and the layer beneath shows through, because
+            // RootView is a ZStack of routes and nothing else paints an opaque floor here.
+            Color(hex: "#0A0803").ignoresSafeArea()
 
-    private func reach() async {
-        guard let key = KeychainService.load("anthropic_api_key"), !key.isEmpty else { phase = .needKey; return }
-        phase = .reaching
-        guard let url = URL(string: "https://api.anthropic.com/v1/messages") else { phase = .failed; return }
+            TimelineView(.animation) { tl in
+                Canvas { ctx, size in
+                    field(ctx, size, tl.date.timeIntervalSinceReferenceDate)
+                }
+                .allowsHitTesting(false)
+            }
+            .ignoresSafeArea()
 
-        // The Aperture transmits ONE register from an authentic tradition OUTSIDE the
-        // well-known (point-content.js REGISTERS) — never twice in a session — with the comp's
-        // avoid-list, so what arrives is small, true, and genuinely unfamiliar.
-        let fresh = Self.registers.filter { !Self.seenRegisters.contains($0) }
-        let reg = (fresh.isEmpty ? Self.registers : fresh).randomElement() ?? Self.registers[0]
-        Self.seenRegisters.insert(reg)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("AVARANA VIII · THE APERTURE · THE LOOP, OPENED")
+                        .spaceMonoTracked(8, em: 0.24).foregroundStyle(faint)
+                    Text("What you did not choose")
+                        .font(.lora(25, weight: .medium)).tracking(-0.014 * 25)
+                        .foregroundStyle(cream).padding(.top, 9)
+                    Text("Every dimension behind you came from inside the loop. Open the eye: a register is drawn from traditions this library has never walked, and something arrives that you cannot predict — from the world’s old knowing, or from what is happening this very week.")
+                        .font(.lora(13.5)).lineSpacing(13.5 * 0.72)
+                        .foregroundStyle(dim).padding(.top, 13)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    eye.frame(maxWidth: .infinity).padding(.top, 26)
+
+                    Text(status.uppercased())
+                        .spaceMonoTracked(8, em: 0.14).foregroundStyle(faint)
+                        .frame(maxWidth: .infinity, minHeight: 12).padding(.top, 16)
+
+                    if let card { visitor(card).padding(.top, 14) }
+
+                    if arrived && !busy {
+                        Button { Task { await open() } } label: {
+                            Text("LET ANOTHER ARRIVE").spaceMonoTracked(8.5, em: 0.2).foregroundStyle(hue)
+                        }
+                        .buttonStyle(.plain).padding(.top, 14)
+                    }
+
+                    // The key is offered, never demanded — and never in the way of the surface.
+                    if !hasKey {
+                        Button { withAnimation { showKeyEntry.toggle() } } label: {
+                            Text(showKeyEntry ? "NEVER MIND" : "A KEY IS PRESENT")
+                                .spaceMonoTracked(8.5, em: 0.2).foregroundStyle(faint)
+                        }
+                        .buttonStyle(.plain).padding(.top, 18)
+                        if showKeyEntry { keyEntry.padding(.top, 12) }
+                    }
+
+                    if arrived {
+                        Button { $path.pushDissolve(FeedRoute.instrument(9)) } label: {
+                            Text("TO THE CENTRE ›").spaceMonoTracked(8.5, em: 0.2).foregroundStyle(hue)
+                        }
+                        .buttonStyle(.plain).padding(.top, 22)
+                    }
+                    Color.clear.frame(height: 80)
+                }
+                .padding(.horizontal, 30).padding(.top, 68)
+            }
+            .scrollIndicators(.hidden)
+
+            if !arrived && !busy {
+                VStack { Spacer()
+                    Text("OPEN THE EYE").spaceMonoTracked(8.5, em: 0.26)
+                        .foregroundStyle(cream.opacity(0.34)).padding(.bottom, 56)
+                }
+                .allowsHitTesting(false)
+            }
+
+            VStack {
+                HStack {
+                    Button { $path.popDissolve() } label: {
+                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
+                            .foregroundStyle(hue.opacity(0.6)).padding(16)
+                    }
+                    Spacer()
+                }
+                Spacer()
+            }
+        }
+        .navigationBarBackButtonHidden(true)
+    }
+
+    // MARK: - the eye
+
+    /// `point-levels.js:120-121` — two counter-facing triangles, verbatim, with the circle
+    /// and the centre dot the earlier build dropped. 42s/rev, accelerating to 2.4s while it
+    /// is reaching.
+    private var eye: some View {
+        TimelineView(.animation) { tl in
+            let t = tl.date.timeIntervalSinceReferenceDate
+            let period = busy ? 2.4 : 42.0
+            let a = (t.truncatingRemainder(dividingBy: period)) / period * 360
+            Canvas { ctx, size in
+                let s = min(size.width, size.height) / 96
+                var g = ctx
+                g.translateBy(x: size.width / 2, y: size.height / 2)
+                g.rotate(by: .degrees(a))
+                g.scaleBy(x: s, y: s)
+                g.translateBy(x: -48, y: -48)
+                var up = Path()
+                up.move(to: .init(x: 48, y: 14)); up.addLine(to: .init(x: 84, y: 76))
+                up.addLine(to: .init(x: 12, y: 76)); up.closeSubpath()
+                g.stroke(up, with: .color(hue.opacity(0.5)), lineWidth: 1 / s)
+                var dn = Path()
+                dn.move(to: .init(x: 48, y: 82)); dn.addLine(to: .init(x: 12, y: 20))
+                dn.addLine(to: .init(x: 84, y: 20)); dn.closeSubpath()
+                g.stroke(dn, with: .color(hue.opacity(0.22)), lineWidth: 1 / s)
+                let c = CGPoint(x: size.width / 2, y: size.height / 2)
+                ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 34 * s, y: c.y - 34 * s, width: 68 * s, height: 68 * s)),
+                           with: .color(hue.opacity(0.3)), lineWidth: 1)
+                ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.4 * s, y: c.y - 2.4 * s, width: 4.8 * s, height: 4.8 * s)),
+                         with: .color(Color(hex: "#FFF6E2").opacity(0.9)))
+            }
+        }
+        .frame(width: 120, height: 120)
+        .contentShape(Rectangle())
+        .onTapGesture { Task { await open() } }
+    }
+
+    // MARK: - the card
+
+    private func visitor(_ c: VisitorCard) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(c.reg.uppercased()).spaceMonoTracked(8, em: 0.16).foregroundStyle(hue)
+                .padding(.bottom, 10)
+            Text(c.line).font(.lora(19)).lineSpacing(19 * 0.44)
+                .foregroundStyle(cream).padding(.bottom, 12)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(c.deep).font(.lora(14.5)).lineSpacing(14.5 * 0.7)
+                .foregroundStyle(dim)
+                .fixedSize(horizontal: false, vertical: true)
+            // the edge — where this library stops. Its own rule, above it.
+            Rectangle().fill(hue.opacity(0.2)).frame(height: 0.5).padding(.top, 10)
+            Text(c.edge).font(.loraItalic(14.5)).lineSpacing(14.5 * 0.7)
+                .foregroundStyle(cream.opacity(0.5)).padding(.top, 10)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .transition(.opacity)
+    }
+
+    private var keyEntry: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("With a key the same frame fills two of its slots from outside. Without one it is already whole.")
+                .font(.loraItalic(12)).foregroundStyle(faint)
+                .fixedSize(horizontal: false, vertical: true)
+            SecureField("anthropic api key", text: $keyInput)
+                .font(.spaceMono(12)).foregroundStyle(cream)
+                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                .padding(10).background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.04)))
+            Button {
+                let k = keyInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !k.isEmpty else { return }
+                KeychainService.save("anthropic_api_key", value: k)
+                hasKey = true; keyInput = ""; showKeyEntry = false
+            } label: {
+                Text("HOLD THE KEY").spaceMonoTracked(8.5, em: 0.2).foregroundStyle(hue)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: - opening
+
+    private func drawRegister() -> String {
+        if Self.drawn.count >= Self.registers.count { Self.drawn.removeAll() }
+        let fresh = Self.registers.filter { !Self.drawn.contains($0) }
+        let r = fresh.randomElement() ?? Self.registers[0]
+        Self.drawn.insert(r)
+        return r
+    }
+
+    private func open() async {
+        guard !busy else { return }
+        busy = true
+        withAnimation(.easeInOut(duration: 0.5)) { card = nil }
+        let reg = drawRegister()
+        status = "drawing from the unwalked traditions…"
+        if hasKey {
+            await live(reg)
+        } else {
+            try? await Task.sleep(nanoseconds: 1_100_000_000)
+            standard(reg)
+        }
+        busy = false
+    }
+
+    /// The standard state. Every slot local, nothing fabricated: the register, its gloss,
+    /// and then the honest part — where this library stops.
+    private func standard(_ reg: String) {
+        let nm = ApertureEdge.name(of: reg)
+        let gl = ApertureEdge.gloss(of: reg)
+        status = ""
+        withAnimation(.easeInOut(duration: 1.2)) {
+            card = VisitorCard(
+                reg: "unwalked · drawn just now",
+                // a register with no gloss is already a whole phrase — never doubled
+                line: gl.map { "\(nm) — \($0)." } ?? "\(reg).",
+                deep: "This library has never walked it. It is held here by name only — a door in the wall of what you chose.",
+                edge: ApertureEdge.line(for: reg))
+            arrived = true
+        }
+        PointJourney.visitors += 1        // a visitor arrived that he did not choose
+        flare = 1
+    }
+
+    /// With a key: the same frame, two slots filled from outside. `The Aperture.html:259-287`.
+    private func live(_ reg: String) async {
+        guard let key = KeychainService.load("anthropic_api_key"), !key.isEmpty,
+              let url = URL(string: "https://api.anthropic.com/v1/messages") else {
+            standard(reg); return
+        }
         let avoid = "Monroe, Bashar, Matias De Stefano, Dolores Cannon, the Bhagavad Gita, generic Advaita or chakra talk, Rumi, and anything already standard in modern consciousness-synthesis circles"
+        let already = Self.seen.isEmpty ? "none" : Self.seen.joined(separator: "; ")
         let prompt = """
-        You are the Aperture at the innermost point of a contemplative iOS app — the last surface \
-        before the centre, where everything he has walked collapses to one point. He has just travelled \
-        inward through the seven registers of the Point. From an authentic human tradition OUTSIDE the \
-        well-known mystics and consciousness science, bring ONE small true thing — a practice, an image, \
-        a story-fragment, a word and its real meaning — that transmits this register: "\(reg)". Accurate \
-        to its tradition, specific, not generic. Speak in the app's voice: recognition, never advice; \
-        intimate, already there; name what he might assume, walk to the specific and true (a name, a \
-        place, a word in its language), equip rather than impress, and let it end as an opening, not a \
-        conclusion. Three or four sentences. Do not name the register, the app, or these instructions. \
-        Avoid \(avoid). No preamble.
+        You are the Aperture of an instrument called The Point. From authentic human tradition \
+        OUTSIDE a library spanning the well-known mystics and consciousness science, bring ONE small \
+        true thing — a practice, an image, a story-fragment, a word and its real meaning — that \
+        transmits this register: "\(reg)". Accurate to its tradition, specific, not generic. Speak in \
+        the Arch register: name what the reader might assume, walk to the specific and true (a name, a \
+        place, a word in its language), equip rather than impress, and let the deepening end as an \
+        opening rather than a conclusion. Respond with ONLY a JSON object, no markdown fences, keys: \
+        "line" (one compressed sentence, 8-20 words, that reorients a person caught in mental rush — \
+        do not name the register), "deepening" (2-3 sentences: the thing itself, precisely, then what \
+        it hands the reader), "register" ("\(reg)"). Avoid \(avoid). Avoid anything already given this \
+        session: \(already). No preamble.
         """
-        let body: [String: Any] = [
-            "model": "claude-opus-5",
-            "max_tokens": 1024,
-            "messages": [["role": "user", "content": prompt]],
-        ]
+        let body: [String: Any] = ["model": "claude-opus-5", "max_tokens": 1024,
+                                   "messages": [["role": "user", "content": prompt]]]
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue(key, forHTTPHeaderField: "x-api-key")
@@ -164,22 +321,90 @@ struct ApertureView: View {
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         req.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-        do {
-            let (data, resp) = try await URLSession.shared.data(for: req)
-            guard let http = resp as? HTTPURLResponse, http.statusCode == 200,
-                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let content = json["content"] as? [[String: Any]] else {
-                phase = .failed; return
+        guard let (data, resp) = try? await URLSession.shared.data(for: req),
+              let http = resp as? HTTPURLResponse, http.statusCode == 200,
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = json["content"] as? [[String: Any]] else {
+            // the authored failure line — and then the surface is still whole
+            status = "the aperture stayed closed this time — breathe once, and try again"
+            try? await Task.sleep(nanoseconds: 1_400_000_000)
+            standard(reg); return
+        }
+        let text = content.compactMap { ($0["type"] as? String) == "text" ? $0["text"] as? String : nil }.joined()
+        let cleaned = text.replacingOccurrences(of: "```json", with: "").replacingOccurrences(of: "```", with: "")
+        guard let lo = cleaned.firstIndex(of: "{"), let hi = cleaned.lastIndex(of: "}"), lo <= hi,
+              let obj = try? JSONSerialization.jsonObject(with: Data(cleaned[lo...hi].utf8)) as? [String: Any],
+              let line = obj["line"] as? String, !line.isEmpty else {
+            status = "the aperture stayed closed this time — breathe once, and try again"
+            try? await Task.sleep(nanoseconds: 1_400_000_000)
+            standard(reg); return
+        }
+        status = ""
+        withAnimation(.easeInOut(duration: 1.2)) {
+            card = VisitorCard(
+                reg: "through " + ((obj["register"] as? String) ?? reg),
+                line: line,
+                deep: (obj["deepening"] as? String) ?? "",
+                edge: ApertureEdge.line(for: reg))   // the fourth line stays, either way
+            arrived = true
+        }
+        Self.seen.append(line)
+        if Self.seen.count > 6 { Self.seen.removeFirst() }
+        PointJourney.visitors += 1
+        flare = 1
+    }
+
+    // MARK: - the field, and the flare
+
+    private func field(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
+        let W = Double(size.width), H = Double(size.height)
+        let b = (sin(t * RoomGeo.tau / 9) + 1) / 2
+        let cx = W / 2, cy = H * 0.30, R = min(W, H) * 0.30
+        ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)), with: .radialGradient(
+            Gradient(stops: [
+                .init(color: Color(.sRGB, red: 0.110, green: 0.078, blue: 0.024, opacity: 0.62 + b * 0.10), location: 0),
+                .init(color: Color(.sRGB, red: 0.063, green: 0.047, blue: 0.020, opacity: 0.72), location: 0.55),
+                .init(color: Color(.sRGB, red: 0.031, green: 0.024, blue: 0.012, opacity: 0.96), location: 1)]),
+            center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: max(W, H) * 0.85))
+
+        // the yantra, faint — three enclosures and a 16-petal ring
+        var y = ctx
+        y.translateBy(x: cx, y: cy)
+        for (i, e) in [1.46, 1.38, 1.30].enumerated() {
+            let s = R * e * 0.62
+            y.stroke(Path(CGRect(x: -s, y: -s, width: s * 2, height: s * 2)),
+                     with: .color(hue.opacity(0.055 - Double(i) * 0.012 + flare * 0.14)), lineWidth: 1)
+        }
+        y.rotate(by: .radians(t * 0.006))
+        for k in 0..<16 {
+            let a = Double(k) / 16 * RoomGeo.tau
+            y.stroke(RoomDraw.ring(cos(a) * R * 0.94, sin(a) * R * 0.94, R * 0.075),
+                     with: .color(hue.opacity(0.05 + flare * 0.16)), lineWidth: 0.8)
+        }
+
+        // the flare — the visual half of the shimmer; the sound is its own pass
+        if flare > 0.001 {
+            let q = 1 - flare
+            ctx.stroke(RoomDraw.ring(cx, cy, R * (0.3 + q * 1.7)),
+                       with: .color(Color(hex: "#FFEEC4").opacity(0.42 * flare * flare)), lineWidth: 1.4)
+            for i in 0..<26 {
+                let a = RoomGeo.rnd(Double(i)) * RoomGeo.tau
+                let rr = R * (0.4 + q * 1.5) * (0.6 + RoomGeo.rnd(Double(i + 9)) * 0.8)
+                ctx.fill(RoomDraw.ring(cx + cos(a) * rr, cy + sin(a) * rr, 1 + RoomGeo.rnd(Double(i + 3)) * 1.6),
+                         with: .color(Color(hex: "#FFF6DC").opacity(0.6 * flare * flare)))
             }
-            // The Messages API returns content blocks; take the first text block.
-            let text = content.compactMap { block -> String? in
-                (block["type"] as? String) == "text" ? block["text"] as? String : nil
-            }.joined(separator: "\n\n")
-            response = text.isEmpty ? "…" : text
-            PointJourney.visitors += 1               // a visitor arrived that he did not choose
-            withAnimation(.easeInOut(duration: 1.0)) { phase = .answered }
-        } catch {
-            phase = .failed
+            DispatchQueue.main.async { flare = max(0, flare - 0.012) }
+        }
+
+        // dust, so the enclosure is never empty
+        for i in 0..<40 {
+            let px = (RoomGeo.rnd(Double(i)) * W + sin(t * 0.14 + Double(i)) * 9 + W)
+                .truncatingRemainder(dividingBy: W)
+            let py = (RoomGeo.rnd(Double(i + 7)) * H + t * (2 + RoomGeo.rnd(Double(i)) * 5))
+                .truncatingRemainder(dividingBy: H)
+            ctx.fill(RoomDraw.ring(px, py, 0.5 + RoomGeo.rnd(Double(i + 2)) * 1.2),
+                     with: .color(Color(.sRGB, red: 0.886, green: 0.800, blue: 0.620,
+                                        opacity: 0.05 + RoomGeo.rnd(Double(i + 4)) * 0.18)))
         }
     }
 }

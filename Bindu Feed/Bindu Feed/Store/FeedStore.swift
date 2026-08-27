@@ -256,11 +256,17 @@ final class FeedStore: ObservableObject {
     /// cleared as it is read, and nothing in a release build compiles this at all.
     func parkDebugRoomIfRequested() {
         let key = "bindu.debug.room"
-        guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty,
-              let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })
-        else { return }
+        guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty else { return }
         UserDefaults.standard.removeObject(forKey: key)
-        pendingLaunchRoute = .home(a)
+        // a route keyword, or a voice's name — the same hook, one key
+        switch name.lowercased() {
+        case "aperture": pendingLaunchRoute = .aperture
+        case "point":    pendingLaunchRoute = .instrument(8)      // d7, where the Aperture's door is
+        default:
+            if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+                pendingLaunchRoute = .home(a)
+            }
+        }
     }
 #endif
 

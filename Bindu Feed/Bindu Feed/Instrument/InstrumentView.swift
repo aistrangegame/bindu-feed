@@ -542,9 +542,13 @@ private struct ThroatView: View {
 ///
 /// Porting them is Pass 5 (`HANDOFF-BUILD-LIST.md` §3). Until then this renders ABSENCE —
 /// which is the rule: an unwired slot renders nothing, never an invention.
-private struct AxisGateView: View {
-    var body: some View { EmptyView() }
-}
+/// The gate (Z +2) — `PointGateView`, which carries the five canon DEALS.
+///
+/// This was `EmptyView()` from the Rule-1 sweep until Pass 5: the register was real, the
+/// slot was real, and the only thing in it had been invented ("keep pulling inward"). The
+/// sweep was right to take that out and right to leave the register bare until the content
+/// arrived. `canon/point-content.js:422-428` is the content.
+private typealias AxisGateView = PointGateView
 
 /// The Feed seam (Z 0).
 ///
