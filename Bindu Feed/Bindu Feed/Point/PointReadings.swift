@@ -160,38 +160,67 @@ struct PointReading: View {
 }
 
 // MARK: - I · THE POINT — stillness
-// "Everywhere else a star is opened, caught, unfolded. Here nothing opens by being acted
-//  on. He comes to rest near one and STAYS." The field is DISPLACED as he reads: the
-//  emptiness is the subject, so what arrives pushes the rest of the world outward.
+// `world-one.js:70-100`, and I had it exactly backwards on the first cut.
+//
+//   *"Touching a star CHOOSES it. That is all touching does — it does not open anything.
+//    What opens it is letting go and STAYING."*
+//
+//     if (touching) { still = max(0, still − dt*0.55); return null }
+//     still = min(1, still + dt*0.30)
+//     gates = [0.14, 0.38, 0.64, 0.88]
+//
+// STILLNESS IN THIS INSTRUMENT IS ALWAYS AN ASYMMETRIC ACCUMULATOR THAT DECAYS UNDER
+// ACTION, NEVER A TIMER. Three instances now — the sky's dwell (0.30 build / 1.30 decay
+// past Z < −2.3), this one (0.30 / 0.55), and `still` as a velocity test rather than a
+// since-last-touch test. Twice already "held" or "no recent input" has been mistaken for
+// "still", and my first cut here made it a third: a hold-to-build ring on a 2.2s timer,
+// which is the opposite gesture. A fourth stillness surface gets built this way, and its
+// decay term gets checked first.
+//
+// There is no contention with the rope. The rope is a press; this admits on hands off.
+// `Deal 5` — *a rope for the drowning minute, a cathedral for the returning hour, both
+// open from this gate* — and it is the one affordance that is never conditional.
 
 private struct ReadStillness: View {
     @ObservedObject var s: PointReadingState
     let hue: Color
     let onClose: () -> Void
-    @State private var dwell: Double = 0
+    @State private var still: Double = 0
     @State private var touching = false
+    @State private var running = false
+
+    private let gates = [0.14, 0.38, 0.64, 0.88]
+
+    /// `world-one.js:184-186`, verbatim — the only four things this world says.
+    private var stateWord: String {
+        if still < 0.05 { return "let go" }
+        if still < 0.14 { return "staying" }
+        return s.revealed < 2 ? "it is admitting you" : "still admitting"
+    }
 
     var body: some View {
         ZStack {
-            // the field, displaced by what has been admitted
+            // "the more he is given, the less there is around it" — `displaced() = given/4`,
+            // and the world's alpha is `A = p * (1 − dsp*0.62)`.
             TimelineView(.animation) { tl in
                 let t = tl.date.timeIntervalSinceReferenceDate
                 Canvas { ctx, size in
-                    let push = Double(s.revealed) * 0.22 + dwell * 0.10
+                    let dsp = Double(s.revealed) / 4
+                    let A = 1 - dsp * 0.62
                     for i in 0..<70 {
                         let a = RoomGeo.rnd(Double(i)) * RoomGeo.tau
-                        let base = 0.10 + RoomGeo.rnd(Double(i + 5)) * 0.42
-                        let r = min(size.width, size.height) * (base + push * base)
+                        let r = min(size.width, size.height)
+                            * (0.10 + RoomGeo.rnd(Double(i + 5)) * 0.42)
                         let cx = size.width / 2 + cos(a) * r
                         let cy = size.height * 0.46 + sin(a) * r * 1.25
                         let tw = 0.4 + 0.6 * abs(sin(t * 0.5 + Double(i)))
-                        ctx.fill(RoomDraw.ring(Double(cx), Double(cy), 0.7 + RoomGeo.rnd(Double(i + 2)) * 1.1),
-                                 with: .color(BinduTheme.inkPrimary.opacity(0.06 + 0.10 * tw)))
+                        ctx.fill(RoomDraw.ring(Double(cx), Double(cy),
+                                               0.7 + RoomGeo.rnd(Double(i + 2)) * 1.1),
+                                 with: .color(BinduTheme.inkPrimary.opacity((0.06 + 0.10 * tw) * A)))
                     }
                 }
             }
-            .ignoresSafeArea()
-            .allowsHitTesting(false)
+            .ignoresSafeArea().allowsHitTesting(false)
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
@@ -201,20 +230,18 @@ private struct ReadStillness: View {
                             .transition(.opacity)
                     }
                     if !s.done {
-                        // the one affordance: stay. Nothing here opens by being acted on.
+                        // the gauge is a report, not a control: it fills when the hand is OFF
                         ZStack {
-                            Circle().stroke(hue.opacity(0.16), lineWidth: 1).frame(width: 74, height: 74)
-                            Circle().trim(from: 0, to: dwell)
+                            Circle().stroke(hue.opacity(0.14), lineWidth: 1).frame(width: 74, height: 74)
+                            Circle().trim(from: 0, to: still)
                                 .stroke(hue.opacity(0.7), style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
                                 .frame(width: 74, height: 74).rotationEffect(.degrees(-90))
-                            Text("stay").font(.loraItalic(13)).foregroundStyle(hue.opacity(0.6 + dwell * 0.4))
+                            // its four states, verbatim — `world-one.js:184-186`
+                            Text(stateWord.uppercased())
+                                .spaceMonoTracked(8.5, em: 0.2)
+                                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.44))
                         }
                         .frame(maxWidth: .infinity)
-                        .contentShape(Rectangle())
-                        .gesture(DragGesture(minimumDistance: 0)
-                            .onChanged { _ in if !touching { touching = true; run() } }
-                            .onEnded { _ in touching = false
-                                withAnimation(.easeOut(duration: 0.7)) { dwell = 0 } })
                     }
                     ReadingFooter(star: s.star, hue: hue)
                     Color.clear.frame(height: 90)
@@ -223,16 +250,29 @@ private struct ReadStillness: View {
             }
             .scrollIndicators(.hidden)
         }
+        // Reaching for it interrupts, and it closes without complaint.
+        .contentShape(Rectangle())
+        .simultaneousGesture(DragGesture(minimumDistance: 0)
+            .onChanged { _ in touching = true }
+            .onEnded { _ in touching = false })
+        .onAppear { run() }
     }
 
-    /// It admits him at its own pace — 2.2s of staying, and it cannot be hurried.
     private func run() {
+        guard !running else { return }
+        running = true
         Task {
-            while touching && !s.done {
+            while !s.done {
                 try? await Task.sleep(nanoseconds: 16_000_000)
-                dwell = min(1, dwell + 0.016 / 2.2)
-                if dwell >= 1 { dwell = 0; s.give(); break }
+                let dt = 0.016
+                if touching {
+                    still = max(0, still - dt * 0.55)      // acting suspends it
+                } else {
+                    still = min(1, still + dt * 0.30)
+                    if s.revealed < 4 && still >= gates[s.revealed] { s.give() }
+                }
             }
+            running = false
         }
     }
 }
@@ -388,8 +428,22 @@ private struct ReadParting: View {
 }
 
 // MARK: - IV · THE CHAMBER — pressing
-// The one architectural register, and walls are the only surface in the instrument that can
-// be INSCRIBED. "Press, and the strike deepens — below 0.12, no impression at all."
+// `world-four.js:100-133`. The one architectural register, and walls are the only surface
+// in the instrument that can be INSCRIBED — so here the reading is a thing pressed into a
+// surface rather than a thing that arrives.
+//
+//     press += dt * (0.30 + load(Z)*0.26)          while bearing
+//     gates  = [0.22, 0.46, 0.70, 0.92]
+//     release → press -= dt*0.52, and below 0.02 the niche closes and `given` resets
+//
+// *"nothing here is a tap, because an impression cannot be made by touching."* And the
+// strike deepens with the press: the struck title only exists above `press > 0.05`, and
+// its ink is `min(1, press*2.4)` — so a light bearing leaves a partial impression and a
+// touch leaves none at all. (The checklist rounds this to 0.12; these are the source's
+// own numbers, and they are what is implemented.)
+//
+// Note this is NOT the stillness rule inverted by accident — pressing IS action, so it
+// builds under the hand and decays when the hand leaves. Opposite world, opposite term.
 
 private struct ReadPressing: View {
     @ObservedObject var s: PointReadingState
@@ -397,9 +451,9 @@ private struct ReadPressing: View {
     let onClose: () -> Void
     @State private var press: Double = 0
     @State private var holding = false
+    @State private var running = false
 
-    /// `world-four.js` — under this, the wall takes nothing. A light touch is not a strike.
-    private let threshold = 0.12
+    private let gates = [0.22, 0.46, 0.70, 0.92]
 
     var body: some View {
         ZStack {
@@ -414,26 +468,27 @@ private struct ReadPressing: View {
                     ForEach(0..<s.revealed, id: \.self) { i in
                         SectionBlock(section: PointSection(rawValue: i)!, star: s.star, hue: hue)
                             .padding(.leading, 14)
-                            .overlay(alignment: .leading) {   // pressed into the wall
+                            .overlay(alignment: .leading) {   // struck into the wall
                                 Rectangle().fill(hue.opacity(0.35)).frame(width: 1.5)
                             }
                             .transition(.opacity)
                     }
                     if !s.done {
                         VStack(spacing: 8) {
+                            // the impression: nothing at all below 0.05, deepening at press*2.4
                             Rectangle()
-                                .fill(press < threshold ? hue.opacity(0.12) : hue.opacity(0.25 + press * 0.5))
+                                .fill(hue.opacity(press <= 0.05 ? 0 : 0.30 * min(1, press * 2.4)))
                                 .frame(height: 2 + press * 10)
                                 .frame(maxWidth: .infinity)
-                            Text(press < threshold ? "press" : "deeper")
+                                .background(Rectangle().fill(hue.opacity(0.08)).frame(height: 1.5))
+                            Text(press <= 0.05 ? "press · a touch leaves nothing" : "bear down")
                                 .font(.loraItalic(13))
-                                .foregroundStyle(hue.opacity(press < threshold ? 0.4 : 0.8))
+                                .foregroundStyle(hue.opacity(press <= 0.05 ? 0.4 : 0.85))
                         }
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 0)
-                            .onChanged { _ in if !holding { holding = true; run() } }
-                            .onEnded { _ in holding = false
-                                withAnimation(.easeOut(duration: 0.5)) { press = 0 } })
+                            .onChanged { _ in holding = true }
+                            .onEnded { _ in holding = false })
                     }
                     ReadingFooter(star: s.star, hue: hue)
                     Color.clear.frame(height: 90)
@@ -442,17 +497,24 @@ private struct ReadPressing: View {
             }
             .scrollIndicators(.hidden)
         }
+        .onAppear { run() }
     }
 
     private func run() {
+        guard !running else { return }
+        running = true
         Task {
-            while holding && !s.done {
+            while !s.done {
                 try? await Task.sleep(nanoseconds: 16_000_000)
-                press = min(1, press + 0.016 / 1.7)
-                // below the threshold the wall takes NO impression at all — the press
-                // registers on the surface but nothing is inscribed
-                if press >= 1 { press = 0; s.give(); break }
+                let dt = 0.016
+                if holding {
+                    press = min(1, press + dt * 0.42)          // 0.30 + a mid load
+                    if s.revealed < 4 && press >= gates[s.revealed] { s.give() }
+                } else {
+                    press = max(0, press - dt * 0.52)
+                }
             }
+            running = false
         }
     }
 }

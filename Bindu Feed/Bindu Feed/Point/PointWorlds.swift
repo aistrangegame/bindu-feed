@@ -202,17 +202,31 @@ private struct WorldPoint: View {
                             .scaleEffect(dwell == p.id ? 1.35 : 1)
                             .opacity(0.5 + 0.5 * breath.value)
                             .position(x: x, y: y)
-                            .onLongPressGesture(minimumDuration: 0.9, pressing: { pressing in
-                                dwell = pressing ? p.id : nil
-                                if pressing { lastStir = Date() }
-                            }, perform: { onOpen(p.star); dwell = nil })
+                            // `world-one.js:72-75` — *"Touching a star CHOOSES it. That is
+                            // all touching does — it does not open anything. What opens it
+                            // is letting go and STAYING."* So touch picks and RELEASE opens
+                            // the reading, where the stillness accumulator runs. It was a
+                            // 0.9s long-press, which is the opposite gesture: acting is what
+                            // this world suspends.
+                            .gesture(DragGesture(minimumDistance: 0)
+                                .onChanged { _ in dwell = p.id; lastStir = Date() }
+                                .onEnded { _ in
+                                    if dwell == p.id { onOpen(p.star) }
+                                    dwell = nil
+                                })
                     }
-                    // World I's prompt is canon — `TOUCH ONE · THEN LET GO AND STAY`
-                    // (world-one.js:183), and its four states at :185-186. It is deliberately
-                    // NOT ported here: it names the design's gesture (rest and stay, where
-                    // touching *reverses* progress at 0.55/s) and this world still opens on a
-                    // 0.9s long-press. Canon words over the wrong gesture is still a lie.
-                    // Pass 5 brings the prompt and the gesture together.
+                    // The prompt is canon and can ship now that the gesture under it is the
+                    // design's. `world-one.js:183`.
+                    if dwell == nil {
+                        VStack { Spacer()
+                            Text("TOUCH ONE · THEN LET GO AND STAY")
+                                .spaceMonoTracked(8.5, em: 0.2)
+                                .foregroundStyle(BinduTheme.inkPrimary
+                                    .opacity(0.38 * (0.7 + breath.value * 0.4)))
+                                .padding(.bottom, 150)
+                        }
+                        .allowsHitTesting(false)
+                    }
                 }
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastStir = Date() })
