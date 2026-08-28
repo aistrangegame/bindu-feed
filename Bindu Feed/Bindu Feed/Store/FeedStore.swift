@@ -19,6 +19,9 @@ final class FeedStore: ObservableObject {
     // Feed data
     @Published var stories: [Story] = []
     @Published var storyStats: [String: StoryStats] = [:]
+    /// story record id → its rings, in `Ring Index` order. The strata's depth and every
+    /// story's age both come from here, and from nothing else.
+    @Published var returnRings: [String: [ReturnRing]] = [:]
 
     // Card surface data (Mirror, Signal, Practice Invitation).
     // Comments dictionaries are keyed by the card's record ID — field
@@ -206,7 +209,9 @@ final class FeedStore: ObservableObject {
         do {
             async let fieldT = service.fetchAllFieldComments()
             async let ashT = service.fetchAllAshComments()
+            async let ringsT: () = loadReturnRings()      // the strata and every story's age
             let (field, ash) = try await (fieldT, ashT)
+            await ringsT
 
             // Sort by comment order so the first archetype to speak shows leftmost.
             let combined = (field + ash).sorted { $0.commentOrder < $1.commentOrder }
@@ -759,9 +764,27 @@ final class FeedStore: ObservableObject {
             .components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        // Each own-words seal on this story is one ring; the earliest is when he first met it.
-        let ringCount = max(1, seals.count)
-        let firstMetDay = seals.map { $0.sourceDate }.min() ?? story.sourceDate
+        // THE RINGS ARE THE `Return` ROWS — not the Ash comments. A seal is something he
+        // said; a ring is a time he came back. Before Pass 6 nothing wrote a ring, so the
+        // strata counted his comments instead and every story with one comment drew one ring.
+        let rings = returnRings[story.id] ?? []
+        // NOT `max(1, …)`. A story he has never returned to has zero rings, and saying so is
+        // the whole point of the surface — with a floor of one, the first return was invisible.
+        let ringCount = rings.count
+        // `days` from the EARLIEST date this story can show — across the rings AND the seals
+        // together, not the rings first and the seals only as a fallback.
+        //
+        // Written as a `??` chain it read the earliest RING and never looked at the seal,
+        // so the moment the first ring was added the story's age reset to zero. Caught on
+        // device the only way it could be: "you first met this" moved from August 24 to
+        // August 27 after one return. You cannot first meet a thing later than you sealed it.
+        //
+        // The same fault as `age = returnCount/5`, one layer down — age taken from an act of
+        // returning rather than from when the thing began. Returning to something must never
+        // make it younger.
+        let dated = rings.map(\.sealedAt).filter { !$0.isEmpty }
+            + seals.map { String($0.sourceDate.prefix(10)) }.filter { !$0.isEmpty }
+        let firstMetDay = dated.min() ?? String(story.sourceDate.prefix(10))
         return ReturnStoryData(
             title: story.title, roomName: story.room, roomColor: room?.color ?? RiteCanon.roomColor,
             codexId: story.codexId, date: story.sourceDate,
@@ -771,6 +794,7 @@ final class FeedStore: ObservableObject {
             anew: anew.isEmpty ? ReturnCanon.anew : anew,
             storyId: story.id, record: record,
             returnCount: ringCount,
+            days: ReturnRing.days(since: firstMetDay),
             firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay),
             audioReference: sealed.audioReference,
             roomRGB: UniGeo.hx(room?.hexColor ?? "#9B6BD6"))
@@ -790,6 +814,43 @@ final class FeedStore: ObservableObject {
     /// the NavigationStack, so it parks the route here; RootView consumes it on
     /// appear and pushes it once the feed is reachable. Nil clears it.
     @Published var pendingLaunchRoute: FeedRoute?
+
+    // MARK: - THE RETURN
+
+    func loadReturnRings() async {
+        guard let all = try? await service.fetchReturns() else { return }
+        var byStory: [String: [ReturnRing]] = [:]
+        for r in all { byStory[r.storyId, default: []].append(r) }
+        for k in byStory.keys { byStory[k]?.sort { $0.ringIndex < $1.ringIndex } }
+        returnRings = byStory
+    }
+
+    /// SEAL ONE RETURN. Two rows: the ring, then its answer parented to the ring.
+    ///
+    /// It is called from exactly one place — the hand completing the ceremony — and it never
+    /// fires on its own. An empty answer writes NOTHING AT ALL, not an empty ring: a return
+    /// that arrived empty would be a ring he did not add.
+    ///
+    /// Nothing here counts. `Ring Index` is written so the rings have an order to be drawn
+    /// in; no surface reads it as a total, a streak or a score.
+    func sealReturn(storyId: String, text: String) async {
+        let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !storyId.isEmpty, !body.isEmpty else { return }
+        let who = archetype(named: "Ash")?.name ?? "Ash"       // §7: resolved, never hardcoded
+        let index = (returnRings[storyId]?.count ?? 0) + 1
+        do {
+            // §10's sort contract: runtime-written rows live in the 900 band, always.
+            let ring = try await service.writeReturn(storyId: storyId, ringIndex: index,
+                                                    archetypeName: who, sortOrder: 900 + index)
+            _ = try? await service.writeReturnAnswer(storyId: storyId, ringId: ring.id, body: body,
+                                                     archetypeName: who, sortOrder: 900 + index)
+            await loadReturnRings()
+            await loadStoryStats()        // so Ash's seat re-derives from the new count
+        } catch {
+            // A failed write must never break the ceremony — the ring he added is still his.
+            print("[Return] seal failed: \(error)")
+        }
+    }
 
     /// The Vow loop — a carved Declaration in the Light writes a Reflection (Vow).
     /// Fire-and-forget; a failed write never affects the ceremony.

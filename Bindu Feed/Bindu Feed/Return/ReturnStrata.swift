@@ -48,7 +48,9 @@ struct ReturnStrata: View {
         let W = size.width, H = size.height
         let a = max(0, min(1, age))
         let warm = 0.30 + 0.70 * a, breathMul = 1 + 0.45 * a
-        let n = max(1, rings)
+        // Zero rings is a real state — the seed with nothing around it yet. The loop below
+        // already draws nothing for n < 2, so this only needs to stop clamping upward.
+        let n = max(0, rings)
         let s = 1.0                               // arrived (z = 1)
         let cx = W / 2, cy = H * camY
         let bs = 9.0 * breathMul

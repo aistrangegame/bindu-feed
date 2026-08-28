@@ -50,6 +50,8 @@ struct RecordFields: Codable {
     var closingLine: String?
     var sourceType: String?
     var cardRegister: String?
+    let ringIndex: Int?
+    let sealedAt: String?
 
     // Sound Layer (post-Phase-9). Sparse — empty on every non-sound
     // record (the ~900 stories/comments). Optional by design; the
@@ -95,6 +97,13 @@ struct RecordFields: Codable {
         case closingLine       = "Closing Line"
         case sourceType        = "Source Type"
         case cardRegister      = "Card Register"
+
+        // THE RETURN's write-back (Pass 6). `Sealed At` stores the DATE and nothing else —
+        // `days` is computed at read time, every read. A stored `days` integer is stale the
+        // next morning, and `Ring Index` is POSITION ONLY: deriving age from it is the fault
+        // that made a story sealed three years ago with one return read brand new.
+        case ringIndex         = "Ring Index"
+        case sealedAt          = "Sealed At"
 
         // Sound Layer — exact field names from the live schema.
         // Parentheticals and spaces matter; decode is by name (the
@@ -500,4 +509,45 @@ struct FieldSound: Identifiable, Hashable {
         attackSeconds: 12,
         releaseSeconds: 8
     )
+}
+
+// MARK: - THE RETURN · one ring
+
+/// A single sealed return. It carries a POSITION (`Ring Index`) and a DATE (`Sealed At`) and
+/// nothing else — the words live on its `Return Answer` child.
+///
+/// The two must never be confused. §10: *age comes from days, never from rank.* Before this
+/// pass the strata took `age = returnCount / 5`, so a story sealed three years ago and
+/// returned to once read as brand new, and a story returned to five times in a week read as
+/// ancient. `Ring Index` orders the rings; `Sealed At` is the only thing that can say how old
+/// anything is, and it says it through a subtraction done at read time.
+struct ReturnRing: Identifiable, Equatable {
+    let id: String
+    let storyId: String
+    let ringIndex: Int
+    /// `yyyy-MM-dd`, local. Stored; never a duration.
+    let sealedAt: String
+
+    init?(from record: AirtableRecord) {
+        guard let sid = record.fields.linkedStory?.first else { return nil }
+        self.id = record.id
+        self.storyId = sid
+        self.ringIndex = record.fields.ringIndex ?? 0
+        self.sealedAt = String((record.fields.sealedAt ?? "").prefix(10))
+    }
+
+    /// Days from this ring's seal to today, LOCAL, computed now and never stored.
+    var days: Int { ReturnRing.days(since: sealedAt) }
+
+    static func days(since day: String) -> Int {
+        guard !day.isEmpty else { return 0 }
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        f.timeZone = .current                      // §9: the user's day is the day their phone shows
+        guard let then = f.date(from: String(day.prefix(10))) else { return 0 }
+        let cal = Calendar.current
+        let d = cal.dateComponents([.day], from: cal.startOfDay(for: then),
+                                   to: cal.startOfDay(for: Date())).day ?? 0
+        return max(0, d)
+    }
 }

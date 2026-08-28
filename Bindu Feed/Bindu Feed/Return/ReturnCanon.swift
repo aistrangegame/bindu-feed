@@ -153,6 +153,31 @@ enum ReturnCanon {
 // day over day and standing alone, or the canon fallback when the feed isn't reachable
 // or nothing has been sealed yet. The sealedSelf is ALWAYS the user's real prior words
 // (never generated); anew are real field voices that spoke after.
+/// THE ONE AGE VALUE — `return-strata.js:20-23`, verbatim.
+///
+///     const a = clamp(Math.pow(days/1095, 0.55), 0, 1);
+///     return {days, a, sat:1-0.30*a, breathMul:1+0.45*a, grain:0.05+0.14*a, warm:0.30+0.70*a};
+///
+/// *"One Age value governs every material. Nothing here counts; everything deepens."* 1095 is
+/// three years, and `^0.55` is why the first months move fastest and the third year barely at
+/// all — a thing goes from raw to lovely quickly and then just keeps being old.
+///
+/// It takes DAYS. It has never taken a count of anything, and it must not: `returnCount/5`
+/// made five returns in a week look like a decade and one return after three years look like
+/// this morning. Bone → amber → deep gold is the palette of time, not of effort.
+enum ReturnAge {
+    struct Materials {
+        let days: Int, a: Double
+        let sat: Double, breathMul: Double, grain: Double, warm: Double
+    }
+    static func of(days: Int) -> Materials {
+        let a = max(0, min(1, pow(Double(max(0, days)) / 1095, 0.55)))
+        return Materials(days: days, a: a,
+                         sat: 1 - 0.30 * a, breathMul: 1 + 0.45 * a,
+                         grain: 0.05 + 0.14 * a, warm: 0.30 + 0.70 * a)
+    }
+}
+
 struct ReturnStoryData {
     let title: String
     let roomName: String
@@ -165,7 +190,12 @@ struct ReturnStoryData {
     let anew: [ReturnCanon.AnewVoice]
     let storyId: String            // where a new ring (the reply) is written; "" = canon demo, no target
     let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
-    var returnCount: Int = 1       // rings already sealed here (each seal = one ring); ≥1
+    var returnCount: Int = 0       // rings already sealed here; ZERO is real and common
+    /// Days since this story was sealed — the ONLY source of its age. Computed at read time
+    /// by the store from the earliest `Sealed At` it can find, never stored as a number here.
+    var days: Int = 0
+    /// `age` is a function of `days` and of nothing else.
+    var age: Double { ReturnAge.of(days: days).a }
     var firstMet: String = ReturnCanon.firstMetDate(fromDay: RiteCanon.date)  // "you first met this · <date>"
     var audioReference: String? = nil   // Movement IV — the kept voice of the sealed self, if any
     var roomRGB: [Double] = [155, 107, 214]   // the room colour as [r,g,b] 0…255, for the four-layer fall
@@ -174,5 +204,5 @@ struct ReturnStoryData {
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
         codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body,
         sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew,
-        storyId: "", record: RiteVoices.all, returnCount: 2)
+        storyId: "", record: RiteVoices.all, returnCount: 2, days: 420)
 }

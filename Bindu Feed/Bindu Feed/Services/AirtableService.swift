@@ -280,20 +280,99 @@ final class AirtableService {
         return records.map(FieldComment.init(from:))
     }
 
+    /// Ash's words across the whole feed — his comments AND his return answers. The story
+    /// stats count these, which is how the company rule at `uni-field.js:58` earns Ash a seat
+    /// in the fan: `cmts > spoke.length + 1`. A return raises `cmts` and never `spoke` (he is
+    /// excluded from the lenses), so the standard four-voice ensemble seats him at the SECOND
+    /// return on one story, and never at the first. That is the rule doing its own work —
+    /// nothing here counts returns toward anything.
     func fetchAllAshComments() async throws -> [FieldComment] {
         let records = try await fetch(
-            filter: "AND({Type}='Ash Comment',{Status}='Live')",
+            filter: "AND(OR({Type}='Ash Comment',{Type}='Return Answer'),{Status}='Live')",
             sort: [(field: "Source Date", direction: "desc")]
         )
         return records.map(FieldComment.init(from:))
+    }
+
+    // MARK: - THE RETURN's write-back
+
+    /// One ring. `Type='Return'` carries the RECORD of a return — its position and its date —
+    /// and holds no words; the words are its `Return Answer` child. Two rows because they are
+    /// two things: the ring is what the strata draw, the answer is what register 2 reads.
+    ///
+    /// `Sealed At` takes the DATE and only the date. Everything about how old this is gets
+    /// computed at read time from it.
+    func writeReturn(storyId: String, ringIndex: Int, archetypeName: String,
+                     sortOrder: Int) async throws -> AirtableRecord {
+        try await createRecord(fields: [
+            "Name": "return-\(Self.localDayString())-\(ringIndex)",
+            "Type": "Return",
+            "Status": "Live",                     // or it writes into the void the gate excludes
+            "Archetype": archetypeName,
+            "Linked Story": [storyId],
+            "Ring Index": ringIndex,              // POSITION ONLY. Never an age.
+            "Sealed At": Self.localDayString(),
+            "Sort Order": sortOrder,
+        ])
+    }
+
+    /// The words he answered his past self with, parented to the ring by `Parent Comment`.
+    func writeReturnAnswer(storyId: String, ringId: String, body: String,
+                           archetypeName: String, sortOrder: Int) async throws -> AirtableRecord {
+        try await createRecord(fields: [
+            "Name": "return-answer-\(Self.localDayString())",
+            "Type": "Return Answer",
+            "Status": "Live",
+            "Archetype": archetypeName,
+            "Comment Body": body,                 // §6: comments use `Comment Body`, never `Body`
+            "Linked Story": [storyId],
+            "Parent Comment": [ringId],
+            "Sort Order": sortOrder,
+        ])
+    }
+
+    /// Every ring in the base. Grouped by story on the store side — §6's linked-record caveat
+    /// means `Linked Story` cannot be filtered server-side by record id.
+    func fetchReturns() async throws -> [ReturnRing] {
+        let records = try await fetch(filter: "AND({Type}='Return',{Status}='Live')",
+                                      sort: [(field: "Sort Order", direction: "asc")])
+        return records.compactMap(ReturnRing.init(from:))
+    }
+
+    /// The one POST both writers share, so the payload shape is stated once.
+    private func createRecord(fields: [String: Any]) async throws -> AirtableRecord {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
+        let payload: [String: Any] = [["fields": fields]].isEmpty ? [:] : [
+            "records": [["fields": fields]],
+            "typecast": true,      // resolves `Type` and `Sealed At` by value, not by option id
+        ]
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
+        let result = try decoder.decode(AirtableCreateResponse.self, from: data)
+        guard let first = result.records.first else { throw AirtableError.badURL }
+        return first
     }
 
     func fetchArchetypeComments(archetypeName: String) async throws -> [FieldComment] {
         let escaped = archetypeName.replacingOccurrences(of: "'", with: "\\'")
         // Ash's own words are Type='Ash Comment', not 'Field Comment' — filtering on
         // Field Comment made Ash's Turning render permanently empty ("No words yet.").
-        let commentType = archetypeName == "Ash" ? "Ash Comment" : "Field Comment"
-        let filter = "AND({Type}='\(commentType)',{Status}='Live',{Archetype}='\(escaped)')"
+        //
+        // AND 'Return Answer' is one of Ash's words. A return is not a second archive kept
+        // beside the first; it is another thing he said on a story he had already spoken on.
+        // Reading it here — rather than through a parallel query — is what makes register 2's
+        // sub-depth real and what turns the legend's `none twice` by itself: `RoomStoryGroup`
+        // simply finds two items where it has only ever found one.
+        let typeClause = archetypeName == "Ash"
+            ? "OR({Type}='Ash Comment',{Type}='Return Answer')"
+            : "{Type}='Field Comment'"
+        let filter = "AND(\(typeClause),{Status}='Live',{Archetype}='\(escaped)')"
         let records = try await fetch(
             filter: filter,
             sort: [(field: "Comment Order", direction: "desc")]

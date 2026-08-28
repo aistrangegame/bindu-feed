@@ -44,7 +44,11 @@ struct ReturnView: View {
             Color(hex: "#08070B").ignoresSafeArea()
             // The strata — the aged rings, the seed, the settling dust — living behind every
             // movement (return-strata.js), not a static wash. His own returns, warmed by age.
-            ReturnStrata(rings: max(1, storyData.returnCount), age: min(1, Double(storyData.returnCount) / 5))
+            // AGE FROM DAYS, NEVER FROM RANK. `age = returnCount/5` was bug class 3 in the
+            // open: a story sealed three years ago and returned to once read brand new,
+            // while five returns in one week read as a decade old. `ReturnAge.of(days:)` is
+            // `return-strata.js:20-23` verbatim — `clamp(pow(days/1095, 0.55))`.
+            ReturnStrata(rings: storyData.returnCount, age: storyData.age)
 
             content.transition(.opacity)
 
@@ -406,15 +410,20 @@ struct ReturnView: View {
         .padding(.horizontal, 34)
     }
 
+    /// THE RING CLOSES ONLY WHILE THE HAND ASKS. This is reachable from exactly one place —
+    /// the button under his written reply — and from no timer, no `onAppear`, no completion
+    /// callback. It writes nothing when the reply is empty: a ring that arrived empty would
+    /// be a return he did not make.
     private func addRing() {
         soundEngine.riteBowl(hz: 210)          // the ring's bowl
-        // KEEP the ring. The reply is the user's new response to their past self — written
-        // as a durable Ash comment on the returned story (the same robust, retry-queued
-        // path Compose uses). Before, "The ring is added" was a lie: nothing persisted.
+        // The ring is now a RING — `Type='Return'` plus its `Return Answer` — not an Ash
+        // comment standing in for one. It persisted before, but into the wrong shape: the
+        // strata counted comments, so a story he had commented on twice and never returned
+        // to drew two rings, and one he had returned to drew none.
         let text = replyText.trimmingCharacters(in: .whitespacesAndNewlines)
         if !text.isEmpty, !storyData.storyId.isEmpty {
             let storyId = storyData.storyId
-            Task { await store.postComment(storyId: storyId, body: text, parentId: nil) }
+            Task { await store.sealReturn(storyId: storyId, text: text) }
         }
         withAnimation(.easeInOut(duration: 1.0)) { stage = .sealed }
     }
@@ -468,16 +477,20 @@ private struct ReturnRings: View {
     var body: some View {
         Canvas { ctx, size in
             let cx = size.width / 2, cy = size.height / 2
-            let n = max(1, priorRings)
+            // ZERO IS A REAL ANSWER. `max(1, …)` drew a ring for a return that never
+            // happened — a story he has never come back to showed the same strata as one he
+            // had returned to once, so the first return changed nothing on screen. *"Around
+            // it, a ring for each time you returned."* None means none; the seed stands alone.
+            let n = max(0, priorRings)
             // Keep the whole strata inside the frame however many rings there are.
-            let gap = min(size.width, size.height) * 0.45 / Double(n + 1)
+            let gap = min(size.width, size.height) * 0.45 / Double(n + 2)
             // The seed.
             ctx.fill(Path(ellipseIn: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8)),
                      with: .color(Color(hex: "#E4DCC8")))
             // Past rings — aged (amber), dimming outward toward the oldest.
-            for i in 1...n {
+            for i in stride(from: 1, through: n, by: 1) {
                 let r = 8 + Double(i) * gap
-                let age = Double(i) / Double(n + 1)               // 0 newest-of-old … →1 oldest
+                let age = Double(i) / Double(n + 2)               // 0 newest-of-old … →1 oldest
                 ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
                            with: .color(Color(hex: "#D0A048").opacity(0.5 - age * 0.30)), lineWidth: 1)
             }

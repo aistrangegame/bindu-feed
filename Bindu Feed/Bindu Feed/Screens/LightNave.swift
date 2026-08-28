@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 // THE NAVE — a dim stone interior with one shaft of light falling through it (The Light
 // v2.html, ported). The ground is DIM; only the shaft is bright; he stands in the shaft.
@@ -12,6 +13,7 @@ struct LightNave: View {
     var flooding: Bool       // once the aperture opens, the interior floods dark → lit over 3s
 
     @State private var floodStart: Double?
+    @StateObject private var floor = NaveFloor()
 
     private let SW = 390.0, SH = 844.0
     private let apexX = 195.0, apexY = 150.0, floorY = 706.0
@@ -27,6 +29,8 @@ struct LightNave: View {
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
+        // ONE RING PER BREATH — keyed on the breath's own cycle, not on a timer.
+        .onChange(of: breath.cycle) { _, _ in floor.exhale() }
         .onChange(of: flooding) { _, f in
             floodStart = f ? Date().timeIntervalSinceReferenceDate : nil
         }
@@ -90,19 +94,34 @@ struct LightNave: View {
         ctx.fill(Path(ellipseIn: CGRect(x: apexX - cr, y: apexY - cr, width: cr * 2, height: cr * 2)),
                  with: .color(c(255, 250, 240, 0.9 * warm)))
 
-        // ── rings worn into the floor: breaths taken here, standing as sediment ──
-        let wornCount = 3 + Int(still * 8)
-        for i in 0..<wornCount {
-            let r = pr * (0.34 + Double(i) * 0.045)
-            p.stroke(Path(ellipseIn: CGRect(x: apexX - r, y: floorY - r * 0.26, width: r * 2, height: r * 0.52)),
-                     with: .color(c(ink.0, ink.1, ink.2, (0.06 + rnd(Double(i)) * 0.05) * A)), lineWidth: 0.7)
+        // ── rings worn into the floor: EVERY BREATH HE HAS TAKEN HERE ──
+        //
+        // `wornCount = 3 + Int(still * 8)` was a progress bar in disguise. `still` is how
+        // arrived he is, so the floor's depth read his progress through the procession — it
+        // filled whether or not he breathed, and it EMPTIED again if `still` fell back. The
+        // floor is sediment: it only ever accumulates, one ring per landed exhale, and the
+        // design caps it at 14 (`:512`). *"Visible as depth, never as a number."*
+        for (i, o) in floor.worn.enumerated() {
+            _ = i
+            p.stroke(Path(ellipseIn: CGRect(x: apexX - o.r, y: floorY - o.r * 0.26,
+                                            width: o.r * 2, height: o.r * 0.52)),
+                     with: .color(c(ink.0, ink.1, ink.2, o.a * A)), lineWidth: 0.7)
         }
 
-        // ── one ring released per exhale, descending the shaft (a continuous fall) ──
-        let ph = (t / 7).truncatingRemainder(dividingBy: 1)
-        let ringY = apexY + (floorY - apexY) * ph, rad = shaftHalf(ringY) * 0.86, ra = (1 - ph * ph) * 0.30
-        p.stroke(Path(ellipseIn: CGRect(x: apexX - rad, y: ringY - rad * (0.20 + ph * 0.10), width: rad * 2, height: rad * (0.40 + ph * 0.20))),
-                 with: .color(c(ink.0, ink.1, ink.2, ra * A)), lineWidth: 0.7)
+        // ── ONE RING PER EXHALE, descending the shaft over 7s ──
+        //
+        // `(t / 7) % 1` was a wall clock: a ring fell forever at a fixed rate whether or not
+        // anyone was breathing, and it could land mid-inhale. `:511` pushes a ring only on the
+        // turn into the exhale — `if(b.phase==='out' && lastCycle!==b.cycle)` — which is why
+        // the shaft is made of his breathing rather than merely animated near it.
+        for born in floor.falling {
+            let ph = min(1, max(0, (t - born) / 7))
+            let ringY = apexY + (floorY - apexY) * ph
+            let rad = shaftHalf(ringY) * 0.86, ra = (1 - ph * ph) * 0.30
+            p.stroke(Path(ellipseIn: CGRect(x: apexX - rad, y: ringY - rad * (0.20 + ph * 0.10),
+                                            width: rad * 2, height: rad * (0.40 + ph * 0.20))),
+                     with: .color(c(ink.0, ink.1, ink.2, ra * A)), lineWidth: 0.7)
+        }
 
         // ── dust in the beam: the air settles as he stills (drift → 0 with calm) ──
         let drift = 1 - calm
@@ -138,4 +157,39 @@ struct LightNave: View {
     }
 
     private func rnd(_ i: Double) -> Double { let x = sin(i * 127.1 + 31.4) * 43758.5453; return x - x.rounded(.down) }
+}
+
+/// THE FLOOR OF THE NAVE — what his breathing leaves behind.
+///
+/// `The Light v2.html:500-514`. A ring is released on each exhale, falls the shaft over seven
+/// seconds, and when it lands it is *worn into the floor and stays*. The floor only ever
+/// accumulates; nothing here decays, and nothing here is counted out loud.
+///
+/// Session-scoped, exactly as the design's `useRef([])` is — the nave remembers the breaths
+/// taken in THIS visit. That is a deliberate match, not an omission: the Light's one persisted
+/// thing is the Declaration, and a floor that remembered across launches would be a record of
+/// attendance, which is the thing the Light refuses to keep.
+@MainActor final class NaveFloor: ObservableObject {
+    struct Worn { let r: Double; let a: Double }
+    /// Born-times of the rings currently falling.
+    @Published private(set) var falling: [Double] = []
+    /// Landed rings, oldest first. Capped at 14 (`:512`).
+    @Published private(set) var worn: [Worn] = []
+
+    private let fall: Double = 7
+    private let shaftHalfAtFloor: Double = 40 + 150 * (1 - exp(-(706.0 - 150.0) / 220))
+
+    func exhale() {
+        let born = CACurrentMediaTime()
+        falling.append(born)
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(7))
+            guard let self else { return }
+            self.falling.removeAll { $0 <= born }
+            guard self.worn.count < 14 else { return }
+            // `r = shaftHalf(FLOOR) * (0.34 + worn.length*0.045)`, `a = 0.06 + rand*0.05`
+            let r = self.shaftHalfAtFloor * (0.34 + Double(self.worn.count) * 0.045)
+            self.worn.append(Worn(r: r, a: 0.06 + Double.random(in: 0..<0.05)))
+        }
+    }
 }

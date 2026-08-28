@@ -72,11 +72,20 @@ final class Breath: ObservableObject {
         link = l
     }
 
+    /// Which breath this is, counted from the launch origin — `The Light v2.html:415`'s
+    /// `cyc = Math.floor((now-t0)/ms)`. It exists so a surface can act ONCE PER BREATH rather
+    /// than on a clock of its own: the Light's nave sends one ring down the shaft per exhale,
+    /// and without a cycle to key on it fell continuously at a fixed rate instead, unrelated
+    /// to the breathing it was supposed to be made of.
+    @Published private(set) var cycle: Int = 0
+
     @objc private func tick() {
         let elapsed = CACurrentMediaTime() - startTime
         let p = elapsed.truncatingRemainder(dividingBy: Self.period) / Self.period
         phase = p
         value = (1 - cos(p * 2 * .pi)) / 2
+        let c = Int(elapsed / Self.period)
+        if c != cycle { cycle = c }
     }
 
     /// Sample the eased breath at an arbitrary phase offset in [0, 1). Lets a
