@@ -47,6 +47,16 @@ final class RoomTravel: ObservableObject {
 
     func configure(holdsLat: Bool) { self.holdsLat = holdsLat }
 
+    #if DEBUG
+    /// `bindu.debug.reg` — park the walk at a register. The SIXTH key in the same harness as
+    /// room / nogate / fallstar / falldepth / star, and it exists for the same reason the
+    /// others do: the Rooms' vertical does not respond to the simulator's synthetic touches
+    /// (the same limitation `parkDebugRoomIfRequested` records for PlayersView's fold), so
+    /// registers 1 and 2 are unreachable by a scripted hand. It moves the camera and nothing
+    /// else — no content is faked, no state is invented.
+    func park(at register: Double) { d = max(0, min(2, register)) }
+    #endif
+
     func start() {
         guard link == nil else { return }
         lastTime = CACurrentMediaTime()

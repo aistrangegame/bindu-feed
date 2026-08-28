@@ -523,15 +523,30 @@ struct FieldSound: Identifiable, Hashable {
 /// anything is, and it says it through a subtraction done at read time.
 struct ReturnRing: Identifiable, Equatable {
     let id: String
-    let storyId: String
+    /// EVERY id in `Linked Story`, unresolved. NOT `.first`.
+    ///
+    /// `Parent Comment` and `Linked Story` are a SYMMETRIC PAIR on this table, so writing
+    /// `Parent Comment: [ringId]` on the answer makes Airtable add the answer to the ring's
+    /// `Linked Story` — the app writes one link and the base stores two. Verified in the base:
+    /// the ring's `Linked Story` held the story AND the answer record.
+    ///
+    /// So `Linked Story` is not guaranteed to hold one thing, and `.first` here would return
+    /// whichever Airtable ordered first — possibly the ANSWER, giving the ring the wrong
+    /// story. That is the Codex ID fault again in a third place: a lookup keyed on a field
+    /// that does not promise to be singular. The store resolves which of these is actually a
+    /// story; nothing takes it by position.
+    let linkedIds: [String]
+    /// Resolved by the store against the loaded stories. Empty until then.
+    var storyId: String = ""
     let ringIndex: Int
     /// `yyyy-MM-dd`, local. Stored; never a duration.
     let sealedAt: String
 
     init?(from record: AirtableRecord) {
-        guard let sid = record.fields.linkedStory?.first else { return nil }
+        let ids = record.fields.linkedStory ?? []
+        guard !ids.isEmpty else { return nil }
         self.id = record.id
-        self.storyId = sid
+        self.linkedIds = ids
         self.ringIndex = record.fields.ringIndex ?? 0
         self.sealedAt = String((record.fields.sealedAt ?? "").prefix(10))
     }

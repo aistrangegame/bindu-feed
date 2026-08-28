@@ -222,7 +222,21 @@ final class FeedStore: ObservableObject {
 
             for c in combined {
                 guard let sid = c.linkedStoryId else { continue }
+                // `cmts` — EVERY comment on the story, Ash's included. The seat rule measures
+                // the thread running past the field, so his own words have to be in the count.
                 counts[sid, default: 0] += 1
+                // `spoke` — THE LENSES ONLY. `uni-field.js:54-56` sorts `spoke` through
+                // `BY[k]` and then pushes Ash SEPARATELY as `ASH`; he is not among the voices
+                // it looks up. With him inside `spoke` three things broke at once: `BY['ash']`
+                // has nothing to resolve, `spoke.length` inflated so the threshold rose by
+                // one (he would have needed a third return), and he was seated twice — once
+                // as a lens in the fan and once as himself.
+                //
+                // He has always been in here, because `loadStoryStats` has always folded in
+                // `fetchAllAshComments`. Adding Return Answers to that fetch is what made it
+                // matter: before, it only mis-sorted a fan; now it moves the arithmetic that
+                // decides whether he is present at all.
+                guard c.archetype.caseInsensitiveCompare("Ash") != .orderedSame else { continue }
                 if seenArchetypes[sid, default: []].insert(c.archetype).inserted {
                     orderedArchetypes[sid, default: []].append(c.archetype)
                 }
@@ -269,6 +283,18 @@ final class FeedStore: ObservableObject {
         case "sky":      pendingLaunchRoute = .instrument(-4)     // the Universe, at the sky
         case "fall":     pendingLaunchRoute = .instrument(-1)     // the fall's register
         case "point":    pendingLaunchRoute = .instrument(8)      // d7, where the Aperture's door is
+        // `return:<record id>` — the Return of ONE named story, not the daily rotation.
+        // Same key, one more case: the rotation is day-hashed, so a specific story cannot
+        // otherwise be walked twice in a day, which is exactly what the seat rule needs.
+        case let r where r.hasPrefix("return:"):
+            let rid = String(name.dropFirst("return:".count))
+            // `stories` is deliberately not in `bootstrap()`, so resolve it first.
+            Task { @MainActor in
+                if self.stories.isEmpty { await self.loadStories() }
+                if let st = self.stories.first(where: { $0.id == rid }) {
+                    self.pendingLaunchRoute = .returnCeremony(st)
+                }
+            }
         case let r where r.hasPrefix("point") && Int(r.dropFirst(5)) != nil:
             pendingLaunchRoute = .instrument(1 + (Int(r.dropFirst(5)) ?? 1))   // point1…point7 → d1…d7
         default:
@@ -818,9 +844,18 @@ final class FeedStore: ObservableObject {
     // MARK: - THE RETURN
 
     func loadReturnRings() async {
+        if stories.isEmpty { await loadStories() }
         guard let all = try? await service.fetchReturns() else { return }
+        // WHICH LINK IS THE STORY. `Linked Story` can hold more than one id (the symmetric
+        // back-link from the answer's `Parent Comment`), so the story is the one that IS a
+        // story — resolved by identity, never taken by position.
+        let known = Set(stories.map(\.id))
         var byStory: [String: [ReturnRing]] = [:]
-        for r in all { byStory[r.storyId, default: []].append(r) }
+        for var r in all {
+            guard let sid = r.linkedIds.first(where: { known.contains($0) }) else { continue }
+            r.storyId = sid
+            byStory[sid, default: []].append(r)
+        }
         for k in byStory.keys { byStory[k]?.sort { $0.ringIndex < $1.ringIndex } }
         returnRings = byStory
     }
