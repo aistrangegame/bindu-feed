@@ -134,19 +134,68 @@ a deliberate geometry divergence.
 **BUILT · `#seam`**, with met-ness lifted out of `DoorView`'s private `@State` into
 `FeedStore.todayMet`. Not walked: today is unmet, so the gate correctly keeps it silent.
 
-**OPEN · eight authored cues with no trigger.** Ledger §D‴ names the exact state each waits
-on. Four are the same shape — a decay after release — and world V's guard pane already has
-it, so one mechanic closes four. Words on an approximate trigger would be the
-invented-string fault carrying authored copy, and would read as verified.
+**OPEN · eight authored cues, no trigger — enumerated and deliberately unbuilt.** Not a
+string problem: each is verbatim in the design and absent because the state that fires it
+does not exist. Building one is a decision about a mechanic, never about placing words.
+
+| cue | source | waits on |
+|---|---|---|
+| `IT CLOSED. IT DOES NOT MIND.` | `world-one.js:193` | `leaving > 0.02` |
+| `IT CLOSED BEHIND YOU. IT ALWAYS DOES.` | `world-three.js:244` | `closing > 0.02` |
+| `THE WALL EASED. WHAT WAS STRUCK STAYS STRUCK.` | `world-four.js:277` | `easing > 0.02` |
+| `THE GLASS LET GO. WHAT FACED YOU, FACED YOU.` | `world-five.js:445` | `settling > 0.02` — and the app already uses that *name* for which face is toward you, so this needs a rename as well as a mechanic |
+| `DRAW IT UP · AIM · LET GO` | `world-six.js:419` | `holding` — the draw-up-and-aim gesture; the app's send is a Button |
+| `THEY WILL COME BACK IN THEIR OWN ORDER` | `world-six.js:424` | `arcs.length > 1` |
+| `SOMETHING IS COMING THAT YOU DID NOT SEND` | `world-six.js:423` | an arc with `deep` set |
+| `holding it open` | `world-three.js:240` | `open < 0.30` — a parting *width*; the app's `part` is a point or nothing |
+
+**One mechanic closes the first four.** They are the same shape — a decay that runs after
+release while the reading is still on screen — and world V's guard pane already has exactly
+that (`withdrawing`, on its own wall clock, finishing whether he is there or not). That is
+the next pass. World VI's three need a different gesture and a multi-arc model, which is a
+larger question about what that world is.
+
+Words on an approximate trigger would be the invented-string fault carrying **authored**
+copy — worse, because it would read as verified.
 
 **Also open:** the journey narration and the lens label, both now carrying deliberate §10
 divergence records rather than sitting undocumented.
 
 ---
 
+## The rule the build now follows
+
+**The app says what the design says, where the design says it, once.**
+
+I spent most of this build repeating a blanket ban on instructional strings, and it was
+wrong. The Light instructs — `The Light v2.html:685` — *"one invitation, once. After the
+touch, the door says nothing more"* — and it says `touch once`. The one flat prohibition,
+`The Rooms v4.html:1054`, is scoped to a single legend: *"register 2's own wayfinding —
+counts, never instructions"*. The eighteen world cues at `H−150` are authored imperatives.
+
+So the ban is about **repetition and place, not the imperative mood**, and one question
+settles any instructional string: **did the design draw this surface?**
+
+| | ruling |
+|---|---|
+| drew it, gave it words | **port the words** |
+| drew it, chose silence | **the silence is authored — delete** |
+| never drew it | no authored silence to honour and no affordance to repair. The app may speak, **minimally, once, and on the record** as `APP-OWN-INSTRUCTIONAL` — never laundered into plain `APP-OWN` |
+
+That test found a seventh invented string, and the first one found by method rather than by
+memory: `▽ DESCEND ONE LAYER DEEPER` sat where `point-levels.js:107` says
+*"descend onto this star"*. It was almost deleted as chrome over a working affordance; the
+design had drawn that surface and given it a label all along. `hold for depth` went the
+other way — `Story Detail.html` is named once at `The Universe v3.html:1571` and is not in
+the bundle, so the surface was never drawn and the string stays, recorded. Ash's three are
+one `hintText` state machine showing one line at a time, which is what "once" means.
+
+---
+
 ## What the closing sequence found
 
-Six steps, run from scratch in the stated order. The order mattered.
+Six steps, run from scratch in the stated order, twice — once at the original close and
+again after this pass. The order mattered.
 
 **1 · Protect list.** The fifteen files in `HANDOFF.md` §7 diffed clean.
 
@@ -185,9 +234,24 @@ of them. Absence of a key proves nothing; **the key present and the app deaf to 
 the reader is gone.** Then the domain was deleted and a cold launch reached the Door
 again, no fault in the log.
 
-**5 · `HANDOFF-VERIFICATION.md` as a gate.** Line by line, below.
+**5 · `HANDOFF-VERIFICATION.md` as a gate.** Line by line, below. Re-run after this pass
+against the lines it touched: Pass 5's *"the reading is carried by the hand"* now has all
+seven worlds saying the design's own words at the design's own moment, which is the line
+that was furthest from true when the build closed the first time.
 
-**6 · The empty-body sweep, last.** Three hits, one real: `parkDebugStarIfRequested() { }`
+**The re-run also named something step 4 had let pass.** `TokenEntryView` keeps two
+`#if DEBUG` dev doors — `⟿ walk the Instrument` and `⟿ the Rite` — compile-gated out of
+Release and commented *"never ship"*. They are not the `bindu.debug.*` parking hooks (they
+fake no state; they open a door), and they are the only tokenless way into the instrument
+for someone walking it. Named here rather than removed, because removing them makes the app
+unwalkable without a live Airtable token — but "every debug hook" did mean these too, and
+they should not have gone unmentioned the first time.
+
+**6 · The empty-body sweep, last.** Re-run after this pass: **two hits, both the known
+unreachable defaults, none new.** This pass's mechanical editors — the string ports and the
+registry seeders — did not produce one, which is the first time that has been true.
+
+At the original close it was three hits, one real: `parkDebugStarIfRequested() { }`
 with a live call site in `.onAppear`. **The hook-stripper produced, for the second time,
 the exact fault it was removing.** That is the whole reason this step is sequenced after
 the removal instead of before it — run first, it cannot see what the removal creates. The
@@ -254,6 +318,18 @@ from a quoted one. The narrowed matcher is the only trustworthy one, and it is t
 `REQUIRED` fell from 799 to 718. **Treat any backward-direction result in this build's
 history that predates the narrowing as unverified, and re-run it with
 `Tools/check_authored.py`.**
+
+**Every one of them had, on its first run, the exact fault it was built to catch.** The
+hook-stripper left an empty body with a live call site — twice, the second time while
+removing the first. The authored-string guard passed a deleted string because a comment
+three lines above quoted the design: a rule that always fires, inside the tool built to
+catch rules that always fire. The citation checker paired a quote with a citation from a
+different sentence and reported a false OK. **A tool is not exempt from the class it
+detects.** The only thing that finds it is pointing the tool at something whose answer you
+already know, in both directions — break it on purpose and watch it go red, then hand it
+something correct and watch it stay green. Calibration is the work, not overhead: a checker
+that over-reports gets ignored, and being ignored is the same silent failure as
+under-reporting, because the tool is green either way and nobody is looking.
 
 **Three drift checks now, not two.** `check_authored.py` proves authored strings present.
 `check_rendered.py` proves rendered strings authored-or-recorded. `check_citations.py`
