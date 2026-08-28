@@ -1,5 +1,6 @@
 import Foundation
 import AVFoundation
+import UIKit
 import Combine
 
 // MARK: - SoundEngine
@@ -620,8 +621,20 @@ final class SoundEngine: ObservableObject {
         )
     }
 
+    /// `prefers-reduced-motion` — **suppresses EVENTS and leaves the BED.**
+    ///
+    /// The design's rule (`HANDOFF-VERIFICATION.md`, Pass 7) is precise about the asymmetry:
+    /// what goes is the one-shot — the bowl, the threshold, the presence, the drain. What
+    /// stays is the continuous ground, because the bed is not motion; it is the room being
+    /// there. Silencing it would make reduced-motion mean "off", which it does not.
+    ///
+    /// Read from UIKit rather than SwiftUI's `@Environment` so the ENGINE can honour it at the
+    /// single choke point every event already passes through. A per-call-site check would be
+    /// eleven places to forget one.
+    private var eventsSuppressed: Bool { UIAccessibility.isReduceMotionEnabled }
+
     private func playCeremony(_ voice: CeremonyVoice, maxWait: Double) {
-        guard isRunning else { return }
+        guard isRunning, !eventsSuppressed else { return }
         engine.attach(voice.sourceNode)
         let format = voice.sourceNode.outputFormat(forBus: 0)
         engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
@@ -702,7 +715,7 @@ final class SoundEngine: ObservableObject {
     }
 
     private func playAxis(_ voice: AxisVoice, maxWait: Double) {
-        guard isRunning else { return }
+        guard isRunning, !eventsSuppressed else { return }
         engine.attach(voice.sourceNode)
         engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: voice.sourceNode.outputFormat(forBus: 0))
         let deadline = Date().addingTimeInterval(maxWait)

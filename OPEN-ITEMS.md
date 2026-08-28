@@ -367,6 +367,42 @@ which is the touch itself rather than the accumulator's decay.
 when the dwell was ported. The drone follows the accumulator that exists rather than starting a
 second clock beside it.)
 
+### Group 3's last five — CLOSED
+
+**E1.2 · the column lifts and masks.** A five-anchor scene grew from the vertical centre and
+ran onto dim stone. Two different things: it LIFTS (rises as it fills, so its foot stays in the
+light) and it MASKS (what passes the boundary **fades** — a hard edge on stone reads as a crop,
+a fade reads as the edge of the light). Driven by how much has surfaced, not a measured height,
+so it cannot fight the layout.
+
+**walk-continuity · the remaining half.** The depth he left from is carried, so a ceremony
+returns him there and not to a cold Door. **The other half was already better than the design:**
+it carries `breath` because its clock restarts per page — *"He left mid-breath; he arrives
+mid-breath"* — and `Breath.originSeconds` is launch-anchored, so the 0.1 Hz clock cannot
+restart inside a session. There is nothing to carry. `carry`/`carved`/`crossed` are deliberately
+NOT stored: E5 rules they may colour a ceremony and never be rendered, nothing reads them today,
+and an unused field would be the unwired-slot fault.
+
+**reduced-motion.** Suppresses EVENTS, keeps the BED — the asymmetry is the rule: the bed is
+not motion, it is the room being there, and silencing it would make reduced-motion mean "off".
+Enforced at the two choke points every one-shot already passes through, rather than eleven call
+sites to forget one.
+
+**The fall's four layer names.** `uni-fall.js:25`'s layer index `n` (thresholds 0.20 / 0.50 /
+0.88) was never ported, so the caption it feeds never appeared — the four layers were reachable
+and unnamed. *the story, close · who sat with it · what you left here · the mouth of the return*,
+at `H−172`, mono 8.5, the mouth's fade `L.mouth` and the others breathing.
+
+**The rail.** Pitch **21 → 22** (`1 + 9 + 3 + 9`), span 294 → 309, and the ticks now grow
+**toward** the screen edge from a shared left edge rather than away from it — same silhouette at
+rest, opposite motion as he travels, and the motion is the half that reads. Dot centre corrected
+to `W − 17.5`.
+
+**Labelled as the app's, not ported:** `CeremonyVoice`'s pitch ramp and the `.drain` synth. The
+design builds both on the WebAudio graph and this engine has no equivalent, so the BEHAVIOUR is
+canon and the means are the register's own idiom — there is nothing upstream to check them
+against, and a future session should not go looking.
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed

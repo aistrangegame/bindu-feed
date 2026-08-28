@@ -23,8 +23,11 @@ enum CeremonySynth {
     /// ONE PRESENCE, IN ITS OWN BODY — `field-sound.js:13-25 CHAR`. Pitch comes from the
     /// VOICES table and never from here; this is only how that voice SOUNDS.
     case presence(VoiceCharacter)
-    /// THE SOUND OF SUBTRACTION — `The Light v2.html:327-331`. Filtered noise whose cutoff
-    /// falls from 3000 to 90 across the gesture, draining downward and out. Nothing arrives.
+    /// THE SOUND OF SUBTRACTION — `The Light v2.html:327-331` describes it; **this synth is
+    /// the app's, not a port.** The design builds it from a WebAudio convolver buffer and a
+    /// ramped biquad, which this engine has no equivalent for, so it is a one-pole low-pass on
+    /// white noise with the cutoff falling 3000 → 90 across the gesture. The BEHAVIOUR is
+    /// canon; the means are the register's own idiom. Nothing to check it against upstream.
     case drain
 }
 
@@ -44,6 +47,10 @@ final class CeremonyVoice {
         /// When set, the pitch ramps linearly from `hz` to this across the whole envelope —
         /// `The Light v2.html:304-306`, the rise sliding root → root×1.5 as the breath draws
         /// in. A held tone that MOVES; the engine had no way to say that.
+        ///
+        /// **This parameter is the app's, not the design's.** The design ramps an oscillator's
+        /// `frequency` on the WebAudio graph; there is no upstream `endHz` to compare against.
+        /// The 110 → 165 slide it produces IS canon; the mechanism is ours.
         endHz: Double? = nil,
         sampleRate: Double = 48000
     ) {

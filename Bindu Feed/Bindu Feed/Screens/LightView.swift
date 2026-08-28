@@ -292,6 +292,21 @@ struct LightView: View {
 
     // MARK: - Scene
 
+    // E1.2 · THE COLUMN LIFTS AND MASKS.
+    //
+    // A five-anchor scene grew downward from the vertical centre and ran off the lit area onto
+    // dim stone — the words kept going where the light stopped. Two different things: it LIFTS
+    // (the column rises as it fills, so its foot stays inside the light) and it MASKS (what
+    // passes the boundary FADES rather than being cut, because a hard edge on stone reads as a
+    // crop and a fade reads as the edge of the light).
+    //
+    // The lift is driven by how much has surfaced — the same quantity the rest of the register
+    // reads — not by a measured height, so it cannot fight the layout.
+    private var columnLift: Double {
+        let filled = scene.anchors.isEmpty ? 0 : Double(shownAnchors) / Double(scene.anchors.count)
+        return -filled * 96 - (beatActive ? 42 : 0)
+    }
+
     private var sceneBody: some View {
         VStack(alignment: .leading, spacing: 20) {
             Spacer()
@@ -356,6 +371,16 @@ struct LightView: View {
         }
         .padding(.horizontal, 38)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .offset(y: columnLift)
+        .animation(.easeInOut(duration: 1.2), value: columnLift)
+        .mask(
+            LinearGradient(stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: 0.10),
+                .init(color: .black, location: 0.88),
+                .init(color: .clear, location: 1.0),
+            ], startPoint: .top, endPoint: .bottom)
+        )
         .contentShape(Rectangle())
         .gesture(sceneGesture)
         .onChange(of: breath.value) { deliverOnExhale() }

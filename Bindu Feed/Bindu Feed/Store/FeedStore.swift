@@ -844,6 +844,36 @@ final class FeedStore: ObservableObject {
         uniSky = UniWeather.sky(density: UniWeather.density(metByRoom: metByRoom), ext: ext)
     }
 
+    // MARK: - walk-continuity · `walk-continuity.js:26-52`
+
+    /// THE DEPTH HE LEFT FROM, so a ceremony returns him there and not to a cold Door.
+    ///
+    ///   *"A ceremony opened from the Feed returns to the Feed; one opened from the fall
+    ///    returns to the fall… at the depth he left, with the way back already open."*
+    ///
+    /// **The other half of this contract is already better than the design's.** The design
+    /// carries `breath` in the same object because its clock restarts per page: *"He left
+    /// mid-breath; he arrives mid-breath."* `Breath.originSeconds` is launch-anchored, so the
+    /// 0.1 Hz clock CANNOT restart inside a session — there is nothing to carry. Only the
+    /// depth needs remembering, and only for the session (`sessionStorage`, TTL 90 min).
+    ///
+    /// `carry` / `carved` / `crossed` are deliberately NOT stored: E5 rules they exist so a
+    /// ceremony may colour itself by them and may never render them, and nothing here reads
+    /// them today. An unused field would be the unwired-slot fault.
+    private var leftFromZ: Double?
+    private var leftAt: Date?
+
+    /// Called as a ceremony opens from the axis.
+    func markDeparture(z: Double) { leftFromZ = z; leftAt = Date() }
+
+    /// Where to put him back, or nil — the Feed, as before.
+    func departureZ() -> Double? {
+        guard let z = leftFromZ, let at = leftAt,
+              Date().timeIntervalSince(at) < 90 * 60 else { return nil }   // TTL
+        return z
+    }
+    func clearDeparture() { leftFromZ = nil; leftAt = nil }
+
     // MARK: - THE RETURN
 
     func loadReturnRings() async {

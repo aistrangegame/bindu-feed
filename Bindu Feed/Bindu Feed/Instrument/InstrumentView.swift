@@ -384,7 +384,8 @@ struct InstrumentView: View {
             let step = 21.0
             let railH = Double(n - 1) * step
             let top = (size.height - railH) / 2
-            let edge = size.width - 14                           // right:13px
+            let edge = size.width - 13                           // `right:13px`
+            let left = edge - 17                                 // the widest tick's own left edge
             let curI = Axis.nearest(z).i
             let opened = travel.openedSurfaces
             let bone = Color(hex: "#EDE8E3")
@@ -402,7 +403,8 @@ struct InstrumentView: View {
                 let yA = top + railH - Double(s) * step
                 let yB = top + railH - Double(s + 1) * step
                 let ym = (yA + yB) / 2
-                let cxs = edge - 3.0, r = 1.5
+                // `align-self:flex-end; margin-right:3px` → centre at `W − 13 − 3 − 1.5`
+            let cxs = edge - 4.5, r = 1.5
                 let rect = CGRect(x: cxs - r, y: ym - r, width: r * 2, height: r * 2)
                 if s < opened.count && opened[s] {
                     ctx.fill(Path(ellipseIn: rect), with: .color(red.opacity(0.55)))     // meant → filled, kept
@@ -577,7 +579,10 @@ struct InstrumentView: View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
             PointWorldView(dimensionN: here.z - 1, path: $path,
-                           onReturn: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) },
+                           onReturn: {
+                               store.markDeparture(z: travel.z)
+                               $path.pushDissolve(FeedRoute.returnCeremony(nil))
+                           },
                            onHold: { held in
                                pointHolds = held
                                travel.handVerticalToRegister(held)
@@ -597,6 +602,8 @@ struct InstrumentView: View {
                          onRegisterDrift: { travel.setRegisterDrifting($0) },
                          path: $path,
                          onFall: { story in
+                             // he crossed from HERE — the Return puts him back at this depth
+                             store.markDeparture(z: travel.z)
                              // It carries the story he descended into. It used to pass `nil`,
                              // and the Return then fell back to its daily rotation — he
                              // arrived somewhere he had not been going. `B5.3`.

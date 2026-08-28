@@ -447,7 +447,16 @@ struct ReturnView: View {
                 VStack(spacing: 14) {
                     Text(ReturnCanon.sealDwell1).font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
                     Text(ReturnCanon.sealDwell2).font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
-                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
+                    // walk-continuity — if he crossed from the axis, he goes back to the
+                    // depth he left, not to a cold Door. The way back is already open behind
+                    // him because the axis was never unmounted; only the route is restored.
+                    Button {
+                        if let z = store.departureZ() {
+                            store.clearDeparture()
+                            $path.popToRootDissolve()
+                            store.pendingLaunchRoute = .instrument(Int(z.rounded()))
+                        } else if !path.isEmpty { $path.popToRootDissolve() }
+                    } label: {
                         Text(ReturnCanon.archiveWaits).font(.spaceMono(10)).tracking(2).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
                     }
                 }

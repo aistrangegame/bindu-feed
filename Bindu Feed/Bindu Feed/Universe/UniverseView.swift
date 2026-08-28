@@ -1105,6 +1105,10 @@ struct UniverseView: View {
         func seg(_ a: Double, _ b: Double) -> Double { max(0, min(1, (d - a) / (b - a))) }
         let app = 1 - seg(0.16, 0.34), gath = seg(0.14, 0.30) * (1 - seg(0.52, 0.74))
         let strat = seg(0.44, 0.66), mouth = seg(0.84, 0.96)
+        // `uni-fall.js:25` — the LAYER INDEX, and the four thresholds are its own, not the
+        // ramps'. It was never ported, so the caption the fall draws from it (`:154-159`) has
+        // never appeared: the four layers were reachable and unnamed.
+        let n = d < 0.20 ? 0 : (d < 0.50 ? 1 : (d < 0.88 ? 2 : 3))
         let col = rm.rgb, br = UniGeo.breath(t), dep = depth(story)
         let cx = W / 2, cy = H * (0.40 - 0.10 * gath + 0.05 * strat)
         let enter = min(1, d / 0.3)
@@ -1233,6 +1237,19 @@ struct UniverseView: View {
                 center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: mr * 3))
             ctx.stroke(UniGeo.ringPath(cx, cy, mr * (1.5 + br * 0.14)), with: .color(UniGeo.col(UniGeo.mix(col, [236, 206, 150], 0.8), 0.20 * mouth)), lineWidth: 1)
         }
+        // ── the layer's own name — `uni-fall.js:154-159` ──
+        //
+        // Four strings the design draws from `L.n`, at `H-172` in mono 8.5, `BONE` at 0.26.
+        // They exist elsewhere in the app — the Return's captions, `#pname`, the fall
+        // register's sub-line — but never HERE, where the descent actually names the layer
+        // he is in. The mouth's fade is `L.mouth`; the others breathe.
+        let names = ["the story, close", "who sat with it", "what you left here", "the mouth of the return"]
+        let fade = n == 3 ? mouth : 0.5 + 0.5 * sin(t * 0.5) * 0.2 + 0.4
+        var nameText = Text(names[n].uppercased())
+            .font(.spaceMono(8.5))
+        nameText = nameText.foregroundColor(UniGeo.col(UniGeo.BONE, 0.26 * min(1, fade)))
+        ctx.draw(nameText, at: CGPoint(x: cx, y: H - 172), anchor: .center)
+
         return hits
     }
 }
