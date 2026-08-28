@@ -1151,7 +1151,28 @@ struct UniverseView: View {
                 ctx.draw(Text(story.title).font(.lora(16, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
                          at: CGPoint(x: cx, y: cy - hal * 0.42))
             }
-            let voices = Array(store.stats(for: story.id).archetypes.prefix(6))
+            // `uni-field.js:52-73 company()` — the fan seats the COMPANY, not the raw voice
+            // list, and the company has two rules the seat path never had:
+            //
+            //   · Lalita always threads a reply, so she is in the company whether or not the
+            //     Archive shows her speaking.
+            //   · Ash joins where the thread ran past the field and its reply —
+            //     `ash = s.cmts > s.spoke.length + 1`. He is not a lens; he is the one the
+            //     lenses read, so his seat is derived from the shape of the thread, never
+            //     from a comment row of his own.
+            //
+            // The MOTE path already implemented both (`:255-266`); the SEAT path implemented
+            // neither, so the two disagreed about who was present, and Ash could not seat
+            // anywhere. His C-1052 paragraph — the one where he answers himself — was
+            // unreachable for that reason and not because the design withholds it.
+            let stats = store.stats(for: story.id)
+            var voices = Array(stats.archetypes.prefix(6))
+            if !voices.contains(where: { $0.caseInsensitiveCompare("Lalita") == .orderedSame }) {
+                voices.append("Lalita")
+            }
+            if stats.commentCount > stats.archetypes.count + 1 {
+                voices.append(store.ashArchetype?.name ?? "Ash")   // by record, never the string
+            }
             let m = max(1, voices.count)
             for (i, name) in voices.enumerated() {
                 let isAsh = name.lowercased() == "ash"

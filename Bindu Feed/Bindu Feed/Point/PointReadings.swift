@@ -27,6 +27,44 @@ import Combine
 // The section labels are `openSheet`'s own, which were never the sheet's — they name the
 // four sections and outlive it.
 
+// THE RECEDE, READ FROM ALL SEVEN SOURCES BEFORE ANYTHING SHARED WAS FOLDED IN.
+//
+// Every world dims as it gives — `A = p * (1 − dsp * k)` — and the coefficient is a
+// GRADIENT, not a constant. The emptier the world, the further it gets out of the way:
+//
+//   I   THE POINT     0.62   world-one.js:112     the deepest recede; the emptiness is the subject
+//   II  THE TURN      0.54   world-two.js:132
+//   III THE VEIL      0.50   world-three.js:148
+//   IV  THE CHAMBER   0.46   world-four.js:144
+//   V   THE MIRRORS   0.46   world-five.js:210    × (1 − bk*0.86) — see below
+//   VI  THE RETURN    0.44   world-six.js:239
+//   VII THE DANCE     0.44   world-seven.js:315
+//
+// AND VI AND VII INVERT IT. Their `displaced()` returns **−1** while he is acting, which
+// makes `1 − dsp*k` = 1.44: the world gets BRIGHTER, not dimmer.
+//
+//   VI  `if(!this.reading||this.holding)return -1;`   *"he has to be able to see the
+//        horizon to send over it"* (`world-six.js:185-190`)
+//   VII `if(this.hand&&!this.resolved)return -1;`     *"he needs the floor to dance on"*
+//        (`world-seven.js:138-142`)
+//
+// Both also scale their own `displaced` by 0.54 internally, so their deepest dim is
+// 0.54 × 0.44 ≈ 0.24 against I's 0.62 — a quarter of the recede, in the two worlds where
+// the ground is the thing he is using. A single shared dim would have flattened all of
+// this: it would have taken the two inverting worlds the wrong way entirely.
+//
+// V carries a second, opposite term: `× (1 − bk*0.86)` for the guard pane, because *"a
+// mirror at the end of a hall is always larger than the walk to it predicts — so the guard
+// LOOMS where everything else recedes"* (`world-five.js:198-200`). It is not part of the
+// recede; it is its inverse, and it belongs with the guard-pane build.
+//
+// NOT YET IMPLEMENTED, and it is structural rather than a constant. In the design the
+// reading OVERLAYS the world and the world recedes under it; in the app `PointWorldView`
+// shows the reading INSTEAD of the world, so there is nothing behind to dim. Wiring the
+// recede means drawing the world behind the reading and feeding `revealed` back into its
+// alpha — which is also what would stop a world's own chrome reading through, the thing
+// the world-V walk turned up.
+
 enum PointSection: Int, CaseIterable {
     case say, walk, hand, open
     var label: String {
