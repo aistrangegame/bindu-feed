@@ -299,6 +299,34 @@ the design fixes it at `rr` — a constant per mote. The company's distance from
 varied by which star it was and by how close he had come. That is what `rr` means, and the
 name `orbitMul` had quietly stopped meaning it.
 
+### E1.1 · the Light chooses — CLOSED
+
+`LightView.swift` read *"One scene per visit, deterministic by local-day hash"*, so a date
+chose his future for him in the one register whose whole subject is what has not happened yet.
+A ruling from the conflict document that never reached a pass plan — which is exactly how an
+item survives seven passes: **nothing disagreed with it, because nothing asked.**
+
+The geometry is canon (`spine-light.js:104-121`): five drifting in the open sky at
+`x = W(0.50 + cos(a)·0.29)`, `y = H(0.245 + sin(a·0.62 + i·1.1)·0.055 + i·0.058)`, the Far one
+low at `H·0.845` where a floor would be, hit radius 30, `ORDER` verbatim. **The look is not
+canon** — no comp draws these; `The Light v2.html` goes straight to `SCENES[which]`. So it is
+the register's own idiom and said so rather than implied to be ported.
+
+**The stillness gate is untouched.** The choosing sits AFTER it: the way opens by stillness —
+accumulate and keep, force only pauses, *"this is not a test he can fail"* — and what he walks
+toward is then his. The worn rings are likewise unchanged: one per exhale, kept, capped at 14,
+session-scoped.
+
+**One correction mid-build.** I hung all six titles under their points and three collided —
+`place()` spaces *lights* by 0.058·H, ample for a point and nowhere near enough for a two-line
+title. The titles were my addition, so the collision was mine. Fixed with the two stages the
+Rooms' marks already use: the first touch arms and NAMES, the second enters. It suits this
+register especially — he approaches one of six futures and it tells him what it is before he
+commits — and it adds a name, never an instruction.
+
+Walked: six lights standing clean, and *"The one who was watching all of them"* naming itself
+alone when armed.
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed

@@ -15,7 +15,13 @@ import SwiftUI
 // One scene per visit, chosen by date-hash (like the Mirror). Two materials tell
 // you where you are with the words covered: the dawn (Near) vs the nave (Far).
 
-private enum LightStage { case approach, hold, scene, out }
+private enum LightStage {
+    /// `.choosing` — E1.1. The six stand in the dawn and HE picks. It sits after the gate,
+    /// never inside it: the stillness gate is the designed exception (accumulate and keep,
+    /// force only pauses, *"this is not a test he can fail"*) and the choosing must not touch
+    /// it. The way opens by stillness; what he walks toward is then his.
+    case approach, hold, choosing, scene, out
+}
 
 struct LightView: View {
     @Binding var path: [FeedRoute]
@@ -25,6 +31,8 @@ struct LightView: View {
 
     @State private var stage: LightStage = .approach
     @State private var sceneIndex = 0
+    /// Which of the six is under the hand, named but not yet entered.
+    @State private var armed: Int?
 
     // Stillness gate
     @State private var stillMs: Double = 0
@@ -82,6 +90,7 @@ struct LightView: View {
             switch stage {
             case .approach: approach
             case .hold:     holdBody
+            case .choosing: choosingBody
             case .scene:    sceneBody
             case .out:      backOut
             }
@@ -180,6 +189,73 @@ struct LightView: View {
 
     // MARK: - The Hold (standing in the shaft, before the aperture opens)
 
+    // E1.1 · THE SIX, STANDING IN THE DAWN — and he chooses.
+    //
+    // Geometry is canon (`LightPlaces`, `spine-light.js:104-121`): five drifting in the open
+    // sky, the Far one low where a floor would be, hit radius 30. The LOOK is the app's — no
+    // comp draws these — so it is the register's own idiom and nothing more: a breathing point
+    // in the Light's cream with its title beneath, the Far one distinguished because its
+    // material is the nave and not the dawn.
+    private var choosingBody: some View {
+        GeometryReader { geo in
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                let W = Double(geo.size.width), H = Double(geo.size.height)
+                let places = LightPlaces.place(W, H, t)
+                ZStack(alignment: .topLeading) {
+                    Color.clear
+                    ForEach(Array(LightCanon.scenes.enumerated()), id: \.offset) { i, sc in
+                        let p = i < places.count ? places[i] : .zero
+                        let far = sc.material == .nave
+                        let br = 0.72 + 0.28 * RoomGeo.breath(t + Double(i) * 1.7)
+                        // ONE NAME AT A TIME. The design places POINTS — `place()` spaces the
+                        // six by 0.058·H, which is ample for a light and nowhere near enough
+                        // for a two-line title. Hanging all six titles under them was my
+                        // addition and it collided three of them into one another.
+                        //
+                        // So the same two stages the Rooms' marks use: the first touch arms
+                        // and NAMES, the second enters. It fits this register especially —
+                        // he approaches one of six futures and it tells him what it is before
+                        // he commits to it — and it adds no instruction, only a name.
+                        VStack(spacing: 9) {
+                            Circle()
+                                .fill(RadialGradient(
+                                    colors: [Color(hex: "#F5F0E8").opacity((far ? 0.55 : 0.85) * br * (armed == i ? 1.25 : 1)),
+                                             Color(hex: "#EDE3CE").opacity(0)],
+                                    center: .center, startRadius: 0, endRadius: far ? 17 : 13))
+                                .frame(width: far ? 34 : 26, height: far ? 34 : 26)
+                            if armed == i {
+                                Text(sc.title)
+                                    .font(.loraItalic(12.5))
+                                    .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.78))
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: 150)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .transition(.opacity)
+                            }
+                        }
+                        .position(x: p.x, y: p.y)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { loc in
+                    // `The Instrument v3.html:5872` — `if(k && LT.select(k)) { liteRender(); B.blip(174); }`
+                    guard let k = LightPlaces.hit(loc, W, H, t) else {
+                        withAnimation(.easeInOut(duration: 0.6)) { armed = nil }; return
+                    }
+                    if armed == k {
+                        sceneIndex = k
+                        soundEngine.riteBowl(hz: 174)      // `:5873` — `B.blip(174)`
+                        withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.7)) { armed = k }
+                    }
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+
     private var holdBody: some View {
         VStack {
             Spacer()
@@ -197,7 +273,7 @@ struct LightView: View {
             let dim = DispatchWorkItem { withAnimation(.easeInOut(duration: 1.6)) { holdDimmed = true } }
             let open = DispatchWorkItem {
                 soundEngine.riteBowl(hz: 174)                 // the aperture opens; light floods down
-                withAnimation(.easeInOut(duration: 1.6)) { stage = .scene }
+                withAnimation(.easeInOut(duration: 1.6)) { stage = .choosing }
             }
             holdWork = [dim, open]
             DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000 * 0.45, execute: dim)
@@ -323,12 +399,13 @@ struct LightView: View {
     // MARK: - Flow
 
     private func begin() {
-        // One scene per visit, deterministic by local-day hash.
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        let key = fmt.string(from: Date())
-        var h: UInt32 = 2166136261
-        for b in key.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
-        sceneIndex = Int(h % UInt32(LightCanon.scenes.count))
+        // E1.1 · NO DAY-HASH. It read: "One scene per visit, deterministic by local-day hash",
+        // and a date chose his future for him in the one register whose whole subject is what
+        // has not happened yet. The six stand in the dawn and he picks — `spine-light.js:104`,
+        // and `The Instrument v3.html:5872` selects on a touch, not on a clock.
+        //
+        // A ruling from the conflict document that never reached a pass plan, which is exactly
+        // how an item survives seven passes: nothing disagreed with it, because nothing asked.
 
         // The stillness gate — accumulates only while the hand is off the glass and
         // no input for 340ms. It NEVER resets; a touch only pauses the fill.

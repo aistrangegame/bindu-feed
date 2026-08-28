@@ -166,3 +166,37 @@ enum LightCanon {
         ),
     ]
 }
+
+
+// MARK: - the six, standing in the dawn · `canon/spine-light.js:104-121`
+
+/// WHERE THE SIX STAND, and how near a touch has to be. Both authored.
+///
+///   *"The five Future scenes drift in the open sky; the Far one waits low, where a floor
+///    would be."*
+///
+/// The GEOMETRY is canon — `place()` and `hit()`'s radius 30 and `ORDER` are verbatim. The
+/// LOOK is not: no comp renders these. `The Light v2.html` goes straight to `SCENES[which]`,
+/// so the six-in-the-dawn exists only as this mechanism. Drawn here in the register's own
+/// idiom — a breathing point in the Light's cream with its title beneath — and said plainly
+/// rather than implied to be ported.
+enum LightPlaces {
+    /// `ORDER` — `spine-light.js:97`, and `LightCanon.scenes` is already in this order.
+    static func place(_ W: Double, _ H: Double, _ t: Double) -> [CGPoint] {
+        var out: [CGPoint] = []
+        for i in 0..<5 {
+            let a = t * 0.043 + Double(i) * 1.2566
+            out.append(CGPoint(x: W * (0.50 + cos(a) * 0.29),
+                               y: H * (0.245 + sin(a * 0.62 + Double(i) * 1.1) * 0.055 + Double(i) * 0.058)))
+        }
+        out.append(CGPoint(x: W * 0.5, y: H * 0.845))       // the Far one, where a floor would be
+        return out
+    }
+
+    /// `hit()` — within 30. Not derived from spacing: the design states it.
+    static func hit(_ p: CGPoint, _ W: Double, _ H: Double, _ t: Double) -> Int? {
+        let places = place(W, H, t)
+        for (i, h) in places.enumerated() where hypot(h.x - p.x, h.y - p.y) < 30 { return i }
+        return nil
+    }
+}
