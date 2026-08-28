@@ -30,6 +30,7 @@ struct PointRevealView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
+
             // The split-into-three, then the collapse to one.
             Canvas { ctx, size in
                 let cx = size.width / 2, cy = size.height * 0.32

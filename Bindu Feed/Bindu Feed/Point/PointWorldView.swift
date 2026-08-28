@@ -12,6 +12,10 @@ struct PointWorldView: View {
     let dimensionN: Int          // 1…7 → m1…m7
     @Binding var path: [FeedRoute]
     let onReturn: () -> Void
+    /// The Point's half of `handedToRegister` — the same contract the Universe's fall uses.
+    /// TRUE while a universe body or a star reading is open: the register owns the vertical,
+    /// and `#where` steps aside because a star is held.
+    var onHold: (Bool) -> Void = { _ in }
 
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var selectedUniverse: PointUniverse?   // the middle tier: dimension → universe → star
@@ -22,7 +26,30 @@ struct PointWorldView: View {
     private let ladder: [Double] = [285, 396, 417, 528, 639, 741, 852]
 
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
+
+    private func parkDebugStarIfRequested() {
+        #if DEBUG
+        if openStar == nil, let s = debugStar { openStar = s }
+        #endif
+    }
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
+
+    #if DEBUG
+    /// `bindu.debug.star` — park one star's READING open, by star key. The fifth key in the
+    /// same harness as `room` / `nogate` / `fallstar` / `falldepth`: no UI, DEBUG only.
+    ///
+    /// It exists because several of the seven level-1 pickers are, by design, hostile to a
+    /// scripted hand — II's stars are 10pt marks orbiting at 0.16 rad/s (a ~2% hit rate per
+    /// blind tap), I's drift away from a touch, VII's outrun it. Those pickers are the
+    /// world's own material and must not be softened to make a test pass; this reaches PAST
+    /// them to the reading, so the reading can be walked and the picker reported separately.
+    private var debugStar: PointStar? {
+        guard let k = UserDefaults.standard.string(forKey: "bindu.debug.star"), !k.isEmpty,
+              let star = PointContent.stars.first(where: { $0.key == k }),
+              dim?.universes.contains(where: { $0.stars.contains(k) }) == true else { return nil }
+        return star
+    }
+    #endif
 
     var body: some View {
         ZStack {
@@ -35,7 +62,14 @@ struct PointWorldView: View {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).
                 PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue) { s in
-                    soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 6)
+                    // `world-five.js:49-50` — *"at the exact instant every other star sounds
+                    // its arrival, this one is silent: a true null, the only deliberate
+                    // silence in the Point. Sakshi's register — it witnesses, it does not
+                    // teach."* `mute` is set at `:161` and read by nothing in the reference
+                    // build; it is read HERE. This silence is the design, never a gap to fix.
+                    if s.key != "r-guard" {
+                        soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 6)
+                    }
                     PointJourney.openedStars.append(s.t)
                     withAnimation(.easeInOut(duration: 0.8)) { openStar = s }
                 }
@@ -99,7 +133,11 @@ struct PointWorldView: View {
         // is open, so their own drag/scroll wins over the axis travel gesture.
         .onChange(of: openStar != nil) { _, _ in syncAxisLock() }
         .onChange(of: selectedUniverse != nil) { _, _ in syncAxisLock() }
+        // Released on the way out, like the fall's four scoped paths: a register that is no
+        // longer mounted must never still be holding the vertical.
+        .onDisappear { onHold(false) }
         .onAppear {
+            parkDebugStarIfRequested()
             syncAxisLock()
             if let dim { PointJourney.enteredDims.append(dim.name) }
             if !PointGoodnight.shown.contains(dimensionN) {
@@ -116,7 +154,18 @@ struct PointWorldView: View {
     /// now — the vertical always walks it, which is what makes a register reachable at all
     /// (`B0.2`). A reading that needs to keep the vertical claims it locally, the way the
     /// fall does; nothing reaches up and disables the instrument.
-    private func syncAxisLock() { }
+    /// This was an EMPTY BODY. Declared, wired into three call sites, commented with exactly
+    /// what it does — and doing nothing, which is indistinguishable from a lock that is on.
+    ///
+    /// The cost was not cosmetic. Every Point reading takes a vertical or near-vertical drag
+    /// (II travels outward on it, III parts on it, IV presses on it), and with the axis still
+    /// listening the drag walked the axis to the next register instead. WORLD II WAS NOT
+    /// WALKABLE BY ANY HAND — the first upward swipe carried you from The Turn to The Veil
+    /// with the reading still open behind it.
+    ///
+    /// `AxisTravel.handedToRegister` already existed and is enforced at the source in
+    /// `applyDrag`, so no call path can route around it. It only ever needed to be told.
+    private func syncAxisLock() { onHold(openStar != nil || selectedUniverse != nil) }
 }
 
 // The goodnights are said once per dimension per session, then gone.
@@ -137,52 +186,153 @@ struct PointDescentDoor: View {
     @State private var deeper: PointDeeper?
     @State private var reaching = false
     @State private var reached = false
+    @State private var shown = 0                 // stages revealed so far
+    @EnvironmentObject private var soundEngine: SoundEngine
     private var cacheKey: String { "point.descent.\(star.t)" }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            if let d = deeper {
-                ScrollView { deeperStages(d).padding(.horizontal, 32).padding(.bottom, 40) }
-                    .frame(maxHeight: 380)
-            } else if reaching {
-                Text("descending…").spaceMonoTracked(9, em: 0.2)
-                    .foregroundStyle(hue.opacity(0.7)).padding(.bottom, 34)
-            } else {
-                Button { Task { await descend() } } label: {
-                    Text("▽ DESCEND ONE LAYER DEEPER").spaceMonoTracked(10, em: 0.2)
-                        .foregroundStyle(hue)
-                }
-                .buttonStyle(.plain).padding(.bottom, 34)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .background(LinearGradient(colors: [.clear, Color(hex: "#050408").opacity(0.9)],
-                                   startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+    /// `[label, text, minor]`, then FILTERED on non-empty (`point-levels.js:1249`). Five is
+    /// the ceiling, not the count — and offline it is always FOUR, because the fallback's
+    /// `thread` is `''` by design and filters itself out. The two minor stages are set
+    /// smaller, dimmer and italic (`.d-stage.minor`, `:1097`).
+    private func stages(_ d: PointDeeper) -> [(String, String, Bool)] {
+        [("arrival", d.arrival, false), ("the teaching", d.teaching, false),
+         ("the thread", d.thread, true), ("the practice", d.practice, true),
+         ("the ascent", d.ascent, false)].filter { !$0.1.isEmpty }
     }
 
-    @ViewBuilder private func deeperStages(_ d: PointDeeper) -> some View {
-        let stages: [(String, String, Bool)] = [
-            ("arrival", d.arrival, false), ("the teaching", d.teaching, false),
-            ("the thread", d.thread, true), ("the practice", d.practice, true), ("the ascent", d.ascent, false)
-        ].filter { !$0.1.isEmpty }
-        VStack(alignment: .leading, spacing: 18) {
-            ForEach(Array(stages.enumerated()), id: \.offset) { _, s in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(s.0.uppercased()).font(.spaceMono(9)).tracking(1.5).foregroundStyle(hue.opacity(0.7))
-                    Text(s.1).font(.lora(s.2 ? 14 : 15.5)).lineSpacing(6)
-                        .foregroundStyle(s.2 ? BinduTheme.inkSecondary : BinduTheme.inkPrimary)
+    var body: some View {
+        // A LAYER IN THE STAGE, not a system modal. `.ovl{position:absolute;inset:0;z-index:12}`
+        // is a sibling of the feed inside `#stage` — so this is a full-bleed ZStack, and the
+        // door is one item aligned to its bottom.
+        //
+        // It was a `.fullScreenCover` first, and that silently did nothing: the cover was
+        // attached to a `Group` whose `if` renders EMPTY the moment `deeper` is set, so at the
+        // instant it should present, its anchor no longer exists. The shaft rose and the
+        // figure dimmed on cue — every visible signal said the descent had begun — and the
+        // reading it was meant to cover just sat there. Absence again, wearing the shape of
+        // something wired.
+        ZStack(alignment: .bottom) {
+            if deeper == nil {
+                // The door, at the foot of the reading.
+                VStack(spacing: 0) {
+                    if reaching {
+                        Text("descending…").spaceMonoTracked(8, em: 0.24)
+                            .foregroundStyle(BinduTheme.inkPrimary.opacity(0.3)).padding(.bottom, 34)
+                    } else {
+                        Button { Task { await descend() } } label: {
+                            Text("▽ DESCEND ONE LAYER DEEPER").spaceMonoTracked(10, em: 0.2)
+                                .foregroundStyle(hue)
+                        }
+                        .buttonStyle(.plain).padding(.bottom, 34)
+                    }
                 }
-                .transition(.opacity)
+                .frame(maxWidth: .infinity)
+                .background(LinearGradient(colors: [.clear, Color(hex: "#050408").opacity(0.9)],
+                                           startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+            } else {
+                descentOverlay.transition(.opacity)
             }
         }
-        .padding(.top, 10)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        // THE DESCENT IS AN OVERLAY OVER EVERYTHING, not a panel inside the reading.
+        // `.ovl{position:absolute;inset:0;z-index:12;background:rgba(7,8,13,.965)}` (`:1050`)
+        // — it covers the world, the plate and the reading, which is why the register content
+        // is hidden (`feed.style.opacity=0`, `:1242`) and the yantra goes to `descend` with
+        // the shaft raised. A 380pt scroll box inside the reading was the wrong object: it
+        // let the world stay legible behind a thing that exists to take the world away.
+    }
+
+    @ViewBuilder private var descentOverlay: some View {
+        if let d = deeper {
+            let st = stages(d)
+            ZStack(alignment: .top) {
+                Color(red: 7 / 255, green: 8 / 255, blue: 13 / 255).opacity(0.965).ignoresSafeArea()
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // `.dtopic` — mono 8 / .3em / uppercase / --dhue / centred / mb 34
+                        Text(star.t.uppercased()).spaceMonoTracked(8, em: 0.3)
+                            .foregroundStyle(hue).multilineTextAlignment(.center)
+                            .padding(.bottom, 34)
+
+                        ForEach(Array(st.enumerated()), id: \.offset) { i, sg in
+                            VStack(spacing: 0) {
+                                // `.d-label` — mono 7.5 / .3em / --dhue at .75 / mb 12
+                                Text(sg.0.uppercased()).spaceMonoTracked(7.5, em: 0.3)
+                                    .foregroundStyle(hue.opacity(0.75)).padding(.bottom, 12)
+                                // `.d-text` 17/1.76 cream · `.minor` 14.5 dim italic
+                                Text(sg.1)
+                                    .font(sg.2 ? .loraItalic(14.5) : .lora(17))
+                                    .lineSpacing(sg.2 ? 10 : 13)
+                                    .foregroundStyle(sg.2 ? BinduTheme.inkSecondary : BinduTheme.inkPrimary)
+                            }
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 330)
+                            .padding(.bottom, 34)
+                            // `.d-stage` — opacity 0 + translateY(12), 2.4s ease on both
+                            .opacity(i < shown ? 1 : 0)
+                            .offset(y: i < shown ? 0 : 12)
+                            .animation(.easeInOut(duration: 2.4), value: shown)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 120).padding(.horizontal, 34).padding(.bottom, 90)
+                }
+                .scrollIndicators(.hidden)
+
+                if shown >= st.count {
+                    HStack {
+                        Button { ascend() } label: {
+                            Text("‹ ascend").spaceMonoTracked(8.5, em: 0.2)
+                                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.3)).padding(10)
+                        }.buttonStyle(.plain)
+                        Spacer()
+                    }
+                    .padding(.leading, 24).padding(.top, 8)
+                    .transition(.opacity)
+                }
+            }
+            // TAP ADVANCES ONE STAGE — it does not skip to the end. `:1256-1260` reveals the
+            // NEXT un-revealed stage and nothing more; only when there is no next does the
+            // ascent appear. He can outrun the 3400ms clock, one stage at a time; he cannot
+            // jump the walk.
+            .contentShape(Rectangle())
+            .onTapGesture {
+                withAnimation(.easeInOut(duration: 2.4)) { shown = min(st.count, shown + 1) }
+            }
+            .task(id: st.count) {
+                // `700 + i*3400` (`:1253`), and the ascent at `700 + n*3400` (`:1255`).
+                for i in 0..<st.count {
+                    let due = 700 + i * 3400
+                    try? await Task.sleep(for: .milliseconds(due))
+                    guard !Task.isCancelled else { return }
+                    withAnimation(.easeInOut(duration: 2.4)) { shown = max(shown, i + 1) }
+                }
+            }
+        }
     }
 
     // One live layer deeper, in the Arch register — generated once, then persisted per star so a
     // re-descent returns the same reading (point-levels.js cache[k]). Graceful offline fallback.
+    /// `:229` — the hall comes back: the figure returns to `walk`, the shaft drops, the
+    /// register content is legible again, and the glide runs the other way.
+    private func ascend() {
+        shown = 0
+        deeper = nil
+        PointYantra.shared.descending = false
+        withAnimation(.easeInOut(duration: 1.4)) { PointYantra.shared.shaft = 0 }
+        soundEngine.setAxisGlide(hz: 0, level: 0)
+    }
+
     private func descend() async {
         guard !reached else { return }
         reached = true
+        shown = 0
+        // `:206` — `YANTRA.setMode('descend'); YANTRA.shaft=1;`. The figure dims to 0.22 and
+        // one shaft of the enclosure's light remains, which is the only thing still lit
+        // while he is under it.
+        PointYantra.shared.descending = true
+        withAnimation(.easeInOut(duration: 1.8)) { PointYantra.shared.shaft = 1 }
         // persisted?
         if let data = UserDefaults.standard.data(forKey: cacheKey),
            let cached = try? JSONDecoder().decode(PointDeeper.self, from: data) {

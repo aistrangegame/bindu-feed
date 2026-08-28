@@ -191,7 +191,9 @@ struct PointReading: View {
             }
         }
         // Level 3 is shared by all seven, in the design too — the descent, and its fallback.
-        .overlay(alignment: .bottom) {
+        // Plain `.overlay`, not `.overlay(alignment: .bottom)` — the descent needs the whole
+        // frame to cover, and the door aligns itself to the bottom from inside it.
+        .overlay {
             if state.done { PointDescentDoor(star: star, hue: hue) }
         }
     }
@@ -378,7 +380,14 @@ private struct ReadFollowing: View {
                 .scrollIndicators(.hidden)
             }
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 2)
+            // `.simultaneousGesture`, NOT `.gesture`. A ScrollView claims the vertical
+            // drag before an ancestor's plain `.gesture` ever sees it, so this reading's own
+            // travel was shadowed by its own scroll view: correct gesture, correct maths,
+            // never delivered. World I already had `simultaneousGesture` (which is why the
+            // rope worked) and V and VII read `translation.width`, which a vertical scroll
+            // does not claim — so the fault fell precisely on the readings whose gesture is
+            // VERTICAL and sits outside the scroll. That is II and III, and only those.
+            .simultaneousGesture(DragGesture(minimumDistance: 2)
                 .onChanged { v in
                     // going outward is what gives; stopping gives nothing
                     let d = -Double(v.translation.height) / Double(geo.size.height) * 1.6
@@ -451,7 +460,14 @@ private struct ReadParting: View {
                 }
             }
             .contentShape(Rectangle())
-            .gesture(DragGesture(minimumDistance: 0)
+            // `.simultaneousGesture`, NOT `.gesture`. A ScrollView claims the vertical
+            // drag before an ancestor's plain `.gesture` ever sees it, so this reading's own
+            // travel was shadowed by its own scroll view: correct gesture, correct maths,
+            // never delivered. World I already had `simultaneousGesture` (which is why the
+            // rope worked) and V and VII read `translation.width`, which a vertical scroll
+            // does not claim — so the fault fell precisely on the readings whose gesture is
+            // VERTICAL and sits outside the scroll. That is II and III, and only those.
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
                 .onChanged { v in part = v.location }
                 .onEnded { v in
                     // holding it open long enough to read is what hands a section back
@@ -561,12 +577,66 @@ private struct ReadPressing: View {
 // "The reading physically CROSSES THE LINE every half turn — a section arrives on this
 //  side, the next arrives from the other, mirror-written, and unflips as it settles."
 
+// R-GUARD · THE EXCEPTION, ruled and not discovered (`world-five.js:32-50`).
+//
+//   *"The warning is posted at the exit: achievement is the trap. A world built on pairing,
+//    closing on a star that warns against collecting the pairs, is only a gift if the
+//    INTERACTION breaks — otherwise it is the eleventh collected thing."*
+//
+// So the guard is the one pane with nothing on the other side. `pair: null`, `side: 0` — and
+// `give()` at `:158-162` hard-sets `side='this'`, `through=''`: **the reading never crosses
+// at it.** Ten panes train him to expect the far side; he turns this one and finds his own
+// reflection and no partner. No caption fills the gap — `:430-432` is an empty branch with a
+// comment saying so, because *"a caption here would be the instrument explaining its own
+// guard."* The emptiness is the content.
+//
+// It does not advance the walk. Completing it WITHDRAWS the hall and carries him back out to
+// the Surface, the gate he came in by — *"a guard turns you back; it does not let you pass
+// for having finished it."*
+//
+// TWO THINGS FOUND ON THE PORT, both worth stating plainly:
+//
+//  1 · `sendBack` and `mute` are declared at `:106-107`, set at `:161`, and READ BY NOTHING —
+//      not in the app, and not in the reference build either. Grepped every design source:
+//      the only hits are their own declaration, reset and assignment. The prose at `:44-46`
+//      is unambiguous about what they are for, so they are wired here from the prose. This is
+//      the `beatCue` class again: declared, set, never called, and indistinguishable from
+//      absence until someone goes looking.
+//  2 · The silence is not an omission. *"At the exact instant every other star sounds its
+//      arrival, this one is silent — a true null, the only deliberate silence in the Point.
+//      Sakshi's register: it witnesses, it does not teach."* So `mute` suppresses the arrival
+//      tone, and that suppression must never be "fixed".
+//
+// `bk()` (`:173-179`) is a WALL CLOCK, not a state — *"it runs on its own clock rather than
+// on his presence… a walk that returns finds the hall standing, or finds it rising, and never
+// finds it snapping."* Rise `sm(e/2.4)` over 0–2.4s · hold 1 to 3.6s · ease `sm(1−(e−3.6)/1.8)`
+// to 5.4s · then 0.
 private struct ReadTurning: View {
     @ObservedObject var s: PointReadingState
     let hue: Color
     let onClose: () -> Void
     @State private var turn: Double = 0          // half-turns taken
     @State private var settling = false
+    @State private var backAt: Date?             // when the guard withdrew the hall
+    @State private var bk: Double = 0
+
+    private var isGuard: Bool { s.star.key == "r-guard" }
+
+    /// `:200-201` — *"a mirror at the end of a hall is always larger than the walk to it
+    /// predicts, so the guard LOOMS where everything else recedes."* `sc` 1.16 against the
+    /// other panes' 0.60…, and `A = p(1−dsp·0.46)(1−bk·0.86)` — the second term is the
+    /// inverse of the recede, and it belongs to the guard alone.
+    private var loom: Double { isGuard ? 1.16 : 1.0 }
+
+    /// `world-five.js:438` — the word under the held pane. The guard's own is fixed from the
+    /// second give: nothing else will ever be true of it.
+    private var word: String? {
+        if bk > 0 { return nil }                             // the withdrawal says nothing
+        if isGuard && s.revealed >= 2 { return "only your own reflection" }
+        if s.revealed >= 4 { return "faced" }
+        if s.revealed == 0 { return "turn a mirror · and see what faces it" }
+        return settling ? "the other face" : "facing you"
+    }
 
     var body: some View {
         ZStack {
@@ -582,14 +652,17 @@ private struct ReadTurning: View {
                     ReadingHead(star: s.star, hue: hue, onClose: onClose)
                     ForEach(0..<s.revealed, id: \.self) { i in
                         // every other section came from the far side
+                        // The guard's reading NEVER arrives mirror-written: `give()` sets
+                        // `side='this'` and `through=''` unconditionally for it. Nothing
+                        // faces it, so nothing can come from the far side.
                         SectionBlock(section: PointSection(rawValue: i)!, star: s.star, hue: hue,
-                                     mirrored: i % 2 == 1 && settling && i == s.revealed - 1)
+                                     mirrored: !isGuard && i % 2 == 1 && settling && i == s.revealed - 1)
                             .transition(.opacity)
                             .animation(.easeOut(duration: 1.1), value: settling)
                     }
-                    if !s.done {
-                        Text("turn the glass")
-                            .font(.loraItalic(13)).foregroundStyle(hue.opacity(0.55))
+                    if !s.done, let w = word {
+                        Text(w.uppercased()).spaceMonoTracked(8.5, em: 0.2)
+                            .foregroundStyle(hue.opacity(0.55))
                             .frame(maxWidth: .infinity)
                             .rotation3DEffect(.degrees(turn * 180), axis: (x: 0, y: 1, z: 0))
                     }
@@ -600,6 +673,33 @@ private struct ReadTurning: View {
             }
             .scrollIndicators(.hidden)
         }
+        // THE WITHDRAWAL. The hall looms, whites out, and carries him back to the Surface.
+        // It runs on its own clock so it finishes whether he is here or not.
+        .overlay {
+            if bk > 0 {
+                Color(hex: "#EAFBF8").opacity(bk * 0.86)
+                    .ignoresSafeArea().allowsHitTesting(bk > 0.2)
+            }
+        }
+        .scaleEffect(1 + bk * (loom - 1))
+        .task(id: backAt) {
+            guard let t0 = backAt else { return }
+            // `bk()` — rise 0→2.4s · hold to 3.6s · ease out to 5.4s · then 0, and gone.
+            while !Task.isCancelled {
+                let e = Date().timeIntervalSince(t0)
+                let v: Double
+                if e < 2.4 { v = RoomGeo.sm(0, 1, e / 2.4) }
+                else if e < 3.6 { v = 1 }
+                else if e < 5.4 { v = RoomGeo.sm(0, 1, 1 - (e - 3.6) / 1.8) }
+                else { v = 0 }
+                bk = v
+                // `sendBack` — *"it withdraws the hall and carries him back out to the
+                // Surface, the gate he came in by."* At the hold, he is already gone.
+                if e >= 3.0 { onClose(); return }
+                if e >= 5.4 { return }
+                try? await Task.sleep(for: .milliseconds(33))
+            }
+        }
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 4)
             .onEnded { v in
@@ -607,6 +707,8 @@ private struct ReadTurning: View {
                 withAnimation(.easeInOut(duration: 0.9)) { turn += 0.5 }
                 settling = true
                 s.give()
+                // `:161` — at the fourth give the guard withdraws the hall and sends him back.
+                if isGuard && s.revealed >= 4 { backAt = Date() }
                 // it arrives mirror-written and UNFLIPS as it settles
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     withAnimation(.easeOut(duration: 1.1)) { settling = false }

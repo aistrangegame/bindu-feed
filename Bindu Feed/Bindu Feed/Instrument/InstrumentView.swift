@@ -28,6 +28,7 @@ struct InstrumentView: View {
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
     @State private var thinSounded = false
+    @State private var pointHolds = false      // a Point universe or star reading is open
     // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
     // so the axis drag stands down and the card's own scroll/pan works. Without this, the
     // outer `.highPriorityGesture` steals every drag from the presented card.
@@ -278,7 +279,10 @@ struct InstrumentView: View {
     // not re-tick with Z. Hidden on the ground, past the centre, and inside a passage.
     private var whereBlock: some View {
         let w = here.whereBlock
-        let hidden = abs(travel.z) < 0.42 || travel.z > 8.6 || travel.crossing
+        // `withStar` — the design's FOURTH hide condition (`:4979-4992`), and it was the one
+        // never wired, because nothing on the Point side ever said a star was held. It showed
+        // as the register's name printed straight through the star's own title.
+        let hidden = abs(travel.z) < 0.42 || travel.z > 8.6 || travel.crossing || pointHolds
         return VStack(spacing: 0) {
             if let top = w.top {
                 Text(top.uppercased())
@@ -493,7 +497,11 @@ struct InstrumentView: View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
             PointWorldView(dimensionN: here.z - 1, path: $path,
-                           onReturn: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) })
+                           onReturn: { $path.pushDissolve(FeedRoute.returnCeremony(nil)) },
+                           onHold: { held in
+                               pointHolds = held
+                               travel.handVerticalToRegister(held)
+                           })
         case "centre":
             PointRevealView(path: $path)
         case "gate":
