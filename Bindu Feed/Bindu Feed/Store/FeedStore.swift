@@ -221,6 +221,9 @@ final class FeedStore: ObservableObject {
             var seenArchetypes: [String: Set<String>] = [:]
 
             let known = Set(self.stories.map(\.id))
+            // The Airtable NAME of the record `rec9BUbHMuylYiVwH`, resolved once per pass —
+            // never the literal. If he is renamed in the base this still finds him.
+            let ashName = self.ashArchetype?.name ?? "Ash"
             for c in combined {
                 guard let sid = c.storyId(in: known) else { continue }
                 // `cmts` — EVERY comment on the story, Ash's included. The seat rule measures
@@ -237,7 +240,7 @@ final class FeedStore: ObservableObject {
                 // `fetchAllAshComments`. Adding Return Answers to that fetch is what made it
                 // matter: before, it only mis-sorted a fan; now it moves the arithmetic that
                 // decides whether he is present at all.
-                guard c.archetype.caseInsensitiveCompare("Ash") != .orderedSame else { continue }
+                guard c.archetype != ashName else { continue }
                 if seenArchetypes[sid, default: []].insert(c.archetype).inserted {
                     orderedArchetypes[sid, default: []].append(c.archetype)
                 }
@@ -286,7 +289,9 @@ final class FeedStore: ObservableObject {
     /// spoken on (derived: Field Comments carry no date of their own).
     func roomArchive(for archetype: Archetype) async
         -> (comments: [FieldComment], titles: [String: String], since: String) {
-        let comments = (try? await service.fetchArchetypeComments(archetypeName: archetype.name)) ?? []
+        let comments = (try? await service.fetchArchetypeComments(
+            archetypeName: archetype.name,
+            isAsh: archetype.id == Self.ashRecordID)) ?? []
         if stories.isEmpty { await loadStories() }
         let known = Set(stories.map(\.id))
         // Only the ids that are STORIES. A threaded reply's back-link would otherwise be sent
@@ -471,7 +476,7 @@ final class FeedStore: ObservableObject {
     /// now, false if it was queued for retry.
     @discardableResult
     func postComment(storyId: String, body: String, parentId: String?, audioReference: String? = nil) async -> Bool {
-        let userArchetypeName = archetype(named: "Ash")?.name ?? "Ash"
+        let userArchetypeName = ashArchetype?.name ?? "Ash"
         do {
             _ = try await service.postAshComment(
                 storyId: storyId,
@@ -532,7 +537,7 @@ final class FeedStore: ObservableObject {
         guard !queue.isEmpty else { return }
         var remaining: [PendingComment] = []
         for c in queue {
-            let name = archetype(named: "Ash")?.name ?? "Ash"
+            let name = ashArchetype?.name ?? "Ash"
             do { _ = try await service.postAshComment(storyId: c.storyId, body: c.body, parentCommentId: c.parentId, archetypeName: name, audioReference: c.audioReference) }
             catch { remaining.append(c) }
         }
@@ -836,7 +841,7 @@ final class FeedStore: ObservableObject {
     func sealReturn(storyId: String, text: String) async {
         let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !storyId.isEmpty, !body.isEmpty else { return }
-        let who = archetype(named: "Ash")?.name ?? "Ash"       // §7: resolved, never hardcoded
+        let who = ashArchetype?.name ?? "Ash"       // by record `rec9BUbHMuylYiVwH`
         let index = (returnRings[storyId]?.count ?? 0) + 1
         do {
             // §10's sort contract: runtime-written rows live in the 900 band, always.

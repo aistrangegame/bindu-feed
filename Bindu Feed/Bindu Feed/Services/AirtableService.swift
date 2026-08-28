@@ -359,7 +359,10 @@ final class AirtableService {
         return first
     }
 
-    func fetchArchetypeComments(archetypeName: String) async throws -> [FieldComment] {
+    /// `isAsh` is decided by the CALLER, from the record `rec9BUbHMuylYiVwH` — not from the
+    /// name. It used to be `archetypeName == "Ash"`, so the identity of the voice chose which
+    /// `Type` was queried: rename the row in the base and this silently reads the wrong kind.
+    func fetchArchetypeComments(archetypeName: String, isAsh: Bool = false) async throws -> [FieldComment] {
         let escaped = archetypeName.replacingOccurrences(of: "'", with: "\\'")
         // Ash's own words are Type='Ash Comment', not 'Field Comment' — filtering on
         // Field Comment made Ash's Turning render permanently empty ("No words yet.").
@@ -369,7 +372,7 @@ final class AirtableService {
         // Reading it here — rather than through a parallel query — is what makes register 2's
         // sub-depth real and what turns the legend's `none twice` by itself: `RoomStoryGroup`
         // simply finds two items where it has only ever found one.
-        let typeClause = archetypeName == "Ash"
+        let typeClause = isAsh
             ? "OR({Type}='Ash Comment',{Type}='Return Answer')"
             : "{Type}='Field Comment'"
         let filter = "AND(\(typeClause),{Status}='Live',{Archetype}='\(escaped)')"

@@ -199,7 +199,13 @@ struct RiteGatheringView: View {
         let v = speaking[i]
         let count = lines(v).count
         let dur = 4.0 + Double(count) * 3.6
-        soundEngine.riteVoice(hz: v.hz, dur: dur)
+        // Each presence in ITS OWN BODY. `riteVoice` gave all ten the same sine-plus-octave
+        // at whatever Hz was passed — the eleven CHAR timbres existed and nothing read them.
+        if let k = RoomKey(rawValue: v.key.lowercased()) {
+            soundEngine.presence(k, dur: dur)
+        } else {
+            soundEngine.riteVoice(hz: v.hz, dur: dur)
+        }
     }
 
     private func tap() {

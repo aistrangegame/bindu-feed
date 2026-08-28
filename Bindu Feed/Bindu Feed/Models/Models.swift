@@ -182,7 +182,9 @@ struct FieldComment: Identifiable, Hashable {
         body.trimmingCharacters(in: .whitespacesAndNewlines) == "·"
     }
 
-    var isAsh: Bool { type == "Ash Comment" || archetype == "Ash" }
+    /// His words are identified by the ACT that produced them, not by a name. `Return Answer`
+    /// is one of Ash's kinds — see §10's Type-encodes-the-act rule.
+    var isAsh: Bool { type == "Ash Comment" || type == "Return Answer" }
 
     init(from record: AirtableRecord) {
         let f = record.fields

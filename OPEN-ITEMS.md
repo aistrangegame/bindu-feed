@@ -159,6 +159,37 @@ stood at once. `#where` is the design's object and names every register; the sea
 register's content and offers the way in. The seam keeps its door and drops the repeat.
 (`"stand inside ›"` is not in any design file — noted, kept as the only affordance there.)
 
+### 2.1 · `VoiceCharacter` — WIRED. Pass 7 had shipped without its content.
+
+Eleven `CHAR` timbres, zero consumers: the bed split landed and the voices never did, so every
+presence sounded identical — a sine-plus-octave at whatever Hz the caller passed.
+
+`CeremonySynth.presence(VoiceCharacter)` now renders the body term for term: partials summed
+and normalised on the voice's own wave, `vib` bending pitch, `gliss` sliding it, `flicker`
+breathing the amplitude, `air` adding Shweta's band of breath, `shimmer` beating Karishma's
+third partial, and eleven pan positions. Phase buffers allocated once outside the render
+block — §15's discipline holds.
+
+Pitch from VOICES, body from CHAR, and the two disagree on four voices. Routed at the Rite's
+gathering (each presence in its own body) and at the Rooms' descent (the voice whose archive
+he is opening). Walked: Shweta — the quietest at `gain 0.012`, `atk 4.0` — opens without a
+graph fault.
+
+### 2.2 · Ash by string, nine sites — CLOSED
+
+All routed through `ashArchetype` / `rec9BUbHMuylYiVwH`. Three of note:
+
+- **`sealReturn`'s comment said `§7: resolved, never hardcoded` while calling
+  `archetype(named:)` — a name lookup. Deleted.** A comment describing code it does not match
+  is the empty-body fault in prose: it reads as a guarantee and is an assertion.
+- **`AirtableService:372`** decided which `Type` to query from `archetypeName == "Ash"`, so the
+  voice's identity chose the query shape — rename the row and it silently reads the wrong kind.
+  `isAsh` is now decided by the caller from the record.
+- **`FieldComment.isAsh`** tested `archetype == "Ash"`; now tests the ACT
+  (`Ash Comment` or `Return Answer`), per §10's Type-encodes-the-act rule.
+
+Verified: no identity is resolved by string anywhere in the app.
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed

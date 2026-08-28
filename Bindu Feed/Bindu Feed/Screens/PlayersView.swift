@@ -16,7 +16,9 @@ struct PlayersView: View {
         "Bindu", "Gaia", "Sid", "Arch", "Sakshi", "Karishma", "Ashrey", "Lalita"
     ]
     private static let rootNames: Set<String> = ["Neev", "Shweta"]
-    private static let ashName = "Ash"
+    /// The eleventh voice is found by RECORD. §10: nothing in the app resolves a voice by
+    /// name — the display string is device-local and changeable at any time.
+    private static let ashRecordID = "rec9BUbHMuylYiVwH"
 
     private var lenses: [Archetype] {
         // Preserve the canonical lens order regardless of Airtable Sort.
@@ -32,7 +34,7 @@ struct PlayersView: View {
     }
 
     private var ash: Archetype? {
-        store.archetypes.first { $0.name == Self.ashName }
+        store.archetypes.first { $0.id == Self.ashRecordID }
     }
 
     private let columns = [

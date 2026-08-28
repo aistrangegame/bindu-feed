@@ -241,7 +241,7 @@ struct UniverseView: View {
                     }
                     if stats.commentCount > stats.archetypes.count + 1 {
                         let ms = hash(s.id + "ash")
-                        motes.append(UMote(color: store.archetype(named: "Ash")?.color ?? BinduTheme.colorAsh,
+                        motes.append(UMote(color: store.ashArchetype?.color ?? BinduTheme.colorAsh,
                                            per: 4 + ms * 20, ph: ms * 6.2831, orbitMul: 3.4, size: 1.5, wobble: false))
                     }
                 }

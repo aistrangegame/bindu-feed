@@ -20,6 +20,9 @@ enum CeremonySynth {
     case sine        // pure tone
     case sineOctave  // sine + a near-octave partial (the choir voice)
     case bowl        // struck-bowl partials (thresholds, the Sealing bowl)
+    /// ONE PRESENCE, IN ITS OWN BODY — `field-sound.js:13-25 CHAR`. Pitch comes from the
+    /// VOICES table and never from here; this is only how that voice SOUNDS.
+    case presence(VoiceCharacter)
 }
 
 /// A one-shot bloom: sin-ease up to `peak` over `attack`, exponential decay over
@@ -44,6 +47,15 @@ final class CeremonyVoice {
         var partialPhase: Double = 0
         var sampleIndex: Int = 0
         var alreadyFlagged = false
+
+        // Per-partial phase, allocated ONCE here and only mutated in the render block —
+        // the Sound Layer's render discipline (§15): no allocation on the audio thread.
+        let char: VoiceCharacter? = { if case .presence(let c) = synth { return c } else { return nil } }()
+        var partialPhases = [Double](repeating: 0, count: char?.partials.count ?? 0)
+        var bodyPhase: Double = 0            // flicker / vib / shimmer LFO
+        var noiseState: UInt32 = 0x9E3779B9  // air, for Shweta alone
+        let panL = char.map { 0.5 - $0.pan * 0.5 } ?? 0.5
+        let panR = char.map { 0.5 + $0.pan * 0.5 } ?? 0.5
 
         let attackSamples = max(1, Int(attackSeconds * sampleRate))
         let releaseSamples = max(1, Int(releaseSeconds * sampleRate))
@@ -88,11 +100,44 @@ final class CeremonyVoice {
                     raw = (sin(phase) + sin(partialPhase) * 0.28) / 1.28
                 case .bowl:
                     raw = (sin(phase) + sin(phase * 2.756) * 0.5 + sin(phase * 5.404) * 0.25) / 1.75
+                case .presence(let c):
+                    // THE BODY, term for term. `vib` bends the pitch, `gliss` slides it, the
+                    // partials sum and normalise, `flicker` breathes the amplitude, `air` adds
+                    // Shweta's band of breath and `shimmer` beats Karishma's third partial.
+                    bodyPhase += 2.0 * .pi * 1.0 / sampleRate
+                    let t = Double(sampleIndex) / sampleRate
+                    var bend = 1.0
+                    if let v = c.vib { bend *= 1 + 0.004 * sin(2.0 * .pi * v * t) }
+                    if let g = c.gliss { bend *= 1 + (g - 1) * min(1, t / 3) }
+                    var sum = 0.0, norm = 0.0
+                    for (k, m) in c.partials.enumerated() {
+                        partialPhases[k] += 2.0 * .pi * (hz * m * bend) / sampleRate
+                        if partialPhases[k] >= 2.0 * .pi { partialPhases[k] -= 2.0 * .pi }
+                        let w: Double
+                        switch c.wave {
+                        case .sine: w = sin(partialPhases[k])
+                        case .triangle:
+                            let pp = partialPhases[k] / (2.0 * .pi)
+                            w = 4.0 * abs(pp - 0.5) - 1.0
+                        }
+                        let a = c.shimmer && k == c.partials.count - 1
+                            ? 0.5 + 0.5 * sin(2.0 * .pi * 0.21 * t)     // the unearned gift, arriving
+                            : 1.0
+                        sum += w * a; norm += a
+                    }
+                    raw = norm > 0 ? sum / norm : 0
+                    if let f = c.flicker { raw *= 0.82 + 0.18 * sin(2.0 * .pi * f * t) }
+                    if let air = c.air {
+                        noiseState = noiseState &* 1_664_525 &+ 1_013_904_223
+                        raw += (Double(noiseState >> 8) / 8_388_608.0 - 1.0) * air
+                    }
                 }
 
+                var lGain = 1.0, rGain = 1.0
+                if case .presence = synth { lGain = panL * 2; rGain = panR * 2 }
                 let s = Float(raw * peak * env)
-                bufL?[frame] = s
-                bufR?[frame] = s
+                bufL?[frame] = Float(Double(s) * lGain)
+                bufR?[frame] = Float(Double(s) * rGain)
                 sampleIndex += 1
             }
             return noErr

@@ -262,10 +262,12 @@ struct RoomView: View {
                 one = max(0, archive.stories[story].items.firstIndex(where: { $0.id == target.id }) ?? 0)
                 sub = 1
                 armed = nil
-                soundEngine.riteThreshold(hz: key?.hz ?? 220, dur: 3)
+                // the voice whose archive this is, in its own body
+                if let k = key { soundEngine.presence(k, dur: 3) }
+                else { soundEngine.riteThreshold(hz: 220, dur: 3) }
             } else {
                 armed = hit.realIndex
-                soundEngine.riteThreshold(hz: (key?.hz ?? 220) * 0.5, dur: 1.4)
+                soundEngine.riteThreshold(hz: (key?.hz ?? 220) * 0.5, dur: 1.4)   // arming: not a voice
             }
             return
         }

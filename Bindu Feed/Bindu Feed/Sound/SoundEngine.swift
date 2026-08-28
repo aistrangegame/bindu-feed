@@ -509,6 +509,25 @@ final class SoundEngine: ObservableObject {
         )
     }
 
+    /// ONE PRESENCE SPEAKS, in its own body and at its own pitch.
+    ///
+    /// This is what Pass 7 was for and what it shipped without: `VoiceCharacter` held all
+    /// eleven `CHAR` timbres and **nothing read it**. The bed split landed and the voices
+    /// never did, so every presence sounded identical — a sine-plus-octave at whatever Hz the
+    /// caller happened to pass.
+    ///
+    /// Pitch from VOICES (`RoomKey.hz`), body from CHAR. The two tables disagree on four
+    /// voices and only one of them is the pitch; see §10.
+    func presence(_ key: RoomKey, dur: Double? = nil) {
+        guard let c = VoiceCharacter.of(key.rawValue) else { return }
+        playCeremony(
+            CeremonyVoice(hz: key.hz, peak: c.gain * 2.6,     // CHAR gains are bus-relative
+                          attackSeconds: c.atk, releaseSeconds: dur ?? c.rel,
+                          synth: .presence(c)),
+            maxWait: (dur ?? c.rel) + c.atk + 1
+        )
+    }
+
     /// The Sealing bowl — struck once, long decay while the bed holds.
     func riteBowl(hz: Double) {
         playCeremony(

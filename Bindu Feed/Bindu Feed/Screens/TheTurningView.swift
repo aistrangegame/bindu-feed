@@ -377,7 +377,7 @@ struct TheTurningView: View {
 
             wordsContent
 
-            if archetype.name == "Ash" {
+            if archetype.id == FeedStore.ashRecordID {
                 ashramVoiceLink
                     .padding(.horizontal, BinduTheme.space20)
                     .padding(.top, 18)
