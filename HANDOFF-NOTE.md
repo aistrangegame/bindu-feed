@@ -255,6 +255,20 @@ from a quoted one. The narrowed matcher is the only trustworthy one, and it is t
 history that predates the narrowing as unverified, and re-run it with
 `Tools/check_authored.py`.**
 
+**Three drift checks now, not two.** `check_authored.py` proves authored strings present.
+`check_rendered.py` proves rendered strings authored-or-recorded. `check_citations.py`
+proves a cited line still says what the prose claims it says — because **documents drift the
+same way code does and nothing greps them.** Three got through this build: a stale §6 note,
+a stale `LightView` header, and §10's own citation of a line that turned out to be
+`touch:function(){this.touches++;}`. A line number alone cannot be verified; a line number
+plus its words can, so §10 now quotes what it cites. 57 citations, 4 checkable, 0 drifted —
+the coverage number is the honest one and it goes up as citations are converted.
+
+**One thing the comp's numbers cannot carry.** `#carry` at the comp's `bottom:54` landed on
+the app's descend door at `bottom:34` — an element the comp does not have. Raised to 118.
+**The comp's coordinates assume the comp's surfaces**, and copying a number into a screen
+that has one more thing on it reproduces the collision the number was chosen to avoid.
+
 **Both halves now run from a list.** `check_authored.py` proves authored strings PRESENT
 (the backward half). `check_rendered.py` proves rendered strings AUTHORED-or-recorded (the
 forward half) — 985 rendered · 850 authored · 102 APP-OWN · 25 NON-UI · 5

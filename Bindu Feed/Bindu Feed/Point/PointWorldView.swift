@@ -320,8 +320,14 @@ struct PointDescentDoor: View {
                         Text("descending…").spaceMonoTracked(8, em: 0.24)
                             .foregroundStyle(BinduTheme.inkPrimary.opacity(0.3)).padding(.bottom, 34)
                     } else {
+                        // `point-levels.js:107` — `<button id="descendBtn">descend onto this
+                        // star</button>`. The design DREW this surface and it is not silent
+                        // here, so the authored label is the only correct string. It had been
+                        // "▽ DESCEND ONE LAYER DEEPER", invented — the seventh instance of an
+                        // invented instructional string standing where an authored one belongs,
+                        // and the first found by the forward check rather than by memory.
                         Button { Task { await descend() } } label: {
-                            Text("▽ DESCEND ONE LAYER DEEPER").spaceMonoTracked(10, em: 0.2)
+                            Text("descend onto this star").spaceMonoTracked(10, em: 0.2)
                                 .foregroundStyle(hue)
                         }
                         .buttonStyle(.plain).padding(.bottom, 34)

@@ -117,7 +117,7 @@
 "s": "```json",
 "sites": [
 "Bindu Feed/Bindu Feed/Point/ApertureView.swift:361",
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:497"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:503"
 ]
 },
 {
@@ -671,7 +671,7 @@
 {
 "s": "Carry the one line that landed.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:448"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:454"
 ]
 },
 {
@@ -847,6 +847,12 @@
 "sites": [
 "Bindu Feed/Bindu Feed/Point/PointContent.swift:314",
 "Bindu Feed/Bindu Feed/Point/PointContent.swift:408"
+]
+},
+{
+"s": "descend onto this star",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:330"
 ]
 },
 {
@@ -1272,7 +1278,7 @@
 {
 "s": "Go one true layer deeper than the held reading -- material it did not include.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:465"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:471"
 ]
 },
 {
@@ -2273,7 +2279,7 @@
 {
 "s": "One breath. Feet on the ground. Eyes soft.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:447"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:453"
 ]
 },
 {
@@ -3233,7 +3239,7 @@
 {
 "s": "The deeper field is quiet just now -- this is the held knowing.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:445"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:451"
 ]
 },
 {
@@ -4860,7 +4866,7 @@
 {
 "s": "This star is seeded, not yet walked -- this is his FIRST TRUE MEETING with the topic: bring its actual substance accurately from its real tradition or science, going well beyond the held reading.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:464"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:470"
 ]
 },
 {
@@ -5947,7 +5953,7 @@
 {
 "s": "\u2039 ascend",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:387"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:393"
 ]
 },
 {
@@ -5968,12 +5974,6 @@
 "s": "\u21a9 In reply to \u2026",
 "sites": [
 "Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:295"
-]
-},
-{
-"s": "\u25bd DESCEND ONE LAYER DEEPER",
-"sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:324"
 ]
 },
 {

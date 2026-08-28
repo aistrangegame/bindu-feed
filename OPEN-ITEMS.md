@@ -541,6 +541,18 @@ R1 was the one that changed what a first reader meets, and it is closed. R2 and 
 **enumerated open, not in progress** — sized so the scope call can be made, and left alone
 until it is.
 
+## D⁗ · The five instructional strings, ruled by one test
+
+**Did the design draw this surface?** That is the whole test, and it replaces the blanket
+ban on imperatives I had been applying. The design instructs where it chooses to — the
+eighteen world cues are authored imperatives, and the Light says `touch once`.
+
+| string | did the design draw the surface? | ruling |
+|---|---|---|
+| `▽ DESCEND ONE LAYER DEEPER` | **Yes, and it is not silent.** `point-levels.js:107` — *"descend onto this star"* | **PORTED.** Not deleted: the premise that it sat on the Rooms' register 2 was off — it is the Point's star reading, so `The Rooms v4.html:1054` does not reach it. But the design drew it *and gave it words*, so the authored label is the only correct string. Seventh invented instructional string found, and the first found by the forward check rather than by memory. |
+| `hold for depth` | **No.** `Story Detail.html` is referenced once — `The Universe v3.html:1571` — and does not exist in the bundle. The design names the destination and never draws it. | **APP-OWN-INSTRUCTIONAL.** No authored silence to honour, no affordance to repair. |
+| `WRITE, THEN HOLD TO RELEASE` · `HOLD — LET IT RISE` · `HOLD TO RELEASE INTO THE FIELD` | **No.** The design has no in-app writing surface for Ash at all. | **APP-OWN-INSTRUCTIONAL**, and already minimal: the three are one `hintText` state machine showing one line at a time — the same shape as the design's own world cues. Kept visible rather than laundered into plain `APP-OWN`. |
+
 ## D‴ · Authored, no trigger — the eight cues that wait on a mechanic
 
 Not a string problem. Each of these is verbatim in the design and absent from the app
