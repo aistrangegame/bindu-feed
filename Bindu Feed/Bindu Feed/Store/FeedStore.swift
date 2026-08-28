@@ -800,6 +800,7 @@ final class FeedStore: ObservableObject {
             storyId: story.id, record: record,
             returnCount: ringCount,
             days: ReturnRing.days(since: firstMetDay),
+            ringDays: rings.map(\.days),          // oldest first — each ring's own age
             firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay),
             audioReference: sealed.audioReference,
             roomRGB: UniGeo.hx(room?.hexColor ?? "#9B6BD6"))

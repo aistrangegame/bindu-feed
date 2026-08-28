@@ -8,7 +8,19 @@ import SwiftUI
 // governs every material. Nothing counts; everything deepens.
 struct ReturnStrata: View {
     var rings: Int              // how many returns (aged rings) — the strata's depth
-    var age: Double             // 0 new → 1 old (loveliest); warms the whole field
+    var age: Double             // the STORY's age — warms the whole field (wash, grain, breath)
+    /// EACH RING'S OWN AGE, indexed to match the draw loop: `[i]` is the ring at radius `i`,
+    /// so `[n−1]` is the outermost and newest. Empty falls back to position.
+    ///
+    /// `return-strata.js:100` derives `rel` from the INDEX — `(n−1−i)/(n−2)` — and then hangs
+    /// the colour, the bloom and the craquelure on it. That is a proxy for age that holds only
+    /// if returns are evenly spaced in time. Two returns a day apart and a third two years
+    /// later draw as evenly aged, and §10 is explicit: **age comes from days, never from
+    /// rank.** It is `age = returnCount/5` again, one layer in.
+    ///
+    /// So position keeps what position means — radius, rotation rate, what sits on top — and
+    /// DAYS decide what age means: bone → amber → deep gold, the bloom, the craquelure.
+    var ringAges: [Double] = []
     var camY: Double = 0.42
 
     private static let BONE: [Double] = [228, 220, 205]
@@ -69,16 +81,36 @@ struct ReturnStrata: View {
         for i in stride(from: n - 1, through: 1, by: -1) {
             let R = (8 + Double(i) * gap) * s
             if R < 0.6 { continue }
-            let rel = n <= 2 ? 1.0 : max(0, min(1, Double(n - 1 - i) / Double(n - 2)))   // 0 newest · 1 oldest
+            // ORDER — where this ring sits in the strata. Never its age.
+            let ord = n <= 2 ? 1.0 : max(0, min(1, Double(n - 1 - i) / Double(n - 2)))
+            // AGE — what this ring has actually served. `rel` is the name the design gives the
+            // quantity the colour reads, so it keeps the name and changes its source.
+            let rel = i < ringAges.count ? ringAges[i] : ord
             let cc = mixc(Self.BONE, rel > 0.62 ? Self.DEEP : Self.AMBER, pow(rel, 0.72))
             let ph = (sin(t * 2 * .pi / (bs * (1 + rel * 0.5)) + Double(i) * 0.8) + 1) / 2
-            let rot = t * (0.004 + 0.026 * pow(1 - rel, 1.6))       // an orrery of selves, each its own rate
+            let rot = t * (0.004 + 0.026 * pow(1 - ord, 1.6))       // an orrery of selves, each its own rate
             let al = 0.13 + rel * 0.30 + ph * 0.06
             let gapLen = rel > 0.35 && rnd(Double(i) * 17) > 0.62 ? 0.035 + rnd(Double(i) * 7) * 0.05 : 0
             let wob = 0.35 + rel * 0.5 + 0.18 * sin(t * 0.21 + Double(i))
             ctx.stroke(ringPath(cx, cy, R, wob, Double(i) * 3.7, rot, gapAt: rnd(Double(i) * 31) * 0.9, gapLen: gapLen),
                        with: .color(col(cc, al)), lineWidth: 0.9 + rel * 1.5)
             // bloom — only the aged glow; the new ring is the plainest thing on the screen
+            // CRAQUELURE — `return-strata.js:50-60`, *"fine radial cracks earned by age, never
+            // drawn on the new ring."* Never ported; the app's strata had no cracks at all.
+            // Gated on AGE now that age is a real quantity: a ring one day old shows none, and
+            // it cannot borrow them from an older neighbour's position.
+            if rel > 0.5 && R > 18 {
+                for k in 0..<7 {
+                    let u = rnd(Double(i) * 13 + Double(k) * 7.7)
+                    let ang = u * 2 * .pi
+                    let len = 2 + rnd(Double(i) * 5 + Double(k)) * 5
+                    let r0 = R - len * 0.5, r1 = R + len * 0.5
+                    var crack = Path()
+                    crack.move(to: CGPoint(x: cx + cos(ang) * r0, y: cy + sin(ang) * r0))
+                    crack.addLine(to: CGPoint(x: cx + cos(ang) * r1, y: cy + sin(ang) * r1))
+                    ctx.stroke(crack, with: .color(col(cc, 0.05 + rel * 0.06)), lineWidth: 0.6)
+                }
+            }
             if rel > 0.42 && R > 6 {
                 ctx.fill(Path(ellipseIn: CGRect(x: cx - R * 1.09, y: cy - R * 1.09, width: R * 2.18, height: R * 2.18)),
                          with: .radialGradient(Gradient(stops: [

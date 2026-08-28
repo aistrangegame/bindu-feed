@@ -48,7 +48,11 @@ struct ReturnView: View {
             // open: a story sealed three years ago and returned to once read brand new,
             // while five returns in one week read as a decade old. `ReturnAge.of(days:)` is
             // `return-strata.js:20-23` verbatim — `clamp(pow(days/1095, 0.55))`.
-            ReturnStrata(rings: storyData.returnCount, age: storyData.age)
+            // Per-ring ages, indexed to the draw loop: `[i]` is the ring at radius `i`, so the
+            // outermost/newest sits last. `ringDays` is oldest-first, and the innermost ring is
+            // `i == 1`, so it lines up with a single-slot offset.
+            ReturnStrata(rings: storyData.returnCount, age: storyData.age,
+                         ringAges: [0] + storyData.ringDays.map { ReturnAge.of(days: $0).a })
 
             content.transition(.opacity)
 

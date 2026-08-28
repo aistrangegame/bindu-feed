@@ -196,6 +196,9 @@ struct ReturnStoryData {
     var days: Int = 0
     /// `age` is a function of `days` and of nothing else.
     var age: Double { ReturnAge.of(days: days).a }
+    /// Each ring's own days, oldest first — one per sealed return. The strata age them
+    /// individually; the story's `days` above only warms the field.
+    var ringDays: [Int] = []
     var firstMet: String = ReturnCanon.firstMetDate(fromDay: RiteCanon.date)  // "you first met this · <date>"
     var audioReference: String? = nil   // Movement IV — the kept voice of the sealed self, if any
     var roomRGB: [Double] = [155, 107, 214]   // the room colour as [r,g,b] 0…255, for the four-layer fall

@@ -230,6 +230,35 @@ reading); the reading keeps only the hit-blocking.
 the fourth shape, made by the tool meant to clean up. The earlier empty-body sweep found only
 `duckBreath` because it ran before this existed: **a sweep is a snapshot, not a guarantee.**
 
+### 2.3 · per-ring age — CLOSED, and the design's own `rel` was the rank fault
+
+`return-strata.js:100` derives `rel` from the INDEX — `(n−1−i)/(n−2)` — then hangs the colour,
+the bloom and the craquelure on it. That is a proxy for age which holds only if returns are
+evenly spaced in time. **It is `age = returnCount/5` one layer in**, and §10 is explicit: age
+comes from days, never from rank.
+
+Split: **position keeps what position means** (radius, rotation rate, what sits on top);
+**days decide what age means** (bone → amber → deep gold, bloom, craquelure).
+
+**Craquelure was never ported at all** — `return-strata.js:50-60` exists and the app's strata
+had no cracks. Added, gated on age.
+
+Verified by computing the curve, not by looking — one real ring at one day old cannot show it:
+
+| days | a | colour | bloom | craquelure |
+|---|---|---|---|---|
+| 0 | 0.000 | rgb(228,220,205) bone | no | no |
+| 30 | 0.138 | rgb(223,205,173) | no | no |
+| 365 | 0.546 | rgb(215,180,119) | yes | yes |
+| 730 | 0.800 | rgb(173,128,63) | yes | yes |
+| 1095 | 1.000 | rgb(164,112,38) deep gold | yes | yes |
+
+Bloom crosses at ~208 days, craquelure at ~305. **Nothing wears age it has not served.**
+
+The discriminating case — two returns a day apart and a third two years later — now reads
+**0.031 / 0.021 / 0.800**. Under the position-derived `rel` it read 0.0 / 0.5 / 1.0: evenly
+aged, which is the whole fault.
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed
