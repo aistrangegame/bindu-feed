@@ -132,9 +132,6 @@ struct ContentCoordinator: View {
     private func bootstrap() {
         Task {
             await store.loadFoundation()
-            #if DEBUG
-            store.parkDebugRoomIfRequested()
-            #endif
         }
         Task { await store.loadPracticeInvitations() }
         Task { await store.loadSignals() }

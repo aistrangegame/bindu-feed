@@ -270,29 +270,6 @@ final class FeedStore: ObservableObject {
     /// The comp filled this with 117 invented days and `rnd()` flecks; this is the record.
     @Published var ashDays: [AshDay] = []
 
-#if DEBUG
-    /// TEMPORARY, for Group 1's walks. Removed with the probe when the Rooms close.
-    func parkDebugRoomIfRequested() {
-        let key = "bindu.debug.room"
-        guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty else { return }
-        UserDefaults.standard.removeObject(forKey: key)
-        switch name.lowercased() {
-        case "aperture": pendingLaunchRoute = .aperture; return
-        case "sky":      pendingLaunchRoute = .instrument(-4); return
-        case "fall":     pendingLaunchRoute = .instrument(-1); return
-        case let r where r.hasPrefix("point") && Int(r.dropFirst(5)) != nil:
-            pendingLaunchRoute = .instrument(1 + (Int(r.dropFirst(5)) ?? 1)); return
-        case "point":    pendingLaunchRoute = .instrument(8); return
-        default: break
-        }
-        if name.caseInsensitiveCompare("Ash") == .orderedSame, let a = ashArchetype {
-            pendingLaunchRoute = .home(a)
-        } else if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-            pendingLaunchRoute = .home(a)
-        }
-    }
-#endif
-
     /// A voice's whole archive, resolved in ONE bulk story lookup — never N+1 (§10).
     /// Returns the comments, a story-id → title map, and the earliest day the voice has
     /// spoken on (derived: Field Comments carry no date of their own).

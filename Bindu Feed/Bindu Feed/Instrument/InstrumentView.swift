@@ -390,13 +390,17 @@ struct InstrumentView: View {
             let opened = travel.openedSurfaces
             let bone = Color(hex: "#EDE8E3")
             let red = Color(hex: "#E5533C")
-            // register ticks — right-anchored hairlines; the current one a red needle
+            // THE NEEDLE GROWS TOWARD THE EDGE, not away from it. `#rail i` carries an
+            // explicit `width`, so the flex container's cross-axis default resolves to
+            // flex-start: every tick shares a LEFT edge at `W − 13 − 17` and the current one
+            // extends RIGHTWARD. Anchored right and grown leftward it has the same silhouette
+            // at rest and the opposite motion as he travels — and the motion is what reads.
             for reg in regs {
                 let yy = top + railH - Double(reg.i) * step
                 let d = abs(reg.i - curI)
                 let w: Double = reg.i == curI ? 17 : (d == 1 ? 13 : 9)
                 let col: Color = reg.i == curI ? red.opacity(0.85) : bone.opacity(d == 1 ? 0.42 : 0.16)
-                ctx.fill(Path(CGRect(x: edge - w, y: yy - 0.5, width: w, height: 1)), with: .color(col))
+                ctx.fill(Path(CGRect(x: left, y: yy - 0.5, width: w, height: 1)), with: .color(col))
             }
             // surface-dots (14) at the midpoints, aligned to the edge; hollow until opened
             for s in 0..<(n - 1) {

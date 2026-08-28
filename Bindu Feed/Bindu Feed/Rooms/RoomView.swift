@@ -29,9 +29,6 @@ struct RoomView: View {
     @State private var saysBottom: Double = 0
     /// THE MARK UNDER THE HAND, named but not yet opened. `realIndex`.
     @State private var armed: Int?
-    #if DEBUG
-    @State private var probe: String?
-    #endif
     @State private var story = 0
     @State private var one = 0
     /// Where each mark landed this frame, so a tap can find it. Rebuilt by `drawMap`.
@@ -125,21 +122,7 @@ struct RoomView: View {
                 .padding(.leading, 15).padding(.top, 19)
         }
         .sonicContext(.base)
-        #if DEBUG
-        .overlay(alignment: .bottom) {
-            if let d = probe {
-                Text(d).font(.system(size: 10, design: .monospaced))
-                    .foregroundStyle(.green).padding(.bottom, 40).allowsHitTesting(false)
-            }
-        }
-        #endif
         .onAppear {
-            #if DEBUG
-            if let r = UserDefaults.standard.string(forKey: "bindu.debug.reg"), let v = Double(r) {
-                UserDefaults.standard.removeObject(forKey: "bindu.debug.reg")
-                travel.park(at: v)
-            }
-            #endif
             travel.configure(holdsLat: key == .shweta)
             travel.start()
             Task { await load() }
@@ -224,20 +207,6 @@ struct RoomView: View {
                 let dd = hypot(m.x - Double(p.x), m.y - Double(p.y))
                 if dd < best { best = dd; hit = m }
             }
-            #if DEBUG
-            // 1.0 — WHICH MARK DID THIS RESOLVE TO, AND WHICH ONE WAS UNDER THE FINGER?
-            // If the two differ by ~59pt in y, the frame is the fault and the story is wrong.
-            var nearest: RoomMark?; var nd = Double.greatestFiniteMagnitude
-            for m in marks where m.real {
-                let dd = hypot(m.x - Double(p.x), m.y - Double(p.y))
-                if dd < nd { nd = dd; nearest = m }
-            }
-            let hitTitle = hit.map { h in h.storyIndex >= 0 ? archive.stories[h.storyIndex].title : "storyIndex −1" } ?? "—"
-            probe = String(format: "tap %.0f,%.0f · nearest Δ%.0f,%.0f (%.0f) · hit %@ · r%.1f",
-                           Double(p.x), Double(p.y),
-                           (nearest?.x ?? 0) - Double(p.x), (nearest?.y ?? 0) - Double(p.y), nd,
-                           hitTitle as NSString, hitRadius)
-            #endif
             // TWO STAGES, and the first one NAMES the mark.
             //
             // Measured with the frame corrected: the hit test now always resolves the nearest

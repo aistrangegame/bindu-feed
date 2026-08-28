@@ -30,16 +30,6 @@ struct PointWorldView: View {
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
 
     private func parkDebugStarIfRequested() {
-        #if DEBUG
-        guard openStar == nil,
-              let k = UserDefaults.standard.string(forKey: "bindu.debug.star"), !k.isEmpty,
-              let star = PointContent.stars.first(where: { $0.key == k }),
-              let u = dim?.universes.first(where: { $0.stars.contains(k) }) else { return }
-        // select the universe too, so the walk exercises the OVERLAY path (the world drawn
-        // behind the reading) rather than the bare-reading fallback.
-        selectedUniverse = u
-        openStar = star
-        #endif
     }
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
 
