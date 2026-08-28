@@ -184,28 +184,6 @@ struct UniverseView: View {
             cam.setAxisZ(axisZ)
             cam.start()
             rebuild()
-            #if DEBUG
-            // A WALK HOOK, NOT A SURFACE. The fall opens only on a tap that lands on a star
-            // with `R > 34 && depth > 0`, and only six of the 120 stories have any depth at
-            // all — so a scripted hand has to hit one specific hash-placed star among its
-            // neighbours, and `handleTap`'s radius grows with the approach, which makes the
-            // wrong star win. Suspending the stillness gate fixed the INTERRUPTION; this
-            // fixes the TARGETING, and without both the fall cannot be walked at all.
-            //
-            // `defaults write <bundle> bindu.debug.fallstar "The Two Who Were One"`.
-            if let want = UserDefaults.standard.string(forKey: "bindu.debug.fallstar"), !want.isEmpty {
-                UserDefaults.standard.removeObject(forKey: "bindu.debug.fallstar")
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                    if let st = starsByRegion.flatMap({ $0 }).first(where: { s in
-                        store.stories.first { $0.id == s.id }?.title
-                            .localizedCaseInsensitiveContains(want) == true
-                    }) {
-                        openFall(st)
-                        cam.parkDebugDepthIfRequested()
-                    }
-                }
-            }
-            #endif
         }
         .onChange(of: axisZ) { _, z in
             cam.setAxisZ(z)
@@ -648,7 +626,6 @@ struct UniverseView: View {
         let focus = CGPoint(x: cam.fx, y: cam.fy)
         // the world/region you are looking at = nearest to the frame centre (drives planet/fall/weather)
         let fstar = nearestStarToCenter(size, zoom: zoom, focus: focus)
-        let focusStory = fstar.flatMap { fs in store.stories.first { $0.id == fs.star.id } }
         let focusRoom = uniRooms[min(max(0, nearestRegionToCenter(focus)), uniRooms.count - 1)]
         let focusId = fstar?.star.id
 

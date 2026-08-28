@@ -267,45 +267,6 @@ final class FeedStore: ObservableObject {
     /// The comp filled this with 117 invented days and `rnd()` flecks; this is the record.
     @Published var ashDays: [AshDay] = []
 
-#if DEBUG
-    /// A WALK HOOK, NOT A SURFACE. `simctl spawn booted defaults write <bundle>
-    /// bindu.debug.room Shweta` parks that voice's room, which `RootView` then pushes the
-    /// way it pushes any other `pendingLaunchRoute`. It exists because the simulator's
-    /// synthetic touches do not drive a SwiftUI ScrollView, so the three voices below
-    /// PlayersView's fold cannot otherwise be reached on the sim. One-shot: the key is
-    /// cleared as it is read, and nothing in a release build compiles this at all.
-    func parkDebugRoomIfRequested() {
-        let key = "bindu.debug.room"
-        guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty else { return }
-        UserDefaults.standard.removeObject(forKey: key)
-        // a route keyword, or a voice's name — the same hook, one key
-        switch name.lowercased() {
-        case "aperture": pendingLaunchRoute = .aperture
-        case "sky":      pendingLaunchRoute = .instrument(-4)     // the Universe, at the sky
-        case "fall":     pendingLaunchRoute = .instrument(-1)     // the fall's register
-        case "point":    pendingLaunchRoute = .instrument(8)      // d7, where the Aperture's door is
-        // `return:<record id>` — the Return of ONE named story, not the daily rotation.
-        // Same key, one more case: the rotation is day-hashed, so a specific story cannot
-        // otherwise be walked twice in a day, which is exactly what the seat rule needs.
-        case let r where r.hasPrefix("return:"):
-            let rid = String(name.dropFirst("return:".count))
-            // `stories` is deliberately not in `bootstrap()`, so resolve it first.
-            Task { @MainActor in
-                if self.stories.isEmpty { await self.loadStories() }
-                if let st = self.stories.first(where: { $0.id == rid }) {
-                    self.pendingLaunchRoute = .returnCeremony(st)
-                }
-            }
-        case let r where r.hasPrefix("point") && Int(r.dropFirst(5)) != nil:
-            pendingLaunchRoute = .instrument(1 + (Int(r.dropFirst(5)) ?? 1))   // point1…point7 → d1…d7
-        default:
-            if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
-                pendingLaunchRoute = .home(a)
-            }
-        }
-    }
-#endif
-
     /// A voice's whole archive, resolved in ONE bulk story lookup — never N+1 (§10).
     /// Returns the comments, a story-id → title map, and the earliest day the voice has
     /// spoken on (derived: Field Comments carry no date of their own).

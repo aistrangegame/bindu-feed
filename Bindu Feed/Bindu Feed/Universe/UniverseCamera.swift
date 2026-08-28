@@ -68,24 +68,6 @@ final class UniverseCamera: ObservableObject {
     /// The mouth is open — `uni-fall.js:24`, `mouth = seg(0.84, 0.96)`.
     var atMouth: Bool { desc >= 0.84 }
 
-    #if DEBUG
-    /// A WALK HOOK, NOT A SURFACE. Parks the descent at a chosen depth so a scripted hand can
-    /// stop inside a layer. `gath` lives in `d` 0.14–0.52 and the descent's momentum —
-    /// `descV += −dy·0.00042`, damped 0.935, which integrates to about 15× the impulse —
-    /// carries a 200pt drag through the whole range in one gesture. That is faithful to the
-    /// design and simply finer than a screenshot-driven loop can steer.
-    ///
-    /// Third of three, and each fixed a different thing the fall needed: `nogate` the
-    /// interruption, `fallstar` the targeting, this the DEPTH.
-    /// `defaults write <bundle> bindu.debug.falldepth 0.32`
-    func parkDebugDepthIfRequested() {
-        let key = "bindu.debug.falldepth"
-        guard UserDefaults.standard.object(forKey: key) != nil else { return }
-        let v = UserDefaults.standard.double(forKey: key)
-        desc = max(0, min(1, v)); descV = 0
-    }
-    #endif
-
     func setInFall(_ v: Bool) {
         inFall = v
         if !v { desc = 0; descV = 0; driftX = 0; driftY = 0; mouthPull = 0; mouthMeant = false; asking = false }

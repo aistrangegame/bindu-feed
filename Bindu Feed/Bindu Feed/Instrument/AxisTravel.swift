@@ -232,21 +232,6 @@ final class AxisTravel: ObservableObject {
         // Band: `Z < −2.3`, the literal reading of "stillness at the sky's edge" (:1024) —
         // wider than the sky alone, and it is the accumulator, not the band, that holds it off.
         let still = !down && abs(zv) < 0.0016 && !registerDrifting
-        #if DEBUG
-        // A WALK HOOK, NOT A SURFACE. `defaults write <bundle> bindu.debug.nogate -bool YES`
-        // suspends the gate for scripted walks. A screenshot→compute→tap loop takes longer
-        // than the 3.33s the accumulator needs, so every multi-step approach to one specific
-        // star gets delivered to the Light half-way — which blocks the fall, and the fall is
-        // where the most unwalked geometry lives. The gate is not wrong; it is simply faster
-        // than a scripted hand. Same shape as `parkDebugRoomIfRequested`: one key, no UI, and
-        // nothing in a release build compiles this at all.
-        if UserDefaults.standard.bool(forKey: "bindu.debug.nogate") {
-            thin = 0
-            flash = Swift.max(0, flash - dt / 0.9)
-            detectCross()
-            return
-        }
-        #endif
         if still && z < -2.3 && !mem[GATE] && !crossing {
             dwell = Swift.min(1, dwell + dt * 0.30)
         } else {

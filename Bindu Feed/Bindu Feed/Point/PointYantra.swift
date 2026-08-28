@@ -52,14 +52,7 @@ final class PointYantra: ObservableObject {
     /// `YANTRA.flare()` — a crossing sends one wave out through the whole figure.
     func flare() {
         flares.append(Date().timeIntervalSinceReferenceDate)
-        #if DEBUG
-        flaresFired += 1     // sticky, so a 3.4s wave can be verified by a slower loop
-        #endif
     }
-    #if DEBUG
-    @Published private(set) var flaresFired = 0
-    #endif
-
     // MARK: - the constants
 
     /// `BAND` — the radius each enclosure lives at, in unit space, outward to inward.

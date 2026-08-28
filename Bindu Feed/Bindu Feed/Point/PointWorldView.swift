@@ -28,28 +28,8 @@ struct PointWorldView: View {
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
 
     private func parkDebugStarIfRequested() {
-        #if DEBUG
-        if openStar == nil, let s = debugStar { openStar = s }
-        #endif
     }
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
-
-    #if DEBUG
-    /// `bindu.debug.star` — park one star's READING open, by star key. The fifth key in the
-    /// same harness as `room` / `nogate` / `fallstar` / `falldepth`: no UI, DEBUG only.
-    ///
-    /// It exists because several of the seven level-1 pickers are, by design, hostile to a
-    /// scripted hand — II's stars are 10pt marks orbiting at 0.16 rad/s (a ~2% hit rate per
-    /// blind tap), I's drift away from a touch, VII's outrun it. Those pickers are the
-    /// world's own material and must not be softened to make a test pass; this reaches PAST
-    /// them to the reading, so the reading can be walked and the picker reported separately.
-    private var debugStar: PointStar? {
-        guard let k = UserDefaults.standard.string(forKey: "bindu.debug.star"), !k.isEmpty,
-              let star = PointContent.stars.first(where: { $0.key == k }),
-              dim?.universes.contains(where: { $0.stars.contains(k) }) == true else { return nil }
-        return star
-    }
-    #endif
 
     var body: some View {
         ZStack {

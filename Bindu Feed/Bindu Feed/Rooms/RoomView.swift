@@ -93,12 +93,6 @@ struct RoomView: View {
         }
         .sonicContext(.base)
         .onAppear {
-            #if DEBUG
-            if let r = UserDefaults.standard.string(forKey: "bindu.debug.reg"), let v = Double(r) {
-                UserDefaults.standard.removeObject(forKey: "bindu.debug.reg")   // one-shot
-                travel.park(at: v)
-            }
-            #endif
             travel.configure(holdsLat: key == .shweta)
             travel.start()
             Task { await load() }
