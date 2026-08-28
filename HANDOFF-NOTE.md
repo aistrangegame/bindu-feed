@@ -270,6 +270,19 @@ sweep is a snapshot.
 
 ---
 
+## Build state
+
+`BUILD SUCCEEDED`. Two pre-existing Swift warnings remain, both main-actor isolation at
+`RoomFigures.swift:68-69` (`ring`, `breath` called from a synchronous nonisolated context).
+Benign, unrelated to this pass, and deliberately not touched — changing actor isolation in a
+Canvas drawing path at handoff is the kind of change that goes subtly wrong. Worth noting
+that an earlier report of "zero warnings" was measured on a no-op incremental build; a
+forced recompile is what surfaces these.
+
+`python3 Tools/check_authored.py` exits 0.
+
+---
+
 ## One correction to the acceptance file itself
 
 `HANDOFF-VERIFICATION.md`'s Pass 4 line reads *"Bindu's room does not respond — she is
