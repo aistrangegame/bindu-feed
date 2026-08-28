@@ -157,6 +157,18 @@ struct InstrumentView: View {
             // The back affordance — pinned to the TOP via a full-height top-aligned frame (a
             // VStack+Spacer collapses to centre inside this ZStack). In the Universe the ‹ leaves
             // the sky (glides back to the Feed).
+            //
+            // TWO CHEVRONS OWNED THIS CORNER. This one and `ReadingHead`'s, stacked, while a
+            // reading was open. They are NOT redundant and neither is deletable: this one
+            // leaves the instrument (`popToRootDissolve`) or the sky; the reading's closes the
+            // reading. They are MIS-LAYERED — and stacked they are worse than ambiguous,
+            // because the one a hand reaches for first drops him out of the whole instrument
+            // when he meant "back one step".
+            //
+            // The design never has to choose: its reading is an opaque `.ovl` over the host
+            // chrome, so during a reading only the reading's own back exists. That is the same
+            // recession `#where` and `#pname` now make, on the same signal.
+            if !pointHolds {
             HStack {
                 Button {
                     if inUniverse { travel.exitToFeed() }
@@ -169,6 +181,7 @@ struct InstrumentView: View {
             }
             .padding(.horizontal, 16).padding(.top, 4)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
 
             // #where — the words for where he is. Never a number, never a progress bar.
             whereBlock
@@ -400,8 +413,22 @@ struct InstrumentView: View {
 
     // #pname — the name floats just under the particle in red mono; hidden on the Feed ground
     // and once the particle begins to become the centre (Z > 7.9).
+    //
+    // AND HIDDEN OUTRIGHT UNDER A READING, not dimmed. It is drawn at a FIXED point
+    // (`height*0.5 + 22`) while the reading scrolls past it, so it collided with a different
+    // line of body text every frame — twice in one screenshot, mid-sentence both times. The
+    // dim reached the figure and not this, because this is the instrument's chrome and not
+    // the yantra's.
+    //
+    // Hide, not dim, and the design agrees twice over: its reading is an `.ovl` at
+    // `z-index:12` over `rgba(7,8,13,.965)`, so `#pname` is simply COVERED — 0.22 is not what
+    // the design shows here, it is what a transparent app has to choose instead. And a mono
+    // caption crossing serif body text does not read as ground at any alpha; it reads as
+    // damage. The figure recedes because it is behind the words; a caption ON the words has
+    // no receded state that is honest.
     private var particleNameLabel: some View {
-        let hidden = travel.crossing || z > 7.9 || inUniverse || (here.key == "feed" && abs(z) < 0.4)
+        let hidden = travel.crossing || z > 7.9 || inUniverse || pointHolds
+            || (here.key == "feed" && abs(z) < 0.4)
         return GeometryReader { geo in
             Text(particleName(z).uppercased())
                 .font(.spaceMono(7.5)).tracking(1.5)
