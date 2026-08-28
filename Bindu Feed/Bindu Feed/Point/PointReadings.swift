@@ -611,14 +611,40 @@ private struct ReadPressing: View {
 // on his presence… a walk that returns finds the hall standing, or finds it rising, and never
 // finds it snapping."* Rise `sm(e/2.4)` over 0–2.4s · hold 1 to 3.6s · ease `sm(1−(e−3.6)/1.8)`
 // to 5.4s · then 0.
+/// THE WITHDRAWAL'S CLOCK LIVES OUTSIDE THE READING, and that is the whole point of it.
+///
+/// `world-five.js:170-172`: *"The withdrawal is a moment, not a state — so it runs on its own
+/// clock rather than on his presence. It rises, holds while he is carried out, and eases back
+/// down; a walk that returns finds the hall standing, or finds it rising, and NEVER FINDS IT
+/// SNAPPING."*
+///
+/// Built first with `backAt` as `@State` on the reading, it snapped — the reading closes at
+/// 3.0s, taking its own `.task` with it, so the hall was cut off at the top of the hold and
+/// the ease-down from 3.6→5.4s never ran. The design names that failure in its own comment.
+/// So the clock is static and the hall is drawn by the enclosure, which outlives the reading.
+enum MirrorHall {
+    static var backAt: Date?
+
+    /// rise `sm(e/2.4)` · hold 1 to 3.6s · ease `sm(1−(e−3.6)/1.8)` to 5.4s · then gone.
+    static func bk(_ now: Date = Date()) -> Double {
+        guard let t0 = backAt else { return 0 }
+        let e = now.timeIntervalSince(t0)
+        if e < 2.4 { return RoomGeo.sm(0, 1, e / 2.4) }
+        if e < 3.6 { return 1 }
+        if e < 5.4 { return RoomGeo.sm(0, 1, 1 - (e - 3.6) / 1.8) }
+        backAt = nil
+        return 0
+    }
+}
+
 private struct ReadTurning: View {
     @ObservedObject var s: PointReadingState
     let hue: Color
     let onClose: () -> Void
     @State private var turn: Double = 0          // half-turns taken
     @State private var settling = false
-    @State private var backAt: Date?             // when the guard withdrew the hall
-    @State private var bk: Double = 0
+    @State private var bk: Double = 0            // this reading's own read of the shared clock
+    @State private var withdrawing = false
 
     private var isGuard: Bool { s.star.key == "r-guard" }
 
@@ -661,10 +687,16 @@ private struct ReadTurning: View {
                             .animation(.easeOut(duration: 1.1), value: settling)
                     }
                     if !s.done, let w = word {
+                        // NOT rotated with the glass. `world-five.js:427-441` draws this in
+                        // screen space at `(cx, H-150)`; it is the world speaking, not
+                        // something printed on the pane. The rotation was inherited from the
+                        // invented "turn the glass" line it replaced, and on the guard it
+                        // made exactly the wrong claim — a mirror-written "only your own
+                        // reflection" implies a far side, which is the one thing the guard
+                        // does not have.
                         Text(w.uppercased()).spaceMonoTracked(8.5, em: 0.2)
                             .foregroundStyle(hue.opacity(0.55))
                             .frame(maxWidth: .infinity)
-                            .rotation3DEffect(.degrees(turn * 180), axis: (x: 0, y: 1, z: 0))
                     }
                     ReadingFooter(star: s.star, hue: hue)
                     Color.clear.frame(height: 90)
@@ -682,21 +714,15 @@ private struct ReadTurning: View {
             }
         }
         .scaleEffect(1 + bk * (loom - 1))
-        .task(id: backAt) {
-            guard let t0 = backAt else { return }
-            // `bk()` — rise 0→2.4s · hold to 3.6s · ease out to 5.4s · then 0, and gone.
+        .task(id: withdrawing) {
+            guard withdrawing, let t0 = MirrorHall.backAt else { return }
+            // The reading shows the rise; the ENCLOSURE shows the hold and the ease-down,
+            // because by then the reading is gone. `sendBack` — *"it withdraws the hall and
+            // carries him back out to the Surface, the gate he came in by."*
             while !Task.isCancelled {
                 let e = Date().timeIntervalSince(t0)
-                let v: Double
-                if e < 2.4 { v = RoomGeo.sm(0, 1, e / 2.4) }
-                else if e < 3.6 { v = 1 }
-                else if e < 5.4 { v = RoomGeo.sm(0, 1, 1 - (e - 3.6) / 1.8) }
-                else { v = 0 }
-                bk = v
-                // `sendBack` — *"it withdraws the hall and carries him back out to the
-                // Surface, the gate he came in by."* At the hold, he is already gone.
+                bk = MirrorHall.bk()
                 if e >= 3.0 { onClose(); return }
-                if e >= 5.4 { return }
                 try? await Task.sleep(for: .milliseconds(33))
             }
         }
@@ -708,7 +734,7 @@ private struct ReadTurning: View {
                 settling = true
                 s.give()
                 // `:161` — at the fourth give the guard withdraws the hall and sends him back.
-                if isGuard && s.revealed >= 4 { backAt = Date() }
+                if isGuard && s.revealed >= 4 { MirrorHall.backAt = Date(); withdrawing = true }
                 // it arrives mirror-written and UNFLIPS as it settles
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     withAnimation(.easeOut(duration: 1.1)) { settling = false }

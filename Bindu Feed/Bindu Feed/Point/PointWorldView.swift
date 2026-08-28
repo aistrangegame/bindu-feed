@@ -133,6 +133,20 @@ struct PointWorldView: View {
         // is open, so their own drag/scroll wins over the axis travel gesture.
         .onChange(of: openStar != nil) { _, _ in syncAxisLock() }
         .onChange(of: selectedUniverse != nil) { _, _ in syncAxisLock() }
+        // THE HALL, WITHDRAWN. Drawn here rather than in the reading because the reading is
+        // carried out at 3.0s and the withdrawal runs to 5.4s — it has to have somewhere to
+        // finish. `world-five.js:200-201`: it LOOMS (1.16) where everything else recedes.
+        .overlay {
+            if dimensionN == 5 {
+                TimelineView(.animation) { _ in
+                    let bk = MirrorHall.bk()
+                    if bk > 0 {
+                        Color(hex: "#EAFBF8").opacity(bk * 0.86)
+                            .ignoresSafeArea().allowsHitTesting(false)
+                    }
+                }
+            }
+        }
         // Released on the way out, like the fall's four scoped paths: a register that is no
         // longer mounted must never still be holding the vertical.
         .onDisappear { onHold(false) }

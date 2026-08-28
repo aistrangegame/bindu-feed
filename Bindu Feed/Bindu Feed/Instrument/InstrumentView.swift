@@ -187,9 +187,18 @@ struct InstrumentView: View {
         // made the four Universe registers mutually unreachable) and B0.3 (the dead band at
         // the Feed edge, where the axis was locked and the Universe not yet hit-testable).
         .simultaneousGesture(travelGesture)
-        // The rope from anywhere (§7.5) — a ~1.1s long-press; the particle is always here.
+        // THE ROPE, AT THE GATE — not from anywhere. This said "from anywhere (§7.5)" and
+        // fired on all fifteen registers, and the brief does not say that: R1·Q4 scopes it to
+        // *"On the Door itself, always — long-press anywhere on the threshold"* (which
+        // `DoorView.swift:172` already carries), and the instrument's own hold is the GATE's
+        // particle only — `The Point v9.html:1005-1006` opens with `if(idx!==0)return;`.
+        //
+        // Over-broad, it ate world IV. The Chamber's entire gesture is a sustained press
+        // ("press · a touch leaves nothing"), so at 1.1s the rope opened over the wall he was
+        // pressing — every time, and it looked like the reading simply refused to give.
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
+                guard here.key == "gate" else { return }
                 withAnimation(.easeInOut(duration: 0.8)) { showRope = true }
             }
         )
