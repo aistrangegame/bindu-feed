@@ -89,11 +89,23 @@ struct ApertureView: View {
             Color(hex: "#0A0803").ignoresSafeArea()
 
             // AVARANA VIII IS AN ENCLOSURE OF THE YANTRA, so the yantra is its field — not
-            // the three squares and one petal ring I sketched here first. `focus 7` is the
-            // eighth enclosure counting outward, which is where the Aperture stands.
+            // the three squares and one petal ring I sketched here first.
+            //
+            // `focus 8`, not 7. `The Point v9.html:876-909` builds ten enclosures and the
+            // FIRST is the gate, so avarana VIII is `BAND[8] = 0.125` — index 7 is avarana
+            // VII, the Dance. Counting the avaranas as if they started the array puts the
+            // Aperture one enclosure too far out, which is a coordinate, so it is measured.
+            // `:1026` also drops the camera to 0.40 for the last two, where these plates are
+            // long and want the room beneath.
+            //
+            // HUE: the Aperture's own comp declares gold (`The Aperture.html:7`
+            // `--hue:#D4A94B`, and its thumbnail is drawn gold); `The Point v9.html:871`'s
+            // DIMHUE gives index 8 `m2` lavender. The register's own comp wins for the
+            // register's own colour — flagged, not silently merged.
             PointYantraView()
                 .onAppear {
-                    PointYantra.shared.focus = 7
+                    PointYantra.shared.focus = 8
+                    PointYantra.shared.camY = 0.40
                     PointYantra.shared.hue = RoomGeo.hex("#D4A94B")
                 }
 

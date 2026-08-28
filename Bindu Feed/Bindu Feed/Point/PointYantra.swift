@@ -24,6 +24,11 @@ final class PointYantra: ObservableObject {
     /// `'walk'` or `'descend'` — the descent dims everything to 0.22 and raises the shaft.
     @Published var descending = false
     @Published var shaft: Double = 0
+    /// `The Point v9.html:929` — the camera drops to 0.40 for the last two enclosures, so the
+    /// aperture and the bindu sit above centre with room beneath them. It EASES (`+=(target-camY)*0.05`
+    /// per frame); it never snaps, because a jump here reads as the figure moving rather than him.
+    var camY: Double = 0.5
+    private var lastT: Double = 0
     /// Crossing waves, in screen space. Each is the time it was fired.
     @Published private(set) var flares: [Double] = []
 
@@ -87,6 +92,46 @@ final class PointYantra: ObservableObject {
         let f = max(0, min(Double(Self.band.count - 1), focus))
         let i = Int(f), j = min(Self.band.count - 1, i + 1)
         return Self.band[i] + (Self.band[j] - Self.band[i]) * (f - Double(i))
+    }
+
+    /// `toScreen(x, y)` — the projection every node is placed through. This is the whole of
+    /// "on its real enclosure radius": a node's position is not a ring drawn near the figure,
+    /// it is the figure's own coordinate run through the figure's own camera.
+    func toScreen(_ x: Double, _ y: Double, in size: CGSize) -> CGPoint {
+        let s = scale(size)
+        return CGPoint(x: Double(size.width) / 2 + x * s, y: Double(size.height) * camY + y * s)
+    }
+
+    /// TEN enclosures against NINE axis registers. `The Point v9.html:876-909` builds the feed
+    /// as gate · avarana I…VII · **avarana VIII, the aperture** · avarana IX, the bindu — and
+    /// `camera()` sets `setFocus(f)` from the scroll position, so enclosure index IS register
+    /// index. The app's axis carries only nine of them: the Aperture is its own route, off the
+    /// axis, so no register stands on `BAND[8]`.
+    ///
+    /// That does not make `BAND[8]` skippable — it makes it a band he PASSES THROUGH. Walking
+    /// d7 → the centre crosses the aperture's enclosure without stopping in it, which is the
+    /// literal truth of the walk. So `z 8…9` spans `focus 7…9` at double rate, and the centre
+    /// lands on `BAND[9] = 0.06` where the design puts it — not on 8, which would stand the
+    /// bindu on the aperture's ring to avoid a visible change of scale.
+    static func focus(forAxisZ z: Double) -> Double {
+        z <= 8 ? max(0, z - 1) : min(9, 7 + (z - 8) * 2)
+    }
+    /// `DIMHUE` — `The Point v9.html:871`, all ten.
+    static let dimHue = ["m1", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m2", "m7"]
+    static func hue(forEnclosure i: Int) -> [Double] {
+        let k = dimHue[max(0, min(9, i))]
+        return RoomGeo.hex(PointContent.hues[k] ?? "#EDE6D6")
+    }
+
+    /// `The Point v9.html:926-932` — one call: the camera takes its focus from where he is,
+    /// and the air takes its colour by MIXING the two enclosures he is between. The hue is a
+    /// continuous quantity along the walk, not a per-register constant that switches.
+    func setEnclosure(_ f: Double) {
+        let fc = max(0, min(9, f))
+        focus = fc
+        let i = Int(fc), j = min(9, i + 1), t = fc - Double(i)
+        let a = Self.hue(forEnclosure: i), b = Self.hue(forEnclosure: j)
+        hue = (0..<3).map { a[$0] + (b[$0] - a[$0]) * t }
     }
 
     /// `anchors(n, idx)` — where the `n` things of an enclosure sit ON it. The Universe's
@@ -163,7 +208,7 @@ final class PointYantra: ObservableObject {
     func draw(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double, breath br: Double) {
         let W = Double(size.width), H = Double(size.height)
         let s = scale(size) * (1 + 0.010 * br)
-        let cx = W / 2, cy = H * 0.5
+        let cx = W / 2, cy = H * camY
         let bandR = bandRadius()
         let dim = descending ? 0.22 : 1.0
 
@@ -252,9 +297,14 @@ final class PointYantra: ObservableObject {
         }
     }
 
-    /// Drop flares that have finished, so the array cannot grow without bound.
+    /// Per frame: ease the camera's height and drop flares that have finished, so the array
+    /// cannot grow without bound.
     func reap(_ t: Double) {
         if !flares.isEmpty { flares.removeAll { t - $0 >= 3.4 } }
+        let dt = lastT == 0 ? 1.0 / 60 : max(0, min(0.1, t - lastT))
+        lastT = t
+        let target = focus >= 7.4 ? 0.40 : 0.5      // `:929`
+        camY += (target - camY) * (1 - pow(1 - 0.05, dt * 60))
     }
 }
 

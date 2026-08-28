@@ -94,6 +94,19 @@ struct InstrumentView: View {
                 shells
             }
 
+            // THE YANTRA — one figure, behind the whole Point walk, and the camera is the
+            // walk itself. Not nine backdrops: `The Point v9.html:923-937 camera()` drives ONE
+            // figure's focus from the scroll position, so what he came through stays visible
+            // behind him and what is ahead is a faint promise at the centre.
+            //
+            // It is the enclosure the registers STAND ON, not decoration behind them — which
+            // is why `PointUniversesView` places its universes by re-projecting through this
+            // object's own `anchors()` and `toScreen()` rather than drawing its own ring.
+            if travel.z > 0.35 {
+                PointYantraView()
+                    .opacity(min(1, (travel.z - 0.35) / 0.5))
+            }
+
             // The register content, brightening as he settles into it. The Universe band
             // (−4…−1) stays continuously present as one camera (fading only at its feed/light
             // edges) so the flowing camera doesn't pulse dim between the four registers.
@@ -189,6 +202,9 @@ struct InstrumentView: View {
         }
         .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
+            // The axis IS the yantra's camera. `focus(forAxisZ:)` carries the ten-against-nine
+            // arithmetic; the hue mixes between the two enclosures he is between.
+            PointYantra.shared.setEnclosure(PointYantra.focus(forAxisZ: travel.z))
         }
         .onChange(of: travel.crossing) { _, crossing in
             if crossing {                                       // a give / the passage fires
@@ -201,6 +217,14 @@ struct InstrumentView: View {
             else if thin <= 0.01 { thinSounded = false }
         }
         .onAppear {
+            // The camera must be set BEFORE the first frame, not only when z next changes.
+            // `onChange` fires on transitions; a launch parked at a register (the deep links,
+            // and `startZ` generally) has no transition, so without this the whole Point walk
+            // draws at `BAND[0]` — the outermost enclosure — no matter which register he is
+            // standing in, and the universes stand on that ring because it is the one the
+            // figure is actually drawing. Measured: the bhupura came out 145pt half-width at
+            // avarana III, which is `s≈99` — `BAND[0]`, not `BAND[3]`'s 217.
+            PointYantra.shared.setEnclosure(PointYantra.focus(forAxisZ: travel.z))
             travel.onCross = { reg in
                 soundEngine.axisTrail(hz: reg.hz)               // the register forming / left behind
                 if reg.key == "gate" {

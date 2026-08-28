@@ -111,31 +111,32 @@ struct PointUniversesView: View {
     let dim: PointDimension
     let hue: Color
     let onSelect: (PointUniverse) -> Void
+    /// OBSERVED, not read. The nodes' places are a function of the camera, so when the camera
+    /// moves they must move with it — a snapshot taken once at body-evaluation leaves them on
+    /// whatever enclosure happened to be in focus that instant.
+    @ObservedObject private var yantra: PointYantra = .shared
 
     var body: some View {
         GeometryReader { geo in
-            let W = geo.size.width, H = geo.size.height
-            let cx = W / 2, cy = H * 0.52
-            let R = min(W, H) * 0.30
-            let n = dim.universes.count
+            // THE UNIVERSES STAND ON THE ENCLOSURE. `The Point v9.html:954,967` —
+            // `anchors(n, i)` gives each universe its place in the FIGURE's own coordinates
+            // and `toScreen` runs it through the FIGURE's own camera. Nothing here chooses a
+            // radius; the radius is `BAND[i] * 0.72` scaled by the camera that is drawing the
+            // yantra this same frame, so a node cannot drift off the ring it is standing on.
+            //
+            // What was here before: a hand-drawn ring at `min(W,H)*0.30`, a thread between the
+            // nodes, and a red dot at `H*0.52`. All three were stand-ins for the enclosure,
+            // and none is in the design's node layer (`buildNodes` appends buttons and nothing
+            // else) — the ring, the thread's chords and the centre are the yantra's own. Kept,
+            // they would draw a second ring of the wrong radius over the real one.
+            //
+            // The frame must be the yantra's frame: the caller applies `.ignoresSafeArea()`
+            // OUTSIDE this GeometryReader, so `geo.size` is the physical 402×874 the yantra's
+            // canvas also draws into. Both read the same origin or the nodes sit ~60pt low.
+            let pts = PointYantra.anchors(dim.universes.count, dim.n)
+                .map { yantra.toScreen($0.x, $0.y, in: geo.size) }
             ZStack {
-                // the enclosure ring + the connecting THREAD through the universes + the centre point
-                Canvas { ctx, size in
-                    ctx.stroke(Path(ellipseIn: CGRect(x: cx - R, y: cy - R, width: R * 2, height: R * 2)),
-                               with: .color(hue.opacity(0.13)), lineWidth: 0.8)
-                    var thread = Path()
-                    for i in 0..<n {
-                        let a = nodeAngle(i, n)
-                        let p = CGPoint(x: cx + cos(a) * R, y: cy + sin(a) * R)
-                        if i == 0 { thread.move(to: p) } else { thread.addLine(to: p) }
-                    }
-                    if n > 2 { thread.closeSubpath() }
-                    ctx.stroke(thread, with: .color(hue.opacity(0.10)), lineWidth: 0.6)   // two are one, all are threaded
-                    ctx.fill(Path(ellipseIn: CGRect(x: cx - 3.5, y: cy - 3.5, width: 7, height: 7)),
-                             with: .color(Color(hex: "#C0392B").opacity(0.85)))            // the point at the centre
-                }
                 ForEach(Array(dim.universes.enumerated()), id: \.element.id) { i, u in
-                    let a = nodeAngle(i, n)
                     Button { onSelect(u) } label: {
                         VStack(spacing: 3) {
                             universeMark(PointWorlds.status(u))
@@ -145,7 +146,7 @@ struct PointUniversesView: View {
                         }
                     }
                     .buttonStyle(.plain)
-                    .position(x: cx + cos(a) * R, y: cy + sin(a) * R)
+                    .position(pts[min(i, pts.count - 1)])
                 }
                 VStack(spacing: 6) {
                     Text("\(dim.roman) · \(dim.name.uppercased())")
@@ -167,7 +168,10 @@ struct PointUniversesView: View {
             }
         }
     }
-    private func nodeAngle(_ i: Int, _ n: Int) -> Double { -Double.pi / 2 + Double(i) * (2 * Double.pi / Double(max(n, 1))) }
+    // `nodeAngle` deleted with the ring it served. Note it was NOT the design's angle either:
+    // `anchors` is `-π/2 + (i + 0.5)·τ/n + (idx odd ? 0.16 : 0)` — a HALF-STEP offset so no
+    // universe sits on the vertical axis where the figure's own apex already is, plus a small
+    // rotation on odd enclosures so consecutive walks don't stack their nodes in one place.
 
     @ViewBuilder private func universeMark(_ st: Int) -> some View {
         switch st {
