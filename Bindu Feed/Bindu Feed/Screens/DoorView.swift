@@ -68,7 +68,7 @@ struct DoorView: View {
             if weather == .loading {
                 // Unmet only if today is NOT met AND the Rite hasn't been dismissed today —
                 // once you skip it, the Door stops forcing it (the Rite stays in the turn).
-                let met = await store.checkTodayMet()
+                let met = await store.checkTodayMet()   // also publishes `store.todayMet`
                 let dismissed = store.isRiteDismissedToday()
                 let isUnmet = !(met || dismissed)
                 if isUnmet {

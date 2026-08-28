@@ -141,7 +141,7 @@
 {
 "s": "a dot in the sky",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:431"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:474"
 ]
 },
 {
@@ -183,13 +183,13 @@
 {
 "s": "a light in the room",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:432"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:475"
 ]
 },
 {
 "s": "a light that has not yet risen",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:430"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:473"
 ]
 },
 {
@@ -599,13 +599,13 @@
 {
 "s": "bindu.met.\u2026",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:623"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:624"
 ]
 },
 {
 "s": "bindu.rite.dismissed.\u2026",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:624"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:625"
 ]
 },
 {
@@ -990,7 +990,7 @@
 {
 "s": "enter the feed \u203a",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:691"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:734"
 ]
 },
 {
@@ -1084,6 +1084,12 @@
 ]
 },
 {
+"s": "everything that has met you",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:353"
+]
+},
+{
 "s": "everything that was already here \u2192",
 "sites": [
 "Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:36"
@@ -1099,6 +1105,12 @@
 "s": "Everything you built with grip, you could have built with trust -- and it would have cost you none of the nights.",
 "sites": [
 "Bindu Feed/Bindu Feed/Light/LightCanon.swift:138"
+]
+},
+{
+"s": "everything you have gathered",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:354"
 ]
 },
 {
@@ -1657,7 +1669,7 @@
 {
 "s": "Inward to the one.",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:956"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:974"
 ]
 },
 {
@@ -1693,7 +1705,7 @@
 {
 "s": "it holds until you stop meaning it",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:546"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:589"
 ]
 },
 {
@@ -2494,6 +2506,18 @@
 ]
 },
 {
+"s": "pull down \u00b7 outward",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:353"
+]
+},
+{
+"s": "pull up \u00b7 inward",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:354"
+]
+},
+{
 "s": "Qalb -- the heart-organ of the Sufi Lataif",
 "sites": [
 "Bindu Feed/Bindu Feed/Point/ApertureView.swift:27"
@@ -2556,7 +2580,7 @@
 {
 "s": "return.",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:673"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:674"
 ]
 },
 {
@@ -2790,7 +2814,7 @@
 {
 "s": "stand inside \u203a",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:752"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:795"
 ]
 },
 {
@@ -2820,7 +2844,7 @@
 {
 "s": "Stillness opened the Light.",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:946"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:964"
 ]
 },
 {
@@ -3258,13 +3282,13 @@
 {
 "s": "the dot at the gate",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:436"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:479"
 ]
 },
 {
 "s": "the dot in the post",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:435"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:478"
 ]
 },
 {
@@ -3688,7 +3712,7 @@
 {
 "s": "The Light -- stood inside",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:945"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:963"
 ]
 },
 {
@@ -4066,19 +4090,19 @@
 "sites": [
 "Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:40",
 "Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:87",
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:216"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:219"
 ]
 },
 {
 "s": "The Point -- walked to the centre",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:955"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:973"
 ]
 },
 {
 "s": "the point at the centre of the enclosure",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:427"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:470"
 ]
 },
 {
@@ -4328,7 +4352,7 @@
 {
 "s": "the seed of the well",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:434"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:477"
 ]
 },
 {
@@ -4455,13 +4479,13 @@
 {
 "s": "The story was met in the Rite.",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:606"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:607"
 ]
 },
 {
 "s": "the story, close",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:433",
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:476",
 "Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269",
 "Bindu Feed/Bindu Feed/Universe/UniverseView.swift:1325"
 ]
@@ -5844,7 +5868,7 @@
 {
 "s": "\u2026 -- met in the Rite",
 "sites": [
-"Bindu Feed/Bindu Feed/Store/FeedStore.swift:605"
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:606"
 ]
 },
 {

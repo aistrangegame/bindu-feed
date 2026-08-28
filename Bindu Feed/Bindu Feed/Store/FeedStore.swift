@@ -597,6 +597,7 @@ final class FeedStore: ObservableObject {
         // same-day reliability cache, not a replacement (it is the exact failure the user
         // hit — the ceremony completed but the day still read "unmet").
         UserDefaults.standard.set(true, forKey: Self.metCacheKey(AirtableService.localDayString()))
+        todayMet = true                     // the seam and anything else gated on the day's weather
         let recordId = resolveMetRecordId(storyId: storyId)
         do {
             _ = try await service.logActivity(
@@ -784,14 +785,31 @@ final class FeedStore: ObservableObject {
             roomRGB: UniGeo.hx(room?.hexColor ?? "#9B6BD6"))
     }
 
+    /// THE DAY'S WEATHER, lifted out of `DoorView`'s private `@State`.
+    ///
+    /// `The Instrument v3.html:5619` gates the axis's `#seam` on
+    /// `Math.abs(Z)<0.30 && GR.weather==='met'` — so met-ness is not the Door's private
+    /// business, it is a property of the day that other surfaces read. It was a
+    /// `private @State DoorWeather` inside `DoorView`, which meant the Door recomputed it
+    /// on every appearance and nothing else could see it at all.
+    ///
+    /// `nil` = not yet determined, and it stays nil until something asks. A surface that
+    /// gates on met-ness must treat nil as "not yet", never as "unmet" — the design only
+    /// knows the weather once the Door has read it either.
+    @Published private(set) var todayMet: Bool?
+
     /// The Door's weather read: is today already met? True if the local same-day cache is
     /// set (a Rite completed on this device today) OR App Activity has today's Story Met.
-    /// Fail-safe to `false` (unmet).
+    /// Fail-safe to `false` (unmet). Publishes to `todayMet` on the way out.
+    @discardableResult
     func checkTodayMet() async -> Bool {
         if UserDefaults.standard.bool(forKey: Self.metCacheKey(AirtableService.localDayString())) {
+            todayMet = true
             return true
         }
-        return await service.isTodayMet()
+        let met = await service.isTodayMet()
+        todayMet = met
+        return met
     }
 
     /// A destination chosen from the launch Door's turn — the Door lives before

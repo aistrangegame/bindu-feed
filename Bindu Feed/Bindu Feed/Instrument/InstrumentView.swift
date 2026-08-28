@@ -151,6 +151,9 @@ struct InstrumentView: View {
             // The ladder (#rail) — where he is on the fifteen-register axis.
             ladderRail
 
+            // The seam — the two directions, named, at the Feed's own scale.
+            axisSeam
+
             // The passage throat — a wormhole inward, a whitehole outward.
             if travel.crossing {
                 ThroatView(t: travel.passageT, dir: travel.passageDir, hue: here.color)
@@ -328,6 +331,46 @@ struct InstrumentView: View {
     //   .sub  italic 13 · line-height 1.6 · rgba(237,232,227,.48) · max-width 300 · margin-top 9
     //
     // Repainted only when the register KEY changes (`.id`), crossfading over 1.1s — it does
+    // ── #seam · THE TWO DIRECTIONS, NAMED ────────────────────────────────────────
+    // `The Instrument v3.html:4653-4656`, gated at `:5619`:
+    //     seam.classList.toggle('on', Math.abs(Z)<0.30 && GR.weather==='met')
+    //
+    // It speaks only at the Feed's own scale, and only on a day that has been met — the
+    // axis naming what lies either way from where he is standing, once there is something
+    // in both directions to name. `:4385-4389`: left/right 30, bottom 112, two flex
+    // columns with an 18 gap, Space Mono 7.5 / .14em / uppercase at `rgba(237,232,227,.24)`,
+    // line-height 1.7, and a 1.2s opacity transition.
+    //
+    // `store.todayMet` is nil until something has read the day. Nil is NOT unmet: the
+    // design does not know the weather before the Door reads it either, so the seam simply
+    // does not speak yet.
+    private var axisSeam: some View {
+        let near = max(0, min(1, (0.30 - abs(travel.z)) / 0.08))
+        let on = store.todayMet == true ? near : 0
+        return VStack {
+            Spacer()
+            HStack(alignment: .top, spacing: 18) {
+                seamColumn("pull down · outward", "everything that has met you")
+                seamColumn("pull up · inward", "everything you have gathered")
+            }
+            .padding(.horizontal, 30)
+            .padding(.bottom, 112)
+        }
+        .opacity(on)
+        .animation(.easeInOut(duration: 1.2), value: on)
+        .allowsHitTesting(false)
+    }
+
+    private func seamColumn(_ a: String, _ b: String) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(a.uppercased()).spaceMonoTracked(7.5, em: 0.14)
+            Text(b.uppercased()).spaceMonoTracked(7.5, em: 0.14)
+        }
+        .lineSpacing(7.5 * 0.7)                       // line-height 1.7 on a 7.5 face
+        .foregroundStyle(Color(hex: "#EDE8E3").opacity(0.24))
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     // not re-tick with Z. Hidden on the ground, past the centre, and inside a passage.
     private var whereBlock: some View {
         let w = here.whereBlock
