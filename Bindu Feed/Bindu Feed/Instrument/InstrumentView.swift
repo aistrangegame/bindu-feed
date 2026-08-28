@@ -187,18 +187,26 @@ struct InstrumentView: View {
         // made the four Universe registers mutually unreachable) and B0.3 (the dead band at
         // the Feed edge, where the axis was locked and the Universe not yet hit-testable).
         .simultaneousGesture(travelGesture)
-        // THE ROPE, AT THE GATE — not from anywhere. This said "from anywhere (§7.5)" and
-        // fired on all fifteen registers, and the brief does not say that: R1·Q4 scopes it to
-        // *"On the Door itself, always — long-press anywhere on the threshold"* (which
-        // `DoorView.swift:172` already carries), and the instrument's own hold is the GATE's
-        // particle only — `The Point v9.html:1005-1006` opens with `if(idx!==0)return;`.
+        // THE ROPE, FROM ANYWHERE — `The Instrument v3.html:5874-5877`, in its own capitals:
+        // *"the rope is reachable from ANYWHERE now. The particle is always present, so the
+        // rope is always one gesture from the hand."* The "now" is the point: this was
+        // deliberately widened past the brief's Door-and-gate scope, and Instrument v3
+        // outranks prose on the ladder. All fifteen registers, always.
         //
-        // Over-broad, it ate world IV. The Chamber's entire gesture is a sustained press
-        // ("press · a touch leaves nothing"), so at 1.1s the rope opened over the wall he was
-        // pressing — every time, and it looked like the reading simply refused to give.
+        // I narrowed it to the gate to stop it eating world IV, and that was the wrong fix —
+        // it bought one reading by taking the rope away from fourteen registers. The design
+        // had already solved it on the SAME LINE:
+        //
+        //     if(!turnEl.classList.contains('on') && !ropeEl.classList.contains('on'))
+        //         pressT = setTimeout(…openRope…, 1100);
+        //
+        // — an exclusion list, not a narrowing. The rope declines where another surface is
+        // already holding the gesture. `PressClaim` is that list, in the same shape as
+        // `handedToRegister`: the surface that owns a sustained press claims it, and the rope
+        // stands down THERE and nowhere else.
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
-                guard here.key == "gate" else { return }
+                guard !showRope, !PressClaim.isClaimed else { return }
                 withAnimation(.easeInOut(duration: 0.8)) { showRope = true }
             }
         )

@@ -149,7 +149,7 @@ struct PointWorldView: View {
         }
         // Released on the way out, like the fall's four scoped paths: a register that is no
         // longer mounted must never still be holding the vertical.
-        .onDisappear { onHold(false) }
+        .onDisappear { onHold(false); PointYantra.shared.readingOpen = false }
         .onAppear {
             parkDebugStarIfRequested()
             syncAxisLock()
@@ -179,7 +179,12 @@ struct PointWorldView: View {
     ///
     /// `AxisTravel.handedToRegister` already existed and is enforced at the source in
     /// `applyDrag`, so no call path can route around it. It only ever needed to be told.
-    private func syncAxisLock() { onHold(openStar != nil || selectedUniverse != nil) }
+    private func syncAxisLock() {
+        onHold(openStar != nil || selectedUniverse != nil)
+        // The figure recedes under a READING specifically — not under the universe body,
+        // where the nodes are standing on the figure and it is the thing being looked at.
+        PointYantra.shared.readingOpen = openStar != nil
+    }
 }
 
 // The goodnights are said once per dimension per session, then gone.

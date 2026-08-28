@@ -65,6 +65,26 @@ import Combine
 // alpha — which is also what would stop a world's own chrome reading through, the thing
 // the world-V walk turned up.
 
+/// WHO IS HOLDING THE GESTURE. `The Instrument v3.html:5876` guards the rope with
+/// `if(!turnEl…('on') && !ropeEl…('on'))` — the rope is reachable from anywhere, and declines
+/// only where a surface is already using the press. This is that exclusion list.
+///
+/// It exists because world IV's whole gesture IS a sustained press — *"press · a touch leaves
+/// nothing"* — so without it the rope opens at 1.1s over the wall he is pressing. The right
+/// answer is not to take the rope away from the other fourteen registers; it is to let the
+/// Chamber say "this one is mine", the same way `handedToRegister` lets a register say the
+/// vertical is.
+///
+/// Read at fire time, not render time — exactly as the design reads a DOM class at fire time —
+/// so it is a plain static and needs no publishing.
+enum PressClaim {
+    private(set) static var owner: String?
+    static var isClaimed: Bool { owner != nil }
+    static func claim(_ who: String) { owner = who }
+    /// Release only your own claim, so a late `onEnded` cannot free someone else's.
+    static func release(_ who: String) { if owner == who { owner = nil } }
+}
+
 enum PointSection: Int, CaseIterable {
     case say, walk, hand, open
     var label: String {
@@ -541,8 +561,21 @@ private struct ReadPressing: View {
                         }
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 0)
-                            .onChanged { _ in holding = true }
-                            .onEnded { _ in holding = false })
+                            .onChanged { _ in
+                                holding = true
+                                PressClaim.claim(Self.claimant)   // the wall owns this press
+                            }
+                            .onEnded { _ in
+                                holding = false
+                                PressClaim.release(Self.claimant)
+                            })
+                        // AND when the strip itself goes. The fourth give sets `s.done`,
+                        // which removes this whole block MID-PRESS — so `onEnded` never
+                        // fires, and without this the claim leaks and the rope stays down
+                        // for the rest of the session. Exactly the fault `handedToRegister`
+                        // has to release on all four of its scoped paths: a claim must be
+                        // released by every way its owner can leave, not just the polite one.
+                        .onDisappear { PressClaim.release(Self.claimant) }
                     }
                     ReadingFooter(star: s.star, hue: hue)
                     Color.clear.frame(height: 90)
@@ -552,7 +585,12 @@ private struct ReadPressing: View {
             .scrollIndicators(.hidden)
         }
         .onAppear { run() }
+        // A claim must never outlive its claimant — the same discipline the fall's four
+        // scoped paths keep on `handedToRegister`.
+        .onDisappear { PressClaim.release(Self.claimant) }
     }
+
+    private static let claimant = "chamber-wall"
 
     private func run() {
         guard !running else { return }

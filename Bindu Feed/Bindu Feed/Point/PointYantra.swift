@@ -28,6 +28,23 @@ final class PointYantra: ObservableObject {
     /// aperture and the bindu sit above centre with room beneath them. It EASES (`+=(target-camY)*0.05`
     /// per frame); it never snaps, because a jump here reads as the figure moving rather than him.
     var camY: Double = 0.5
+    /// `point-yantra.js:108` — `const dim = this.mode==='descend' ? 0.22 : 1`, and it
+    /// multiplies EVERYTHING: the stars (`:117`), the wash (`:125-126`), BOTH figure passes
+    /// (`:134`, `:140`), the bloom (`:145`) and the incense (`:172`). One value, applied at
+    /// every alpha — which is why the answer is never a scrim over the top. The design
+    /// RECEDES the figure; it does not cover it.
+    ///
+    /// The descent set it and a star reading did not, so a reading was read against a figure
+    /// at full brightness. That is the same rule the Rooms keep with `(sub > 0 ? 0.42 : 1)`
+    /// and the seven worlds keep with `displaced()`: when something is being read, the ground
+    /// it is read on gets out of the way.
+    ///
+    /// EASED, not switched. The design's `dim` is a hard ternary because its reading is a
+    /// near-opaque `.ovl` that covers in one step; the app's readings are transparent over
+    /// this figure, so a snap from 1.0 to 0.22 under the first section would read as a flinch.
+    /// Both of the design's own analogues are continuous functions of a continuous quantity.
+    var readingOpen = false
+    private(set) var dim: Double = 1
     private var lastT: Double = 0
     /// Crossing waves, in screen space. Each is the time it was fired.
     @Published private(set) var flares: [Double] = []
@@ -210,7 +227,6 @@ final class PointYantra: ObservableObject {
         let s = scale(size) * (1 + 0.010 * br)
         let cx = W / 2, cy = H * camY
         let bandR = bandRadius()
-        let dim = descending ? 0.22 : 1.0
 
         // the sky, receding as he goes inward
         let zoom = log(s) * 0.16
@@ -305,6 +321,8 @@ final class PointYantra: ObservableObject {
         lastT = t
         let target = focus >= 7.4 ? 0.40 : 0.5      // `:929`
         camY += (target - camY) * (1 - pow(1 - 0.05, dt * 60))
+        let dimTarget = (descending || readingOpen) ? 0.22 : 1.0
+        dim += (dimTarget - dim) * (1 - pow(1 - 0.055, dt * 60))
     }
 }
 
