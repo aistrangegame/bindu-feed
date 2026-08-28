@@ -388,6 +388,16 @@ private struct ReadFollowing: View {
     let onClose: () -> Void
     @State private var travelled: Double = 0     // 0 origin … 1 rim
 
+    /// `world-two.js:229-232`, verbatim. `travelled` is the design's `this.out`,
+    /// `s.revealed` its `given`.
+    private var followWord: String {
+        if s.revealed >= 4 { return "far out, and still leaving" }
+        if travelled < 0.12 { return "holding it" }
+        if travelled < 0.44 { return "going" }
+        if travelled < 0.72 { return "further" }
+        return "far out"
+    }
+
     var body: some View {
         GeometryReader { geo in
             ZStack {
@@ -428,8 +438,12 @@ private struct ReadFollowing: View {
                                 .transition(.opacity)
                         }
                         if !s.done {
-                            Text(s.revealed == 0 ? "take the ray and go" : "keep going")
-                                .font(.loraItalic(13)).foregroundStyle(hue.opacity(0.55))
+                            // `world-two.js:229-232` — the five things this world says while
+                            // the ray is held, keyed to how far out he is. Replaced
+                            // "take the ray and go" / "keep going", both invented.
+                            Text(followWord.uppercased())
+                                .spaceMonoTracked(8.5, em: 0.2)
+                                .foregroundStyle(hue.opacity(0.55))
                                 .frame(maxWidth: .infinity)
                         }
                         ReadingFooter(star: s.star, hue: hue)
@@ -470,6 +484,19 @@ private struct ReadParting: View {
     let onClose: () -> Void
     @State private var part: CGPoint?      // where the hand is holding it open
     @State private var thinned: [CGPoint] = []   // permanently thinner, one per section received
+
+    /// `world-three.js:208-215` — the one star that watches back. When the parting is open
+    /// over `v-shadow`, a second hand shows in it, and the world names it. The design gates
+    /// on `this.reading.shadow && this.open>0.30`; the app's star key IS that flag.
+    private var shadowNamed: Bool { s.star.key == "v-shadow" && part != nil && s.revealed > 0 }
+
+    /// `world-three.js:238-241`, less the `open<0.30` branch the app has no scalar for.
+    private var partWord: String {
+        if part == nil { return "part it with your hand · and hold it open" }
+        if s.revealed == 0 { return "nothing here yet" }
+        if s.revealed >= 4 { return "handed back" }
+        return s.revealed < 2 ? "it is thinning" : "thinner"
+    }
 
     var body: some View {
         GeometryReader { geo in
@@ -512,10 +539,23 @@ private struct ReadParting: View {
                 }
                 .ignoresSafeArea().allowsHitTesting(false)
 
-                if !s.done && part == nil {
+                // `world-three.js:238-241`. Replaced "part it where you are", invented.
+                // The opening cue is the FIELD's (`WorldVeil`); what the reading says is what
+                // the parting is doing. `this.open` — how wide the parting is held — has no
+                // app scalar (the app's `part` is a point or nothing), so the design's
+                // `open<0.30 -> 'holding it open'` is NOT ported rather than given an
+                // invented trigger. It is a REVIEW row in Tools/authored-strings.tsv.
+                if !s.done {
                     VStack { Spacer()
-                        Text("part it where you are")
-                            .font(.loraItalic(13)).foregroundStyle(hue.opacity(0.55)).padding(.bottom, 120)
+                        if shadowNamed {
+                            Text("THAT IS YOUR OWN HAND")
+                                .spaceMonoTracked(7, em: 0.2)
+                                .foregroundStyle(Color(hex: "#FFFBFF").opacity(0.42))
+                                .padding(.bottom, 10)
+                        }
+                        Text(partWord.uppercased())
+                            .spaceMonoTracked(8.5, em: 0.2)
+                            .foregroundStyle(hue.opacity(0.55)).padding(.bottom, 120)
                     }.allowsHitTesting(false)
                 }
             }
@@ -565,6 +605,15 @@ private struct ReadPressing: View {
     let onClose: () -> Void
     @State private var press: Double = 0
     @State private var holding = false
+
+    /// `world-four.js:272-274`, verbatim. `press` is the design's own `this.press`.
+    private var pressWord: String {
+        if s.revealed >= 4 { return "struck" }
+        if press < 0.22 { return "bearing" }
+        if press < 0.50 { return "it is taking" }
+        if press < 0.76 { return "deeper" }
+        return "nearly through"
+    }
     @State private var running = false
 
     private let gates = [0.22, 0.46, 0.70, 0.92]
@@ -595,8 +644,10 @@ private struct ReadPressing: View {
                                 .frame(height: 2 + press * 10)
                                 .frame(maxWidth: .infinity)
                                 .background(Rectangle().fill(hue.opacity(0.08)).frame(height: 1.5))
-                            Text(press <= 0.05 ? "press · a touch leaves nothing" : "bear down")
-                                .font(.loraItalic(13))
+                            // `world-four.js:272-274`, verbatim. Replaced "press · a touch
+                            // leaves nothing" / "bear down", both invented.
+                            Text(pressWord.uppercased())
+                                .spaceMonoTracked(8.5, em: 0.2)
                                 .foregroundStyle(hue.opacity(press <= 0.05 ? 0.4 : 0.85))
                         }
                         .contentShape(Rectangle())
@@ -739,6 +790,10 @@ private struct ReadTurning: View {
         if isGuard && s.revealed >= 2 { return "only your own reflection" }
         if s.revealed >= 4 { return "faced" }
         if s.revealed == 0 { return "turn a mirror · and see what faces it" }
+        // `world-five.js:439` — `st=|cos(angleOf(held))|`, and below 0.12 the pane is
+        // edge-on and there is nothing to read off it. `turn` counts half-turns, so the
+        // pane's angle is `turn * pi`.
+        if abs(cos(turn * .pi)) < 0.12 { return "edge-on · nothing" }
         return settling ? "the other face" : "facing you"
     }
 
@@ -835,6 +890,13 @@ private struct ReadSending: View {
     @State private var out: Double = 0        // 0 here · 1 the far point
     @State private var sent = false
 
+    /// `world-six.js:423-428`, the three states the app's single arc can be in.
+    private var sendWord: String {
+        if sent { return "it will come back. not when you want it to." }
+        if s.revealed > 0 { return "send another · or send the same one further" }
+        return "take one · send it over · wait"
+    }
+
     var body: some View {
         ZStack {
             GeometryReader { g in
@@ -863,8 +925,14 @@ private struct ReadSending: View {
                             guard !sent else { return }
                             send()
                         } label: {
-                            Text(sent ? "it is out there" : "send it out")
-                                .font(.loraItalic(13))
+                            // `world-six.js:423-428`. Replaced "send it out" / "it is out
+                            // there", both invented. The app carries ONE arc at a time, so
+                            // the design's `arcs.length>1` and `deep` branches ("THEY WILL
+                            // COME BACK IN THEIR OWN ORDER", "SOMETHING IS COMING THAT YOU
+                            // DID NOT SEND") have no state to hang on and are NOT invented
+                            // into being. Both are REVIEW rows.
+                            Text(sendWord.uppercased())
+                                .spaceMonoTracked(8.5, em: 0.2)
                                 .foregroundStyle(hue.opacity(sent ? 0.35 : 0.65))
                         }
                         .buttonStyle(.plain).frame(maxWidth: .infinity)
@@ -901,6 +969,20 @@ private struct ReadCompany: View {
     let hue: Color
     let onClose: () -> Void
     @State private var pace: Double = 0
+
+    /// `world-seven.js:494-499` — *"a world that has closed is not a dead surface. It says
+    /// what it is and it says where the way on runs."* `res>0.02` is the resolved world;
+    /// `s.done` is that here. The second line is the only direction left in the instrument.
+    private var closedLines: (String, String)? {
+        s.done ? ("THE MAP BECAME ARCHITECTURE", "THE DOOR OUT IS THE DOOR IN · PULL UP") : nil
+    }
+
+    /// `world-seven.js:503-505`, verbatim, with `chain.length` read as `s.revealed`.
+    private var danceWord: String {
+        if s.revealed == 0 { return "someone is coming across the floor" }
+        if s.revealed == 1 { return "you are dancing · it goes quicker in company" }
+        return "\(s.revealed) hands · the dance is carrying you"
+    }
     @State private var lastMove = Date()
 
     var body: some View {
@@ -935,8 +1017,19 @@ private struct ReadCompany: View {
                                             .frame(width: g.size.width * pace)
                                     }
                                 }
-                            Text(pace > 0.05 ? "keep pace" : "they are already dancing")
-                                .font(.loraItalic(13)).foregroundStyle(hue.opacity(0.55))
+                            // `world-seven.js:503-505`. Replaced "keep pace" / "they are
+                            // already dancing", both invented. `this.chain` — who he has
+                            // gathered — is `s.revealed` here.
+                            if let (top, way) = closedLines {
+                                Text(top).spaceMonoTracked(8.5, em: 0.2)
+                                    .foregroundStyle(Color(hex: "#FFF3DC").opacity(0.40))
+                                Text(way).spaceMonoTracked(8.5, em: 0.2)
+                                    .foregroundStyle(hue.opacity(0.42))
+                            } else {
+                                Text(danceWord.uppercased())
+                                    .spaceMonoTracked(8.5, em: 0.2)
+                                    .foregroundStyle(hue.opacity(0.55))
+                            }
                         }
                     }
                     ReadingFooter(star: s.star, hue: hue)

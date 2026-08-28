@@ -195,6 +195,33 @@ struct PointUniversesView: View {
 }
 
 // ── I · THE POINT — near-emptiness; points approach when he is still; DWELL to open ──
+// THE WORLD'S OWN QUESTION, in its own words. Every `world-*.js` draws one at `H-150` in
+// 8.5px Space Mono at `A*0.38*(0.7+br*0.4)` while the hand is not yet engaged — world-one
+// :183, world-two :225, world-three :235, world-four :269, world-five :434, world-six :428,
+// world-seven :501. It is how the gesture is discoverable, and it is the ONE string a world
+// may say before it is touched.
+//
+// Six of these were INVENTED substitutes until this pass ("part the veil >", "move along
+// the walls", "catch one in flight", and three more). Rule 4's forward half forbids
+// inventing an instructional string; it requires porting the authored one. The eight-string
+// grep never saw them because they were not among the eight anyone remembered — which is
+// the whole argument for `Tools/authored-strings.tsv`.
+private struct WorldCue: View {
+    let text: String
+    @EnvironmentObject private var breath: Breath
+    var body: some View {
+        VStack { Spacer()
+            Text(text)
+                .spaceMonoTracked(8.5, em: 0.2)
+                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.38 * (0.7 + breath.value * 0.4)))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 150)
+        }
+        .allowsHitTesting(false)
+    }
+}
+
 private struct WorldPoint: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
@@ -233,16 +260,7 @@ private struct WorldPoint: View {
                     }
                     // The prompt is canon and can ship now that the gesture under it is the
                     // design's. `world-one.js:183`.
-                    if dwell == nil {
-                        VStack { Spacer()
-                            Text("TOUCH ONE · THEN LET GO AND STAY")
-                                .spaceMonoTracked(8.5, em: 0.2)
-                                .foregroundStyle(BinduTheme.inkPrimary
-                                    .opacity(0.38 * (0.7 + breath.value * 0.4)))
-                                .padding(.bottom, 150)
-                        }
-                        .allowsHitTesting(false)
-                    }
+                    if dwell == nil { WorldCue(text: "TOUCH ONE · THEN LET GO AND STAY") }
                 }
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastStir = Date() })
@@ -308,9 +326,8 @@ private struct WorldTurn: View {
                                 }
                             }
                     }
-                    Text("touch a star · it draws inward").font(.spaceMono(8)).tracking(2)
-                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                        .position(x: cx, y: geo.size.height - 40)
+                    // `world-two.js:225`. Replaced "touch a star · it draws inward", invented.
+                    if drawingId == nil { WorldCue(text: "TAKE A RAY NEAR THE CENTRE · THEN GO OUT") }
                 }
             }
         }
@@ -322,6 +339,9 @@ private struct WorldVeil: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
     @State private var part: CGFloat = 0     // 0 closed … 1 fully parted
+    /// `world-three.js:235` reads `this.back.length` — has a parting been made at all yet.
+    /// The app's veil is one scalar, so what persists is the fact of it, not the zone list.
+    @State private var partedOnce = false
     var body: some View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
@@ -349,14 +369,21 @@ private struct WorldVeil: View {
                             .allowsHitTesting(part > 0.4)
                             .onTapGesture { onOpen(p.star) }
                     }
-                    Text(part < 0.4 ? "part the veil ›" : "")
-                        .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
-                        .position(x: geo.size.width / 2, y: geo.size.height - 40)
+                    // `world-three.js:235` — TWO-STATE on `this.back.length`, the zones already
+                    // parted: the world stops asking for the first parting once one has been
+                    // made, and asks for another somewhere else. Replaced "part the veil ›".
+                    if part < 0.4 {
+                        WorldCue(text: partedOnce ? "PART IT AGAIN, SOMEWHERE ELSE"
+                                                  : "PART IT WITH YOUR HAND · AND HOLD IT OPEN")
+                    }
                 }
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture().onChanged { v in
                     part = min(1, max(0, abs(v.translation.width) / (geo.size.width * 0.5)))
-                }.onEnded { _ in withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 } })
+                }.onEnded { _ in
+                    if part > 0.5 { partedOnce = true }
+                    withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 }
+                })
             }
         }
     }
@@ -411,9 +438,18 @@ private struct WorldChamber: View {
                                   y: geo.size.height * (0.24 + Double(p.uni % 4) * 0.17))
                         .onTapGesture { onOpen(p.star) }
                 }
-                Text("move along the walls").font(.spaceMono(8)).tracking(2)
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                    .position(x: W / 2, y: H - 40)
+                // `world-four.js:195` — the shells above, *"named as weight, never as a
+                // number."* It rides high in the chamber, not at H-150 with the cue.
+                VStack { Spacer().frame(height: 74)
+                    Text("EVERY SHELL ABOVE IS STANDING ON THIS ONE")
+                        .spaceMonoTracked(7.5, em: 0.2)
+                        .foregroundStyle(hue.opacity(0.28))
+                        .multilineTextAlignment(.center).padding(.horizontal, 24)
+                    Spacer()
+                }
+                .allowsHitTesting(false)
+                // `world-four.js:269`. Replaced "move along the walls", invented.
+                WorldCue(text: "PRESS A WALL · AND BEAR IT")
             }
             .contentShape(Rectangle())
             .simultaneousGesture(DragGesture().onChanged { v in panX = max(-spread + W * 0.5, min(0, panBase + v.translation.width)) }
@@ -460,9 +496,10 @@ private struct WorldMirrors: View {
                     mirrorStar(pair.0, x: cx - W * 0.24, y: y, facingRight: true)
                     if let echo = pair.1 { mirrorStar(echo, x: cx + W * 0.24, y: y, facingRight: false) }
                 }
-                Text("each meets its echo · turn to enter").font(.spaceMono(8)).tracking(2)
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                    .position(x: cx, y: H - 40)
+                // `world-five.js:434-435` — TWO-STATE on `Object.keys(this.faced).length`.
+                // `turned` is that set. Replaced "each meets its echo · turn to enter", invented.
+                WorldCue(text: turned.isEmpty ? "TURN A MIRROR · AND SEE WHAT FACES IT"
+                                              : "TURN ANOTHER · SOMETHING FACES IT")
             }
         }
     }
@@ -525,9 +562,10 @@ private struct WorldReturn: View {
                         .allowsHitTesting(y > 40 && y < H - 40)
                         .onTapGesture { onOpen(p.star) }
                 }
-                Text(settle < 20 ? "settle down through the layers" : "")
-                    .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                    .position(x: W / 2, y: H - 40)
+                // `world-six.js:428` — the un-sent state. The field is where he takes one;
+                // the send and the wait are the reading's. Replaced "settle down through the
+                // layers", invented.
+                if settle < 20 { WorldCue(text: "TAKE ONE · SEND IT OVER · WAIT") }
             }
             .contentShape(Rectangle())
             .simultaneousGesture(DragGesture()
@@ -542,6 +580,8 @@ private struct WorldReturn: View {
 private struct WorldDance: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
+    /// `world-seven.js:501` reads `this.danceCount()` — has a hand been offered at all yet.
+    @State private var offeredOnce = false
     var body: some View {
         GeometryReader { geo in
             let cx = geo.size.width / 2, cy = geo.size.height / 2
@@ -566,11 +606,12 @@ private struct WorldDance: View {
                         let y = cy + sin(bt * 0.73 + ph * 1.3) * geo.size.height * 0.30
                         StarMark(placed: sp, hue: hue, compact: true)
                             .position(x: x, y: y)
-                            .onTapGesture { onOpen(sp.star) }
+                            .onTapGesture { offeredOnce = true; onOpen(sp.star) }
                     }
-                    Text("catch one in flight").font(.spaceMono(8)).tracking(2)
-                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
-                        .position(x: cx, y: geo.size.height - 40)
+                    // `world-seven.js:501-502` — TWO-STATE on `danceCount()`. Replaced
+                    // "catch one in flight", invented.
+                    WorldCue(text: offeredOnce ? "OFFER A HAND AGAIN · THEY ARE STILL DANCING"
+                                               : "THEY WERE DANCING BEFORE YOU CAME · OFFER A HAND")
                 }
             }
         }
