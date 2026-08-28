@@ -523,6 +523,23 @@ harness limits.** What remains is smaller and more precisely stated.
 | D6 | **Ash's seat in the fan.** | **STILL OPEN.** Needs two returns on one story; the Return declines on The Two Who Were One because it carries no Ash Comment. Sequence, not defect. |
 | D7 | **The fall's layer four, on device.** | **NEW, OPEN.** The four names, the thresholds `0.20 / 0.50 / 0.88`, the fade and the `H−172` mono 8.5 BONE 0.26 placement all verify verbatim against `uni-fall.js:153-158`. The *behaviour* does not: the axis flick carries momentum past the fall's inner depths, and I did not land `d` in `[0.88, 1.0]` in the attempts made. The mouth's gold rings were reached; the caption band at `H−172` was measured empty on a surface past the fall, which is correct there and proves nothing about layer four. |
 
+## D″ · Found by the authored-string registry, on its first run
+
+`Tools/authored-strings.tsv` replaced the backwards grep's three remembered strings with an
+enumerated list. These are its finds, all **OPEN**, all `REVIEW` rows in the registry.
+
+| # | Item | Evidence |
+|---|---|---|
+| R1 | **18 of 20 world hand-cues absent.** Worlds II, III, IV, VI and VII never tell the hand what to do. | `world-two.js` *TAKE A RAY NEAR THE CENTRE · THEN GO OUT* · `world-three.js` *PART IT WITH YOUR HAND · AND HOLD IT OPEN* and *PART IT AGAIN, SOMEWHERE ELSE* · `world-four.js` *PRESS A WALL · AND BEAR IT* · five each in six and seven. Built: only world I's *TOUCH ONE · THEN LET GO AND STAY* (`PointWorlds.swift:238`) and world V's rotating word. |
+| R2 | **`#carry` never built** — a whole mechanic, not a string. | `The Instrument v3.html:4682` the affordance, `:5334` `sealCarry()`, `:5752` the carried motes in orbit around the one particle, `:5776` the journey line, `:5809` serialised into `asf.walk`. The app has `KEPT` (the rail's filled dots) and nothing of `CARRY`. |
+| R3 | **`#seam` never built.** | `:5619` toggles it at `|Z| < 0.30` and weather met; `:4653-4656` are the two hints. |
+| R4 | **The journey narration diverges without a record.** | Design narrates the reading-*gesture* used (`:5770-5781`); `PointJourney.narration()` narrates dims and stars entered. Possibly deliberate — but not recorded in §10, so it cannot be assumed. |
+| R5 | **The lens label diverged without a record.** | `The Universe v3.html:1437` / `:1676` say `the star lens` / `the structure lens`; `UniverseView.swift:146` says `the light ›` / `the structure ›`. |
+
+R1 is the one that changes what a first reader experiences: the cue is how the gesture is
+discoverable, and the app has neither the authored cue nor an invented substitute. Rule 4's
+forward half forbids inventing one — so the only correct fix is the authored string.
+
 ## D′ · The checklist itself was wrong in one place
 
 `HANDOFF-VERIFICATION.md`'s Pass 4 line says *"**Bindu's room does not respond** — she
