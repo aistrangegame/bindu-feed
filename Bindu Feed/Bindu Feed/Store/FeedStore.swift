@@ -342,6 +342,7 @@ final class FeedStore: ObservableObject {
 
     func loadMetStories() async {
         self.metStoryIDs = await service.fetchMetStoryIDs()
+        rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
 
     func loadGaiaSeeds() async {
@@ -820,6 +821,28 @@ final class FeedStore: ObservableObject {
     /// the NavigationStack, so it parks the route here; RootView consumes it on
     /// appear and pushes it once the feed is reachable. Nil clears it.
     @Published var pendingLaunchRoute: FeedRoute?
+
+    // MARK: - the sky's light-wells
+
+    /// The room the Universe is looking at, so the shader can wear ITS weather.
+    /// Set by `UniverseView` as the camera moves; nil is the honest default (the fallback).
+    @Published var currentUniRoomId: String?
+
+    /// `SKY` — 39 floats, rebuilt whenever met-ness changes. Density is DERIVED from how much
+    /// of him each room holds (`uni-deep.js:60-66`), never a flat constant.
+    @Published var uniSky: [Float] = UniWeather.sky(
+        density: [Double](repeating: 0.6, count: uniRooms.count),
+        ext: max(1, uniRooms.map { max(abs($0.x), abs($0.y)) }.max() ?? 1))
+
+    func rebuildUniSky() {
+        let ext = max(1, uniRooms.map { max(abs($0.x), abs($0.y)) }.max() ?? 1)
+        var metByRoom: [Int: [Int]] = [:]
+        for st in stories where metStoryIDs.contains(st.id) {
+            guard let ri = uniRooms.firstIndex(where: { $0.id == st.room }) else { continue }
+            metByRoom[ri, default: []].append(stats(for: st.id).commentCount)
+        }
+        uniSky = UniWeather.sky(density: UniWeather.density(metByRoom: metByRoom), ext: ext)
+    }
 
     // MARK: - THE RETURN
 

@@ -472,6 +472,8 @@ struct InstrumentView: View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
                 let t = tl.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 100000)
+                let wx = UniWeather.of(store.currentUniRoomId)
+                let skyArray = store.uniSky
                 Rectangle()
                     .fill(Color.black)
                     .colorEffect(ShaderLibrary.instrumentField(
@@ -484,8 +486,20 @@ struct InstrumentView: View {
                         .float(0),                         // uReveal (light bloom — Phase 2)
                         .float(0),                         // uDwell  (sky dwell — Phase 2)
                         .float2(0, 0),                     // uSweep  (memory sweep — Phase 2)
-                        .float3(0.4, 0.02, 0.2),           // uWx     (weather default)
-                        .float3(0, 0, 0)                   // uHand   (veil parting — Phase 2)
+                        // uWx — THE LIVE ROOM'S OWN WEATHER. This was the design's FALLBACK
+                        // literal `(0.4, 0.02, 0.2)` (`uni-deep.js:91`'s `|| [...]`) hardcoded
+                        // for every register in every room, so the thirteen have never had
+                        // their own turbulence, drift or grain. The Forge churns at 0.92; the
+                        // Watcher is nearly still at 0.12; the Forgetting is 0.86 grain.
+                        .float3(Float(wx[0]), Float(wx[1]), Float(wx[2])),
+                        .float3(0, 0, 0),                  // uHand   (veil parting — Phase 2)
+                        // uRm — 39 floats, the rooms' light-wells with a DERIVED density.
+                        // `ROOMS_FALLBACK` in the shader pins every one at a flat 0.6.
+                        // `.floatArray` supplies BOTH the pointer and its length — the Metal
+                        // side declares `device const float *uRm, int uRmCount`. Passing the
+                        // count as a second argument breaks the stitch: "Function stitching
+                        // failed: instrumentField", which is a link error, not a maths one.
+                        .floatArray(skyArray)
                     ))
             }
         }

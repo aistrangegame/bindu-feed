@@ -525,3 +525,57 @@ enum RegionForm {
         }
     }
 }
+
+
+// MARK: - the rooms' weather · `uni-deep.js:42-74`
+
+/// `WX` — turbulence · drift · grain, authored per room from what the room IS.
+///
+///   *"The Forge churns; the Signal is nearly still and dry; the Forgetting is all grain."*
+///
+/// This is the second of the two adds §7 sanctions on this file, and it has been absent since
+/// the port: `InstrumentView` fed the shader `(0.4, 0.02, 0.2)` — the design's FALLBACK
+/// literal from `uni-deep.js:91` — for every room, so the thirteen have never had their own
+/// weather. The fallback is kept, for the case the accessor is written to expect it.
+enum UniWeather {
+    static let wx: [String: [Double]] = [
+        "The Forge":       [0.92, 0.055, 0.30],
+        "The Signal":      [0.16, 0.012, 0.62],
+        "The Descent":     [0.74, 0.040, 0.16],
+        "The Garden":      [0.40, 0.020, 0.10],
+        "A Maya Game":     [0.30, 0.026, 0.44],
+        "The Watcher":     [0.12, 0.008, 0.06],
+        "The Field":       [0.55, 0.016, 0.22],
+        "The Thread":      [0.34, 0.030, 0.14],
+        "The Body":        [0.66, 0.034, 0.20],
+        "The Forgetting":  [0.48, 0.010, 0.86],
+        "The Remembering": [0.36, 0.018, 0.28],
+        "The Circle":      [0.26, 0.022, 0.12],
+        "The Return":      [0.44, 0.028, 0.18],
+    ]
+    /// `uni-deep.js:91` — `return w || [0.4,0.02,0.2]`.
+    static func of(_ roomId: String?) -> [Double] { wx[roomId ?? ""] ?? [0.4, 0.02, 0.2] }
+
+    /// `DENS` — `uni-deep.js:60-66`. DERIVED, never authored: *"how much of him each room
+    /// holds — from the record, not from a guess."* `d += 1 + depth*0.6` over that room's MET
+    /// stars, normalised by the largest. The shader had every room pinned at a flat 0.6.
+    static func density(metByRoom: [Int: [Int]]) -> [Double] {
+        var d = [Double](repeating: 0, count: uniRooms.count)
+        for (i, depths) in metByRoom { if i >= 0 && i < d.count {
+            d[i] = depths.reduce(0) { $0 + 1 + Double($1) * 0.6 }
+        } }
+        let maxD = max(1, d.max() ?? 1)
+        return d.map { $0 / maxD }
+    }
+
+    /// `SKY` — 39 floats, `[x/EXT*0.88, y/EXT*0.88, dens]` per room (`uni-deep.js:68-74`).
+    static func sky(density: [Double], ext: Double) -> [Float] {
+        var out = [Float](); out.reserveCapacity(39)
+        for (i, r) in uniRooms.enumerated() {
+            out.append(Float(r.x / ext * 0.88))
+            out.append(Float(r.y / ext * 0.88))
+            out.append(Float(i < density.count ? density[i] : 0.6))
+        }
+        return out
+    }
+}

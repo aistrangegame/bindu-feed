@@ -18,7 +18,17 @@ import SwiftUI
 // The Universe redraws at 60fps; without these, draw() re-filtered all stories per region,
 // rebuilt the lanes, re-hashed every mote, and re-scanned archetypes EVERY frame — which
 // tanked the device. These hold the results so the frame does only arithmetic + fills.
-private struct UMote { let color: Color; let per: Double; let ph: Double; let orbitMul: Double; let size: Double; let wobble: Bool }
+/// One seated presence in a star's company. `uni-field.js:57-71`.
+///
+/// `rr` is the orbit radius **in star radii** — it multiplies the PLANET's projected radius,
+/// not the core dot. `tip` tilts the orbit plane so the company reads as a ring seen at an
+/// angle, and the sine of the travel angle says whether a mote is in front or behind.
+private struct UMote {
+    let color: Color; let per: Double; let ph: Double
+    let rr: Double            // 1.62 + hash·0.72 (Ash: 1.30 + hash·0.26)
+    let tip: Double           // (hash − 0.5)·0.9
+    let size: Double; let wobble: Bool
+}
 private struct UStar {
     let id: String
     let wx: Double, wy: Double
@@ -237,12 +247,17 @@ struct UniverseView: View {
                         let ms = hash(s.id + name)
                         motes.append(UMote(color: store.archetype(named: name)?.color ?? color,
                                            per: 3 + ms * 23, ph: ms * 6.2831 + Double(v) * 0.7,
-                                           orbitMul: 4.6 + ms * 2.4, size: isL ? 1.4 : 1.2, wobble: isL))
+                                           rr: 1.62 + hash(s.id + name + "rr") * 0.72,
+                                           tip: (hash(s.id + name + "tip") - 0.5) * 0.9,
+                                           size: isL ? 1.4 : 1.2, wobble: isL))
                     }
                     if stats.commentCount > stats.archetypes.count + 1 {
                         let ms = hash(s.id + "ash")
                         motes.append(UMote(color: store.ashArchetype?.color ?? BinduTheme.colorAsh,
-                                           per: 4 + ms * 20, ph: ms * 6.2831, orbitMul: 3.4, size: 1.5, wobble: false))
+                                           per: 8 + ms * 14, ph: ms * 6.2831,
+                                           rr: 1.30 + ms * 0.26,          // he orbits closer
+                                           tip: (hash(s.id + "ashtip") - 0.5) * 0.7,
+                                           size: 1.5, wobble: false))
                     }
                 }
                 byRegion[ri].append(UStar(id: s.id, wx: sw.0, wy: sw.1, isMet: isMet,
@@ -627,6 +642,10 @@ struct UniverseView: View {
         // the world/region you are looking at = nearest to the frame centre (drives planet/fall/weather)
         let fstar = nearestStarToCenter(size, zoom: zoom, focus: focus)
         let focusRoom = uniRooms[min(max(0, nearestRegionToCenter(focus)), uniRooms.count - 1)]
+        // the shader wears THIS room's weather — `WX[13]`, not the fallback literal
+        if store.currentUniRoomId != focusRoom.id {
+            DispatchQueue.main.async { store.currentUniRoomId = focusRoom.id }
+        }
         let focusId = fstar?.star.id
 
         // ── the deep sky: a coloured ground + three parallax depths of dust, so the sky has
@@ -872,12 +891,23 @@ struct UniverseView: View {
         // `uni-sky.js:313` gates the company on `s.met` — no one has sat with an unmet world.
         let moteIn = max(0, min(1, (R - 3.4) / 5.0))          // uni-field.js:90 — they resolve
         if st.isMet, moteIn > 0.02 {
+            // THE COMPANY ORBITS THE PLANET, NOT THE DOT. `uni-sky.js:316` passes
+            // `max(R, 3.2 + z*1.1)` — the planet's PROJECTED radius with a floor — where this
+            // used `sz`, the met star's 2–3pt core dot. As zoom grew the dot grew ~1.9× with z
+            // while the disc grew as `pr·z` (7–11×), so the company sank INTO a planet that
+            // kept expanding past it. Four things were missing from one line: the base, the
+            // `tip` tilt, the 0.42 ellipse, and the behind/in-front term.
+            let base = max(R, 3.2 + zoom * 1.1)
             for m in st.motes {
-                var orbit = sz * m.orbitMul
-                if m.wobble { orbit *= 1 + 0.18 * sin(t * 0.31 + st.twSeed * 6.2831) }
+                var orr = base * m.rr
+                if m.wobble { orr *= 1 + 0.18 * sin(t * 0.31 + st.twSeed * 6.2831) }
                 let ang = t * (2 * .pi / m.per) + m.ph
-                ctx.fill(UniGeo.ringPath(sx + cos(ang) * orbit, sy + sin(ang) * orbit, m.size),
-                         with: .color(m.color.opacity((m.wobble ? 0.8 : 0.7) * moteIn)))
+                let ct = cos(m.tip), stp = sin(m.tip)
+                let ox = cos(ang) * orr
+                let oy = sin(ang) * orr * 0.42          // seen at an angle, not flat on
+                let back = sin(ang) < 0 ? 0.44 : 1.0    // `uni-field.js:88`
+                ctx.fill(UniGeo.ringPath(sx + ox * ct - oy * stp, sy + ox * stp + oy * ct, m.size),
+                         with: .color(m.color.opacity((m.wobble ? 0.8 : 0.7) * moteIn * back)))
             }
         }
     }
