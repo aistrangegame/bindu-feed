@@ -111,6 +111,54 @@ ScrollView; here a child gesture beat one. Replaced with `PressScaleStyle: Butto
 gets the same `isPressed` and cooperates with scrolling. **Walked: ROOTS, Neev, Shweta and
 Ash's full-width card now reachable.**
 
+### 1.4 · the dead lit mark — CLOSED
+
+`real` kept every non-empty comment while the grouping dropped any whose story would not
+resolve, so an unresolvable comment drew a bright, lit, tappable-looking mark with
+`storyIndex == −1` that silently swallowed the tap. Filtered at the one definition of "in the
+record", which `n`, `at`, the legend and the map all read.
+
+### 1.5 · register 0's overlap (C1) — CLOSED, and my first fix was wrong
+
+The figure now recedes in proportion to how far the words run past its centre, landing on this
+file's own 0.42 at the extreme rather than a new constant.
+
+**The first version was a switch (`saysBottom > cy − 8`) and it fired for everyone** — Gaia's
+four lines end at ~412 against a centre of 358, and the comp's own three short blocks end at
+~394, which also passes it. A condition every voice satisfies is not a condition; it was a
+global dim of an authored constant wearing one. **Caught by testing the negative case.**
+
+Continuous now, which is the design's idiom everywhere else:
+
+| | text ends | figure |
+|---|---|---|
+| comp's 3 short blocks | 394 | 0.270 |
+| Gaia · 4 lines | 412 | 0.212 |
+| Lalita · 5 lines | 433 | 0.157 |
+| Neev · 6 lines | 460 | 0.143 |
+
+Walked: Neev (248ch, the longest) fully legible; Gaia's phyllotaxis still reads as her figure.
+
+### 1.6 · Ash's two figures — NOT A DEFECT, verified against the comp
+
+The comp has **both** layers too: `FIG.ashram` (`The Rooms v4.html:623`) and `MAPGEO.ashram`
+(`:811`). The even calendar column `q = (i/(n−1))·2−1` is authored maths verbatim, and the
+comp's own `drawMap` does **not** use `lat` either — the map is a stationary index over a
+scrubbing figure, for every voice. Nothing changed. Looked before deciding.
+
+### 1.7 · `dragFrom` — CLOSED
+
+Released on `onDisappear` as well as `onEnded`. A cancelled gesture left `down == true` and
+the register spring dead for the session. Third appearance of the claim-release hole.
+
+### A3 · the duplicate Light title — CLOSED
+
+`AxisLightSeam` printed "the Light" / "what has not yet been" while `#where` printed the
+identical pair from `Axis.registers`; at z −5 all four hide conditions are false, so both
+stood at once. `#where` is the design's object and names every register; the seam is the
+register's content and offers the way in. The seam keeps its door and drops the repeat.
+(`"stand inside ›"` is not in any design file — noted, kept as the only affordance there.)
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed
@@ -126,6 +174,12 @@ stats as **19 fields**. The figure was authored against 19; the base holds 48.
 |---|---|---|---|---|---|
 | 19 *(as authored)* | 3.37 | 11.04 | 31.65 | **0** of 18 | 8 of 18 |
 | 48 *(as held)* | 1.29 | 4.28 | 14.20 | **9** of 47 | 38 of 47 |
+
+**This is the FOURTH instance of one class: the comp's fixed geometry meeting an archive
+larger than it was drawn for.** The map density (31 → 101), register 0's overlap (a shorter
+principle than the base holds), the Universe's fixed mark size, and now Karishma (19 → 48).
+The first three were fixable. **This one is not, without invention** — naming the class is what
+stops the next one being diagnosed from scratch.
 
 The two-stage tap mitigates but does not solve it: the first tap arms an effectively arbitrary
 mark in the coil and **names** it, so he can see it is not the one he meant — but at 1.29pt

@@ -67,13 +67,24 @@ struct RoomArchive {
     /// fails, so the lens path fails loud and draws only what it has.
     static func build(comments: [FieldComment], titles: [String: String],
                       declared: Int? = nil, allowsGap: Bool = false) -> RoomArchive {
-        let real = comments.filter { !$0.body.trimmingCharacters(in: .whitespaces).isEmpty }
+        // A MARK IS DRAWN ONLY IF ITS STORY CAN BE FOUND. The two used to disagree: `real`
+        // kept every non-empty comment while the grouping below dropped any whose story would
+        // not resolve — so an unresolvable comment drew a bright, lit, tappable-looking mark
+        // with `storyIndex == −1` that silently swallowed the tap. Absence would have been
+        // honest; a lit mark that does nothing is the shape this build keeps digging out.
+        //
+        // Filtering here rather than special-casing the tap keeps ONE definition of what is in
+        // the record, which `n`, `at`, the legend and the map all read.
+        let known = Set(titles.keys)
+        let real = comments.filter {
+            !$0.body.trimmingCharacters(in: .whitespaces).isEmpty && $0.storyId(in: known) != nil
+        }
         guard !real.isEmpty else { return .empty }
 
         var groups: [RoomStoryGroup] = []
         var index: [String: Int] = [:]
         for c in real {
-            guard let sid = c.storyId(in: Set(titles.keys)) else { continue }
+            guard let sid = c.storyId(in: known) else { continue }
             if let i = index[sid] {
                 groups[i].items.append(c)
             } else {

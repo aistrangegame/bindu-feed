@@ -25,6 +25,8 @@ struct RoomView: View {
     @State private var loaded = false
     /// Register 2's own depth. 0 the map · 1 a story · 2 one comment.
     @State private var sub = 0
+    /// Where the Operating Principle actually ends, in the room's frame.
+    @State private var saysBottom: Double = 0
     /// THE MARK UNDER THE HAND, named but not yet opened. `realIndex`.
     @State private var armed: Int?
     #if DEBUG
@@ -115,6 +117,7 @@ struct RoomView: View {
             // correctness — and picks the wrong card the moment a story holds two items,
             // which is exactly what a Return produces.
             .coordinateSpace(name: "room")
+            .onPreferenceChange(RoomSaysBottom.self) { saysBottom = $0 }
         }
         .ignoresSafeArea()
         .overlay(alignment: .topLeading) {
@@ -141,7 +144,18 @@ struct RoomView: View {
             travel.start()
             Task { await load() }
         }
-        .onDisappear { travel.stop() }
+        .onDisappear {
+            // 1.7 — A CLAIM IS RELEASED BY EVERY PATH ITS OWNER CAN LEAVE BY. `dragFrom` was
+            // cleared only in `onEnded`; a gesture cancelled by the view going away left it
+            // non-nil and `travel.down` true, so the next gesture never called `begin()`,
+            // `anchor` stayed stale, and the register spring in `step()` was dead for the
+            // session. Same rule the fall's four scoped paths and `PressClaim` keep — and the
+            // third time this exact hole has appeared.
+            dragFrom = nil
+            lastDrag = .zero
+            travel.end()
+            travel.stop()
+        }
         // THE VERTICAL ALWAYS WINS. Leaving register 2 resets its sub-depth, so the depth
         // is state and never a mode he can be trapped in. `:1026-1027`.
         .onChange(of: near2) { _, isNear in
@@ -292,10 +306,34 @@ struct RoomView: View {
         let b = RoomGeo.breath(t)
         // `:1015-1021` — at register 2 the figure becomes the archive's index; descending
         // into a story or a comment recedes it to 42% so that type wins.
+        // C1 — WHEN THE WORDS REACH THE FIGURE, THE FIGURE GETS OUT OF THE WAY.
+        //
+        // The comp's `#says` is 2–3 short first-person blocks, so at `pres 0.34` the figure
+        // reads as a watermark behind them. The base holds the Operating Principle as written
+        // — Neev 248 chars, Shweta 227, Lalita 225 — five to six lines that run from ~313pt
+        // straight through the figure's centre at `H*0.42`. Third instance of the comp's fixed
+        // geometry meeting a longer archive; the type is authored and is not cut.
+        //
+        // So the same rule the rest of the build keeps — the yantra's dim, the Rooms' own
+        // `(sub > 0 ? 0.42 : 1)`, the seven worlds' `displaced()` — landing on this file's OWN
+        // 0.42 at the extreme rather than inventing a constant.
+        //
+        // CONTINUOUS, and the first version was not. I wrote it as `saysBottom > cy − 8`, and
+        // testing the NEGATIVE case caught it: Gaia's four lines end at ~412 against a centre
+        // of 358, so it fired for her too — and the comp's own three short lines end at ~394,
+        // which also passes the centre. A condition every voice satisfies is not a condition;
+        // it was a global dim of an authored constant wearing one.
+        //
+        // What discriminates is HOW FAR PAST the centre the words run: the comp's 2–3 blocks
+        // barely cross it, Neev's six lines bury it. So the figure recedes in proportion,
+        // which is the design's idiom everywhere else — a continuous function of a continuous
+        // quantity, not a switch.
+        let over = saysBottom > 0 ? RoomGeo.sm(cyFor(d), cyFor(d) + 90, saysBottom) : 0
         let pres = (0.34 + RoomGeo.sm(0, 1, d) * 0.66 - RoomGeo.sm(1.4, 2.2, d) * 0.42)
                  * (sub > 0 ? 0.42 : 1)
+                 * (1 - over * 0.58 * (1 - RoomGeo.sm(0, 1, d)))
         let S = (0.62 + RoomGeo.sm(0, 1, d) * 0.52) * min(1, W / 393)
-        let cy = H * (0.42 - RoomGeo.sm(1, 2, d) * 0.02)
+        let cy = cyFor(d, H)
 
         if let key {
             RoomFigures.draw(key, ctx, size, t, RoomFigureParams(
@@ -321,6 +359,11 @@ struct RoomView: View {
     /// radii. At 31 it is the comp exactly; at 101 it is 0.55; the floor keeps a mark visible
     /// at any count. The GEOMETRY does not change — the index is still the figure, every mark
     /// still sits where that voice's mathematics puts it. Only the ink does.
+    /// The figure's centre. `The Rooms v4.html:1017` — one expression, read in two places.
+    private func cyFor(_ d: Double, _ H: Double = 852) -> Double {
+        H * (0.42 - RoomGeo.sm(1, 2, d) * 0.02)
+    }
+
     private func markScale(_ n: Int) -> Double {
         max(0.5, min(1.0, (31.0 / Double(max(1, n))).squareRoot()))
     }
@@ -419,6 +462,13 @@ struct RoomView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(BinduTheme.inkPrimary.opacity(0.88))
                 .padding(.horizontal, 34).padding(.top, 22)
+                // MEASURED, not estimated. The figure recedes exactly when the words reach
+                // it, so the rule fires on this device with this voice's real text rather
+                // than on a character count that guesses at line wrapping.
+                .background(GeometryReader { g in
+                    Color.clear.preference(key: RoomSaysBottom.self,
+                                           value: g.frame(in: .named("room")).maxY)
+                })
             Spacer(minLength: 0)
         }
         .padding(.top, 96)
@@ -678,5 +728,14 @@ private struct RoomCardFrames: PreferenceKey {
 enum RoomDraw {
     static func ring(_ cx: Double, _ cy: Double, _ r: Double) -> Path {
         Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
+    }
+}
+
+
+/// Where the Operating Principle's last line falls, in the room's coordinate space.
+struct RoomSaysBottom: PreferenceKey {
+    static var defaultValue: Double = 0
+    static func reduce(value: inout Double, nextValue: () -> Double) {
+        value = max(value, nextValue())
     }
 }

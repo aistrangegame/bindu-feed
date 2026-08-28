@@ -713,10 +713,16 @@ private struct AxisLightSeam: View {
             }
             .ignoresSafeArea().allowsHitTesting(false)
 
+            // A3 — THE REGISTER IS NAMED ONCE. This printed "the Light" and "what has not
+            // yet been" while `#where` printed the identical pair from `Axis.registers` — at
+            // z −5 all four of its hide conditions are false, so both stood on screen at once,
+            // differing only in size (Lora 20 vs 23) and colour.
+            //
+            // `#where` is the design's object (`:4348-4351`, the centred block at top:100) and
+            // names every register; the seam is the register's CONTENT and offers the way in.
+            // So the seam keeps its door and drops the title it was repeating.
             VStack(spacing: 12) {
                 Spacer()
-                Text("the Light").font(.lora(20)).foregroundStyle(Color(hex: "#EDE3CE"))
-                Text("what has not yet been").font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
                 Button(action: onEnter) {
                     Text("stand inside ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }.padding(.top, 6)

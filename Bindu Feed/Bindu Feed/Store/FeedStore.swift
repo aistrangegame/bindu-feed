@@ -273,7 +273,9 @@ final class FeedStore: ObservableObject {
         let key = "bindu.debug.room"
         guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty else { return }
         UserDefaults.standard.removeObject(forKey: key)
-        if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+        if name.caseInsensitiveCompare("Ash") == .orderedSame, let a = ashArchetype {
+            pendingLaunchRoute = .home(a)
+        } else if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
             pendingLaunchRoute = .home(a)
         }
     }
