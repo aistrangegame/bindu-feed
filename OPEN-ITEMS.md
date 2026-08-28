@@ -58,6 +58,42 @@ rendering nothing; `ThresholdSentence` reading `f.body ?? f.name`; **the sentenc
 derived path does not exist** (newline-only, no `count <= 1` fallback); `writeVow` in the 900
 band with a resolved archetype.
 
+### 1.3 · the hit target — RE-MEASURED FIRST, and two of three prescriptions were wrong
+
+Pass 4.1's "selected cleanly at 101, first tap" was a wrong-story open read as a clean one, so
+`sqrt(31/n)`, the 9pt floor and the two-stage tap were all tuned against a broken hit test.
+Re-measured with the frame corrected:
+
+| voice | region | spacing | Δ | result |
+|---|---|---|---|---|
+| Lalita 101 | isolated | — | 2 | the mark aimed at |
+| Lalita 101 | 14pt pair | 14 | 1 / 2 | **two different stories** |
+| Lalita 101 | median pair | 8 | 1 / 3 | **two different stories** |
+| Karishma 48 | outer arc | 14.2 | 4 | clean |
+| Karishma 48 | inner coil | **1.29** | 6 | resolves, but to *a* mark, not *the* mark |
+
+**The 9pt floor STAYS — raising it is measurably wrong.** At Lalita's 8pt median a larger
+radius makes neighbouring marks steal each other and destroys the selectivity just measured.
+The prescription to raise it came from the corrupted evidence.
+
+**`sqrt(31/n)` STAYS — measured, not assumed.** The worry was that it shrinks sparse outer
+marks needlessly. Lalita's nearest-neighbour spread is min 1.0 · p25 5.4 · median 8.2 · p75
+10.9 · max 28.3, and **only 2 of 101 marks have more than 20pt of clearance**. Three quarters
+sit within 11pt, where full-size glows (r15) would merge. A local scale would change two marks
+and cost a cached layout.
+
+**The two-stage tap IS built** — for the piled regions and for finger-vs-pointer, not for the
+frame. The first tap arms and **names** the mark in the legend; the second opens. The naming
+is the point: marks are unlabelled, which is exactly why a wrong-mark open stayed invisible
+for three walks. Nothing instructional is added — the title appearing is the affordance.
+
+**It would have made things worse before the frame fix**: a two-stage tap over a 62pt-offset
+hit test lights the wrong mark and lets him confirm it, adding confidence to an error.
+
+Karishma's core is the design's own authored maths (`The Rooms v4.html:790-812`, verbatim) —
+`th` linear against an exponential radius. It is not changed; the two-stage tap is the answer
+for piled regions.
+
 ---
 
 ## NEWLY FOUND — not in the original ledger

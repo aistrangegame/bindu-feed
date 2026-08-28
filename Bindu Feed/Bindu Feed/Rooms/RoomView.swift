@@ -25,6 +25,8 @@ struct RoomView: View {
     @State private var loaded = false
     /// Register 2's own depth. 0 the map · 1 a story · 2 one comment.
     @State private var sub = 0
+    /// THE MARK UNDER THE HAND, named but not yet opened. `realIndex`.
+    @State private var armed: Int?
     #if DEBUG
     @State private var probe: String?
     #endif
@@ -144,6 +146,7 @@ struct RoomView: View {
         // is state and never a mode he can be trapped in. `:1026-1027`.
         .onChange(of: near2) { _, isNear in
             if !isNear && sub != 0 { sub = 0; story = 0; one = 0 }
+            if !isNear { armed = nil }
         }
     }
 
@@ -221,12 +224,34 @@ struct RoomView: View {
                            (nearest?.x ?? 0) - Double(p.x), (nearest?.y ?? 0) - Double(p.y), nd,
                            hitTitle as NSString, hitRadius)
             #endif
-            if let hit, hit.storyIndex >= 0 {
+            // TWO STAGES, and the first one NAMES the mark.
+            //
+            // Measured with the frame corrected: the hit test now always resolves the nearest
+            // mark — Lalita's 8pt-median pairs give two different stories at Δ1 and Δ3, and a
+            // 14pt pair at Δ1 and Δ2. So selection is truthful. What is left is ergonomic and
+            // geometric: a finger is not a 2pt pointer, and Karishma's inner coil packs its
+            // marks 1.29pt apart (`th` steps linearly against an exponential radius), where a
+            // tap resolves to *a* mark rather than *the* mark — measured at Δ6 there.
+            //
+            // So the first tap arms and names; the second opens. The naming is the whole
+            // point: marks are unlabelled, which is why a wrong-mark open was invisible for
+            // three walks. Nothing instructional is added — the title simply appears, and
+            // that is the affordance.
+            //
+            // THIS WOULD HAVE MADE THINGS WORSE BEFORE THE FRAME FIX: a two-stage tap over a
+            // 62pt-offset hit test would have lit the wrong mark and let him confirm it,
+            // adding confidence to an error.
+            guard let hit, hit.storyIndex >= 0 else { armed = nil; return }
+            if armed == hit.realIndex {
                 story = hit.storyIndex
                 let target = archive.real[hit.realIndex]
                 one = max(0, archive.stories[story].items.firstIndex(where: { $0.id == target.id }) ?? 0)
                 sub = 1
+                armed = nil
                 soundEngine.riteThreshold(hz: key?.hz ?? 220, dur: 3)
+            } else {
+                armed = hit.realIndex
+                soundEngine.riteThreshold(hz: (key?.hz ?? 220) * 0.5, dur: 1.4)
             }
             return
         }
@@ -319,6 +344,7 @@ struct RoomView: View {
             }
             out.append(RoomMark(x: mx, y: my, real: real, storyIndex: si, realIndex: ri ?? -1))
             if real {
+                let isArmed = ri != nil && ri == armed
                 let tw = 0.62 + 0.38 * sin(t * 0.7 + Double(i))
                 let c = CGPoint(x: mx, y: my)
                 ctx.fill(RoomDraw.ring(mx, my, 15 * k), with: .radialGradient(
@@ -329,6 +355,12 @@ struct RoomView: View {
                            with: .color(RoomGeo.col(RoomGeo.mix(rgb, [255, 255, 255], 0.3), 0.30 * a)),
                            lineWidth: 0.8)
                 ctx.fill(RoomDraw.ring(mx, my, 2.6 * k), with: .color(RoomGeo.col([255, 252, 248], 0.92 * a)))
+                if isArmed {
+                    // the one under the hand — held open, not decorated
+                    ctx.stroke(RoomDraw.ring(mx, my, 13 * k),
+                               with: .color(RoomGeo.col([255, 252, 248], 0.55 * a)), lineWidth: 1)
+                    ctx.fill(RoomDraw.ring(mx, my, 3.4 * k), with: .color(RoomGeo.col([255, 252, 248], a)))
+                }
             } else {
                 // a real position with no words behind it — dim, and never filled in
                 ctx.fill(RoomDraw.ring(mx, my, 1.1 * k), with: .color(RoomGeo.col(rgb, 0.26 * a)))
@@ -559,6 +591,13 @@ struct RoomView: View {
                         .foregroundStyle(Color(hex: "#C0392B"))
                 } else if archive.isEmpty {
                     Text("nothing in the record yet")
+                } else if sub == 0, let a = armed, a < archive.real.count,
+                          let si = archive.stories.firstIndex(where: { archive.real[a].belongs(to: $0.id) }) {
+                    // ARMED — the mark says which story it is, and nothing else. No "tap
+                    // again": the name appearing IS the affordance, and an instruction here
+                    // would be the invented-string class the sweep removed six of.
+                    Text(archive.stories[si].title)
+                        .foregroundStyle(BinduTheme.inkPrimary.opacity(0.82))
                 } else if sub == 0 {
                     let ns = archive.stories.count
                     let rt = archive.returnedCount     // derived every read — never asserted
