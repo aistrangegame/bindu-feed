@@ -505,19 +505,36 @@ It was held because the app showed readings *instead of* the world. **The yantra
 
 | # | Item |
 |---|---|
-| C1 | **Register 0 — text over the figure.** Dimming and the frame fix both landed; the overlap persists because the comp's `cy = H*0.42` at 62% assumed a shorter Operating Principle than the base holds. Lalita's is five lines. |
-| C2 | **Register 2 — marks unselectable.** Not overall density: `MAPGEO.karishma` steps `th` linearly against an exponential radius, so marks pile at the core. Sakshi and Lalita crowd by different mechanisms again. Even perfect spacing gives ~5pt between centres at 48 marks. **Needs the two-stage tap and a wider `R`, not more shrinking.** |
+| C1 | **Register 0 — text over the figure.** **CLOSED.** The first fix was a switch (`saysBottom > cy − 8`) that fired for Gaia's four lines *and the comp's own three blocks* — a rule that always fires, caught only by testing the case that should not trigger. Rebuilt as a continuous recede: the figure's presence falls off by how far the principle actually overruns it, so a short principle leaves the figure untouched. Walked in Lalita (five lines) and Bindu (four): text legible, figure behind and dim, and Bindu's flower not dimmed at all. |
+| C2 | **Register 2 — marks unselectable.** **CLOSED, and the root cause was not density.** `RoomView`'s `GeometryReader` lacked `.ignoresSafeArea()` while the Canvas had it, so every tap resolved ~59pt above the finger: in a dense field it opened *the wrong story* silently, in a sparse one it did nothing. Fixed at the source, plus `.coordinateSpace(name: "room")` which was written at `:491` and never declared anywhere. The two-stage tap then makes a 4–8pt archive aimable: the first tap arms the nearest mark and **names its story in the caption**, the second descends. Verified in Sakshi — the caption read "The Waves That Came to Clear" before the tap, and that is the story that opened. Karishma's coil remains a measured named limit, not a defect: marks pile toward the core by construction, and the outer turns are where you aim. |
 
 ## D · Built but never walked — must be in the final honest list
 
-| # | Item | Why |
+Re-walked in the closing sequence. **D2, D4 and D5 retire: they were defects, not
+harness limits.** What remains is smaller and more precisely stated.
+
+| # | Item | Status after the closing walk |
 |---|---|---|
-| D1 | **The sound, entirely.** | Simulator reports no headphones, so the binaural path collapses by design; reverb can't be read off a screenshot. Ashrey's first hearing. |
-| D2 | **Ash's register-2 card at sub-depth 1.** | His figure is the documented exception with no geometry; the mark→story hit path is `drawMap`'s. |
-| D3 | **Worlds I and VII.** | Unwalkable by a scripted hand for their own opposite reasons — I's stars drift from the taps, VII's are too fast. Both are those worlds working. |
-| D4 | **The Rooms' vertical travel**, and **PlayersView's fold** where Neev, Shweta and Ash live. | Synthetic touches don't move that ScrollView. The eleventh voice is the hardest to reach in his own instrument. |
-| D5 | **Register 2 filling after a Return**, beyond Ash's spine. | The legend turned on Ash's map; the sub-depth card was not reached. |
-| D6 | **Ash's seat in the fan.** | Needs two returns on one story; the Return declines on The Two Who Were One because it carries no Ash Comment. Sequence, not defect. |
+| D1 | **The sound, entirely.** | **STILL OPEN — the honest list's first entry.** Every value verifies by reading (BEATS, the eleven CHAR timbres, the two beds, the Light's eight events, the 0.075 ceiling, reduced-motion). None has been *heard*. The simulator reports no headphones, so the binaural pair collapses to mono by construction, and reverb cannot be read off a screenshot. Ashrey's first hearing is the first hearing. |
+| D2 | ~~Ash's register-2 card at sub-depth 1.~~ | **RETIRED — it was the frame error.** Sub-depth 2 now reached in Lalita, Karishma and Sakshi. His vertical calendar column was the worst case of a 59pt offset, not a documented exception. |
+| D3 | **Worlds I and VII.** | **STILL OPEN.** Unwalkable by a scripted hand for their own opposite reasons — I's stars drift away from a stale tap coordinate, VII's scatter faster than the round trip. Both are those worlds working as designed. The Light's choosing hit the same wall and was only cleared by tapping the same point twice in immediate succession. |
+| D4 | ~~The Rooms' vertical travel, and PlayersView's fold.~~ | **RETIRED.** The Rooms' vertical was my swipe direction. PlayersView's fold was two press-highlight `DragGesture`s eating the pan — a defect producing exactly the symptom a harness limit would. Ash is reachable; the scroll was walked. |
+| D5 | ~~Register 2 filling after a Return.~~ | **RETIRED with D2** — the sub-depth card is reached. |
+| D6 | **Ash's seat in the fan.** | **STILL OPEN.** Needs two returns on one story; the Return declines on The Two Who Were One because it carries no Ash Comment. Sequence, not defect. |
+| D7 | **The fall's layer four, on device.** | **NEW, OPEN.** The four names, the thresholds `0.20 / 0.50 / 0.88`, the fade and the `H−172` mono 8.5 BONE 0.26 placement all verify verbatim against `uni-fall.js:153-158`. The *behaviour* does not: the axis flick carries momentum past the fall's inner depths, and I did not land `d` in `[0.88, 1.0]` in the attempts made. The mouth's gold rings were reached; the caption band at `H−172` was measured empty on a surface past the fall, which is correct there and proves nothing about layer four. |
+
+## D′ · The checklist itself was wrong in one place
+
+`HANDOFF-VERIFICATION.md`'s Pass 4 line says *"**Bindu's room does not respond** — she
+is undivided."* The app makes her flower strain outward under the hand and spring back.
+Checked against the comp rather than assuming the checklist was right: `The Rooms
+v4.html:203` is `const push=1+strain*0.5*(i?1:0)`, with the authored comment *"she strains
+outward under the hand, and comes back"*. The port is verbatim, alpha term included.
+
+So the code is correct and **the acceptance line is imprecise**. What Bindu lacks is a
+*division* — no lens, no two sides, no scrub; her `lat` has no destination. She is not
+inert. This is the same shape as A4 and E1/E2: a checklist assertion that is not in the
+design. Recorded, not "fixed".
 
 ## E · Closed — recorded so they are not re-opened
 
