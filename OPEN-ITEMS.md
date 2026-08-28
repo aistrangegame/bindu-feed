@@ -210,9 +210,16 @@ is not changed; growing `R` with `n` is not in the design and would be an invent
 | walk | claim | status |
 |---|---|---|
 | Pass 4 | reached sub-depth 2 | **stands** — predates `31c63cd` |
-| Pass 4.1 | *"selected cleanly at 101, first tap"* | **void** — it selected something; landing read as correctness |
-| Pass 6 | opened a sub-depth from a lit mark | **void** — same |
-| `Linked Story` sweep | the mark→story hit path | **void** — read, never walked |
+| Pass 4.1 | *"selected cleanly at 101, first tap"* | **RE-WALKED** — Lalita 101, Δ1–2, two 8pt-apart marks giving two different stories |
+| Pass 6 | opened a sub-depth from a lit mark | **RE-WALKED** — Ash's lower mark, Δ0,1, named then opened |
+| `Linked Story` sweep | the mark→story hit path | **RE-WALKED** — resolved to The Measuring Stick, and both its items are the right two |
+
+**D5 and D2 closed in the same walk, and it is the whole Return loop end to end.** Ash's
+register 2, sub-depth 1 on The Measuring Stick shows **two** cards: *"Be Your Self"* (his
+sealed self) and *"The stick is still in my hand. I notice I am the one holding it."* (the
+Return Answer written in Pass 6). Seal → ring + answer → read back → legend derives → register
+2 shows both. Nothing here is a second path; it is the one archive query.
+
 
 ---
 
