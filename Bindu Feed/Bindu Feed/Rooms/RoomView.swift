@@ -25,6 +25,9 @@ struct RoomView: View {
     @State private var loaded = false
     /// Register 2's own depth. 0 the map · 1 a story · 2 one comment.
     @State private var sub = 0
+    #if DEBUG
+    @State private var probe: String?
+    #endif
     @State private var story = 0
     @State private var one = 0
     /// Where each mark landed this frame, so a tap can find it. Rebuilt by `drawMap`.
@@ -42,6 +45,23 @@ struct RoomView: View {
     private var near2: Bool { abs(d - 2) < 0.5 }
 
     var body: some View {
+        // ONE FRAME FOR THE WHOLE ROOM — the figure, the marks, the type AND THE HAND.
+        //
+        // This `GeometryReader` had no `.ignoresSafeArea()` while the Canvas below it and the
+        // `Group` of type both did, so `v.location` arrived in the safe-area frame and was
+        // compared against marks drawn in the physical one. MEASURED ON DEVICE: a tap at
+        // physical y 435 reported 373, and at 345 reported 283 — a **62pt** offset, the top
+        // inset, on every tap.
+        //
+        // It did not read as broken, which is why it survived three walks. Against a 9pt hit
+        // radius the query lands 62pt above the finger, so in a dense archive it finds a
+        // DIFFERENT mark and opens THAT story — marks are unlabelled, so it looks like a hit.
+        // Measured: tapping Lalita's core resolved a mark 7pt from the shifted point and
+        // opened "Thank You for the Cold", 62pt from where the finger was. Only in sparse
+        // regions is there nothing 62pt up, and those are the "dots that don't work".
+        //
+        // `31c63cd` moved the DRAWING into the physical frame and left the hit-testing behind.
+        // Fixed at the source — one frame — never by subtracting an inset at the call site.
         GeometryReader { geo in
             let size = geo.size
             ZStack {
@@ -86,13 +106,35 @@ struct RoomView: View {
             }
             .contentShape(Rectangle())
             .gesture(hand(size))
+            // `cardRects` is written as `frame(in: .named("room"))` and this is the only
+            // place that name is declared. Without it the rects resolved against an
+            // undefined space; sub-depth 2 still opened, but only because a card is ~164pt
+            // tall and a 62pt error still lands inside it. It works by SIZE, not by
+            // correctness — and picks the wrong card the moment a story holds two items,
+            // which is exactly what a Return produces.
+            .coordinateSpace(name: "room")
         }
+        .ignoresSafeArea()
         .overlay(alignment: .topLeading) {
             BackChevron { $path.popDissolve() }
                 .padding(.leading, 15).padding(.top, 19)
         }
         .sonicContext(.base)
+        #if DEBUG
+        .overlay(alignment: .bottom) {
+            if let d = probe {
+                Text(d).font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(.green).padding(.bottom, 40).allowsHitTesting(false)
+            }
+        }
+        #endif
         .onAppear {
+            #if DEBUG
+            if let r = UserDefaults.standard.string(forKey: "bindu.debug.reg"), let v = Double(r) {
+                UserDefaults.standard.removeObject(forKey: "bindu.debug.reg")
+                travel.park(at: v)
+            }
+            #endif
             travel.configure(holdsLat: key == .shweta)
             travel.start()
             Task { await load() }
@@ -165,6 +207,20 @@ struct RoomView: View {
                 let dd = hypot(m.x - Double(p.x), m.y - Double(p.y))
                 if dd < best { best = dd; hit = m }
             }
+            #if DEBUG
+            // 1.0 — WHICH MARK DID THIS RESOLVE TO, AND WHICH ONE WAS UNDER THE FINGER?
+            // If the two differ by ~59pt in y, the frame is the fault and the story is wrong.
+            var nearest: RoomMark?; var nd = Double.greatestFiniteMagnitude
+            for m in marks where m.real {
+                let dd = hypot(m.x - Double(p.x), m.y - Double(p.y))
+                if dd < nd { nd = dd; nearest = m }
+            }
+            let hitTitle = hit.map { h in h.storyIndex >= 0 ? archive.stories[h.storyIndex].title : "storyIndex −1" } ?? "—"
+            probe = String(format: "tap %.0f,%.0f · nearest Δ%.0f,%.0f (%.0f) · hit %@ · r%.1f",
+                           Double(p.x), Double(p.y),
+                           (nearest?.x ?? 0) - Double(p.x), (nearest?.y ?? 0) - Double(p.y), nd,
+                           hitTitle as NSString, hitRadius)
+            #endif
             if let hit, hit.storyIndex >= 0 {
                 story = hit.storyIndex
                 let target = archive.real[hit.realIndex]

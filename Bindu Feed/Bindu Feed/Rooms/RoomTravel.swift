@@ -47,6 +47,10 @@ final class RoomTravel: ObservableObject {
 
     func configure(holdsLat: Bool) { self.holdsLat = holdsLat }
 
+    #if DEBUG
+    func park(at register: Double) { d = max(0, min(2, register)) }
+    #endif
+
     func start() {
         guard link == nil else { return }
         lastTime = CACurrentMediaTime()
