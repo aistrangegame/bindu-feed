@@ -259,6 +259,46 @@ The discriminating case — two returns a day apart and a third two years later 
 **0.031 / 0.021 / 0.800**. Under the position-derived `rel` it read 0.0 / 0.5 / 1.0: evenly
 aged, which is the whole fault.
 
+### 2.5 · `WX[13]` + `DENS[]` — CLOSED (real work, not a port)
+
+The second of the two adds §7 sanctions on `UniRegions`, absent since the port. The shader was
+fed `(0.4, 0.02, 0.2)` — the design's **fallback** literal from `uni-deep.js:91`'s `|| [...]` —
+for every register in every room. The Forge churns at 0.92 turbulence; the Watcher is nearly
+still at 0.12; the Forgetting is 0.86 grain. `DENS` is derived from met-ness, not authored;
+the shader had all thirteen pinned at a flat 0.6.
+
+`mSky` now reads a 39-float `uRm`. **First attempt failed at link time** — I passed the array
+length as a separate `.float`, but `.floatArray` supplies both pointer and length: *"Function
+stitching failed: instrumentField"*, which is a link error and would have shown as a black
+field, not a wrong one.
+
+**Protect list re-diffed:** the metal change is a rename, two data-source lines in `mSky`, and
+signature threading. **No motif body differs** — all fifteen verbatim, `mSky`'s own formula
+included. Walked: the sky renders all thirteen rooms.
+
+### 2.6 · the mote orbit — CLOSED, and my first description of it was wrong
+
+The base was `sz` (the 2–3pt core dot) where `uni-sky.js:316` passes `max(R, 3.2 + z·1.1)` —
+the planet's projected radius. The `tip` tilt, the `oy × 0.42` ellipse and the behind/in-front
+term were all missing too: four things on one line.
+
+**But "the company sank into the planet" — which I wrote in the commit — is too strong.**
+Computed across the real parameter range, the old orbit as a multiple of planet radius:
+
+| pr | orbitMul 4.6 | 5.8 | 7.0 |
+|---|---|---|---|
+| 7 | 1.39 | 1.76 | 2.12 |
+| 9 | **1.08** | 1.37 | 1.65 |
+| 11 | **0.89** | 1.12 | 1.35 |
+
+Inside the limb only for the largest planets at the lowest `orbitMul` (0.89, and 0.81 at high
+zoom). Elsewhere it merely hugged the disc at ~1.1–1.4 radii against the design's 1.62–2.34.
+
+**The systematic fault is subtler and worse:** the ratio was a function of `pr` AND zoom, where
+the design fixes it at `rr` — a constant per mote. The company's distance from its own planet
+varied by which star it was and by how close he had come. That is what `rr` means, and the
+name `orbitMul` had quietly stopped meaning it.
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed
