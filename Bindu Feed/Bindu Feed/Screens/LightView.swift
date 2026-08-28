@@ -12,8 +12,11 @@ import SwiftUI
 //     debossed, and writes the Vow → landing.
 //   out → "walk back out".
 //
-// One scene per visit, chosen by date-hash (like the Mirror). Two materials tell
-// you where you are with the words covered: the dawn (Near) vs the nave (Far).
+// One scene per visit, and HE chooses it — six presences stand in the dawn after the
+// gate and he walks toward one (E1.1). It is NOT a date-hash: this is the one register
+// whose subject is what has not happened yet, and a hash choosing his future for him is
+// the wrong gesture in it. Two materials tell you where you are with the words covered:
+// the dawn (Near) vs the nave (Far).
 
 private enum LightStage {
     /// `.choosing` — E1.1. The six stand in the dawn and HE picks. It sits after the gate,

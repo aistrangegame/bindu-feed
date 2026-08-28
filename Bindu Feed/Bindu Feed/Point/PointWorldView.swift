@@ -29,8 +29,6 @@ struct PointWorldView: View {
 
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
 
-    private func parkDebugStarIfRequested() {
-    }
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
 
     var body: some View {
@@ -154,7 +152,6 @@ struct PointWorldView: View {
         // longer mounted must never still be holding the vertical.
         .onDisappear { onHold(false); PointYantra.shared.readingOpen = false }
         .onAppear {
-            parkDebugStarIfRequested()
             syncAxisLock()
             if let dim { PointJourney.enteredDims.append(dim.name) }
             if !PointGoodnight.shown.contains(dimensionN) {
