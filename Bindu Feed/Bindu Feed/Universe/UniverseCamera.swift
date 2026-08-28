@@ -31,6 +31,27 @@ import QuartzCore
 // (nx=(wx+490)/980, ny=(wy+1030)/1930), so the draw path is fed unchanged.
 @MainActor
 final class UniverseCamera: ObservableObject {
+    // THE WORLD'S TURN — `uni-deep.js:250-303`, and it was never built.
+    //
+    // `The Instrument v3.html:5906-5926` gives the law: the vertical always walks the axis,
+    // and the horizontal is the register's own gesture — `else if(|Z+2|<0.75) turnV += dx*0.0016`.
+    // At the world register that gesture turns the body: three faces at TAU/3 each, the story,
+    // then who sat with it, then how often he came back. It "keeps the turn" — there is no
+    // spring home, only friction.
+    //
+    // Nothing in the app read `turnV`, because nothing wrote it. The horizontal at the world
+    // register did nothing at all, and the three faces the design authored — including the
+    // company's glyphs and the depth rings — have never been on screen.
+    @Published private(set) var turn: Double = 0
+    private var turnV: Double = 0
+
+    func turnBy(_ dx: Double) { turnV += dx * 0.0016 }
+    func stepTurn(_ dt: Double) {
+        turn += turnV
+        turnV *= pow(0.94, dt * 60)          // it keeps the turn; friction only
+        if abs(turnV) < 0.00002 { turnV = 0 }
+    }
+
     @Published private(set) var fx: Double = 0.5
     @Published private(set) var fy: Double = 0.5
     /// Derived from the axis. Never set by a gesture — see `setAxisZ`.
@@ -205,6 +226,7 @@ final class UniverseCamera: ObservableObject {
         lastTime = now
         guard dt > 0 else { return }
         dt = min(dt, 1.0 / 30.0)
+        stepTurn(dt)
         let f = dt * 60.0
 
         if let tx = tfx, let ty = tfy {

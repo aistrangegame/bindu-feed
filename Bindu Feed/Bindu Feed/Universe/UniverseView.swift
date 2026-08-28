@@ -175,6 +175,10 @@ struct UniverseView: View {
                         lastPan = v.translation
                         if inFall {
                             cam.descendBy(dx: Double(dx), dy: Double(dy))
+                        } else if register.key == "world" {
+                            // `:5906-5926` — the horizontal is the REGISTER's own gesture, and
+                            // at the world it turns the body rather than panning the sky.
+                            cam.turnBy(Double(dx))
                         } else {
                             cam.panBy(Double(dx), 0, geo.size)
                         }
@@ -696,6 +700,13 @@ struct UniverseView: View {
         // ── the travellers: life on the move between his met worlds (uni-rooms LANES) ──
         drawLanes(ctx, size, zoom: zoom, focus: focus, t: t)
 
+        // ── THE WORLD'S TURN — `uni-deep.js:250-303`, never built until now. Three faces at
+        // TAU/3: the story, then who sat with it, then how often he came back. ──
+        if register.key == "world", let fs = fstar,
+           let story = store.stories.first(where: { $0.id == fs.star.id }) {
+            drawWorldTurn(ctx, size, story: story, rm: uniRooms[fs.ri], t: t)
+        }
+
         // ── THE FALL — a star's whole life, opened. It composites OVER the same scene
         // rather than replacing it (uni-sky.js:332 — the fall renders on top; the sky does
         // not stop existing). Its descent is `desc`, its own gesture with its own momentum,
@@ -924,6 +935,74 @@ struct UniverseView: View {
     /// its neighbours vanished. `uni-sky.js:1336` draws each planet at its own projected
     /// position, and `detail` ramps `clamp((R-4)/26)` so the civilisation arrives with the
     /// approach instead of all at once.
+    /// THE WORLD, TURNED. `uni-deep.js:250-303`.
+    ///
+    /// The seam he is turning, and the face it brings round. `TURN IT` is the only affordance,
+    /// at `H−186` — canon, and the bidirectional string grep is what found it missing: a
+    /// one-directional check proves only that nothing was invented, never that nothing was
+    /// lost. This whole mechanic was absent with no flag against it.
+    private func drawWorldTurn(_ ctx: GraphicsContext, _ size: CGSize,
+                               story: Story, rm: UniRoom, t: Double) {
+        let W = Double(size.width), H = Double(size.height)
+        let cx = W / 2, cy = H / 2
+        let rim = min(W, H) * 0.30
+        let p = 0.92
+        let tau = Double.pi * 2
+        let face = ((cam.turn.truncatingRemainder(dividingBy: tau)) + tau).truncatingRemainder(dividingBy: tau)
+        let third = Int(face / (tau / 3))
+        let col = UniGeo.hx(rm.hex)
+
+        // the body's own terminator
+        ctx.stroke(UniGeo.ringPath(cx, cy, rim * 0.60), with: .color(UniGeo.col(col, p * 0.26)), lineWidth: 1)
+        // three seams, the one he is turning brightest
+        for m in 0..<3 {
+            let a = cam.turn + Double(m) * tau / 3
+            var seam = Path()
+            for q in 0...24 {
+                let f = Double(q) / 24
+                let yy = cy - rim * 0.60 + f * rim * 1.20
+                let wide = (max(0, 1 - pow((yy - cy) / (rim * 0.60), 2))).squareRoot()
+                let xx = cx + cos(a) * rim * 0.60 * wide
+                if q == 0 { seam.move(to: CGPoint(x: xx, y: yy)) } else { seam.addLine(to: CGPoint(x: xx, y: yy)) }
+            }
+            ctx.stroke(seam, with: .color(UniGeo.col(col, p * (m == 0 ? 0.34 : 0.14))),
+                       lineWidth: m == 0 ? 1 : 0.6)
+        }
+
+        let al = p * 0.92
+        func label(_ str: String, _ y: Double, _ font: Font, _ c: Color) {
+            var tx = Text(str).font(font)
+            tx = tx.foregroundColor(c)
+            ctx.draw(tx, at: CGPoint(x: cx, y: y), anchor: .center)
+        }
+        if third == 0 {
+            label("\(story.codexId) · \(rm.id.uppercased())", cy + rim * 0.86,
+                  .spaceMono(7.5), UniGeo.col(UniGeo.BONE, al * 0.34))
+            label(story.title, cy + rim * 0.86 + 21, .loraItalic(16), UniGeo.col(UniGeo.BONE, al * 0.86))
+        } else if third == 1 {
+            label("WHO SAT WITH IT", cy + rim * 0.86, .spaceMono(7.5), UniGeo.col(UniGeo.BONE, al * 0.34))
+            // the company, by the same rule the fan uses — glyphs, never a count
+            let names = Array(store.stats(for: story.id).archetypes.prefix(6))
+            let gx = cx - Double(names.count - 1) * 13, gy = cy + rim * 0.86 + 22
+            for (i, n) in names.enumerated() {
+                let a = store.archetype(named: n)
+                var tx = Text(a?.glyph ?? "·").font(.lora(15))
+                tx = tx.foregroundColor((a?.color ?? BinduTheme.inkPrimary).opacity(al * 0.90))
+                ctx.draw(tx, at: CGPoint(x: gx + Double(i) * 26, y: gy), anchor: .center)
+            }
+        } else {
+            label("HOW OFTEN YOU CAME BACK", cy + rim * 0.86,
+                  .spaceMono(7.5), UniGeo.col(UniGeo.BONE, al * 0.34))
+            let depth = store.returnRings[story.id]?.count ?? 0
+            for k in 0...max(0, depth) {
+                let rr = 8 + Double(k) * 7
+                ctx.stroke(UniGeo.ringPath(cx, cy + rim * 0.86 + 34, rr),
+                           with: .color(UniGeo.col(col, al * (0.30 - Double(k) * 0.03))), lineWidth: 0.7)
+            }
+        }
+        label("TURN IT", H - 186, .spaceMono(7), UniGeo.col(UniGeo.BONE, p * 0.24))
+    }
+
     private func drawPlanet(_ ctx: GraphicsContext, _ size: CGSize, story: Story, rm: UniRoom,
                             t: Double, b: Double, px: Double, py: Double, R: Double, seedStar: UStar?) {
         let col = rm.rgb, isMet = met(story), d = depth(story)
