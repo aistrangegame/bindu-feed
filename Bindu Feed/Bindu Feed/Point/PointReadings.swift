@@ -85,6 +85,40 @@ enum PressClaim {
     static func release(_ who: String) { if owner == who { owner = nil } }
 }
 
+/// THE SEVEN RECEDE COEFFICIENTS, and the two that invert. Read from all seven sources in
+/// Pass 5 and held unimplemented because the reading REPLACED the world and there was nothing
+/// behind to dim. The overlay changes that, so they land.
+///
+///   I 0.62 · II 0.54 · III 0.50 · IV 0.46 · V 0.46 · VI 0.44 · VII 0.44
+///
+/// **VI and VII invert.** `world-six.js:185-190` returns `−1` while he is reading or holding —
+/// *"he has to be able to see the horizon to send over it"* — and `world-seven.js:138-142`
+/// while his hand is down and unresolved — *"he needs the floor to dance on."* `1 − (−1)·0.44`
+/// = **1.44**: the world gets BRIGHTER. They also scale their own displaced by 0.54, so their
+/// deepest dim is ≈0.24 against I's 0.62 — a quarter of the recede, in the two worlds where
+/// the ground is the thing he is using.
+///
+/// A single shared term would have taken those two backwards, which is why one was refused.
+enum PointRecede {
+    /// index 1…7
+    static let k: [Double] = [0, 0.62, 0.54, 0.50, 0.46, 0.46, 0.44, 0.44]
+    /// VI and VII are the two whose ground he is standing on while he acts.
+    static func inverts(_ n: Int) -> Bool { n >= 6 }
+
+    /// `A = p · (1 − dsp·k)`. `revealed` 0…4 is how much he has been given.
+    static func worldAlpha(dimension n: Int, revealed: Int, open: Bool) -> Double {
+        guard open else { return 1 }                       // nothing being read: no recede
+        let kk = k[max(1, min(7, n))]
+        let dsp: Double
+        if inverts(n) && revealed < 4 {
+            dsp = -1                                       // the horizon · the floor
+        } else {
+            dsp = Double(revealed) / 4 * (inverts(n) ? 0.54 : 1)
+        }
+        return max(0, 1 - dsp * kk)
+    }
+}
+
 enum PointSection: Int, CaseIterable {
     case say, walk, hand, open
     var label: String {
@@ -190,11 +224,15 @@ struct PointReading: View {
     let star: PointStar
     let hue: Color
     let onClose: () -> Void
+    /// How much has been given, reported up so the WORLD BEHIND can recede by it.
+    let onReveal: (Int) -> Void
 
     @StateObject private var state: PointReadingState
 
-    init(dimensionN: Int, star: PointStar, hue: Color, onClose: @escaping () -> Void) {
-        self.dimensionN = dimensionN; self.star = star; self.hue = hue; self.onClose = onClose
+    init(dimensionN: Int, star: PointStar, hue: Color,
+         onClose: @escaping () -> Void, onReveal: @escaping (Int) -> Void = { _ in }) {
+        self.dimensionN = dimensionN; self.star = star; self.hue = hue
+        self.onClose = onClose; self.onReveal = onReveal
         _state = StateObject(wrappedValue: PointReadingState(star: star))
     }
 
@@ -213,6 +251,8 @@ struct PointReading: View {
         // Level 3 is shared by all seven, in the design too — the descent, and its fallback.
         // Plain `.overlay`, not `.overlay(alignment: .bottom)` — the descent needs the whole
         // frame to cover, and the door aligns itself to the bottom from inside it.
+        .onChange(of: state.revealed) { _, r in onReveal(r) }
+        .onAppear { onReveal(state.revealed) }
         .overlay {
             if state.done { PointDescentDoor(star: star, hue: hue) }
         }
@@ -745,11 +785,13 @@ private struct ReadTurning: View {
         }
         // THE WITHDRAWAL. The hall looms, whites out, and carries him back to the Surface.
         // It runs on its own clock so it finishes whether he is here or not.
+        // THE HALL IS DRAWN ONCE, and it is drawn by the ENCLOSURE (`PointWorldView`), which
+        // outlives this reading — the reading is carried out at 3.0s and the withdrawal runs
+        // to 5.4s. Drawing it here as well composited `1 − (1 − 0.86·bk)²` = **0.98** at the
+        // peak instead of 0.86: two correct layers making one wrong value. The reading keeps
+        // only the hit-blocking, so the hall cannot be tapped through while it stands.
         .overlay {
-            if bk > 0 {
-                Color(hex: "#EAFBF8").opacity(bk * 0.86)
-                    .ignoresSafeArea().allowsHitTesting(bk > 0.2)
-            }
+            if bk > 0 { Color.clear.ignoresSafeArea().allowsHitTesting(bk > 0.2) }
         }
         .scaleEffect(1 + bk * (loom - 1))
         .task(id: withdrawing) {

@@ -190,6 +190,46 @@ All routed through `ashArchetype` / `rec9BUbHMuylYiVwH`. Three of note:
 
 Verified: no identity is resolved by string anywhere in the app.
 
+### 2.4 · the recede + the overlay (B4 + A5 + V's doubled whiteout) — CLOSED
+
+Four things landed together, because they are one structural change.
+
+**The world is drawn behind the reading, not replaced by it.** `PointWorldView` was a
+mutually-exclusive `if / else if` chain, so at level 2 the world was unmounted and there was
+nothing to recede — which is why the seven coefficients sat read-but-unimplemented since
+Pass 5. `A = p·(1 − dsp·k)` needs a `p` to multiply.
+
+**The negative test, computed before walking** — and it discriminates:
+
+| world | no reading | revealed 1 | revealed 2 | revealed 4 |
+|---|---|---|---|---|
+| I | 1.00 | 0.84 | 0.69 | **0.38** |
+| II | 1.00 | 0.86 | 0.73 | 0.46 |
+| III | 1.00 | 0.88 | 0.75 | 0.50 |
+| IV · V | 1.00 | 0.89 | 0.77 | 0.54 |
+| **VI · VII** | 1.00 | **1.44** | **1.44** | **0.76** |
+
+No reading open → **1.00 for every world**, so it is not a rule that always fires. The seven
+do not resolve to one visible dim: at full reveal they span 0.38 → 0.76, a factor of two.
+
+**Walked VI and VII first**, as the two carrying least protection. Both show their material
+visibly brighter behind the reading while he acts, and the type stays legible.
+
+**A5 · the world keeps its material and loses its captions.** The recede dims what is behind,
+but a dimmed WORD is still a word — VI's star names ran through the sentences ("You
+volunteered" mid-paragraph). Type competing with type is not ground competing with type, and
+no alpha fixes it; the same reason `#where` and `#pname` HIDE while the yantra only dims.
+`StarMark.compact` already existed — raised for the whole world as `quiet`.
+
+**V's doubled whiteout collapsed.** `PointReadings` and `PointWorldView` both drew `bk × 0.86`
+over the same frames, compositing to **0.98**. The enclosure draws it (it outlives the
+reading); the reading keeps only the hit-blocking.
+
+**And I created an empty body while removing debug hooks.** The hook-stripper left
+`parkDebugStarIfRequested() { }` — a correct name with a live call site and nothing inside,
+the fourth shape, made by the tool meant to clean up. The earlier empty-body sweep found only
+`duckBreath` because it ran before this existed: **a sweep is a snapshot, not a guarantee.**
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed

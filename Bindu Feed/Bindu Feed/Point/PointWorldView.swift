@@ -21,6 +21,8 @@ struct PointWorldView: View {
     @State private var selectedUniverse: PointUniverse?   // the middle tier: dimension → universe → star
     @State private var openStar: PointStar?
     @State private var goodnight = false
+    /// How much of the reading has been given — the world behind recedes by it.
+    @State private var revealed = 0
 
     // The solfeggio ladder — one tone per dimension (285…852), the ladder rising as he descends.
     private let ladder: [Double] = [285, 396, 417, 528, 639, 741, 852]
@@ -28,16 +30,47 @@ struct PointWorldView: View {
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
 
     private func parkDebugStarIfRequested() {
+        #if DEBUG
+        guard openStar == nil,
+              let k = UserDefaults.standard.string(forKey: "bindu.debug.star"), !k.isEmpty,
+              let star = PointContent.stars.first(where: { $0.key == k }),
+              let u = dim?.universes.first(where: { $0.stars.contains(k) }) else { return }
+        // select the universe too, so the walk exercises the OVERLAY path (the world drawn
+        // behind the reading) rather than the bare-reading fallback.
+        selectedUniverse = u
+        openStar = star
+        #endif
     }
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
 
     var body: some View {
         ZStack {
-            if let star = openStar {
-                // LEVEL 2 — the reading, in THIS world's own hand. E3: the shared sheet
-                // (`point-levels.js:161 openSheet()`) is superseded and ships nowhere.
+            // THE WORLD IS DRAWN BEHIND THE READING, NOT REPLACED BY IT.
+            //
+            // This was a mutually-exclusive `if / else if` chain, so at level 2 the world was
+            // unmounted and there was nothing to recede — which is why the seven coefficients
+            // sat read-but-unimplemented since Pass 5. `A = p·(1 − dsp·k)` needs a `p` to
+            // multiply.
+            //
+            // It also closes A5: the world's own chrome (its header, its `‹ the enclosure`)
+            // stays OUT of the reading, because only the material is drawn behind — the
+            // chrome belongs to the level he is not on.
+            if let star = openStar, let u = selectedUniverse {
+                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue,
+                           onOpen: { _ in }, quiet: true)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .opacity(PointRecede.worldAlpha(dimension: dimensionN,
+                                                    revealed: revealed, open: true))
+                    .animation(.easeInOut(duration: 1.1), value: revealed)
+
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
-                             onClose: { withAnimation { openStar = nil } })
+                             onClose: { withAnimation { openStar = nil }; revealed = 0 },
+                             onReveal: { revealed = $0 })
+            } else if let star = openStar {
+                // reached without a universe (the debug star hook) — no world to recede
+                PointReading(dimensionN: dimensionN, star: star, hue: hue,
+                             onClose: { withAnimation { openStar = nil }; revealed = 0 })
             } else if let u = selectedUniverse {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).

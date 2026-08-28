@@ -276,6 +276,15 @@ final class FeedStore: ObservableObject {
         let key = "bindu.debug.room"
         guard let name = UserDefaults.standard.string(forKey: key), !name.isEmpty else { return }
         UserDefaults.standard.removeObject(forKey: key)
+        switch name.lowercased() {
+        case "aperture": pendingLaunchRoute = .aperture; return
+        case "sky":      pendingLaunchRoute = .instrument(-4); return
+        case "fall":     pendingLaunchRoute = .instrument(-1); return
+        case let r where r.hasPrefix("point") && Int(r.dropFirst(5)) != nil:
+            pendingLaunchRoute = .instrument(1 + (Int(r.dropFirst(5)) ?? 1)); return
+        case "point":    pendingLaunchRoute = .instrument(8); return
+        default: break
+        }
         if name.caseInsensitiveCompare("Ash") == .orderedSame, let a = ashArchetype {
             pendingLaunchRoute = .home(a)
         } else if let a = archetypes.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {

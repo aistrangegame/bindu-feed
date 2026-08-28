@@ -89,16 +89,27 @@ struct PointWorld: View {
     let stars: [PlacedStar]
     let hue: Color
     let onOpen: (PointStar) -> Void
+    /// A5 — WHILE A READING IS OPEN THE WORLD KEEPS ITS MATERIAL AND LOSES ITS CAPTIONS.
+    ///
+    /// The recede dims what is behind, but a dimmed WORD is still a word: the world's star
+    /// names ran straight through the reading's sentences ("You volunteered" mid-paragraph,
+    /// the star's own title ghosting under the reading's title). Type competing with type is
+    /// not the same problem as ground competing with type, and no alpha fixes it — the same
+    /// reason `#where` and `#pname` HIDE under a reading while the yantra only dims.
+    ///
+    /// `StarMark` already had `compact`, which drops the label and keeps the marker. This is
+    /// that flag, raised for the whole world.
+    var quiet: Bool = false
 
     var body: some View {
         switch dimensionN {
-        case 1: WorldPoint(stars: stars, hue: hue, onOpen: onOpen)
-        case 2: WorldTurn(stars: stars, hue: hue, onOpen: onOpen)
-        case 3: WorldVeil(stars: stars, hue: hue, onOpen: onOpen)
-        case 4: WorldChamber(stars: stars, hue: hue, onOpen: onOpen)
-        case 5: WorldMirrors(stars: stars, hue: hue, onOpen: onOpen)
-        case 6: WorldReturn(stars: stars, hue: hue, onOpen: onOpen)
-        default: WorldDance(stars: stars, hue: hue, onOpen: onOpen)
+        case 1: WorldPoint(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        case 2: WorldTurn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        case 3: WorldVeil(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        case 4: WorldChamber(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        case 5: WorldMirrors(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        case 6: WorldReturn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        default: WorldDance(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
         }
     }
 }
@@ -186,6 +197,7 @@ struct PointUniversesView: View {
 // ── I · THE POINT — near-emptiness; points approach when he is still; DWELL to open ──
 private struct WorldPoint: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     @EnvironmentObject private var breath: Breath
     @State private var dwell: String? = nil
     @State private var lastStir: Date = Date()      // the points approach only when the hand is still
@@ -202,7 +214,7 @@ private struct WorldPoint: View {
                         let rad = (0.20 + seed * 0.24) * (1 - still * 0.55) + 0.05 * sin(t * 0.05 + seed * 6.28)
                         let x = geo.size.width * (0.5 + cos(ang) * rad)
                         let y = geo.size.height * (0.5 + sin(ang) * rad * 1.15)
-                        StarMark(placed: p, hue: hue, compact: dwell != p.id)
+                        StarMark(placed: p, hue: hue, compact: quiet || dwell != p.id)
                             .scaleEffect(dwell == p.id ? 1.35 : 1)
                             .opacity(0.5 + 0.5 * breath.value)
                             .position(x: x, y: y)
@@ -244,6 +256,7 @@ private struct WorldPoint: View {
 // draw it inward from its circle"). Not an instant open. ──
 private struct WorldTurn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     @State private var drawingId: String? = nil     // the star being drawn inward
     @State private var drawStart: Double = 0
     private let drawDur: Double = 0.9
@@ -282,7 +295,7 @@ private struct WorldTurn: View {
                         let pull = drawingId == p.id ? min(1, (t - drawStart) / drawDur) : 0
                         let e = pull * pull * (3 - 2 * pull)
                         let px = ox + (cx - ox) * e, py = oy + (cy - oy) * e
-                        StarMark(placed: p, hue: hue, compact: pull < 0.4)
+                        StarMark(placed: p, hue: hue, compact: quiet || pull < 0.4)
                             .scaleEffect(1 + e * 0.9)
                             .opacity(drawingId == nil || drawingId == p.id ? 1 : 0.28)   // the rest recede
                             .position(x: px, y: py)
@@ -307,6 +320,7 @@ private struct WorldTurn: View {
 // ── III · THE VEIL — gauze upon gauze; PART the curtain (horizontal drag) to reach in ──
 private struct WorldVeil: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     @State private var part: CGFloat = 0     // 0 closed … 1 fully parted
     var body: some View {
         GeometryReader { geo in
@@ -327,7 +341,7 @@ private struct WorldVeil: View {
                     }
                     ForEach(stars) { p in
                         let seed = PointWorlds.hash(p.id)
-                        StarMark(placed: p, hue: hue, compact: part < 0.5)
+                        StarMark(placed: p, hue: hue, compact: quiet || part < 0.5)
                             .opacity(0.18 + 0.82 * Double(part))
                             .blur(radius: (1 - Double(part)) * 7)          // behind the gauze, out of focus; sharpens as it parts
                             .position(x: geo.size.width * (0.16 + seed * 0.68),
@@ -353,6 +367,7 @@ private struct WorldVeil: View {
 // MOVING ALONG them (pan). Not flat lines with floating dots (§7.3.4). ──
 private struct WorldChamber: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     @State private var panX: CGFloat = 0
     @State private var panBase: CGFloat = 0
     var body: some View {
@@ -387,7 +402,7 @@ private struct WorldChamber: View {
                 }
                 ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
                     let col = Double(i) / Double(max(stars.count - 1, 1))
-                    StarMark(placed: p, hue: hue)
+                    StarMark(placed: p, hue: hue, compact: quiet)
                         .padding(5)
                         .background(Ellipse().fill(Color.black.opacity(0.28)).blur(radius: 2.5))   // the carved recess
                         .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)                  // deboss — cut INTO the wall
@@ -412,6 +427,7 @@ private struct WorldChamber: View {
 // Not solo stars split by parity — each is met ALONGSIDE its facing echo. ──
 private struct WorldMirrors: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     @State private var turned: Set<String> = []
 
     // pair the stars two-by-two; each pair faces across the seam (an odd one out sits solo)
@@ -472,6 +488,7 @@ private struct WorldMirrors: View {
 // floor, the deeper stars older. Reached by settling, not a flat tap. ──
 private struct WorldReturn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     @State private var settle: CGFloat = 0     // 0 at the surface … grows as he settles downward
     @State private var settleBase: CGFloat = 0
     var body: some View {
@@ -502,7 +519,7 @@ private struct WorldReturn: View {
                 ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
                     let strat = Double(i) / Double(max(stars.count - 1, 1))
                     let y = geo.size.height * (0.14 + strat * 1.1) - settle      // deeper stars, revealed by settling
-                    StarMark(placed: p, hue: hue)
+                    StarMark(placed: p, hue: hue, compact: quiet)
                         .saturation(1 - strat * 0.5).opacity(1 - strat * 0.35)   // deeper = aged
                         .position(x: geo.size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22)), y: y)
                         .allowsHitTesting(y > 40 && y < H - 40)
@@ -524,6 +541,7 @@ private struct WorldReturn: View {
 // its speed OBEYS THE BREATH — the flight quickens on the in-breath and eases on the out. ──
 private struct WorldDance: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    var quiet: Bool = false
     var body: some View {
         GeometryReader { geo in
             let cx = geo.size.width / 2, cy = geo.size.height / 2
