@@ -92,6 +92,10 @@ struct LightView: View {
             case .hold:     holdBody
             case .choosing: choosingBody
             case .scene:    sceneBody
+                    // `lightBed` — *"the bare light: almost nothing. A single high room-tone,
+                    // barely there, so the silence has an edge to it. The breath cues ride on
+                    // this."* 528 + 792, six seconds to reach 0.012.
+                    .onAppear { soundEngine.lightRoomTone() }
             case .out:      backOut
             }
             // Always a quiet way out — never trapped in the Light.
@@ -272,6 +276,10 @@ struct LightView: View {
             // on a torn-down view (the comp clears both timers on unmount).
             let dim = DispatchWorkItem { withAnimation(.easeInOut(duration: 1.6)) { holdDimmed = true } }
             let open = DispatchWorkItem {
+                // `:739` — `Sound.veilLift(3); Sound.bowl(174);` The veil is drawn away and
+                // everything drains downward and out; the bowl strikes once into the space
+                // it leaves. Subtraction, then a single arrival.
+                soundEngine.lightVeilLift(dur: 3)
                 soundEngine.riteBowl(hz: 174)                 // the aperture opens; light floods down
                 withAnimation(.easeInOut(duration: 1.6)) { stage = .choosing }
             }
@@ -420,6 +428,10 @@ struct LightView: View {
     }
 
     private func openTheLight() {
+        // `The Light v2.html:637` — `Sound.openTheRoom(8.5); Sound.breathIn(6);`
+        // The room is heard before it is seen, and the breath draws in and HOLDS.
+        soundEngine.lightOpenTheRoom(dur: 8.5)
+        soundEngine.lightBreathIn(dur: 6)
         gate?.invalidate()
         Task { await store.logVeilLifted() }
         // Stand in the shaft first (the Hold), then the aperture opens into the scene.
@@ -457,6 +469,9 @@ struct LightView: View {
     // back (comp `release`). It locks only when he has taken the whole of it.
     private func beginCarve() {
         guard stage == .scene, beatActive, moreBeat, carveTimer == nil else { return }
+        // `:786` — `Sound.breathIn(4.2)` on the draw-in. The same gesture as the opening,
+        // shorter: he is holding the line rather than entering the room.
+        soundEngine.lightBreathIn(dur: 4.2)
         soundEngine.inkOn(hz: 196)                    // the field leans in while he draws breath
         let start = Date()
         carveTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in

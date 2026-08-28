@@ -31,7 +31,9 @@ final class AxisTravel: ObservableObject {
 
     // The hand.
     private var zv = 0.0, force = 0.0, back = 0.0
-    private var down = false
+    /// Readable so the stillness drone can be cut the instant the hand arrives — E4.2's
+    /// "gone in ~0.2s" is about the TOUCH, not about the accumulator's 1.30/s decay.
+    private(set) var down = false
     private var lastInput: CFTimeInterval = 0
 
     // The membranes.

@@ -27,7 +27,6 @@ struct InstrumentView: View {
     @StateObject private var travel: AxisTravel
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
-    @State private var thinSounded = false
     @State private var pointHolds = false      // a Point universe or star reading is open
     // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
     // so the axis drag stands down and the card's own scroll/pan works. Without this, the
@@ -266,8 +265,9 @@ struct InstrumentView: View {
             }
         }
         .onChange(of: travel.thin) { _, thin in
-            if thin > 0.1 && !thinSounded { thinSounded = true; soundEngine.axisThin(thin) }
-            else if thin <= 0.01 { thinSounded = false }
+            // E4.2 — continuous, following the accumulator rather than firing once at 0.1.
+            // `travel.down` is the hand arriving: the drone goes in ~0.2s, not on a decay.
+            soundEngine.setStillness(fill: thin, touching: travel.down)
         }
         .onAppear {
             // The camera must be set BEFORE the first frame, not only when z next changes.

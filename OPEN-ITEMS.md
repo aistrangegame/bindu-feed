@@ -327,6 +327,46 @@ commits — and it adds a name, never an instruction.
 Walked: six lights standing clean, and *"The one who was watching all of them"* naming itself
 alone when armed.
 
+### The Light's sound · 7 of 8 events — CLOSED
+
+*"The Gathering FILLS… The Light REMOVES. So the sound does the opposite of everything above:
+it draws in, holds, drains, strikes once, and leaves silence."* The register built on
+subtraction had only generic engine calls, so it sounded like every other one.
+
+| event | what it does | fired at |
+|---|---|---|
+| `openTheRoom(8.5)` | the long stone tail, wet → 0.85 | the way opens |
+| `breathIn(6)` | breathing STOPS, brightens, swells and **holds — does not release**; a rise slides root → root×1.5 | the way opens |
+| `veilLift(3)` | everything drains downward and out; cutoff 3000 → 90 | the aperture opens |
+| `bowl(174)` | struck once into the space that leaves | the aperture opens |
+| `breathIn(4.2)` | the same gesture, shorter — holding the line, not entering | the Declaration's draw-in |
+| `lightBed` | 528 + 792 at 0.012 over 6s — *"so the silence has an edge to it"* | the scene stands |
+
+Two engine additions were needed: a **pitch ramp** on `CeremonyVoice` (a held tone that MOVES —
+the fifth opening) and a **`.drain`** synth, filtered noise whose cutoff falls across the
+gesture. The bed stays the FIELD's room; the Light's nave is a reverb raised on it, not the
+Point's cathedral. Nothing here speaks, so nothing routes through CHAR.
+
+### E4.2 · the stillness drone — CLOSED. The last genuinely new mechanic.
+
+The one place in the app where sound answers the **absence** of a hand. It was `axisThin`: a
+0.6s one-shot at `f²·0.026` — **0.00026 at the threshold where it fired**, below hearing on any
+device — and it fired ONCE at `thin > 0.1` and never again, so it could not follow the fill it
+was made of.
+
+Now continuous, two oscillators, the fifth opening toward the octave as the way thins
+(`1.5 → 2.0`), ceiling 0.062 at full fill — under the 0.075 event limit.
+
+**It rides the axis's own accumulator, never a timer.** `dwell` builds at 0.30/s only while
+`still && Z < −2.3` and decays at 1.30/s under any action, so the drone can only swell for
+someone who has actually stopped — not for someone merely looking at a still screen. A timer
+would sound for both, and that difference is the entire mechanic. Cut in ~0.2s on `travel.down`,
+which is the touch itself rather than the accumulator's decay.
+
+(The app's accumulator fills in 3.33s where the design's gate is 4.6s — a divergence recorded
+when the dwell was ported. The drone follows the accumulator that exists rather than starting a
+second clock beside it.)
+
 ---
 
 ## KNOWN LIMITS — named, measured, not closed

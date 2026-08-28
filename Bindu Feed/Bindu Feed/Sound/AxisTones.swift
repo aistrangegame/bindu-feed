@@ -140,3 +140,67 @@ final class AxisGlideVoice {
         }
     }
 }
+
+// E4.2 · THE STILLNESS DRONE — the one place in the app where sound answers the ABSENCE of a
+// hand. Everything else responds to a touch; this responds to its withdrawal.
+//
+//   *"Two oscillators swelling as he stops, the fifth opening toward the octave, and gone the
+//    moment he touches anything."*
+//
+// It replaced a 0.6s one-shot at peak `f²·0.026` ≈ 0.0003 — a value below the threshold of
+// hearing on any device, so the mechanic existed and could not be perceived.
+//
+// IT RIDES THE AXIS'S OWN ACCUMULATOR, never a timer. `AxisTravel` builds `dwell` at 0.30/s
+// only while `still && Z < −2.3` and decays it at 1.30/s under any action, so the drone can
+// only swell for someone who has actually stopped — not for someone who is merely looking at
+// a still screen. A timer would sound for both, and the difference is the whole point.
+//
+// (The app's accumulator fills in 1/0.30 = 3.33s where the design's gate is 4.6s — a
+// divergence already recorded when the dwell was ported; the drone follows the accumulator
+// that exists rather than introducing a second clock beside it.)
+final class StillnessVoice {
+    let sourceNode: AVAudioSourceNode
+    private let target: OSAllocatedUnfairLock<(fill: Double, cut: Bool)>
+
+    /// `fill` is the axis's `thin` (0…1). `cut` is the hand arriving — release in ~0.2s.
+    func set(fill: Double, cut: Bool) { target.withLock { $0 = (fill, cut) } }
+
+    init(sampleRate: Double = 48000) {
+        let t = OSAllocatedUnfairLock<(fill: Double, cut: Bool)>(initialState: (0, false))
+        self.target = t
+
+        var phase = 0.0, twinPhase = 0.0
+        var curLevel = 0.0, curRatio = 1.5
+        let root = 136.1
+
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)
+        else { fatalError("StillnessVoice: format") }
+
+        self.sourceNode = AVAudioSourceNode(format: format) { _, _, frameCount, abl in
+            let buffers = UnsafeMutableAudioBufferListPointer(abl)
+            let bufL = buffers[0].mData?.assumingMemoryBound(to: Float.self)
+            let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)
+            let goal = t.withLock { $0 }
+
+            // audible, and still under the 0.075 event ceiling at full fill
+            let wanted = goal.cut ? 0 : goal.fill * goal.fill * 0.062
+            // ~0.2s to silence on a touch; the swell follows the accumulator's own pace
+            let k = goal.cut ? 0.00025 : 0.00004
+            // the fifth opening toward the octave as the way thins
+            let wantedRatio = 1.5 + 0.5 * goal.fill
+
+            for frame in 0..<Int(frameCount) {
+                curLevel += (wanted - curLevel) * k
+                curRatio += (wantedRatio - curRatio) * 0.00002
+                phase += 2 * .pi * root / sampleRate
+                if phase >= 2 * .pi { phase -= 2 * .pi }
+                twinPhase += 2 * .pi * (root * curRatio) / sampleRate
+                if twinPhase >= 2 * .pi { twinPhase -= 2 * .pi }
+                let s = Float((sin(phase) + sin(twinPhase)) * 0.5 * curLevel)
+                bufL?[frame] = s
+                bufR?[frame] = s
+            }
+            return noErr
+        }
+    }
+}

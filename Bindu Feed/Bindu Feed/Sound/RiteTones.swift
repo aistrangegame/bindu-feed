@@ -23,6 +23,9 @@ enum CeremonySynth {
     /// ONE PRESENCE, IN ITS OWN BODY — `field-sound.js:13-25 CHAR`. Pitch comes from the
     /// VOICES table and never from here; this is only how that voice SOUNDS.
     case presence(VoiceCharacter)
+    /// THE SOUND OF SUBTRACTION — `The Light v2.html:327-331`. Filtered noise whose cutoff
+    /// falls from 3000 to 90 across the gesture, draining downward and out. Nothing arrives.
+    case drain
 }
 
 /// A one-shot bloom: sin-ease up to `peak` over `attack`, exponential decay over
@@ -38,6 +41,10 @@ final class CeremonyVoice {
         attackSeconds: Double,
         releaseSeconds: Double,
         synth: CeremonySynth,
+        /// When set, the pitch ramps linearly from `hz` to this across the whole envelope —
+        /// `The Light v2.html:304-306`, the rise sliding root → root×1.5 as the breath draws
+        /// in. A held tone that MOVES; the engine had no way to say that.
+        endHz: Double? = nil,
         sampleRate: Double = 48000
     ) {
         let flag = OSAllocatedUnfairLock<Bool>(initialState: false)
@@ -60,7 +67,10 @@ final class CeremonyVoice {
         let attackSamples = max(1, Int(attackSeconds * sampleRate))
         let releaseSamples = max(1, Int(releaseSeconds * sampleRate))
         let totalSamples = attackSamples + releaseSamples
-        let inc = 2.0 * .pi * hz / sampleRate
+        var inc = 2.0 * .pi * hz / sampleRate
+        let hzStart = hz, hzEnd = endHz ?? hz
+        var drainState: UInt32 = 0x5EED1E55
+        var drainLP: Double = 0
         let partialInc = 2.0 * .pi * (hz * 2.001) / sampleRate
 
         guard let format = AVAudioFormat(
@@ -100,6 +110,15 @@ final class CeremonyVoice {
                     raw = (sin(phase) + sin(partialPhase) * 0.28) / 1.28
                 case .bowl:
                     raw = (sin(phase) + sin(phase * 2.756) * 0.5 + sin(phase * 5.404) * 0.25) / 1.75
+                case .drain:
+                    drainState = drainState &* 1_664_525 &+ 1_013_904_223
+                    let white = Double(drainState >> 8) / 8_388_608.0 - 1.0
+                    // cutoff 3000 → 90 across the gesture: the room closes and goes
+                    let prog = Double(sampleIndex) / Double(max(1, totalSamples))
+                    let cutoff = 3000 - (3000 - 90) * prog
+                    let a = 1 - exp(-2.0 * .pi * cutoff / sampleRate)
+                    drainLP += a * (white - drainLP)
+                    raw = drainLP
                 case .presence(let c):
                     // THE BODY, term for term. `vib` bends the pitch, `gliss` slides it, the
                     // partials sum and normalise, `flicker` breathes the amplitude, `air` adds
@@ -135,6 +154,11 @@ final class CeremonyVoice {
 
                 var lGain = 1.0, rGain = 1.0
                 if case .presence = synth { lGain = panL * 2; rGain = panR * 2 }
+                // the pitch ramp, if this voice was given one
+                if hzEnd != hzStart {
+                    let prog = Double(sampleIndex) / Double(max(1, totalSamples))
+                    inc = 2.0 * .pi * (hzStart + (hzEnd - hzStart) * prog) / sampleRate
+                }
                 let s = Float(raw * peak * env)
                 bufL?[frame] = Float(Double(s) * lGain)
                 bufR?[frame] = Float(Double(s) * rGain)

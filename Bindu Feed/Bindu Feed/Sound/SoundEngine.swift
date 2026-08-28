@@ -39,6 +39,8 @@ final class SoundEngine: ObservableObject {
     private var outgoingBreath: BreathVoice?
     private var crossfadeTask: Task<Void, Never>?
     private var breathFadeTask: Task<Void, Never>?
+    private var naveTask: Task<Void, Never>?
+    private var stillVoice: StillnessVoice?
 
     // Current sonic context — set by surfaces via `setContext(_:)`.
     // Default is .base until a surface reports otherwise.
@@ -528,6 +530,88 @@ final class SoundEngine: ObservableObject {
         )
     }
 
+    // MARK: - THE LIGHT · the photographic negative of the Gathering
+    //
+    //   *"The Gathering FILLS: voices arrive one after another into the dark. The Light
+    //    REMOVES. So the sound does the opposite of everything above: it draws in, holds,
+    //    drains, strikes once, and leaves silence."* (`The Light v2.html:290-293`)
+    //
+    // Seven of these eight events were missing. The Light had only generic engine calls —
+    // a bowl, an ungrip, an ink — so the one register built on subtraction sounded like
+    // every other one.
+    //
+    // The BED here stays the FIELD's room (root + fifth); the Light's nave is a reverb raised
+    // ON it, not the Point's cathedral. Nothing here speaks, so nothing routes through CHAR —
+    // when a presence speaks in the Light it goes through `presence(_:)` like everywhere else.
+
+    /// `openTheRoom(8.5)` — the long stone tail, wet ramping to 0.85. Heard before it is seen.
+    func lightOpenTheRoom(dur: Double = 8.5) {
+        guard isRunning else { return }
+        room.loadFactoryPreset(.cathedral)
+        naveTask?.cancel()
+        naveTask = Task { @MainActor in
+            let start = Date(), from = Double(room.wetDryMix), to = 85.0
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                room.wetDryMix = Float(from + (to - from) * f)
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 60_000_000)
+            }
+        }
+    }
+
+    /// `breathIn(dur)` — *"swells, and holds. Does not release."* The bed's breathing STOPS,
+    /// it brightens as it draws in, and a rise slides root → root×1.5, the fifth opening.
+    func lightBreathIn(dur: Double = 6) {
+        guard isRunning else { return }
+        let root = 110.0
+        playCeremony(
+            CeremonyVoice(hz: root, peak: 0.026, attackSeconds: dur * 0.8,
+                          releaseSeconds: dur * 0.2, synth: .sine, endHz: root * 1.5),
+            maxWait: dur + 1)
+        guard let voice = currentBreath else { return }
+        breathFadeTask?.cancel()
+        breathFadeTask = Task { @MainActor in
+            let start = Date(), from = voice.crossfadeLevel.read()
+            while !Task.isCancelled {
+                let e = Date().timeIntervalSince(start)
+                let f = min(1, e / dur)
+                // 0.052 swell to 0.78·dur, then settle to 0.040 and HOLD
+                let target = f < 0.78 ? from + (1.35 - from) * (f / 0.78) : 1.35 - 0.30 * ((f - 0.78) / 0.22)
+                voice.crossfadeLevel.write(max(0, target))
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
+    /// `veilLift(3)` — *"everything drains downward and out. Nothing arrives here."*
+    func lightVeilLift(dur: Double = 3) {
+        guard isRunning else { return }
+        playCeremony(CeremonyVoice(hz: 110, peak: 0.030, attackSeconds: 0.05,
+                                   releaseSeconds: dur, synth: .drain), maxWait: dur + 1)
+        naveTask?.cancel()
+        naveTask = Task { @MainActor in
+            let start = Date(), from = Double(room.wetDryMix)
+            let bedFrom = currentBreath?.crossfadeLevel.read() ?? 0
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                room.wetDryMix = Float(from * (1 - f) + 50 * f)      // back to the field's room
+                currentBreath?.crossfadeLevel.write(bedFrom * (1 - f))
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
+    /// `lightBed` — *"the bare light: almost nothing. A single high room-tone, barely there,
+    /// so the silence has an edge to it."* 528 with 792 at 0.3, rising to 0.012 over 6s.
+    func lightRoomTone() {
+        guard isRunning else { return }
+        playCeremony(CeremonyVoice(hz: 528, peak: 0.012, attackSeconds: 6,
+                                   releaseSeconds: 40, synth: .sineOctave), maxWait: 47)
+    }
+
     /// The Sealing bowl — struck once, long decay while the bed holds.
     func riteBowl(hz: Double) {
         playCeremony(
@@ -588,9 +672,24 @@ final class SoundEngine: ObservableObject {
         engine.attach(g.sourceNode)
         engine.connect(g.sourceNode, to: engine.mainMixerNode, format: g.sourceNode.outputFormat(forBus: 0))
         glideVoice = g
+        // the stillness drone lives for as long as the axis does — it has no events
+        let sv = StillnessVoice()
+        engine.attach(sv.sourceNode)
+        engine.connect(sv.sourceNode, to: engine.mainMixerNode, format: sv.sourceNode.outputFormat(forBus: 0))
+        stillVoice = sv
     }
     func setAxisGlide(hz: Double, level: Double) { glideVoice?.set(hz: hz, level: min(0.03, level)) }
     func stopAxisGlide() {
+        if let sv = stillVoice {
+            stillVoice = nil
+            sv.set(fill: 0, cut: true)
+            let n = sv.sourceNode
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard let self else { return }
+                self.engine.disconnectNodeInput(n); self.engine.detach(n)
+            }
+        }
         guard let g = glideVoice else { return }
         glideVoice = nil
         g.set(hz: 136.1, level: 0)
@@ -649,10 +748,13 @@ final class SoundEngine: ObservableObject {
             }
         }
     }
-    func axisThin(_ f: Double) {                       // the stillness gate — a companion sweeping 261→348
-        guard f > 0.04 else { return }
-        playAxis(AxisVoice(hzStart: 261, hzEnd: 348, glideSeconds: 0.35,
-                           peak: f * f * 0.026, attackSeconds: 0.2, releaseSeconds: 0.4, mode: .tone), maxWait: 1)
+    /// E4.2 · the stillness drone. Continuous, riding the axis's own accumulator.
+    ///
+    /// `axisThin` was a 0.6s one-shot at `f²·0.026` ≈ 0.0003 — present in the code and below
+    /// the threshold of hearing. It also fired ONCE at `thin > 0.1` and then never again, so
+    /// the sound could not follow the fill it was made of.
+    func setStillness(fill: Double, touching: Bool) {
+        stillVoice?.set(fill: fill, cut: touching)
     }
     func axisUngrip() {                                // the field answering an opened hand — 174→232
         playAxis(AxisVoice(hzStart: 174, hzEnd: 232, glideSeconds: 1.2,
