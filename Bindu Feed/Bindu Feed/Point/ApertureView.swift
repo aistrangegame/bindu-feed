@@ -36,7 +36,6 @@ struct ApertureView: View {
     @State private var card: VisitorCard?
     @State private var status = ""
     @State private var busy = false
-    @State private var flare: Double = 0
     @State private var arrived = false
 
     private let hue = Color(hex: "#D4A94B")
@@ -89,13 +88,14 @@ struct ApertureView: View {
             // RootView is a ZStack of routes and nothing else paints an opaque floor here.
             Color(hex: "#0A0803").ignoresSafeArea()
 
-            TimelineView(.animation) { tl in
-                Canvas { ctx, size in
-                    field(ctx, size, tl.date.timeIntervalSinceReferenceDate)
+            // AVARANA VIII IS AN ENCLOSURE OF THE YANTRA, so the yantra is its field — not
+            // the three squares and one petal ring I sketched here first. `focus 7` is the
+            // eighth enclosure counting outward, which is where the Aperture stands.
+            PointYantraView()
+                .onAppear {
+                    PointYantra.shared.focus = 7
+                    PointYantra.shared.hue = RoomGeo.hex("#D4A94B")
                 }
-                .allowsHitTesting(false)
-            }
-            .ignoresSafeArea()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -156,6 +156,7 @@ struct ApertureView: View {
                 .ignoresSafeArea()            // `.hint{bottom:56px}`
                 .allowsHitTesting(false)
             }
+
 
             VStack {
                 HStack {
@@ -291,7 +292,10 @@ struct ApertureView: View {
             arrived = true
         }
         PointJourney.visitors += 1        // a visitor arrived that he did not choose
-        flare = 1
+        // `YANTRA.flare()` — the crossing sends one wave out through the whole figure. It
+        // existed and was never called, which is the same fault as a word that is wired and
+        // unreachable: the reachability half is the half that matters.
+        PointYantra.shared.flare()
     }
 
     /// With a key: the same frame, two slots filled from outside. `The Aperture.html:259-287`.
@@ -354,60 +358,6 @@ struct ApertureView: View {
         Self.seen.append(line)
         if Self.seen.count > 6 { Self.seen.removeFirst() }
         PointJourney.visitors += 1
-        flare = 1
-    }
-
-    // MARK: - the field, and the flare
-
-    private func field(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
-        let W = Double(size.width), H = Double(size.height)
-        let b = (sin(t * RoomGeo.tau / 9) + 1) / 2
-        let cx = W / 2, cy = H * 0.30, R = min(W, H) * 0.30
-        ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)), with: .radialGradient(
-            Gradient(stops: [
-                .init(color: Color(.sRGB, red: 0.110, green: 0.078, blue: 0.024, opacity: 0.62 + b * 0.10), location: 0),
-                .init(color: Color(.sRGB, red: 0.063, green: 0.047, blue: 0.020, opacity: 0.72), location: 0.55),
-                .init(color: Color(.sRGB, red: 0.031, green: 0.024, blue: 0.012, opacity: 0.96), location: 1)]),
-            center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: max(W, H) * 0.85))
-
-        // the yantra, faint — three enclosures and a 16-petal ring
-        var y = ctx
-        y.translateBy(x: cx, y: cy)
-        for (i, e) in [1.46, 1.38, 1.30].enumerated() {
-            let s = R * e * 0.62
-            y.stroke(Path(CGRect(x: -s, y: -s, width: s * 2, height: s * 2)),
-                     with: .color(hue.opacity(0.055 - Double(i) * 0.012 + flare * 0.14)), lineWidth: 1)
-        }
-        y.rotate(by: .radians(t * 0.006))
-        for k in 0..<16 {
-            let a = Double(k) / 16 * RoomGeo.tau
-            y.stroke(RoomDraw.ring(cos(a) * R * 0.94, sin(a) * R * 0.94, R * 0.075),
-                     with: .color(hue.opacity(0.05 + flare * 0.16)), lineWidth: 0.8)
-        }
-
-        // the flare — the visual half of the shimmer; the sound is its own pass
-        if flare > 0.001 {
-            let q = 1 - flare
-            ctx.stroke(RoomDraw.ring(cx, cy, R * (0.3 + q * 1.7)),
-                       with: .color(Color(hex: "#FFEEC4").opacity(0.42 * flare * flare)), lineWidth: 1.4)
-            for i in 0..<26 {
-                let a = RoomGeo.rnd(Double(i)) * RoomGeo.tau
-                let rr = R * (0.4 + q * 1.5) * (0.6 + RoomGeo.rnd(Double(i + 9)) * 0.8)
-                ctx.fill(RoomDraw.ring(cx + cos(a) * rr, cy + sin(a) * rr, 1 + RoomGeo.rnd(Double(i + 3)) * 1.6),
-                         with: .color(Color(hex: "#FFF6DC").opacity(0.6 * flare * flare)))
-            }
-            DispatchQueue.main.async { flare = max(0, flare - 0.012) }
-        }
-
-        // dust, so the enclosure is never empty
-        for i in 0..<40 {
-            let px = (RoomGeo.rnd(Double(i)) * W + sin(t * 0.14 + Double(i)) * 9 + W)
-                .truncatingRemainder(dividingBy: W)
-            let py = (RoomGeo.rnd(Double(i + 7)) * H + t * (2 + RoomGeo.rnd(Double(i)) * 5))
-                .truncatingRemainder(dividingBy: H)
-            ctx.fill(RoomDraw.ring(px, py, 0.5 + RoomGeo.rnd(Double(i + 2)) * 1.2),
-                     with: .color(Color(.sRGB, red: 0.886, green: 0.800, blue: 0.620,
-                                        opacity: 0.05 + RoomGeo.rnd(Double(i + 4)) * 0.18)))
-        }
+        PointYantra.shared.flare()
     }
 }
