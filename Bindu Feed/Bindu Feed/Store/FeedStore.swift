@@ -603,14 +603,14 @@ final class FeedStore: ObservableObject {
     /// meets no live story, and `isTodayMet()` reads these rows by DATE, not by link. What
     /// must never happen is a GUESSED link.
     /// Fire-and-forget: a failed activity row never affects the ceremony.
-    func logStoryMet(storyId: String, codexId: String, title: String) async {
+    func logStoryMet(storyId: String, title: String) async {
         // Mark today met LOCALLY first, synchronously — so a completed Rite can never
         // re-prompt on this device even if the Airtable write is slow, fails, or the
         // read is flaky. App Activity remains the cross-device source of truth; this is a
         // same-day reliability cache, not a replacement (it is the exact failure the user
         // hit — the ceremony completed but the day still read "unmet").
         UserDefaults.standard.set(true, forKey: Self.metCacheKey(AirtableService.localDayString()))
-        let recordId = resolveMetRecordId(storyId: storyId, codexId: codexId)
+        let recordId = resolveMetRecordId(storyId: storyId)
         do {
             _ = try await service.logActivity(
                 type: .storyMet,
@@ -629,11 +629,8 @@ final class FeedStore: ObservableObject {
     /// The one place a `Story Met` link is decided. Record id first, because that is what
     /// the Rite already knows; a non-empty Codex ID second, for a caller that only has one;
     /// nil last — an unlinked pulse, never a guessed one.
-    private func resolveMetRecordId(storyId: String, codexId: String) -> String? {
-        if !storyId.isEmpty { return storyId }
-        let key = codexId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty else { return nil }        // `""` matches 15 blank-Codex stories
-        return stories.first { $0.codexId == key }?.id
+    private func resolveMetRecordId(storyId: String) -> String? {
+        storyId.isEmpty ? nil : storyId
     }
 
     private static func metCacheKey(_ day: String) -> String { "bindu.met.\(day)" }

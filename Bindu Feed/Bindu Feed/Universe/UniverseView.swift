@@ -199,7 +199,10 @@ struct UniverseView: View {
                     if let st = starsByRegion.flatMap({ $0 }).first(where: { s in
                         store.stories.first { $0.id == s.id }?.title
                             .localizedCaseInsensitiveContains(want) == true
-                    }) { openFall(st) }
+                    }) {
+                        openFall(st)
+                        cam.parkDebugDepthIfRequested()
+                    }
                 }
             }
             #endif
@@ -371,7 +374,7 @@ struct UniverseView: View {
                 switch h.kind {
                 case .presence(_, let name):
                     let story = fallStarID.flatMap { id in store.stories.first { $0.id == id } }
-                    let w = UniWords.word(codex: story?.codexId ?? "", voice: name)
+                    let w = UniWords.word(storyID: story?.id ?? "", voice: name)
                     withAnimation(.easeInOut(duration: 1.1)) {
                         openWord = (openWord?.name == name) ? nil : (name, w)
                     }
@@ -1177,7 +1180,7 @@ struct UniverseView: View {
                                 .foregroundStyle(mc.opacity(0.74 * na)),
                              at: CGPoint(x: px2, y: py2 + 15))
                     // a word waits near the presence, where the Archive holds one
-                    if UniWords.word(codex: story.codexId, voice: name) != nil, openWord == nil {
+                    if UniWords.word(storyID: story.id, voice: name) != nil, openWord == nil {
                         let wy = py2 + 27 + sin(t * 0.24 + Double(i)) * 1.6
                         ctx.draw(Text("touch").font(.spaceMono(7.5))
                                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.30 * na)),

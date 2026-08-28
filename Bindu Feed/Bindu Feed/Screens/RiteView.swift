@@ -121,7 +121,7 @@ struct RiteView: View {
         Task {
             // `sid` — the record id, the same one `postComment` uses below. Passing the
             // Codex ID alone is what mislinked both rows already in the base.
-            await store.logStoryMet(storyId: sid, codexId: storyData.codexId, title: storyData.title)
+            await store.logStoryMet(storyId: sid, title: storyData.title)
             // When the Rite met a LIVE story (not the canon fallback) and Ash left words,
             // the Recognition becomes a durable Ash Comment on that story, carrying the
             // Movement-IV audio reference. The spoken audio itself stays kept on-device
