@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 // THE JOURNEY LOG — the walk kept in the body of the space, given back at the centre.
 // Not a count, not a score: the raw material the reveal narrates ("You entered… You
@@ -13,12 +13,31 @@ enum PointJourney {
     static var descended: [String] = []
     static var visitors = 0
 
+    /// THE CARRY — `The Instrument v3.html:4899` `const CARRY=[]`, and `:5334` `sealCarry()`.
+    ///
+    /// *"Taking it up is weightless — no list, no collection, nothing counted. What it
+    /// leaves behind is company: one more mote in orbit around the one particle, at every
+    /// scale, for the rest of the walk."* (`:5331-5333`)
+    ///
+    /// It is NEVER rendered as a count and never as a list. The only place it becomes
+    /// visible is the motes, and the only place it becomes words is the one line at the
+    /// centre. `walk-continuity.js:44` says the same thing from the ceremony's side:
+    /// *"read-only, and never rendered as a count."*
+    ///
+    /// It lives here rather than in a serialised walk object on purpose — see the note on
+    /// `carriedTitles` below.
+    static var carried: [(title: String, hue: Color)] = []
+
+    /// The titles, oldest first, for the one line the reveal is allowed to say.
+    static var carriedTitles: [String] { carried.map(\.title) }
+
     static func reset() {
         reachedGate = false
         enteredDims = []
         openedStars = []
         descended = []
         visitors = 0
+        carried = []
     }
 
     // Distinct, order-preserving; "a · b · c · and N more" past `max`.
@@ -40,6 +59,12 @@ enum PointJourney {
         if visitors > 0 {
             out.append(visitors == 1 ? "One visitor arrived that you did not choose."
                                      : "\(visitors) visitors arrived that you did not choose.")
+        }
+        // `The Instrument v3.html:5776`, verbatim. The one place the carry becomes words,
+        // and it refuses to be a count in the same breath.
+        if !carried.isEmpty {
+            out.append("You carried " + nameList(carriedTitles, 2)
+                       + " up with you. What you carry is not a list. It is a change in what you notice.")
         }
         if enteredDims.isEmpty && openedStars.isEmpty {
             out.append("You walked straight through, gate to centre. Some days that is the whole practice.")

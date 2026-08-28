@@ -514,6 +514,33 @@ final class SoundEngine: ObservableObject {
 
     /// ONE PRESENCE SPEAKS, in its own body and at its own pitch.
     ///
+    /// `B.carry(hz)` — `The Instrument v3.html:4229-4239`, verbatim. Three sines at the
+    /// register's own Hz and its fifth and octave, each entering 0.30s after the last, each
+    /// a 0.25s ramp to `0.034/(i*0.6+1)` and then 6.5s of exponential decay. It is the
+    /// longest event in the app and the quietest thing that lasts: taking a reading up is
+    /// weightless, and what it leaves behind is company, so the tone stays after the hand
+    /// has moved on.
+    ///
+    /// UNHEARD. Like the rest of Pass 7 this is verified by reading only.
+    func carryTone(hz: Double) {
+        guard isRunning, !eventsSuppressed else { return }
+        for (i, m) in [1.0, 1.5, 2.0].enumerated() {
+            let peak = 0.034 / (Double(i) * 0.6 + 1)
+            let start = Double(i) * 0.30
+            // the design staggers by scheduling each oscillator at `t + i*0.30`; the engine
+            // has no scheduled start, so the stagger is a delayed play of the same envelope
+            Task { @MainActor [weak self] in
+                if start > 0 { try? await Task.sleep(nanoseconds: UInt64(start * 1_000_000_000)) }
+                guard let self, self.isRunning, !self.eventsSuppressed else { return }
+                self.playCeremony(
+                    CeremonyVoice(hz: hz * m, peak: peak,
+                                  attackSeconds: 0.25, releaseSeconds: 6.5, synth: .bowl),
+                    maxWait: 7.2
+                )
+            }
+        }
+    }
+
     /// This is what Pass 7 was for and what it shipped without: `VoiceCharacter` held all
     /// eleven `CHAR` timbres and **nothing read it**. The bed split landed and the voices
     /// never did, so every presence sounded identical — a sine-plus-octave at whatever Hz the

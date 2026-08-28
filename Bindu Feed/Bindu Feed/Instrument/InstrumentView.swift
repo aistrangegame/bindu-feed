@@ -614,7 +614,34 @@ struct InstrumentView: View {
                                          center: .center, startRadius: 0, endRadius: r))
                     .frame(width: r * 2, height: r * 2)
                     .position(x: geo.size.width / 2, y: geo.size.height * cy)
-                    .shadow(color: BinduParticle.core.opacity(0.5 * breath.value), radius: min(r, 40))
+                    // `:5742` — the halo grows with the company, `1 + CARRY.length*0.05`.
+                    .shadow(color: BinduParticle.core.opacity(0.5 * breath.value),
+                            radius: min(r, 40) * (1 + Double(PointJourney.carried.count) * 0.05))
+
+                // THE COMPANY — `:5750-5758`. *"What he carried up. The same being, in more
+                // company than it kept when he went down. Never numbered, never listed,
+                // always there."* One mote per carried reading, in that reading's own hue,
+                // at the golden angle so no two ever sit on each other, drawn at whatever
+                // scale the particle is at and collapsing into it as it becomes the world.
+                if !PointJourney.carried.isEmpty {
+                    TimelineView(.animation) { tl in
+                        let t = tl.date.timeIntervalSinceReferenceDate
+                        Canvas { ctx, size in
+                            let cx = size.width / 2, ccy = size.height * cy
+                            for (i, c) in PointJourney.carried.enumerated() {
+                                let ang = t * 0.07 + Double(i) * 2.399     // the golden angle
+                                let rr = (r * 4.6 + 11 + Double(i) * 2.4) * (1 - fill * 0.96)
+                                let px = cx + cos(ang) * rr, py = ccy + sin(ang) * rr
+                                ctx.fill(Path(ellipseIn: CGRect(x: px - 8, y: py - 8, width: 16, height: 16)),
+                                         with: .radialGradient(
+                                            .init(colors: [c.hue.opacity(0.85), c.hue.opacity(0)]),
+                                            center: CGPoint(x: px, y: py), startRadius: 0, endRadius: 8))
+                                ctx.fill(Path(ellipseIn: CGRect(x: px - 1.5, y: py - 1.5, width: 3, height: 3)),
+                                         with: .color(c.hue.opacity(0.95)))
+                            }
+                        }
+                    }
+                }
             }
         }
         .allowsHitTesting(false)

@@ -20,6 +20,8 @@ struct PointWorldView: View {
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var selectedUniverse: PointUniverse?   // the middle tier: dimension → universe → star
     @State private var openStar: PointStar?
+    /// `#carry.done` — this reading has been taken up; the label dims and stops asking.
+    @State private var carryDone = false
     @State private var goodnight = false
     /// How much of the reading has been given — the world behind recedes by it.
     @State private var revealed = 0
@@ -28,6 +30,74 @@ struct PointWorldView: View {
     private let ladder: [Double] = [285, 396, 417, 528, 639, 741, 852]
 
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
+
+    // ── #carry · TAKE IT UP ──────────────────────────────────────────────────────
+    // `The Instrument v3.html:4682` the affordance, `:4621-4627` its dress, `:5334`
+    // `sealCarry()`. *"Taking it up is weightless — no list, no collection, nothing
+    // counted. What it leaves behind is company: one more mote in orbit around the one
+    // particle, at every scale, for the rest of the walk."*
+    //
+    // WHAT THIS RESOLVES. When walk-continuity landed I declined to store `carry`,
+    // `carved` and `crossed`, on the grounds that E5 lets a ceremony colour itself by them
+    // and nothing actually read them — so a stored field would have been an unwired slot.
+    // That was right on the evidence, and it stays right about the CEREMONIES: neither
+    // `The Return v2.html` nor `The Rite v3.html` ever reads `W.carry` after declaring it.
+    // What was missing was the OTHER consumer — `:5826`, the instrument restoring its own
+    // CARRY, and `:5752`, the motes. Building this does not add an unused field; it
+    // completes one that only looked unused because its reader had never been built.
+    // Fourth and last instance of that shape, after DEALS, WORDS and TURN IT.
+    @ViewBuilder
+    private func carryAffordance(_ star: PointStar) -> some View {
+        VStack { Spacer()
+            VStack(spacing: 17) {
+                Button { sealCarry(star) } label: {
+                    Text("take it up")
+                        .spaceMonoTracked(10, em: 0.24)
+                        .foregroundStyle(Color(hex: "#FFF0E7").opacity(carryDone ? 0.35 : 0.88))
+                        .padding(.bottom, 4)
+                        .overlay(alignment: .bottom) {
+                            Rectangle().fill(Color(hex: "#E5533C")
+                                .opacity(carryDone ? 0 : 0.46)).frame(height: 1)
+                        }
+                }
+                .buttonStyle(.plain).disabled(carryDone)
+                Button { letGo() } label: {
+                    Text("let it go")
+                        .spaceMonoTracked(8.5, em: 0.2)
+                        .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34))
+                }
+                .buttonStyle(.plain)
+            }
+            // `#carry` is `bottom:54` in the comp, where nothing else stands. The app puts
+            // the descend door at `bottom:34` in the same corner — an element the comp does
+            // not have — so at 54 the two overlap and both become unreadable. Raised to
+            // clear it. A DELIBERATE geometry divergence: the design's number is right for
+            // the design's screen, and copying it here would produce the collision the
+            // number exists to avoid.
+            .padding(.bottom, 118)
+        }
+        .animation(.easeInOut(duration: 1.5), value: carryDone)
+    }
+
+    /// `:5334-5343`. Push, mark the surface kept, sound it, and let go on its own after
+    /// 2400ms — he does not have to dismiss what he decided to keep.
+    private func sealCarry(_ star: PointStar) {
+        guard !carryDone else { return }
+        PointJourney.carried.append((title: star.t, hue: hue))
+        carryDone = true
+        soundEngine.carryTone(hz: PointLadder.drone(dimensionN).hz)   // `B.carry(reg.hz)` — the register's own tone
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+            if openStar != nil { letGo() }
+        }
+    }
+
+    /// `:5344` — the reading closes and the world comes back. The claim releases here and
+    /// on `onDisappear`, so no exit path leaves `carryDone` armed for the next star.
+    private func letGo() {
+        withAnimation { openStar = nil }
+        revealed = 0
+        carryDone = false
+    }
 
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
 
@@ -55,6 +125,8 @@ struct PointWorldView: View {
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
                              onClose: { withAnimation { openStar = nil }; revealed = 0 },
                              onReveal: { revealed = $0 })
+
+                carryAffordance(star)
             } else if let star = openStar {
                 // reached without a universe (the debug star hook) — no world to recede
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
@@ -160,7 +232,7 @@ struct PointWorldView: View {
         }
         // Released on the way out, like the fall's four scoped paths: a register that is no
         // longer mounted must never still be holding the vertical.
-        .onDisappear { onHold(false); PointYantra.shared.readingOpen = false }
+        .onDisappear { onHold(false); PointYantra.shared.readingOpen = false; carryDone = false }
         .onAppear {
             syncAxisLock()
             if let dim { PointJourney.enteredDims.append(dim.name) }

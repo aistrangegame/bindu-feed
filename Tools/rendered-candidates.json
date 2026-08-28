@@ -62,7 +62,7 @@
 {
 "s": "-- and came back up.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:39"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:58"
 ]
 },
 {
@@ -117,7 +117,7 @@
 "s": "```json",
 "sites": [
 "Bindu Feed/Bindu Feed/Point/ApertureView.swift:361",
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:425"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:497"
 ]
 },
 {
@@ -671,7 +671,7 @@
 {
 "s": "Carry the one line that landed.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:376"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:448"
 ]
 },
 {
@@ -858,7 +858,7 @@
 {
 "s": "descending...",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:248"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:320"
 ]
 },
 {
@@ -990,7 +990,7 @@
 {
 "s": "enter the feed \u203a",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:734"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:761"
 ]
 },
 {
@@ -1272,7 +1272,7 @@
 {
 "s": "Go one true layer deeper than the held reading -- material it did not include.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:393"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:465"
 ]
 },
 {
@@ -1555,7 +1555,7 @@
 {
 "s": "I Love You",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:134"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:206"
 ]
 },
 {
@@ -1868,6 +1868,7 @@
 {
 "s": "let it go",
 "sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:65",
 "Bindu Feed/Bindu Feed/Screens/LightView.swift:408"
 ]
 },
@@ -2272,7 +2273,7 @@
 {
 "s": "One breath. Feet on the ground. Eyes soft.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:375"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:447"
 ]
 },
 {
@@ -2338,7 +2339,7 @@
 {
 "s": "One visitor arrived that you did not choose.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:41"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:60"
 ]
 },
 {
@@ -2362,7 +2363,7 @@
 {
 "s": "open the return",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:119",
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:191",
 "Bindu Feed/Bindu Feed/Universe/UniverseView.swift:589"
 ]
 },
@@ -2460,7 +2461,7 @@
 {
 "s": "point.descent.\u2026",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:220"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:292"
 ]
 },
 {
@@ -2814,7 +2815,7 @@
 {
 "s": "stand inside \u203a",
 "sites": [
-"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:795"
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:822"
 ]
 },
 {
@@ -2869,6 +2870,12 @@
 "s": "TAKE A RAY NEAR THE CENTRE \u00b7 THEN GO OUT",
 "sites": [
 "Bindu Feed/Bindu Feed/Point/PointWorlds.swift:330"
+]
+},
+{
+"s": "take it up",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:54"
 ]
 },
 {
@@ -2971,7 +2978,7 @@
 {
 "s": "the aperture \u203a",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:127"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:199"
 ]
 },
 {
@@ -2990,7 +2997,7 @@
 {
 "s": "the ascent",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:229"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:301"
 ]
 },
 {
@@ -3226,7 +3233,7 @@
 {
 "s": "The deeper field is quiet just now -- this is the held knowing.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:373"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:445"
 ]
 },
 {
@@ -4138,7 +4145,7 @@
 {
 "s": "the practice",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:228"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:300"
 ]
 },
 {
@@ -4505,7 +4512,7 @@
 {
 "s": "the teaching",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:227"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:299"
 ]
 },
 {
@@ -4547,7 +4554,7 @@
 {
 "s": "the thread",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:228",
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:300",
 "Bindu Feed/Bindu Feed/Universe/UniRegions.swift:131"
 ]
 },
@@ -4823,7 +4830,7 @@
 {
 "s": "This depth and that descent are the same room.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:113"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:185"
 ]
 },
 {
@@ -4853,7 +4860,7 @@
 {
 "s": "This star is seeded, not yet walked -- this is his FIRST TRUE MEETING with the topic: bring its actual substance accurately from its real tradition or science, going well beyond the held reading.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:392"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:464"
 ]
 },
 {
@@ -5108,6 +5115,12 @@
 "s": "unwalked \u00b7 drawn just now",
 "sites": [
 "Bindu Feed/Bindu Feed/Point/ApertureView.swift:307"
+]
+},
+{
+"s": "up with you. What you carry is not a list. It is a change in what you notice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:67"
 ]
 },
 {
@@ -5554,9 +5567,15 @@
 ]
 },
 {
+"s": "You carried",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:66"
+]
+},
+{
 "s": "You descended onto",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:39"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:58"
 ]
 },
 {
@@ -5574,7 +5593,7 @@
 {
 "s": "You entered",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:37"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:56"
 ]
 },
 {
@@ -5640,13 +5659,13 @@
 {
 "s": "You opened",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:38"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:57"
 ]
 },
 {
 "s": "You pressed me at the gate.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:35"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:54"
 ]
 },
 {
@@ -5682,7 +5701,7 @@
 {
 "s": "You slipped past the gate -- I came along anyway.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:36"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:55"
 ]
 },
 {
@@ -5724,7 +5743,7 @@
 {
 "s": "You walked straight through, gate to centre. Some days that is the whole practice.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:45"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:70"
 ]
 },
 {
@@ -5844,7 +5863,7 @@
 {
 "s": "\u00b7 and \u2026 more",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:29"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:48"
 ]
 },
 {
@@ -5898,7 +5917,7 @@
 {
 "s": "\u2026 visitors arrived that you did not choose.",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointJourney.swift:42"
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:61"
 ]
 },
 {
@@ -5928,7 +5947,7 @@
 {
 "s": "\u2039 ascend",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:315"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:387"
 ]
 },
 {
@@ -5942,7 +5961,7 @@
 {
 "s": "\u2039 the enclosure",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:43"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:113"
 ]
 },
 {
@@ -5954,7 +5973,7 @@
 {
 "s": "\u25bd DESCEND ONE LAYER DEEPER",
 "sites": [
-"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:252"
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:324"
 ]
 },
 {

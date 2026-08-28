@@ -531,7 +531,7 @@ enumerated list. These are its finds, all **OPEN**, all `REVIEW` rows in the reg
 | # | Item | Evidence |
 |---|---|---|
 | R1 | **CLOSED — the 18 world hand-cues are built.** And the finding was worse than absence: five of seven worlds carried **invented** substitutes ("touch a star · it draws inward", "part the veil >", "move along the walls", "each meets its echo · turn to enter", "settle down through the layers", "catch one in flight"), none in any design file, none among the forward grep's eight. Missing authored copy and invented copy on the same surface. | 18 of 25 present, up from 2, measured by the registry. Shared `WorldCue` at the design's own 8.5 Space Mono / `A*0.38*(0.7+br*0.4)` / H−150. Walked: world I and world II on device. |
-| R1a | **Seven cues remain, none a string problem.** The withdrawal family (4) fires on a decay *after* release — `leaving`/`closing`/`easing`/`settling` > 0.02 — and the app's readings unmount instead of lingering. World VI's multi-arc family (3) needs the draw-up gesture and more than one arc in flight. Plus III's `holding it open`, gated on a parting-width scalar the app has no equivalent for. | **OPEN.** Inventing a trigger to place the words is the fault this pass is about. The withdrawal family is the same shape world V's guard pane already has, so it is the tractable one. |
+| R1a | **Eight cues remain: AUTHORED, NO TRIGGER.** Each is named below with the exact state it waits on. Words placed on invented triggers would be the invented-string fault carrying authored copy — **worse, because it would look verified.** | **OPEN, and deliberately not built.** |
 | R2 | **`#carry` — SIZED, not started. A pass, not a port.** | Eight pieces. Free: `KEPT` already exists (`AxisTravel.mem`). Small: the affordance, the session store (which must stay invisible — *"no list, no collection, nothing counted"*), the journey line. **Cross-cutting, and the reason this is a pass:** the motes orbiting the particle *at every scale* — `InstrumentView:560-578` is the only full particle render and does carry `fill` and `r`, but the Universe's and the Point's centres are separate drawings; `B.carry(hz)` is a new event in the one layer nobody has heard; and walk-continuity is **blocked** — there is no serialised walk object to extend, only `Breath.originSeconds` and `pendingLaunchRoute`. |
 | R3 | **`#seam` — SIZED, not started. A port, small.** | Two two-line hints at `left:30 right:30 bottom:112`, gated at `:5619` on `\|Z\| < 0.30 && weather === 'met'`. `InstrumentView` already has `travel.z` and `store`. One dependency: met-ness is a `private @State DoorWeather` inside `DoorView` and needs lifting into the store — worth doing regardless, since `DoorView` recomputes it privately today. |
 | R4 | **CLOSED as a deliberate divergence, recorded in §10.** | Design narrates the reading-*gesture* used (`:5770-5781`); `PointJourney.narration()` narrates dims and stars entered. Possibly deliberate — but not recorded in §10, so it cannot be assumed. |
@@ -540,6 +540,29 @@ enumerated list. These are its finds, all **OPEN**, all `REVIEW` rows in the reg
 R1 was the one that changed what a first reader meets, and it is closed. R2 and R3 are
 **enumerated open, not in progress** — sized so the scope call can be made, and left alone
 until it is.
+
+## D‴ · Authored, no trigger — the eight cues that wait on a mechanic
+
+Not a string problem. Each of these is verbatim in the design and absent from the app
+because the state that fires it does not exist. They are listed with that state, so the
+decision to build one is a decision about a mechanic, never about placing words.
+
+| cue | source | the state it waits on |
+|---|---|---|
+| `IT CLOSED. IT DOES NOT MIND.` | `world-one.js:193` | `this.leaving > 0.02` — a decay after the star closes |
+| `IT CLOSED BEHIND YOU. IT ALWAYS DOES.` | `world-three.js:244` | `this.closing > 0.02` |
+| `THE WALL EASED. WHAT WAS STRUCK STAYS STRUCK.` | `world-four.js:277` | `this.easing > 0.02` |
+| `THE GLASS LET GO. WHAT FACED YOU, FACED YOU.` | `world-five.js:445` | `this.settling > 0.02` — and note the app already uses the NAME `settling` for a different thing (which face is toward you), so this one needs a rename as well as a mechanic |
+| `DRAW IT UP · AIM · LET GO` | `world-six.js:419` | `this.holding` — the draw-up-and-aim gesture. The app's send is a Button; there is nothing to hold |
+| `THEY WILL COME BACK IN THEIR OWN ORDER` | `world-six.js:424` | `this.arcs.length > 1` |
+| `SOMETHING IS COMING THAT YOU DID NOT SEND` | `world-six.js:423` | an arc with `deep` set — one returning uninvited |
+| `holding it open` | `world-three.js:240` | `this.open < 0.30` — a parting-WIDTH scalar; the app's `part` is a point or nothing |
+
+**The withdrawal family is the tractable one.** Four of the eight are the same shape — a
+decay that runs after release while the reading is still on screen — and world V's guard
+pane already has exactly that shape (`withdrawing`, on its own wall clock, finishing whether
+he is there or not). One mechanic closes four cues. World VI's three need a different
+gesture and a multi-arc model, which is a larger question about what that world is.
 
 ## D′ · The checklist itself was wrong in one place
 
