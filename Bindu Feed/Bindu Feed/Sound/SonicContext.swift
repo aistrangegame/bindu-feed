@@ -27,6 +27,11 @@ import SwiftUI
 enum SonicContext: Equatable {
     case base
     case room(Room)
+    /// THE ONLY SURFACE THAT CLIMBS. `point-sound.js` — nine steps up and home an octave
+    /// down, the binaural beat narrowing 8.0 → 4.0 Hz as it goes. The enclosure index picks
+    /// both the pitch and the beat from `PointLadder`; nothing else in the app asks for
+    /// `.climbing`, because nothing else is going anywhere.
+    case point(enclosure: Int)
 }
 
 // MARK: - View modifier

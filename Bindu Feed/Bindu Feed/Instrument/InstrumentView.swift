@@ -34,6 +34,18 @@ struct InstrumentView: View {
     // outer `.highPriorityGesture` steals every drag from the presented card.
 
     // The travelling pitch — log-interpolated between adjacent registers (hzAt(Z)).
+    //
+    // E2 SAYS "CLAMP TO 13", AND THAT RULING MUST NOT BE APPLIED HERE. It is a fix for the
+    // DESIGN'S array, not for this one. `The Instrument v3.html:4155` reads
+    // `R[Math.min(14, i+1)].hz` against `SPINE.REG`, which has FOURTEEN entries (0…13) —
+    // the pre-Light spine — so at `Z ≥ 8` it indexes 14 and reads `undefined`. Clamping the
+    // JS to 13 is right.
+    //
+    // `Axis.registers` has FIFTEEN, because the Light was added at `z = −5`. Index 13 is d7
+    // at 852 Hz and index 14 is the centre at 963. Clamping THIS to 13 would sound the bindu
+    // as the Dance — it would silently collapse the last register onto the one before it, at
+    // exactly the place the walk is supposed to arrive. The C1 warning box already says it:
+    // from the pre-Light extraction take strings only, nothing index-related.
     private func hzAt(_ z: Double) -> Double {
         let i = z + 5
         let lo = max(0, min(14, Int(i.rounded(.down))))
@@ -230,6 +242,16 @@ struct InstrumentView: View {
                 })
                 .transition(.opacity)
             }
+        }
+        // THE POINT ASKS FOR THE CLIMBING BED, and only the Point. Enclosure = `z - 1` (gate
+        // 0, d1…d7 1…7, the centre 9) — the same arithmetic the yantra's camera uses, so the
+        // pitch he hears and the enclosure he is standing in can never disagree. Off the
+        // Point band the field bed resumes: a room that hums rather than climbs.
+        .onChange(of: here.key) { _, _ in
+            let onPoint = travel.z >= 0.5
+            soundEngine.setContext(onPoint
+                ? .point(enclosure: Int(PointYantra.focus(forAxisZ: travel.z).rounded()))
+                : .base)
         }
         .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))

@@ -265,7 +265,7 @@ struct RoomView: View {
             var si = -1
             if let ri {
                 let w = archive.real[ri]
-                si = archive.stories.firstIndex(where: { $0.id == w.linkedStoryId }) ?? -1
+                si = archive.stories.firstIndex(where: { w.belongs(to: $0.id) }) ?? -1
             }
             out.append(RoomMark(x: mx, y: my, real: real, storyIndex: si, realIndex: ri ?? -1))
             if real {

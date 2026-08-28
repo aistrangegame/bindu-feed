@@ -220,8 +220,9 @@ final class FeedStore: ObservableObject {
             var orderedArchetypes: [String: [String]] = [:]
             var seenArchetypes: [String: Set<String>] = [:]
 
+            let known = Set(self.stories.map(\.id))
             for c in combined {
-                guard let sid = c.linkedStoryId else { continue }
+                guard let sid = c.storyId(in: known) else { continue }
                 // `cmts` — EVERY comment on the story, Ash's included. The seat rule measures
                 // the thread running past the field, so his own words have to be in the count.
                 counts[sid, default: 0] += 1
@@ -311,7 +312,11 @@ final class FeedStore: ObservableObject {
     func roomArchive(for archetype: Archetype) async
         -> (comments: [FieldComment], titles: [String: String], since: String) {
         let comments = (try? await service.fetchArchetypeComments(archetypeName: archetype.name)) ?? []
-        let ids = comments.compactMap(\.linkedStoryId)
+        if stories.isEmpty { await loadStories() }
+        let known = Set(stories.map(\.id))
+        // Only the ids that are STORIES. A threaded reply's back-link would otherwise be sent
+        // to `fetchStoriesByIds` and come back as nothing, quietly widening the query.
+        let ids = comments.compactMap { $0.storyId(in: known) }
         guard !ids.isEmpty else { return (comments, [:], "") }
         let found = (try? await service.fetchStoriesByIds(ids)) ?? []
         var titles: [String: String] = [:]
@@ -405,22 +410,6 @@ final class FeedStore: ObservableObject {
         fieldSounds.first { $0.role == .practiceDoor }
     }
 
-    // Field Comments are stored with `Linked Story` pointing at their parent
-    // (which may be a Story, Mirror Card, Signal, or Practice Invitation —
-    // Airtable record IDs don't collide across types). Grouping by that ID
-    // lets every card surface look up its own comments without a per-card
-    // round trip.
-    private static func groupByLinkedStory(_ comments: [FieldComment]) -> [String: [FieldComment]] {
-        var grouped: [String: [FieldComment]] = [:]
-        for c in comments {
-            guard let sid = c.linkedStoryId else { continue }
-            grouped[sid, default: []].append(c)
-        }
-        for (key, value) in grouped {
-            grouped[key] = value.sorted { $0.commentOrder < $1.commentOrder }
-        }
-        return grouped
-    }
 
     // MARK: - Practice Door (Phase 9 weighted selector)
 
@@ -733,8 +722,9 @@ final class FeedStore: ObservableObject {
         do { ash = try await service.fetchAllAshComments() } catch { return nil }
         // the most recent own-words per story — the self he sealed there
         var sealedByStory: [String: FieldComment] = [:]
+        let knownStories = Set(stories.map(\.id))
         for c in ash {
-            guard let sid = c.linkedStoryId, !c.body.isEmpty else { continue }
+            guard let sid = c.storyId(in: knownStories), !c.body.isEmpty else { continue }
             if let existing = sealedByStory[sid] {
                 if c.sourceDate > existing.sourceDate { sealedByStory[sid] = c }
             } else {
@@ -755,7 +745,7 @@ final class FeedStore: ObservableObject {
         let story = candidates[Int(h % UInt32(candidates.count))]
         guard let sealed = sealedByStory[story.id] else { return nil }
         let field = await loadComments(for: story.id).field
-        let seals = ash.filter { $0.linkedStoryId == story.id && !$0.body.isEmpty }
+        let seals = ash.filter { $0.belongs(to: story.id) && !$0.body.isEmpty }
         return buildReturnData(story: story, sealed: sealed, field: field, seals: seals)
     }
 

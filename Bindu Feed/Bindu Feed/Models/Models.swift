@@ -154,6 +154,20 @@ struct FieldComment: Identifiable, Hashable {
     let id: String
     let body: String
     let archetype: String
+    /// EVERY id in `Linked Story`. Not one — `Parent Comment` and `Linked Story` are a
+    /// symmetric pair on this table, so a threaded reply puts its own record id into the
+    /// parent's `Linked Story`. Roughly 100 Live field comments — one per story carrying a
+    /// Lalita reply — have held two values since June: `recbtjuoymm4Ot8L1` (S15-Sakshi) reads
+    /// `[The Mirror Doesn't Hallucinate, S15-Lalita-reply]`, and `recupjXrwd55KG0ge` the same.
+    ///
+    /// Nothing broke because Airtable preserves link order and the story was written first,
+    /// so `.first` happened to return it. **That is position-dependence, it is load-bearing,
+    /// and it has been working by luck for two months.** Neither reply drops out of the Live
+    /// filter — they are `Status = Live` — so the counts matched for the wrong reason.
+    let linkedStoryIds: [String]
+    /// The FIRST link, kept only for the paths that have no story set to resolve against.
+    /// Prefer `belongs(to:)` for membership and `storyId(in:)` for grouping — those are
+    /// order-independent and this is not.
     let linkedStoryId: String?
     let parentCommentId: String?
     let commentOrder: Int
@@ -175,6 +189,7 @@ struct FieldComment: Identifiable, Hashable {
         self.id = record.id
         self.body = f.commentBody ?? ""
         self.archetype = f.archetype ?? ""
+        self.linkedStoryIds = f.linkedStory ?? []
         self.linkedStoryId = f.linkedStory?.first
         self.parentCommentId = f.parentComment?.first
         self.commentOrder = f.commentOrder ?? 0
@@ -184,6 +199,34 @@ struct FieldComment: Identifiable, Hashable {
         self.audioReference = f.audioReference?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             ? f.audioReference : nil
     }
+    // TWO DIFFERENT QUESTIONS HIDE BEHIND `linkedStoryId`, and only one of them needs to know
+    // what a story is.
+    //
+    //   "does this comment belong to story X?"  → MEMBERSHIP. Order-independent, needs
+    //                                             nothing but the id being asked about.
+    //   "which story does this comment belong to?" → RESOLUTION. Needs the set of real story
+    //                                             ids, because the extra link is a comment.
+    //
+    // Both were answered with `.first` and an `==`. Membership is the one that could silently
+    // drop a comment off its own story if the link order ever differed.
+
+    /// Membership. Use wherever the story is already known.
+    func belongs(to storyId: String) -> Bool { linkedStoryIds.contains(storyId) }
+
+    /// Resolution against a story map — the map's keys ARE the set of real story ids.
+    func story(in byId: [String: Story]) -> Story? {
+        linkedStoryIds.lazy.compactMap { byId[$0] }.first
+    }
+
+    /// Resolution. `known` is the set of real story record ids; the id that is in it is the
+    /// story, and any other id in the field is a threaded reply's back-link.
+    func storyId(in known: Set<String>) -> String? {
+        if let hit = linkedStoryIds.first(where: { known.contains($0) }) { return hit }
+        // Nothing matched — the story may simply not be loaded. Fall back to the first link
+        // rather than dropping the comment, and never pretend this is a resolution.
+        return linkedStoryId
+    }
+
 }
 
 struct Room: Identifiable, Hashable {

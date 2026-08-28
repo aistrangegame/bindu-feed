@@ -246,14 +246,14 @@ final class AirtableService {
     func fetchFieldComments(storyId: String) async throws -> [FieldComment] {
         let all = try await fetchAllFieldComments()
         return all
-            .filter { $0.linkedStoryId == storyId }
+            .filter { $0.belongs(to: storyId) }
             .sorted { $0.commentOrder < $1.commentOrder }
     }
 
     func fetchAshComments(storyId: String) async throws -> [FieldComment] {
         let all = try await fetchAllAshComments()
         return all
-            .filter { $0.linkedStoryId == storyId }
+            .filter { $0.belongs(to: storyId) }
             .sorted { $0.commentOrder < $1.commentOrder }
     }
 
@@ -262,7 +262,7 @@ final class AirtableService {
     // record ID, so we pull all Resonance Voices and filter in Swift.
     func fetchResonanceVoice(storyId: String) async throws -> FieldComment? {
         let all = try await fetchAllResonanceVoices()
-        return all.first { $0.linkedStoryId == storyId }
+        return all.first { $0.belongs(to: storyId) }
     }
 
     private func fetchAllResonanceVoices() async throws -> [FieldComment] {

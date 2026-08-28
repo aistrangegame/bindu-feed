@@ -73,7 +73,7 @@ struct RoomArchive {
         var groups: [RoomStoryGroup] = []
         var index: [String: Int] = [:]
         for c in real {
-            guard let sid = c.linkedStoryId else { continue }
+            guard let sid = c.storyId(in: Set(titles.keys)) else { continue }
             if let i = index[sid] {
                 groups[i].items.append(c)
             } else {

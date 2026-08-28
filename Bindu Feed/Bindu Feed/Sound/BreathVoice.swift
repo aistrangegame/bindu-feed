@@ -60,6 +60,15 @@ final class BreathVoice {
         let leftFreq = snap.rootHz
         let rightFreq = snap.rootHz + snap.binauralHz
         let centerFreq = snap.rootHz
+        // `.field` — the fifth, at `fg.gain = 0.16` (`field-sound.js:63`). It is not a second
+        // voice; it is the room's own overtone, sitting under the root at a sixth of it.
+        let fifthFreq = snap.rootHz * 1.5
+        let fifthGain = 0.16
+        // `.climbing` — the octave above, at `o3g.gain = 0.06` (`point-sound.js:55`).
+        let octaveFreq = snap.rootHz * 2
+        let octaveGain = 0.06
+        var phaseFifth: Double = 0
+        var phaseOctave: Double = 0
 
         // One-breath alignment. When given the app's launch-anchored origin, the
         // LFO re-anchors its phase to that single clock at the start of every
@@ -115,21 +124,48 @@ final class BreathVoice {
                 let rawL: Double
                 let rawR: Double
 
-                if useBinaural {
+                if snap.bed == .field {
+                    // ROOT + FIFTH, both ears. No binaural anywhere but the Point — and this
+                    // is honest on speakers too, where a binaural pair was collapsing to a
+                    // bare centred tone and the room lost its fifth along with its width.
+                    let r = Self.sample(
+                        texture: snap.texture,
+                        phase: &phaseL,
+                        frequency: centerFreq,
+                        sampleRate: sampleRate,
+                        noiseState: &noiseState
+                    )
+                    let fifth = Self.sample(
+                        texture: snap.texture,
+                        phase: &phaseFifth,
+                        frequency: fifthFreq,
+                        sampleRate: sampleRate,
+                        noiseState: &noiseState
+                    ) * fifthGain
+                    rawL = r + fifth
+                    rawR = r + fifth
+                } else if useBinaural {
+                    let octave = Self.sample(
+                        texture: snap.texture,
+                        phase: &phaseOctave,
+                        frequency: octaveFreq,
+                        sampleRate: sampleRate,
+                        noiseState: &noiseState
+                    ) * octaveGain
                     rawL = Self.sample(
                         texture: snap.texture,
                         phase: &phaseL,
                         frequency: leftFreq,
                         sampleRate: sampleRate,
                         noiseState: &noiseState
-                    )
+                    ) + octave
                     rawR = Self.sample(
                         texture: snap.texture,
                         phase: &phaseR,
                         frequency: rightFreq,
                         sampleRate: sampleRate,
                         noiseState: &noiseState
-                    )
+                    ) + octave
                 } else {
                     let s = Self.sample(
                         texture: snap.texture,

@@ -10,25 +10,44 @@ import os
 // types: cheap to copy, safe to pass between the control thread
 // (where SoundEngine sets new targets) and the audio render thread
 // (where the source node reads them).
+/// WHICH BED THIS IS. The design has TWO, and the app has been running one of them
+/// everywhere — the wrong one.
+///
+///   `.field`    `field-sound.js:53-70 startBed` — ROOT + FIFTH through a 900 Hz low-pass,
+///               swelling on the room's own pace. A room hums at a fixed colour.
+///   `.climbing` `point-sound.js:40-58 drone` — the BINAURAL PAIR, `f` left and `f + beat`
+///               right, with an octave above at 0.06 and the beat narrowing 8.0 → 4.0 Hz.
+///
+/// *"Beating narrows 8.0 → 4.0 Hz (alpha into theta)."* The narrowing IS the climb made
+/// audible, which is why the pair belongs to the Point alone: it is the only surface that
+/// goes somewhere. Everywhere else the same mechanism says a journey is happening when none
+/// is — and the app had it on the Practice Door, the Mirror, every room.
+enum BedMode: Sendable, Equatable { case field, climbing }
+
 struct VoiceSnapshot: Equatable, Sendable {
     let rootHz: Double
     let binauralHz: Double
     let level: Double
     let brightness: Double
     let texture: SoundTexture
+    /// Defaults to `.field` — the surfaces that do not climb are the overwhelming majority,
+    /// and a bed that has not been told otherwise must not pretend to move.
+    var bed: BedMode = .field
 
     init(
         rootHz: Double,
         binauralHz: Double,
         level: Double,
         brightness: Double,
-        texture: SoundTexture
+        texture: SoundTexture,
+        bed: BedMode = .field
     ) {
         self.rootHz = rootHz
         self.binauralHz = binauralHz
         self.level = level
         self.brightness = brightness
         self.texture = texture
+        self.bed = bed
     }
 
     // The seeded Breath — the always-correct default when the field

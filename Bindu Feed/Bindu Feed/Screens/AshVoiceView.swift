@@ -170,7 +170,7 @@ struct AshVoiceView: View {
     }
 
     private var fieldsEntered: Int {
-        let storyIds = Set(comments.compactMap { $0.linkedStoryId })
+        let storyIds = Set(comments.flatMap(\.linkedStoryIds))
         let rooms = storyIds.compactMap { storyById[$0]?.room }.filter { !$0.isEmpty }
         return Set(rooms).count
     }
@@ -210,8 +210,10 @@ struct AshVoiceView: View {
                     StaggeredReveal(triggered: true, delay: 0.4 + Double(i) * 0.18, duration: 0.8, rise: 12) {
                         AshCommentRow(
                             comment: comment,
-                            story: storyById[comment.linkedStoryId ?? ""],
-                            room: storyById[comment.linkedStoryId ?? ""].flatMap { store.room(named: $0.room) },
+                            // The story is whichever link IS a story — `storyById` holds
+                            // exactly those, so it is the discriminator, and position is not.
+                            story: comment.story(in: storyById),
+                            room: comment.story(in: storyById).flatMap { store.room(named: $0.room) },
                             parentArchetypeName: parentCommentById[comment.parentCommentId ?? ""]?.archetype,
                             terra: terra,
                             onTapStory: { story in $path.pushDissolve(FeedRoute.story(story)) }
@@ -230,7 +232,7 @@ struct AshVoiceView: View {
         do {
             let ash = try await AirtableService.shared.fetchAllAshComments()
             comments = ash
-            let storyIds = ash.compactMap { $0.linkedStoryId }
+            let storyIds = ash.flatMap(\.linkedStoryIds)
             let parentIds = ash.compactMap { $0.parentCommentId }
 
             async let storiesT = AirtableService.shared.fetchStoriesByIds(storyIds)

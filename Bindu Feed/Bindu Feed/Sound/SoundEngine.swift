@@ -234,6 +234,14 @@ final class SoundEngine: ObservableObject {
             return baseBreathSnapshot
         case .room(let room):
             return VoiceSnapshot(from: room)
+        case .point(let enclosure):
+            // Pitch AND beat from the ladder — `point-sound.js:42` reads `FREQS[i]` and
+            // `BEATS[i]` from the same index, so they can never drift apart.
+            let step = PointLadder.drone(enclosure)
+            return VoiceSnapshot(rootHz: step.hz, binauralHz: step.beat,
+                                 level: 0.055,          // `gn.gain → 0.055` (`:57`)
+                                 brightness: 0.42, texture: .sine,
+                                 bed: .climbing)
         }
     }
 
@@ -339,10 +347,33 @@ final class SoundEngine: ObservableObject {
 
     // MARK: - Attach / detach
 
+    // THE ROOM, HEARD BEFORE IT IS SEEN. Both beds run through a reverb, and they are not the
+    // same room: `field-sound.js:39-41` is `_air(3.6, 0.34)` at wet 0.5 — a held breath in a
+    // space — while `point-sound.js:35-37` is `_stone(7.5, 0.6)` at wet 0.42, a tail twice as
+    // long. The design calls the second one the cathedral, and it should not be audible
+    // anywhere the walk is not climbing.
+    private lazy var room: AVAudioUnitReverb = {
+        let r = AVAudioUnitReverb()
+        r.loadFactoryPreset(.mediumRoom)
+        r.wetDryMix = 50                       // `wet.gain = 0.5`
+        engine.attach(r)
+        engine.connect(r, to: engine.mainMixerNode, format: nil)
+        return r
+    }()
+
+    /// Called when the bed changes. Tail and wetness are the room's identity.
+    private func setRoom(for bed: BedMode) {
+        switch bed {
+        case .field:    room.loadFactoryPreset(.mediumRoom);  room.wetDryMix = 50
+        case .climbing: room.loadFactoryPreset(.cathedral);   room.wetDryMix = 42
+        }
+    }
+
     private func attach(_ voice: BreathVoice) {
         engine.attach(voice.sourceNode)
         let format = voice.sourceNode.outputFormat(forBus: 0)
-        engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        setRoom(for: voice.snapshot.bed)
+        engine.connect(voice.sourceNode, to: room, format: format)
     }
 
     private func detach(_ voice: BreathVoice) {

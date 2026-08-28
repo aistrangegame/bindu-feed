@@ -408,7 +408,7 @@ struct TheTurningView: View {
                 ForEach(Array(comments.enumerated()), id: \.element.id) { i, comment in
                     WordCard(
                         comment: comment,
-                        story: storyById[comment.linkedStoryId ?? ""],
+                        story: comment.story(in: storyById),
                         color: archetype.color
                     )
                     .offset(y: done ? 0 : 10)
@@ -453,7 +453,7 @@ struct TheTurningView: View {
                 archetypeName: archetype.name
             )
             comments = fetched
-            let ids = fetched.compactMap { $0.linkedStoryId }
+            let ids = fetched.flatMap(\.linkedStoryIds)
             let stories = try await AirtableService.shared.fetchStoriesByIds(ids)
             storyById = Dictionary(uniqueKeysWithValues: stories.map { ($0.id, $0) })
             loaded = true
