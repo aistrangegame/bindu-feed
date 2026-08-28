@@ -83,46 +83,62 @@ That is craft work — writing more scenes — and it is deliberately parked. No
 engineering produces it, and no shortcut through it would be honest. It is named here so
 it is not discovered as a surprise.
 
-### 7 · The registry's first run found more missing authored copy than expected
+### 7 · The registry's first run — what it found, and what is now built
 
-The backwards half of Rule 4 is now a registry rather than a memory (see below). Its first
-run enumerated 1,619 authored strings from `canon/` and the design sources, confirmed 718
-present in the app, and left **490 authored strings that are not**. Most of that backlog is
-comp sample data and Airtable-sourced content. Four clusters are not:
+The backwards half of Rule 4 is a registry rather than a memory (see below). Its first run
+enumerated 1,619 authored strings from `canon/` and the design sources and left 490 that the
+app did not contain. Most of that is comp sample data and Airtable content. Four clusters
+were not, and one of them has since been built.
 
-- **18 of the 20 world hand-cues are absent.** Worlds II, III, IV, VI and VII never tell
-  the hand what to do. `world-three.js` has *PART IT WITH YOUR HAND · AND HOLD IT OPEN* and
-  *PART IT AGAIN, SOMEWHERE ELSE*; `world-four.js` has *PRESS A WALL · AND BEAR IT*;
-  `world-two.js` has *TAKE A RAY NEAR THE CENTRE · THEN GO OUT*; six and seven have five
-  each. Only two are built — world I's *TOUCH ONE · THEN LET GO AND STAY* and world V's
-  *TURN A MIRROR · AND SEE WHAT FACES IT*. This matters more than the count suggests: the cue is how the gesture is
-  discoverable, and `HANDOFF-VERIFICATION.md`'s Pass 5 line — *"the reading is carried by
-  the hand"* — is about exactly this. The app has neither the authored cue nor an invented
-  substitute, so those five worlds are silent about their own gesture.
-- **`#carry` was never built.** `take it up` / `let it go` (`The Instrument v3.html:4682`)
-  and `sealCarry()` at `:5334`. Taking a reading up is weightless — *"no list, no
-  collection, nothing counted"* — and what it leaves behind is company: one carried mote in
-  orbit around the one particle at every scale (`:5752`), the halo growing by
-  `1 + CARRY.length*0.05`, the walk narrating *"You carried X up with you. What you carry is
-  not a list. It is a change in what you notice."* (`:5776`), and `CARRY` serialised into
-  `asf.walk` (`:5809`). The app has `KEPT` — the rail's filled dots — but nothing of `CARRY`.
-- **`#seam` was never built.** The axis's two direction hints at the Feed's own scale,
-  toggled at `:5619` when `|Z| < 0.30` and the day is met: *pull down · outward / everything
-  that has met you* and *pull up · inward / everything you have gathered*.
-- **The journey narration is a different, smaller object than the design's.** The design
-  narrates which reading-*gesture* he used — *You stayed with… You took hold of… You parted
-  the veil over… You bore the pressure until… You kept pace with… You crossed into…*
-  (`:5770-5781`). `PointJourney.narration()` narrates which dims and stars he entered. That
-  may be a deliberate substitution, but it is not recorded as one in §10, so it is listed
-  here rather than assumed.
+**BUILT · the 18 world hand-cues.** The finding was worse than "never built": five of seven
+worlds never told the hand what to do, and the ones that spoke were mostly speaking
+*invented* copy — "touch a star · it draws inward", "part the veil >", "move along the
+walls", "each meets its echo · turn to enter", "settle down through the layers", "catch one
+in flight". None appears in any design file; none was among the eight strings the forward
+grep knew. **The same surface was simultaneously missing authored copy and carrying invented
+copy**, which is the whole project's shape in one sentence and is now recorded in §10.
 
-Also diverged without a record: the Universe's lens label is `the light ›` / `the structure
-›` where `The Universe v3.html:1437` and `:1676` say `the star lens` / `the structure lens`.
+18 of 25 authored cues are present, up from 2. Walked on device: world I's through the new
+shared `WorldCue` view, and world II's `TAKE A RAY NEAR THE CENTRE · THEN GO OUT` standing
+where the invented line was.
 
-**None of this is built.** It is named, enumerated, and left in
-`Tools/authored-strings.tsv` as `REVIEW` so it cannot go quiet again. Whether the world
-cues ship before the first walk is a judgement call about how discoverable the Point should
-be on first contact — it is the one item here that changes what a first reader experiences.
+**Seven remain, and not one is a string problem.** Each needs a mechanic the app does not
+have, and inventing a trigger to place the words would be the exact fault this pass is
+about:
+
+- *The withdrawal family (4)* — `IT CLOSED. IT DOES NOT MIND.` · `IT CLOSED BEHIND YOU. IT
+  ALWAYS DOES.` · `THE WALL EASED. WHAT WAS STRUCK STAYS STRUCK.` · `THE GLASS LET GO. WHAT
+  FACED YOU, FACED YOU.` All four fire on a decay *after release* (`leaving` / `closing` /
+  `easing` / `settling` > 0.02). The app's readings unmount on close instead of lingering,
+  so there is nothing for them to hang on. Worth building: it is the same withdrawal shape
+  world V's guard pane already has.
+- *World VI's multi-arc family (3)* — `DRAW IT UP · AIM · LET GO` needs the draw-up-and-aim
+  gesture the app replaced with a Button; the other two need more than one arc in flight.
+
+**OPEN · `#carry` — a pass, not a port.** Sized rather than started:
+
+| piece | reach |
+|---|---|
+| the affordance (`take it up` / `let it go`, while a reading is open) | small — one view, two controls |
+| the `CARRY` store, session-scoped | small — and it must stay *invisible*: "no list, no collection, nothing counted" |
+| `KEPT[reg.i]` | **already built** — `AxisTravel.mem`, the rail's filled dots |
+| `B.carry(hz)` + `B.shimmer()` | a new sound event, in the one layer nobody has heard |
+| the 2400ms auto-let-go and `letGo()`'s five closes | medium — and it must release on every exit path (§10's claim rule) |
+| **the motes** — one per carried reading, orbiting the particle at the golden angle, halo growing `1 + CARRY.length*0.05` | **the real cost.** `InstrumentView:560-578` is the only full particle render and does have `fill` and `r`; but *"at every scale"* means the Universe's and the Point's centres too, and those are separate drawings, not `BinduParticle` |
+| the journey line | lands inside the narration divergence, now recorded in §10 |
+| walk-continuity (`CARRY` into `asf.walk`) | **blocked** — there is no serialised walk object to extend; only `Breath.originSeconds` and `pendingLaunchRoute` |
+
+Three of eight are cross-cutting: the motes across three particle renders, a new event in the
+unheard sound layer, and a walk object that does not exist. That is a pass.
+
+**OPEN · `#seam` — a port, small.** Two two-line hints at `left:30 right:30 bottom:112`,
+gated at `:5619` on `|Z| < 0.30 && weather === 'met'`. `InstrumentView` already has `travel.z`
+and `store`. The one dependency: met-ness currently lives as a `private @State DoorWeather`
+inside `DoorView`, so it needs lifting into the store — which is worth doing regardless,
+since `DoorView` recomputes it privately today.
+
+**Also open:** the journey narration and the lens label, both now carrying deliberate §10
+divergence records rather than sitting undocumented.
 
 ---
 
@@ -221,6 +237,21 @@ That one fix moved 81 strings out of `REQUIRED`: they had never been rendered an
 quoted. Re-running the deletion test now exits 1 and names the string.
 
 A registry that cries wolf is one nobody reads. A registry that never cries is worse.
+
+**And the 81 comment-only strings have a consequence past the tool.** A *forward* grep is
+safe against comments: a hit inside a comment is a false positive, and you see it and
+dismiss it. A *backward* grep is not: a comment quoting the design creates a **false
+presence you never see**. The string appears to be there, the check passes, and nothing
+draws your attention to it.
+
+So **every whole-file backward check made during this build was masked the same way** —
+including the closing sequence's own step 3, which confirmed `touch to receive`, `touch
+once` and `enter a universe` by grepping whole files. Those three do turn out to be really
+present, but that walk did not prove it; it only failed to distinguish a rendered string
+from a quoted one. The narrowed matcher is the only trustworthy one, and it is the reason
+`REQUIRED` fell from 799 to 718. **Treat any backward-direction result in this build's
+history that predates the narrowing as unverified, and re-run it with
+`Tools/check_authored.py`.**
 
 **What it does not do.** It cannot decide whether an absent string *should* be in the app —
 comp sample data, Airtable content and design commentary all look alike to a matcher. That

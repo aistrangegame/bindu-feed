@@ -530,15 +530,16 @@ enumerated list. These are its finds, all **OPEN**, all `REVIEW` rows in the reg
 
 | # | Item | Evidence |
 |---|---|---|
-| R1 | **18 of 20 world hand-cues absent.** Worlds II, III, IV, VI and VII never tell the hand what to do. | `world-two.js` *TAKE A RAY NEAR THE CENTRE · THEN GO OUT* · `world-three.js` *PART IT WITH YOUR HAND · AND HOLD IT OPEN* and *PART IT AGAIN, SOMEWHERE ELSE* · `world-four.js` *PRESS A WALL · AND BEAR IT* · five each in six and seven. Built: only world I's *TOUCH ONE · THEN LET GO AND STAY* (`PointWorlds.swift:238`) and world V's rotating word. |
-| R2 | **`#carry` never built** — a whole mechanic, not a string. | `The Instrument v3.html:4682` the affordance, `:5334` `sealCarry()`, `:5752` the carried motes in orbit around the one particle, `:5776` the journey line, `:5809` serialised into `asf.walk`. The app has `KEPT` (the rail's filled dots) and nothing of `CARRY`. |
-| R3 | **`#seam` never built.** | `:5619` toggles it at `|Z| < 0.30` and weather met; `:4653-4656` are the two hints. |
-| R4 | **The journey narration diverges without a record.** | Design narrates the reading-*gesture* used (`:5770-5781`); `PointJourney.narration()` narrates dims and stars entered. Possibly deliberate — but not recorded in §10, so it cannot be assumed. |
-| R5 | **The lens label diverged without a record.** | `The Universe v3.html:1437` / `:1676` say `the star lens` / `the structure lens`; `UniverseView.swift:146` says `the light ›` / `the structure ›`. |
+| R1 | **CLOSED — the 18 world hand-cues are built.** And the finding was worse than absence: five of seven worlds carried **invented** substitutes ("touch a star · it draws inward", "part the veil >", "move along the walls", "each meets its echo · turn to enter", "settle down through the layers", "catch one in flight"), none in any design file, none among the forward grep's eight. Missing authored copy and invented copy on the same surface. | 18 of 25 present, up from 2, measured by the registry. Shared `WorldCue` at the design's own 8.5 Space Mono / `A*0.38*(0.7+br*0.4)` / H−150. Walked: world I and world II on device. |
+| R1a | **Seven cues remain, none a string problem.** The withdrawal family (4) fires on a decay *after* release — `leaving`/`closing`/`easing`/`settling` > 0.02 — and the app's readings unmount instead of lingering. World VI's multi-arc family (3) needs the draw-up gesture and more than one arc in flight. Plus III's `holding it open`, gated on a parting-width scalar the app has no equivalent for. | **OPEN.** Inventing a trigger to place the words is the fault this pass is about. The withdrawal family is the same shape world V's guard pane already has, so it is the tractable one. |
+| R2 | **`#carry` — SIZED, not started. A pass, not a port.** | Eight pieces. Free: `KEPT` already exists (`AxisTravel.mem`). Small: the affordance, the session store (which must stay invisible — *"no list, no collection, nothing counted"*), the journey line. **Cross-cutting, and the reason this is a pass:** the motes orbiting the particle *at every scale* — `InstrumentView:560-578` is the only full particle render and does carry `fill` and `r`, but the Universe's and the Point's centres are separate drawings; `B.carry(hz)` is a new event in the one layer nobody has heard; and walk-continuity is **blocked** — there is no serialised walk object to extend, only `Breath.originSeconds` and `pendingLaunchRoute`. |
+| R3 | **`#seam` — SIZED, not started. A port, small.** | Two two-line hints at `left:30 right:30 bottom:112`, gated at `:5619` on `\|Z\| < 0.30 && weather === 'met'`. `InstrumentView` already has `travel.z` and `store`. One dependency: met-ness is a `private @State DoorWeather` inside `DoorView` and needs lifting into the store — worth doing regardless, since `DoorView` recomputes it privately today. |
+| R4 | **CLOSED as a deliberate divergence, recorded in §10.** | Design narrates the reading-*gesture* used (`:5770-5781`); `PointJourney.narration()` narrates dims and stars entered. Possibly deliberate — but not recorded in §10, so it cannot be assumed. |
+| R5 | **CLOSED as a deliberate divergence, recorded in §10.** | `The Universe v3.html:1437` / `:1676` say `the star lens` / `the structure lens`; `UniverseView.swift:146` says `the light ›` / `the structure ›`. |
 
-R1 is the one that changes what a first reader experiences: the cue is how the gesture is
-discoverable, and the app has neither the authored cue nor an invented substitute. Rule 4's
-forward half forbids inventing one — so the only correct fix is the authored string.
+R1 was the one that changed what a first reader meets, and it is closed. R2 and R3 are
+**enumerated open, not in progress** — sized so the scope call can be made, and left alone
+until it is.
 
 ## D′ · The checklist itself was wrong in one place
 
