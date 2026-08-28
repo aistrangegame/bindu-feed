@@ -94,6 +94,44 @@ Karishma's core is the design's own authored maths (`The Rooms v4.html:790-812`,
 `th` linear against an exponential radius. It is not changed; the two-stage tap is the answer
 for piled regions.
 
+### D4 · PlayersView's fold — A REAL APP DEFECT, not a simulator limit. Fixed.
+
+Recorded since Pass 4 as "synthetic touches don't drive a SwiftUI ScrollView", and that was
+wrong twice over: the Return's story view scrolls under the same synthetic drags, and three
+gesture methods failed here while taps worked.
+
+**Cause:** every card carried `.simultaneousGesture(DragGesture(minimumDistance: 0))` to drive
+its press highlight (`PlayersView.swift:223, 345`). A zero-distance drag on a scroll CHILD
+claims the touch sequence before the enclosing `ScrollView` can recognise a pan. **This fails a
+real finger, not only a synthetic one** — Neev, Shweta and Ash live below the fold, so the
+eleventh voice has been unreachable in his own instrument.
+
+Same class as the Point readings' shadowing, inverted: there a parent `.gesture` lost to a
+ScrollView; here a child gesture beat one. Replaced with `PressScaleStyle: ButtonStyle`, which
+gets the same `isPressed` and cooperates with scrolling. **Walked: ROOTS, Neev, Shweta and
+Ash's full-width card now reachable.**
+
+---
+
+## KNOWN LIMITS — named, measured, not closed
+
+### Karishma's inner coil — ~10 of 48 marks below 2pt spacing
+
+`MAPGEO.karishma` is `th = (i/n)·2.6π`, `r = R·0.06·φ^(2θ/π)`. **`th` is normalised by `n`, so
+the spiral spans 2.6π at any archive size and `R` is fixed** — more marks pack tighter on the
+same locus. The comp is not silent by oversight: `The Rooms v4.html:729` states Karishma's own
+stats as **19 fields**. The figure was authored against 19; the base holds 48.
+
+| n | min gap | median | max | gaps < 2pt | gaps < 9pt |
+|---|---|---|---|---|---|
+| 19 *(as authored)* | 3.37 | 11.04 | 31.65 | **0** of 18 | 8 of 18 |
+| 48 *(as held)* | 1.29 | 4.28 | 14.20 | **9** of 47 | 38 of 47 |
+
+The two-stage tap mitigates but does not solve it: the first tap arms an effectively arbitrary
+mark in the coil and **names** it, so he can see it is not the one he meant — but at 1.29pt
+recovery does not converge. **Reachable, not selectable.** The generator is authored maths and
+is not changed; growing `R` with `n` is not in the design and would be an invention.
+
 ---
 
 ## NEWLY FOUND — not in the original ledger

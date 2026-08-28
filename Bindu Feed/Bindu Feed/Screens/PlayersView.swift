@@ -216,15 +216,8 @@ private struct PlayerCard: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .strokeBorder(archetype.color.opacity(borderAlpha), lineWidth: 1)
             )
-            .scaleEffect(pressed ? 0.96 : 1.0)
-            .animation(.easeOut(duration: 0.18), value: pressed)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in pressed = true }
-                .onEnded { _ in pressed = false }
-        )
+        .buttonStyle(PressScaleStyle(scale: 0.96))
     }
 
     private var glyphCircle: some View {
@@ -338,15 +331,8 @@ private struct AshramCard: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .strokeBorder(archetype.color.opacity(0.28), lineWidth: 1)
             )
-            .scaleEffect(pressed ? 0.985 : 1.0)
-            .animation(.easeOut(duration: 0.18), value: pressed)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in pressed = true }
-                .onEnded { _ in pressed = false }
-        )
+        .buttonStyle(PressScaleStyle(scale: 0.985))
     }
 
     private var glyphCircle: some View {
@@ -387,5 +373,29 @@ private struct AshramCard: View {
                 .shadow(color: archetype.color.opacity(0.5), radius: 9)
         }
         .frame(width: size, height: size)
+    }
+}
+
+
+/// THE PRESS THAT DOES NOT EAT THE SCROLL.
+///
+/// Both cards used `.simultaneousGesture(DragGesture(minimumDistance: 0))` to drive their
+/// `pressed` highlight. A zero-distance drag on a scroll CHILD claims the touch sequence
+/// before the enclosing `ScrollView` can recognise a pan, so the list could not be scrolled —
+/// **and that fails a real finger, not only a synthetic one.** Neev, Shweta and Ash live below
+/// the fold, so the eleventh voice was unreachable in his own instrument for that reason.
+///
+/// It was recorded as "synthetic touches don't drive a SwiftUI ScrollView". That was wrong:
+/// the Return's story view scrolls under the same synthetic drags, because it has no child
+/// gesture competing. Same class as the Point readings' shadowing, inverted — there a parent
+/// `.gesture` lost to a ScrollView; here a child gesture beats one.
+///
+/// `ButtonStyle` is the scroll-cooperative way to get the same `isPressed`.
+struct PressScaleStyle: ButtonStyle {
+    var scale: CGFloat = 0.96
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1.0)
+            .animation(.easeOut(duration: 0.18), value: configuration.isPressed)
     }
 }
