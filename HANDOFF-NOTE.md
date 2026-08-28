@@ -115,27 +115,29 @@ about:
 - *World VI's multi-arc family (3)* — `DRAW IT UP · AIM · LET GO` needs the draw-up-and-aim
   gesture the app replaced with a Button; the other two need more than one arc in flight.
 
-**OPEN · `#carry` — a pass, not a port.** Sized rather than started:
+**BUILT · `#carry`, and the walk serialisation was unnecessary rather than large.**
+`asf.walk` exists because each ceremony is a separate HTML document and a JS session dies
+at that boundary. The app has no such boundary, so `CARRY` on a session object survives the
+round trip for free — it lives on `PointJourney`, no serialisation. What it resolves: the
+earlier decision not to store `carry`/`carved`/`crossed` was right and can now be shown
+right — neither `The Return v2.html` nor `The Rite v3.html` ever reads `W.carry` after
+declaring it. The missing consumer was the instrument restoring its own CARRY (`:5826`) and
+the motes (`:5752`). Fourth and last instance of a field that looked unwired because its
+reader had never been built, after DEALS, WORDS and TURN IT.
 
-| piece | reach |
-|---|---|
-| the affordance (`take it up` / `let it go`, while a reading is open) | small — one view, two controls |
-| the `CARRY` store, session-scoped | small — and it must stay *invisible*: "no list, no collection, nothing counted" |
-| `KEPT[reg.i]` | **already built** — `AxisTravel.mem`, the rail's filled dots |
-| `B.carry(hz)` + `B.shimmer()` | a new sound event, in the one layer nobody has heard |
-| the 2400ms auto-let-go and `letGo()`'s five closes | medium — and it must release on every exit path (§10's claim rule) |
-| **the motes** — one per carried reading, orbiting the particle at the golden angle, halo growing `1 + CARRY.length*0.05` | **the real cost.** `InstrumentView:560-578` is the only full particle render and does have `fill` and `r`; but *"at every scale"* means the Universe's and the Point's centres too, and those are separate drawings, not `BinduParticle` |
-| the journey line | lands inside the narration divergence, now recorded in §10 |
-| walk-continuity (`CARRY` into `asf.walk`) | **blocked** — there is no serialised walk object to extend; only `Breath.originSeconds` and `pendingLaunchRoute` |
+Walked to the seal; the mote in orbit is verified by reading only, because at the Point's
+registers the particle sits behind the yantra among the world's own stars. The walk did
+catch a collision I introduced — `#carry` at the comp's `bottom:54` landed on the app's
+descend door at `bottom:34`, an element the comp does not have. Raised to 118, recorded as
+a deliberate geometry divergence.
 
-Three of eight are cross-cutting: the motes across three particle renders, a new event in the
-unheard sound layer, and a walk object that does not exist. That is a pass.
+**BUILT · `#seam`**, with met-ness lifted out of `DoorView`'s private `@State` into
+`FeedStore.todayMet`. Not walked: today is unmet, so the gate correctly keeps it silent.
 
-**OPEN · `#seam` — a port, small.** Two two-line hints at `left:30 right:30 bottom:112`,
-gated at `:5619` on `|Z| < 0.30 && weather === 'met'`. `InstrumentView` already has `travel.z`
-and `store`. The one dependency: met-ness currently lives as a `private @State DoorWeather`
-inside `DoorView`, so it needs lifting into the store — which is worth doing regardless,
-since `DoorView` recomputes it privately today.
+**OPEN · eight authored cues with no trigger.** Ledger §D‴ names the exact state each waits
+on. Four are the same shape — a decay after release — and world V's guard pane already has
+it, so one mechanic closes four. Words on an approximate trigger would be the
+invented-string fault carrying authored copy, and would read as verified.
 
 **Also open:** the journey narration and the lens label, both now carrying deliberate §10
 divergence records rather than sitting undocumented.
@@ -252,6 +254,15 @@ from a quoted one. The narrowed matcher is the only trustworthy one, and it is t
 `REQUIRED` fell from 799 to 718. **Treat any backward-direction result in this build's
 history that predates the narrowing as unverified, and re-run it with
 `Tools/check_authored.py`.**
+
+**Both halves now run from a list.** `check_authored.py` proves authored strings PRESENT
+(the backward half). `check_rendered.py` proves rendered strings AUTHORED-or-recorded (the
+forward half) — 985 rendered · 850 authored · 102 APP-OWN · 25 NON-UI · 5
+APP-OWN-INSTRUCTIONAL · 3 DIVERGENCE · **0 inventions, 0 untriaged**. You cannot enumerate
+inventions from the design, because inventions are exactly what is not in it; so the forward
+check enumerates the other side and anything unaccounted for is an invention by
+construction. Both fail on an untriaged row: an unjudged string is indistinguishable from an
+invented one.
 
 **What it does not do.** It cannot decide whether an absent string *should* be in the app —
 comp sample data, Airtable content and design commentary all look alike to a matcher. That
