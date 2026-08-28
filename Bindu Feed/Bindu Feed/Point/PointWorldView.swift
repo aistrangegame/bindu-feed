@@ -104,9 +104,19 @@ struct PointWorldView: View {
                 .ignoresSafeArea()
 
                 if dimensionN == 6 {
+                    // `spine-axis.js:67-68` — the z:7 `return6` door. *"VI is called The
+                    // Return because it is about the same thing. Descend deep enough into
+                    // its strata and the kinship becomes a door."* A door carries a LABEL
+                    // and a LINE; the app had fused an invented "settle deeper ·" onto the
+                    // label and dropped the line entirely. Both restored, verbatim.
                     VStack { Spacer()
+                        Text("This depth and that descent are the same room.")
+                            .font(.loraItalic(13))
+                            .foregroundStyle(BinduTheme.inkSecondary.opacity(0.66))
+                            .multilineTextAlignment(.center).padding(.horizontal, 32)
+                            .padding(.bottom, 9)
                         Button(action: onReturn) {
-                            Text("settle deeper · open the return ›")
+                            Text("open the return")
                                 .font(.spaceMono(9)).tracking(2).foregroundStyle(hue)
                         }.padding(.bottom, 64)
                     }

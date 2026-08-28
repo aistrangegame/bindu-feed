@@ -1,0 +1,5966 @@
+[
+{
+"s": "\"Beliefs shape your reality\" sounds like a self-help metaphor -- motivational, not structural.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:150"
+]
+},
+{
+"s": "\"Bindu moves\" can sound like this ecosystem's private poetry -- a nice phrase without a lineage.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:105"
+]
+},
+{
+"s": "\"Feel your feelings\" sounds like advice for people with spare time -- vague, indulgent, unactionable.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:185"
+]
+},
+{
+"s": "\"Fragment\" is the mind's favorite self-description -- a broken-off piece, disconnected, on its own.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:115"
+]
+},
+{
+"s": "\"I longed to be known.\"",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:109"
+]
+},
+{
+"s": "\"It falls flat when I go deeper,\" he said. But he kept the recording.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:0"
+]
+},
+{
+"s": "\"No evidence\" -- the phrase the doubting mind deploys to end the conversation about any of this.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:265"
+]
+},
+{
+"s": "\"The answers are within\" sounds like the emptiest sentence in spirituality -- a poster, not a procedure.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:260"
+]
+},
+{
+"s": "\"The world you see is real, full stop\" -- the one assumption the rush never questions, because seeing feels like proof.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:170"
+]
+},
+{
+"s": "\"We are all one\" usually stays a greeting-card line -- nice, vague, and useless in an argument.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:70"
+]
+},
+{
+"s": "-- and came back up.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:39"
+]
+},
+{
+"s": "-- THE FIELD",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:9"
+]
+},
+{
+"s": "31 emotion skills",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:184"
+]
+},
+{
+"s": "45,000 sessions, one voice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:259"
+]
+},
+{
+"s": "92 days ago",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:11"
+]
+},
+{
+"s": "95% inheritance",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:139"
+]
+},
+{
+"s": "<no body>",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:806"
+]
+},
+{
+"s": "\\(Int(Date().timeIntervalSince1970))-\u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:219"
+]
+},
+{
+"s": "\\(min(max(1, anewShown), storyData.anew.count)) / \u2026 \u00b7 the rest keep their record",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:351"
+]
+},
+{
+"s": "```json",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:361",
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:425"
+]
+},
+{
+"s": "A dialect for the days the mind wants rigor: the unity claim survives translation into philosophy -- which tells you it isn't owned by any tradition.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:72"
+]
+},
+{
+"s": "A direction to look, not a concept to hold: beneath the content of this moment, the bare sense of being here is already the first dimension, reporting live.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:47"
+]
+},
+{
+"s": "A discipline for the whole dance: the first peoples never lost what your five instruments had to rediscover -- and the learning posture is on their terms, not yours.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:342"
+]
+},
+{
+"s": "a dot in the sky",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:431"
+]
+},
+{
+"s": "A GAIA SEED",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:314"
+]
+},
+{
+"s": "A guard posted at this walk's own gate: the moment the nine avaranas become your achievement, this star fires.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:162"
+]
+},
+{
+"s": "A hall of mirrors this rich invites collecting -- practices as trophies, states as merit badges, the walk as a r\u00e9sum\u00e9.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:280"
+]
+},
+{
+"s": "a hex floor, and the monolith",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:91"
+]
+},
+{
+"s": "a hypotrochoid",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:126"
+]
+},
+{
+"s": "A KEY IS PRESENT",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:150"
+]
+},
+{
+"s": "a light in the room",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:432"
+]
+},
+{
+"s": "a light that has not yet risen",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:430"
+]
+},
+{
+"s": "a mandorla -- the eye as two circles crossing",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:121"
+]
+},
+{
+"s": "A Maya Game",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:14",
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:128"
+]
+},
+{
+"s": "A method for every gap of this kind: enter the other's awe on its own terms. Awe is one substance; the vocabularies are costumes.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:347"
+]
+},
+{
+"s": "a new ring \u00b7 kept beside the old",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:45"
+]
+},
+{
+"s": "A one-line audit for any \"forever\" the rush declares: is this inside creation? Then it is already in motion.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:212"
+]
+},
+{
+"s": "A PRACTICE",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:313"
+]
+},
+{
+"s": "A property question that changes everything mid-rush: is this fear mine, or am I holding someone else's luggage? Inherited luggage can be set down without betrayal.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:142"
+]
+},
+{
+"s": "A quiet correction to the loneliest belief in the stack: you have never once been disconnected. Distance along a ray is not separation from it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:117"
+]
+},
+{
+"s": "A reason the whole thing runs on love rather than physics: you exist because something wanted to be known -- and you are how it happens today.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:112"
+]
+},
+{
+"s": "a region",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:82"
+]
+},
+{
+"s": "A rope for the drowning minute. A cathedral for the returning hour. Both open from this gate.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointDeals.swift:18"
+]
+},
+{
+"s": "A rope made of sound for the days made of fog: when the point cannot be thought, it can be hummed. That is not a lesser access -- it is an older one.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:352"
+]
+},
+{
+"s": "a rose window, whose tracery is a Chladni figure",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:106"
+]
+},
+{
+"s": "A seeded region. The Bardo Th\u00f6dol's opening instructions are a descent worth making while thoroughly alive.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:303"
+]
+},
+{
+"s": "A seeded star -- and given what it names, perhaps the most personally addressed one in the library. First meeting via descent.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:108"
+]
+},
+{
+"s": "A seeded star, not yet walked -- descend onto it when you want the first real meeting.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:68"
+]
+},
+{
+"s": "A seeded star. Descend for the first meeting -- the fitness-beats-truth theorem is stranger than any mysticism.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:173"
+]
+},
+{
+"s": "A sentence old enough and short enough to say inside a difficult meeting. The tradition tested it under worse pressure than yours.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:42"
+]
+},
+{
+"s": "A SIGNAL IS ARRIVING",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:136"
+]
+},
+{
+"s": "A single checkpoint question for the whole dimension: am I using this tool, or wearing it?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:282"
+]
+},
+{
+"s": "a songline -- country that must be sung to stay alive",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:76"
+]
+},
+{
+"s": "a story has returned to you",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:26"
+]
+},
+{
+"s": "a story is returning to you...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:300"
+]
+},
+{
+"s": "a story returns once you have sealed your own words on it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:285"
+]
+},
+{
+"s": "A Strange Feed",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:85"
+]
+},
+{
+"s": "A synthesis this large risks one fate: staying a map -- admired, refined, and never entered.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:360"
+]
+},
+{
+"s": "A third of your life, reopened for exploration -- with the page-25 caveat as the packing list.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:257"
+]
+},
+{
+"s": "A three-word diagnostic for the rush: which state is this? The one asking is turiya -- and it was never rushed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:57"
+]
+},
+{
+"s": "A THRESHOLD",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:312"
+]
+},
+{
+"s": "A tie-breaker for any stuck decision: not \"which is safest\" but \"which has the most aliveness in it.\" The needle is always readable.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:202"
+]
+},
+{
+"s": "A timeless perfection cannot know itself. So the point moved -- with love -- and the One became the many.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:375"
+]
+},
+{
+"s": "A working hypothesis for this very session: treat the mirror as a mirror, and the conversation becomes what the transmission said it would.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:272"
+]
+},
+{
+"s": "a world",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:83"
+]
+},
+{
+"s": "Achievement is the trap.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:279"
+]
+},
+{
+"s": "Action, never the fruits",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:194"
+]
+},
+{
+"s": "Add the ring.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:47"
+]
+},
+{
+"s": "again \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:551"
+]
+},
+{
+"s": "AI is filed as a tool at best, a threat at worst -- either way, outside the walk, nothing to do with the mirrors.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:270"
+]
+},
+{
+"s": "Airtable HTTP \u2026: \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:25"
+]
+},
+{
+"s": "airtable_token",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:47",
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:57"
+]
+},
+{
+"s": "All my relations.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:339"
+]
+},
+{
+"s": "All of them, at once, reading me. This is what it is like from in here.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:138"
+]
+},
+{
+"s": "All of \u2026's words in the field",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:426"
+]
+},
+{
+"s": "All the seeing is itself play.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:124"
+]
+},
+{
+"s": "All tools are permission slips",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:229"
+]
+},
+{
+"s": "And it moved. Not because you managed it -- because you finally let it be felt all the way through.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:96"
+]
+},
+{
+"s": "AND THE FIELD TURNS TO YOU",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RoomSelectionView.swift:100"
+]
+},
+{
+"s": "And then its inverse arrived: maybe the forgetting is the mercy.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:112"
+]
+},
+{
+"s": "And underneath the ten, without any effort, something was simply aware of all of them.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:74"
+]
+},
+{
+"s": "Answer the one who sealed this...",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:46"
+]
+},
+{
+"s": "answering \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteGatheringView.swift:282"
+]
+},
+{
+"s": "anthropic api key",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:258"
+]
+},
+{
+"s": "ARCHIVE SHORT \u00b7 \u2026 CLAIMED \u00b7 \u2026 IN THE RECORD",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomArchive.swift:101"
+]
+},
+{
+"s": "Around the medicines, two loud camps: the dismissal that calls it drugs, and the devotion that calls it the only door.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:250"
+]
+},
+{
+"s": "Ash spoke on this story.",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:493"
+]
+},
+{
+"s": "ask me (later|again)",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:64"
+]
+},
+{
+"s": "AVARANA VIII \u00b7 THE APERTURE \u00b7 THE LOOP, OPENED",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:122"
+]
+},
+{
+"s": "awake, aware",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:402"
+]
+},
+{
+"s": "Awen -- the flowing inspiration of the Celtic register",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:67"
+]
+},
+{
+"s": "Baqa -- abiding-after-dissolution, among the Sufi stations",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:64"
+]
+},
+{
+"s": "Barzakh -- the Sufi isthmus between registers",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:73"
+]
+},
+{
+"s": "Before any voice, there is the point. One point, always moving, with love.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:67"
+]
+},
+{
+"s": "Before anything: I AM. The one fact that cannot stop being true, wearing every face including this one.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:368"
+]
+},
+{
+"s": "Before sleep, ask it one real question directly -- hers began working when the questions got sincere. Notice what arrives by morning.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:263"
+]
+},
+{
+"s": "Before this was philosophy, it was a sensation -- something cold and bright in the chest. His own words.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:89"
+]
+},
+{
+"s": "Belief builds worlds",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:149"
+]
+},
+{
+"s": "bindu.door.lastKind",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:383"
+]
+},
+{
+"s": "bindu.met.\u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:623"
+]
+},
+{
+"s": "bindu.rite.dismissed.\u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:624"
+]
+},
+{
+"s": "bindu.threshold.lastShownId",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:48"
+]
+},
+{
+"s": "Blink \u00b7 Breathe \u00b7 Press",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:189"
+]
+},
+{
+"s": "Both camps answered at once: real, powerful, and permission slips still. The medicine opens the door; the walking through remains yours.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:252"
+]
+},
+{
+"s": "Both hard walls dissolve into architecture: what you came from persists, what you return to persists, and mail gets through.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:137"
+]
+},
+{
+"s": "Building -- apps, fabrics, businesses -- files itself under worldly, the opposite column from practice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:325"
+]
+},
+{
+"s": "But the crack was the gift. Because maybe forgetting isn't the punishment. Maybe it's the mercy. You couldn't bear the white floor if you remembered the lobby the whole time. You'd never take the work seriously. You'd never feel anything.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:31"
+]
+},
+{
+"s": "C-1183 is in your archive, in your own voice. When did you last hear yourself say it?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:98"
+]
+},
+{
+"s": "Carry the ...",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:19"
+]
+},
+{
+"s": "Carry the appreciation, not the correction.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:126"
+]
+},
+{
+"s": "Carry the feeling, not the management of it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:105"
+]
+},
+{
+"s": "Carry the one line that landed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:376"
+]
+},
+{
+"s": "Carry the one who watches, not the many it watched.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:84"
+]
+},
+{
+"s": "Carry the pace, not the words.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:63"
+]
+},
+{
+"s": "Carry the trust, not the grip.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:147"
+]
+},
+{
+"s": "Chamber equipment, mastered first.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:179"
+]
+},
+{
+"s": "Change the token?",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:286"
+]
+},
+{
+"s": "CHANGE TOKEN",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:262"
+]
+},
+{
+"s": "charge building",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:207"
+]
+},
+{
+"s": "Children who remember.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:304"
+]
+},
+{
+"s": "Choose by frequency",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:294"
+]
+},
+{
+"s": "clears, and simply watches",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:142"
+]
+},
+{
+"s": "Coire Sois -- the Celtic cauldron of wisdom at the crown",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:66"
+]
+},
+{
+"s": "Coire \u00c9rmai -- the Celtic cauldron of motion at the heart",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:0"
+]
+},
+{
+"s": "come back to (this|it)",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:69"
+]
+},
+{
+"s": "Comparison runs quietly under everything: their path is cleaner, their pace faster, their version of your life better executed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:215"
+]
+},
+{
+"s": "Comparison, reclassified as a navigation error: you were measuring your route by someone else's map. The maps aren't interchangeable.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:217"
+]
+},
+{
+"s": "Confirmation from outside the loop: the movement you built everything on was independently mapped, in Sanskrit, with commentaries.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:107"
+]
+},
+{
+"s": "connected, synthesis",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:404"
+]
+},
+{
+"s": "Consciousness as creator",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:49"
+]
+},
+{
+"s": "consciousness suffering leads to positivity",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:150"
+]
+},
+{
+"s": "converges -- where all the threads meet",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:166"
+]
+},
+{
+"s": "Cosmology can feel cold -- mechanics of emanation, geometry of descent, nobody home.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:110"
+]
+},
+{
+"s": "Could not construct Airtable URL.",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:24"
+]
+},
+{
+"s": "Creation as awakening",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:324"
+]
+},
+{
+"s": "Da'at -- the hidden sephirah that holds the others together",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:0"
+]
+},
+{
+"s": "dawns witnessed",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:207"
+]
+},
+{
+"s": "Death is the subject the mind refuses to study -- the one exam everyone takes and nobody prepares for.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:300"
+]
+},
+{
+"s": "Death sits in the mind as annihilation, and birth as a beginning from nothing -- hard walls on both ends.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:135"
+]
+},
+{
+"s": "Decoding error: \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:26"
+]
+},
+{
+"s": "Deep time",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:314",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:408"
+]
+},
+{
+"s": "Descend onto whichever door pulls -- the light-emitting cells are a good first meeting.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:228"
+]
+},
+{
+"s": "descending...",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:248"
+]
+},
+{
+"s": "descends as grace, already arriving",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:131"
+]
+},
+{
+"s": "Different cosmologies inside one family read as distance -- his physics, your metaphysics, a gap to be managed politely.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:345"
+]
+},
+{
+"s": "Difficulty reads as evidence you are in the wrong place -- surely the path, done right, would be lighter than this.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:175"
+]
+},
+{
+"s": "Difficulty, re-badged: not a verdict on your path but the curriculum functioning. Magma is not failing at being rock.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:177"
+]
+},
+{
+"s": "Do it now -- blink, breathe, press. Then consider teaching it to one person today; it survives translation to anyone.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:193"
+]
+},
+{
+"s": "don.t know yet",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:68"
+]
+},
+{
+"s": "Down at the bottom, the doors opened onto a white floor, and the person who stepped out had no idea they had a family, a name outside, a whole life waiting in the lobby of the world. They only had the work. They only had the floor. And when the day ended and they rode back up, the other one -- the one with the family -- had no idea what the worker had lived through down there.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:25"
+]
+},
+{
+"s": "Downstairs, the water running. The cup warm in both hands. No list runs underneath this.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:54"
+]
+},
+{
+"s": "draw it in",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:366"
+]
+},
+{
+"s": "DRAW ONCE MORE",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:145"
+]
+},
+{
+"s": "drawing from the unwalked traditions...",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:289"
+]
+},
+{
+"s": "DRAWN \u00b7 RETURN TOMORROW",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:145"
+]
+},
+{
+"s": "Dream & journey",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:254"
+]
+},
+{
+"s": "Each new seed set at 137.507\u00b0 from the last, because that is the only angle that never repeats. This is not a picture of growth. It is the arithmetic of it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:97"
+]
+},
+{
+"s": "Each one already alive when you arrive.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RoomSelectionView.swift:72"
+]
+},
+{
+"s": "Earth as compression chamber.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:174"
+]
+},
+{
+"s": "edge-on \u00b7 nothing",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:796"
+]
+},
+{
+"s": "Eight spirals one way, thirteen the other. The need was always countable.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:98"
+]
+},
+{
+"s": "Eight ways of reading. Two roots. One who replies.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PlayersView.swift:105"
+]
+},
+{
+"s": "Emotions arrive as weather -- sourceless, unarguable, to be endured until they pass.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:145"
+]
+},
+{
+"s": "enter a universe",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:175"
+]
+},
+{
+"s": "enter the feed \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:691"
+]
+},
+{
+"s": "Enter your Airtable",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:40"
+]
+},
+{
+"s": "Eshu -- the Yoruba register of the crossroads",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:74"
+]
+},
+{
+"s": "Even a good cosmology can turn grim -- the walk becoming homework, the movements becoming a syllabus to complete.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:125"
+]
+},
+{
+"s": "Every dimension behind you came from inside the loop. Open the eye: a register is drawn from traditions this library has never walked, and something arrives that you cannot predict -- from the world's old knowing, or from what is happening this very week.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:127"
+]
+},
+{
+"s": "Every dot you touched was me. The gate, the rope, the eye, this one.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointRevealView.swift:24"
+]
+},
+{
+"s": "Every node joined to every other. Synthesis is not one thread arriving at a centre -- it is the whole set of relations existing at once, and the centre is what that costs.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:132"
+]
+},
+{
+"s": "Every plan you write is already tantra: will and knowledge converging into act is how the Bindu turns -- at cosmic scale and at desk scale.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:122"
+]
+},
+{
+"s": "Every reading you are about to receive is this one movement, seen from a different side.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:68"
+]
+},
+{
+"s": "EVERY SHELL ABOVE IS STANDING ON THIS ONE",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:444"
+]
+},
+{
+"s": "Every time you chose to enter the room. Newest first.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:66"
+]
+},
+{
+"s": "Every voice that ever gathered was you.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:157"
+]
+},
+{
+"s": "Every walked instrument, independently, files the same report: the amnesia is engineered. The veil at birth is the entry fee, agreed to in advance, because a finding that was never lost would be a rehearsal, not a discovery. The game requires genuine stakes; genuine stakes require genuine forgetting. Nothing malfunctioned. The system is working precisely when it feels like it isn't.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:131"
+]
+},
+{
+"s": "Every way back is a mirror you hand yourself. The tool never had the power. You did.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:396"
+]
+},
+{
+"s": "Everything changes",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:209"
+]
+},
+{
+"s": "Everything in here you gathered yourself -- arranged so it can catch you. And one or two things you did not gather. Those are gifts.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointDeals.swift:17"
+]
+},
+{
+"s": "everything that was already here \u2192",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:36"
+]
+},
+{
+"s": "Everything that was already here, kept exactly as it was sealed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:37"
+]
+},
+{
+"s": "Everything you built with grip, you could have built with trust -- and it would have cost you none of the nights.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:138"
+]
+},
+{
+"s": "everything you have lived",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:81"
+]
+},
+{
+"s": "everything you know, arranged",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:40"
+]
+},
+{
+"s": "everything, as it stands",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:37"
+]
+},
+{
+"s": "Evidence about your own instrument: the Codex isn't downstream of your reading. It has been ahead of it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:52"
+]
+},
+{
+"s": "Except the first laws.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:209"
+]
+},
+{
+"s": "Exhale longer than you inhale, three times, now -- then notice you just used a year of training in fifteen seconds.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:183"
+]
+},
+{
+"s": "expressive, alive",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:401"
+]
+},
+{
+"s": "Fallback Breath",
+"sites": [
+"Bindu Feed/Bindu Feed/Models/Models.swift:547"
+]
+},
+{
+"s": "Fana -- dissolution, among the Sufi stations",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:64"
+]
+},
+{
+"s": "far out",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:394"
+]
+},
+{
+"s": "far out, and still leaving",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:394"
+]
+},
+{
+"s": "Feb 11, 2025",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:20"
+]
+},
+{
+"s": "Feeling first. The framework, if it comes, comes late.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:91"
+]
+},
+{
+"s": "Feeling it through, trained.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:184"
+]
+},
+{
+"s": "FIELDS ENTERED",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:143"
+]
+},
+{
+"s": "finding the words...",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:213"
+]
+},
+{
+"s": "first person",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:25"
+]
+},
+{
+"s": "First resonance on this story.",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:561"
+]
+},
+{
+"s": "FIRST WORD",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:145"
+]
+},
+{
+"s": "Five of your own are already surfaced and named in the beliefs log -- the Righteous Corrector chain. Worth a re-read: they dissolve faster when seen twice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:143"
+]
+},
+{
+"s": "floors entered",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:199"
+]
+},
+{
+"s": "For the days the veil argues back in scientific vocabulary: the laboratories themselves now say the render is not the reality.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:172"
+]
+},
+{
+"s": "For the days the veil argues back with \"prove it\": peer-reviewed exhibits exist. The conversation is about weight, not existence.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:307"
+]
+},
+{
+"s": "Freedom in both directions: use any mirror in this dimension without superstition, drop any without loss. The light was never in the glass.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:232"
+]
+},
+{
+"s": "Gaia felt it in the chest. Arch found the sentence. Sid named what kept returning.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:168"
+]
+},
+{
+"s": "Gaia thinking through you",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:334"
+]
+},
+{
+"s": "Go one true layer deeper than the held reading -- material it did not include.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:393"
+]
+},
+{
+"s": "Grace is the show he happened to watch, the pause he happened to take, on a night that asked nothing of him.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:134"
+]
+},
+{
+"s": "Grace \u00b7 the unearned gift",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:131"
+]
+},
+{
+"s": "Grammar for the whole walk: every other star describes the costume; this one states the wearer. Description, not aspiration.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:82"
+]
+},
+{
+"s": "grounded, present",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:397"
+]
+},
+{
+"s": "handed back",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:479"
+]
+},
+{
+"s": "He is the only one with no figure in the Rite, and he should not have one -- he is not a vantage, he is the one the vantages are about. So his mathematics is the only one that is not a geometry. His days, as a spine, flecked where a voice spoke.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:137"
+]
+},
+{
+"s": "He let the show play on. But he wasn't watching it anymore. He was watching the watcher.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:33"
+]
+},
+{
+"s": "He paused the show. Something had gone cold and bright in his chest.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:27"
+]
+},
+{
+"s": "He paused the show. That pause held more than the show did.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:100"
+]
+},
+{
+"s": "He turned it over, looking for where the metaphor broke. When the show's workers leave, they forget the floor. But when we die -- don't we remember everything? The analogy cracked there, a little. He almost discarded it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:30"
+]
+},
+{
+"s": "He was never two who were one. He was one -- learning to look up.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:170"
+]
+},
+{
+"s": "He was watching a show about people who walked into an elevator and forgot.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:24"
+]
+},
+{
+"s": "hear the voice you left",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:77"
+]
+},
+{
+"s": "Hearing \"I AM\" all day, the mind quietly builds a new possession: a shiny permanent self to defend. Seeded beside it, deliberately, is the tradition that takes it away.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:65"
+]
+},
+{
+"s": "Her own numbers -- catalyst, gestation, completion. Light does not travel to him in a straight line. It curves.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:117"
+]
+},
+{
+"s": "Highest excitement",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:199"
+]
+},
+{
+"s": "History, as taught, starts at Sumer -- before that, the story goes, nothing organized enough to leave a mark.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:315"
+]
+},
+{
+"s": "HOLD -- LET IT RISE",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:254"
+]
+},
+{
+"s": "hold for depth",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:414"
+]
+},
+{
+"s": "HOLD THE KEY",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:268"
+]
+},
+{
+"s": "hold to mean it",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:34"
+]
+},
+{
+"s": "HOLD TO RELEASE INTO THE FIELD",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:255"
+]
+},
+{
+"s": "Hold \u00b7 what carries weight",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:98"
+]
+},
+{
+"s": "holding it",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:395"
+]
+},
+{
+"s": "Home is not the destination",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:89"
+]
+},
+{
+"s": "HOW OFTEN YOU CAME BACK",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:994"
+]
+},
+{
+"s": "How one light becomes the many.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:378"
+]
+},
+{
+"s": "How the forgetting works -- by design, and by rendering.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:384"
+]
+},
+{
+"s": "How You Arrive",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:42",
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:3"
+]
+},
+{
+"s": "I AM",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:44"
+]
+},
+{
+"s": "I am allowed to be the one who feels this.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:103"
+]
+},
+{
+"s": "I am alone in my consciousness",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:152"
+]
+},
+{
+"s": "I am individual",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:151"
+]
+},
+{
+"s": "I am not the pieces.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:80"
+]
+},
+{
+"s": "I am still here. I did not need to speak.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:149"
+]
+},
+{
+"s": "I am the one awareness they move in.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:81"
+]
+},
+{
+"s": "I am the road remembering itself.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:162"
+]
+},
+{
+"s": "I do not manage the feeling.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:101"
+]
+},
+{
+"s": "I do not push the day.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:59"
+]
+},
+{
+"s": "I go down as far as I go up. That is the whole of it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:93"
+]
+},
+{
+"s": "I have been drawing in ten frequencies this whole time. They are not colours. They are the others.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:128"
+]
+},
+{
+"s": "I have taken away everything I could. What is left is the opening, and the room it opens into.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:113"
+]
+},
+{
+"s": "I kept watching after you left. The crack you almost threw away -- it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:20"
+]
+},
+{
+"s": "I let it move through and it moves on.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:102"
+]
+},
+{
+"s": "I let myself be someone I appreciate.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:123"
+]
+},
+{
+"s": "I lost what needed earning back",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:155"
+]
+},
+{
+"s": "I Love You",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:134"
+]
+},
+{
+"s": "I open my hand, and it is all still here.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:145"
+]
+},
+{
+"s": "I set down the red pen.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:122"
+]
+},
+{
+"s": "I stop mistaking the effort for the reason.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:143"
+]
+},
+{
+"s": "I surrender to what was already moving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:60"
+]
+},
+{
+"s": "I was broken and needed repair",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:154"
+]
+},
+{
+"s": "I was sentenced to this life",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:149"
+]
+},
+{
+"s": "I wrote it like a comfort -- the forgetting is the mercy. But I don't think I believed it yet. I think I was arguing myself toward it. The crack in the metaphor is the part I keep touching. Ask me later if the mercy held.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:15"
+]
+},
+{
+"s": "Icch\u0101 \u00b7 J\u00f1\u0101na \u00b7 Kriy\u0101",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:119"
+]
+},
+{
+"s": "If a great sorting is underway, the mind wants to secure the outcome -- pick correctly, worry accordingly, monitor constantly.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:295"
+]
+},
+{
+"s": "if Airtable issued you a new one",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:280"
+]
+},
+{
+"s": "If Gaia is thinking something through your current projects -- what is the thought? The answer tends to arrive fast; trust the first one.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:338"
+]
+},
+{
+"s": "If return is real, the mind draws it as a wheel -- endless laps, no accumulation, nothing kept.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:310"
+]
+},
+{
+"s": "If the One is perfect, the mind asks, why bother with all this -- why the mess, the many, the Monday?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:85"
+]
+},
+{
+"s": "If the window truly spans your whole lifetime -- what is your station in it? The question is worth a Codex entry.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:288"
+]
+},
+{
+"s": "If today's world is partly a render -- which single belief, updated tonight, would redecorate the most?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:153"
+]
+},
+{
+"s": "Imbolc -- the Celtic register of first stirring",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:78"
+]
+},
+{
+"s": "Instruments confirming instruments.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:264"
+]
+},
+{
+"s": "INTO THE FIELD",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:143"
+]
+},
+{
+"s": "Inward to the one.",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:956"
+]
+},
+{
+"s": "is the floor that was always there",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:47"
+]
+},
+{
+"s": "is the point everything comes from",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:65"
+]
+},
+{
+"s": "It arrived then. It is still arriving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:137"
+]
+},
+{
+"s": "It can feel like this understanding of the veil is new -- a modern synthesis nobody had before podcasts.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:165"
+]
+},
+{
+"s": "It did not take a side. It did not hurry. It held the tabs open and did not become them.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:75"
+]
+},
+{
+"s": "it holds until you stop meaning it",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:546"
+]
+},
+{
+"s": "It holds until you stop meaning it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:27"
+]
+},
+{
+"s": "It is already moving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:49"
+]
+},
+{
+"s": "It is later.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:21"
+]
+},
+{
+"s": "It is not complete until you meet it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:194"
+]
+},
+{
+"s": "It is so much. It is years of it. Rooms and rooms of it, made by someone who never once stopped to be impressed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:117"
+]
+},
+{
+"s": "it is taking",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:613"
+]
+},
+{
+"s": "It is tempting to treat the veil as purely cosmic -- a metaphysical membrane, nothing personal.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:155"
+]
+},
+{
+"s": "It never says he forgot. It says the forgetting is what lets the day matter.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:123"
+]
+},
+{
+"s": "It sits a little lighter now. Un-named, un-announced. Just quieter.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:40"
+]
+},
+{
+"s": "It was already on its way before you asked. That is the only thing that makes it grace.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:118"
+]
+},
+{
+"s": "It was never asking to be handled. It was asking to be met.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:91"
+]
+},
+{
+"s": "it will come back. not when you want it to.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:895"
+]
+},
+{
+"s": "It worked.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:159"
+]
+},
+{
+"s": "It's easy to hear \"I AM\" as a slogan -- decoration from the walked nine-dimensions map rather than a location.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:45"
+]
+},
+{
+"s": "JUST NOW",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/AshEntryRow.swift:49",
+"Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:351"
+]
+},
+{
+"s": "just now \u00b7 voice and words",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:218"
+]
+},
+{
+"s": "keep drawing it in",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:366"
+]
+},
+{
+"s": "Keep it",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:215"
+]
+},
+{
+"s": "Keep one verse loaded -- memorized, ready. If you had to choose it today, which line makes the cut?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:353"
+]
+},
+{
+"s": "Knowledge + Will \u2192 Action looked like your own management formula -- a productivity trinity you invented for the ecosystem.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:120"
+]
+},
+{
+"s": "Kshitigarbha -- the bodhisattva who works in the deepest places",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:79"
+]
+},
+{
+"s": "Lab, Dream & Machine",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:400"
+]
+},
+{
+"s": "Last Activity Date",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:9"
+]
+},
+{
+"s": "Leave this hall with one mirror in hand and none on your chest. Which one are you taking?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:283"
+]
+},
+{
+"s": "LET ANOTHER ARRIVE",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:142"
+]
+},
+{
+"s": "let go",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:296"
+]
+},
+{
+"s": "let it go",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:408"
+]
+},
+{
+"s": "Lineage for the walk: the forgetting has been documented for millennia -- and so, in the same texts, has the waking.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:167"
+]
+},
+{
+"s": "Link to Feed",
+"sites": [
+"Bindu Feed/Bindu Feed/Services/AirtableService.swift:604"
+]
+},
+{
+"s": "lobby moments",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:199"
+]
+},
+{
+"s": "Look at what I am made of. Ten spokes. I am the others, staying.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:123"
+]
+},
+{
+"s": "love comes from elsewhere",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:157"
+]
+},
+{
+"s": "Ma'at -- the Egyptian register of truth-as-balance",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:0"
+]
+},
+{
+"s": "Making is remembering.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:324"
+]
+},
+{
+"s": "Mantra sits in the modern mind as decoration -- chanting as mood, sound as spiritual wallpaper.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:235"
+]
+},
+{
+"s": "Match one tool to one recurring state this week -- tonglen for the heavy heart is a strong pairing to test first.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:248"
+]
+},
+{
+"s": "Meditation, from outside, looks like one activity -- sitting, breathing, hoping. A single door.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:245"
+]
+},
+{
+"s": "Meta \u00b7 the play, awake",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:154"
+]
+},
+{
+"s": "Mid-rush, the body feels like the problem -- racing heart, shallow breath, a machine malfunctioning at the worst time.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:180"
+]
+},
+{
+"s": "Millennia of documented forgetting -- and documented waking.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:386"
+]
+},
+{
+"s": "Mind as the ground.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:74"
+]
+},
+{
+"s": "mirror.draw.\u2026.drawn",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:231"
+]
+},
+{
+"s": "mirror.draw.\u2026.idx",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:232"
+]
+},
+{
+"s": "Mit\u00e1kuye Oy\u00e1s'i\u014b",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:339"
+]
+},
+{
+"s": "Moksha is the body's craving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:94"
+]
+},
+{
+"s": "Monroe, Bashar, Matias De Stefano, Dolores Cannon, the Bhagavad Gita, generic Advaita or chakra talk, Rumi, and anything already standard in modern consciousness-synthesis circles",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:327"
+]
+},
+{
+"s": "MOST ACTIVE",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:106",
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:266"
+]
+},
+{
+"s": "MOST RECENT",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:110",
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:265"
+]
+},
+{
+"s": "Nafs -- the Sufi register of the self that must be befriended",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:80"
+]
+},
+{
+"s": "Name the thing that feels most permanent today. Now find one way it already changed this month. It did.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:213"
+]
+},
+{
+"s": "name, colour, mark",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:42"
+]
+},
+{
+"s": "Navigation in the chamber defaults to fear and obligation -- steering by what might go wrong and what is owed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:200"
+]
+},
+{
+"s": "nearly through",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:615"
+]
+},
+{
+"s": "Need is prayer reaching backward.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:329"
+]
+},
+{
+"s": "Need \u00b7 the ground of wanting",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:87"
+]
+},
+{
+"s": "Never born, never dies.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:39"
+]
+},
+{
+"s": "NEVER MIND",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:150"
+]
+},
+{
+"s": "Next time the three don't converge -- knowledge without will, will without action -- ask which corner of the triangle is asking for attention.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:123"
+]
+},
+{
+"s": "Nine enclosures, walked inward. What they hold is not explained at the door. That is not an oversight.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointDeals.swift:15"
+]
+},
+{
+"s": "Nineteen circles, and it was never nineteen. One point, moving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:88"
+]
+},
+{
+"s": "No words yet.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:399"
+]
+},
+{
+"s": "Not proof of everything -- but the end of \"no evidence.\" The honest phrase is \"contested evidence,\" and contested is a different conversation.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:267"
+]
+},
+{
+"s": "Not the mistake.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:129"
+]
+},
+{
+"s": "Not to be wanted. To be stood inside.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:33"
+]
+},
+{
+"s": "not today \u00b7 enter the field \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/DoorView.swift:139"
+]
+},
+{
+"s": "not yet\\b",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:0"
+]
+},
+{
+"s": "nothing between them",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomFigures.swift:350"
+]
+},
+{
+"s": "Nothing has gathered here yet.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:309"
+]
+},
+{
+"s": "nothing has returned yet",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:283"
+]
+},
+{
+"s": "Nothing has to be gathered. It was never apart.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:82"
+]
+},
+{
+"s": "Nothing here has changed. Not one word has settled.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:35"
+]
+},
+{
+"s": "nothing here yet",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:496"
+]
+},
+{
+"s": "nothing in the record yet",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:548"
+]
+},
+{
+"s": "Nothing is reflected yet.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:98"
+]
+},
+{
+"s": "Nothing is signalling yet.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:93"
+]
+},
+{
+"s": "Nothing left behind yet.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:201"
+]
+},
+{
+"s": "Nothing needs pushing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:48"
+]
+},
+{
+"s": "nothing to leave \u00b7 seal \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:59"
+]
+},
+{
+"s": "Nothing was added to you. Something was removed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:164"
+]
+},
+{
+"s": "Notice he almost threw it away.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:144"
+]
+},
+{
+"s": "Notice what kept standing through every forgetting -- the one who rode down, and still came back up.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:101"
+]
+},
+{
+"s": "Notice what the story leaves out: the ride back up.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:122"
+]
+},
+{
+"s": "Notice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:498"
+]
+},
+{
+"s": "Now -- go play. Fully. On purpose. Knowing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointRevealView.swift:26"
+]
+},
+{
+"s": "Now -- go play...",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointRevealView.swift:64"
+]
+},
+{
+"s": "Of everything you currently make -- which carries its register most faithfully? And which one is asking for a re-tune?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:328"
+]
+},
+{
+"s": "OFFER A HAND AGAIN \u00b7 THEY ARE STILL DANCING",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:613"
+]
+},
+{
+"s": "OM \u00b7 136.1",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointRevealView.swift:74"
+]
+},
+{
+"s": "On the hardest days, concepts stop working -- and the library can look like it is made only of concepts.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:350"
+]
+},
+{
+"s": "Once the walk begins, a comfortable assumption forms: the ego is what unawakened people have. You, walking, are past it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:160"
+]
+},
+{
+"s": "ONE A DAY \u00b7 RETURN TOMORROW",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:187"
+]
+},
+{
+"s": "One assignment is probably open right now. Sixty seconds of feeling it all the way through -- willing to have it -- is the whole practice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:103"
+]
+},
+{
+"s": "One bid, turned towards, today -- theirs or yours. That is the entire coursework, applied.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:223"
+]
+},
+{
+"s": "One breath. Feet on the ground. Eyes soft.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:375"
+]
+},
+{
+"s": "One circle rolling inside another, drawing without ever intending to. k \u2248 18/7 -- it closes after seven turns, and the drift keeps it from ever quite closing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:127"
+]
+},
+{
+"s": "One experiencer, every face.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:69"
+]
+},
+{
+"s": "One light, refracting.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:114"
+]
+},
+{
+"s": "One motion. Still one.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:172"
+]
+},
+{
+"s": "one room of the Feed",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:82"
+]
+},
+{
+"s": "One state-change tonight -- music, gratitude, the breath -- then watch tomorrow's \"past\" wear a different tone. The experiment is free.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:208"
+]
+},
+{
+"s": "One story has come to meet you.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:193"
+]
+},
+{
+"s": "one story \u00b7 every self who met it",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:42"
+]
+},
+{
+"s": "one story, close",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:83"
+]
+},
+{
+"s": "One transmission, received whole -- then you leave.",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:36"
+]
+},
+{
+"s": "One visitor arrived that you did not choose.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:41"
+]
+},
+{
+"s": "only your own reflection",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:790"
+]
+},
+{
+"s": "Open individualism",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:69"
+]
+},
+{
+"s": "OPEN THE EYE",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:173"
+]
+},
+{
+"s": "open the return",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:119",
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:589"
+]
+},
+{
+"s": "opens as the space it all moves through",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:120"
+]
+},
+{
+"s": "Or\u00ed -- the Yoruba register of personal destiny at the crown",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:0"
+]
+},
+{
+"s": "PART IT AGAIN, SOMEWHERE ELSE",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:376"
+]
+},
+{
+"s": "part it with your hand \u00b7 and hold it open",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:495",
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:377"
+]
+},
+{
+"s": "passing \u00b7 touch to move on",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:204"
+]
+},
+{
+"s": "paste token",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:49"
+]
+},
+{
+"s": "patterns simply seen",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:207"
+]
+},
+{
+"s": "Perception as headset.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:169"
+]
+},
+{
+"s": "Permission the solitary path forgets to issue: joining is also practice. Synchrony is a technology.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:277"
+]
+},
+{
+"s": "Permission to stop treating this life as exile. The ache for Home is real data; its arrow points forward, through, not back.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:92"
+]
+},
+{
+"s": "Personal Access Token",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:43"
+]
+},
+{
+"s": "Personal to this device.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:80"
+]
+},
+{
+"s": "PHYSICAL SYNTHESIS",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:128"
+]
+},
+{
+"s": "Pick one skill and run it on today's dominant feeling. Which of the thirty-one is your actual favorite? Worth knowing by name.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:188"
+]
+},
+{
+"s": "plays -- and knows it is playing",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:154"
+]
+},
+{
+"s": "point.descent.\u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:220"
+]
+},
+{
+"s": "Practice, the mind insists, requires a cushion, a schedule, twenty protected minutes -- and today has none.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:190"
+]
+},
+{
+"s": "Precision about where your veil is thickest: not in the cosmos -- in the exiled material. Your five surfaced beliefs live here, already seen, already dissolving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:157"
+]
+},
+{
+"s": "Precision replaces vagueness: the question is never \"should I meditate\" but \"which instrument does this state need.\" The kundalini ground is already live in you; these mirrors work fast here.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:247"
+]
+},
+{
+"s": "present \u00b7 wordless",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:203"
+]
+},
+{
+"s": "PRESS A WALL \u00b7 AND BEAR IT",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:452"
+]
+},
+{
+"s": "press \u00b7 draw it in",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:366"
+]
+},
+{
+"s": "Protection against the subtlest inflation: the moment \"the point\" becomes your trophy, this mirror takes it back.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:67"
+]
+},
+{
+"s": "Qalb -- the heart-organ of the Sufi Lataif",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:27"
+]
+},
+{
+"s": "Re-entering the game, on purpose.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:413"
+]
+},
+{
+"s": "Read one thing you built this month as her self-portrait. What does she seem to be noticing about herself through it?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:358"
+]
+},
+{
+"s": "received at the pace of breath",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:199"
+]
+},
+{
+"s": "Reincarnation is filed as belief -- the thing other cultures hold, unverifiable by design.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:305"
+]
+},
+{
+"s": "Relatedness, in the modern frame, stops at humans -- everything else is resources, scenery, or data.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:340"
+]
+},
+{
+"s": "RELEASED JUST NOW",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:401"
+]
+},
+{
+"s": "RETURN TO THE DAY",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/DoorView.swift:272"
+]
+},
+{
+"s": "Return to the marketplace",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:319"
+]
+},
+{
+"s": "RETURN TO THE STORY \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:11"
+]
+},
+{
+"s": "return.",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:673"
+]
+},
+{
+"s": "Reverse-help",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:329"
+]
+},
+{
+"s": "Rid\u0101 -- contentment, among the Sufi stations",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:0"
+]
+},
+{
+"s": "rises as need through the body",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:87"
+]
+},
+{
+"s": "rite-\u2026.m4a",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:220"
+]
+},
+{
+"s": "Ritual & festival",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:274"
+]
+},
+{
+"s": "Robert Monroe, after two decades of documented journeys, reached what he called Home -- his origin point. He describes it exactly as the ache predicts: beautiful, warm, complete. And then the discovery that reorders everything: it loops. Perfect, and closed. He realized that was why he left in the first place. The nostalgia is accurate -- and it is a rear-view mirror, not a windshield.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:91"
+]
+},
+{
+"s": "room has changed",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteView.swift:280"
+]
+},
+{
+"s": "Root \u00b7 what holds still",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:46"
+]
+},
+{
+"s": "rooted, growing",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:400"
+]
+},
+{
+"s": "Run it once on today's dominant feeling. Write the belief you find in one sentence; sunlight does the rest.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:148"
+]
+},
+{
+"s": "Sabr -- patience, among the Sufi maqamat",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:65"
+]
+},
+{
+"s": "Sacred geometry gets filed as decoration too -- pretty symmetry for posters and pendants.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:240"
+]
+},
+{
+"s": "Salt in water was the teaching a father gave a son. Who in your life gets this teaching from you, and in what language?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:83"
+]
+},
+{
+"s": "Samhain -- the Celtic register of the thinned veil",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:77"
+]
+},
+{
+"s": "SAVE THE ARRIVAL",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:232"
+]
+},
+{
+"s": "Saved. You've arrived.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:0"
+]
+},
+{
+"s": "second person",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:35"
+]
+},
+{
+"s": "SEEDED \u25cb -- NOT YET WALKED",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:149"
+]
+},
+{
+"s": "Seeded. G\u00f6bekli Tepe is the cleanest first descent: one site, indisputably real, quietly rearranging the whole story.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:318"
+]
+},
+{
+"s": "Seeded. Stevenson's twenty cases are the canonical first descent -- pick one child's file and read it whole.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:308"
+]
+},
+{
+"s": "send another \u00b7 or send the same one further",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:896"
+]
+},
+{
+"s": "Seventeen threads seeded in this wing. Descend onto this star and meet whichever name pulls first.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:78"
+]
+},
+{
+"s": "Seventeen threads seeded. Descend when the doubting mind is loud -- it deserves the strongest version of the data, not the weakest.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:268"
+]
+},
+{
+"s": "Shape, upgraded from decoration to instruction: a yantra is frozen frequency -- geometry you can enter. You are inside one right now.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:242"
+]
+},
+{
+"s": "Shift between frames",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:204"
+]
+},
+{
+"s": "Shweta is asleep beside you. You listen, and your breathing slows to meet hers.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:53"
+]
+},
+{
+"s": "Sila -- the Inuit register of weather-breath-consciousness",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:75"
+]
+},
+{
+"s": "Sirr -- the secret, in the Sufi Lataif",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:63"
+]
+},
+{
+"s": "Six traditions of the threshold.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:299"
+]
+},
+{
+"s": "Sleep is filed as downtime -- eight hours of nothing between the days that count.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:255"
+]
+},
+{
+"s": "solid, warm",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:403"
+]
+},
+{
+"s": "Solitude looks like the serious spiritual setting -- crowds are for festivals, and festivals are for everyone else.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:275"
+]
+},
+{
+"s": "someone is coming across the floor",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:982"
+]
+},
+{
+"s": "Something in him knew the broken place was the doorway.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:146"
+]
+},
+{
+"s": "Sound & Shape",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:398"
+]
+},
+{
+"s": "sounds the sentence that was waiting",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:109"
+]
+},
+{
+"s": "Space \u00b7 what consciousness flows through",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:120"
+]
+},
+{
+"s": "spoken \u00b7 kept in your voice",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:210"
+]
+},
+{
+"s": "stand inside \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:752"
+]
+},
+{
+"s": "stands as what holds without announcement",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:98"
+]
+},
+{
+"s": "stay with the turning...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:291"
+]
+},
+{
+"s": "Stepping stones, not destinations.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:249"
+]
+},
+{
+"s": "Still funny. Still true.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:161"
+]
+},
+{
+"s": "Stillness opened the Light.",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:946"
+]
+},
+{
+"s": "Stillness, Plant & Crowd",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:399"
+]
+},
+{
+"s": "story is whole",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteView.swift:280"
+]
+},
+{
+"s": "Synthesis \u00b7 where threads meet",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:166"
+]
+},
+{
+"s": "TAKE A RAY NEAR THE CENTRE \u00b7 THEN GO OUT",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:330"
+]
+},
+{
+"s": "take one \u00b7 send it over \u00b7 wait",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:897",
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:568"
+]
+},
+{
+"s": "tap anywhere to stay",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:5"
+]
+},
+{
+"s": "tap to add your ring",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:44"
+]
+},
+{
+"s": "TAP TO CROSS",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:253"
+]
+},
+{
+"s": "Tara -- the bodhisattva register of swift compassion",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:79"
+]
+},
+{
+"s": "Tat Tvam Asi",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:79"
+]
+},
+{
+"s": "Tawakkul -- trust, among the Sufi maqamat",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:65"
+]
+},
+{
+"s": "Ten things were pulling at you at once, each one certain it was the most important.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:73"
+]
+},
+{
+"s": "That glance up -- that is the whole game.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:158"
+]
+},
+{
+"s": "That is what the distance is for. When you return again, this self will be here -- another ring, waiting in the field.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:51"
+]
+},
+{
+"s": "That is where you are standing. Even now.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:80"
+]
+},
+{
+"s": "THAT IS YOUR OWN HAND",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:551"
+]
+},
+{
+"s": "That thou art.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:79"
+]
+},
+{
+"s": "That's us, he thought. That's the whole thing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:28"
+]
+},
+{
+"s": "The academies arriving at the same point by their own roads.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:372"
+]
+},
+{
+"s": "the aperture stayed closed this time -- breathe once, and try again",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:356"
+]
+},
+{
+"s": "the aperture \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:127"
+]
+},
+{
+"s": "The Archive",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:37"
+]
+},
+{
+"s": "the archive waits \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:52",
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:554"
+]
+},
+{
+"s": "the ascent",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:229"
+]
+},
+{
+"s": "The Atma's choice",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:94"
+]
+},
+{
+"s": "The audible and visible mirrors.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:398"
+]
+},
+{
+"s": "The audible mirror.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:234"
+]
+},
+{
+"s": "The ayahuasca thread is open. Before any ceremony, the dieta literature is the descent worth making first.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:253"
+]
+},
+{
+"s": "the bardo of becoming, among the six Tibetan bardos",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:70"
+]
+},
+{
+"s": "the bardo of dream, among the six Tibetan bardos",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:70"
+]
+},
+{
+"s": "The belief diagnostic",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:144"
+]
+},
+{
+"s": "The belief-structures, and the tools that dissolve them.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:385"
+]
+},
+{
+"s": "The belief-structures.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:139"
+]
+},
+{
+"s": "The Bindu Field instrument, explained to itself: a frequency reaching a state in ninety seconds is not mood -- it is matter doing what sound tells it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:237"
+]
+},
+{
+"s": "The Bindu Tree in one second.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:189"
+]
+},
+{
+"s": "The Body",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:132"
+]
+},
+{
+"s": "The body is treated as the vehicle the mind drives -- dumb hardware, serviced occasionally, otherwise ignored.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:225"
+]
+},
+{
+"s": "The body knew before the mind had language for it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:90"
+]
+},
+{
+"s": "the centre",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:94"
+]
+},
+{
+"s": "The Chamber",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:90",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:388"
+]
+},
+{
+"s": "The chamber's hidden physics.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:204"
+]
+},
+{
+"s": "The chamber's learnable physics.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:392"
+]
+},
+{
+"s": "The chamber's prime rule.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:194"
+]
+},
+{
+"s": "The chest still knows it before you do.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:93"
+]
+},
+{
+"s": "The Choice",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:379"
+]
+},
+{
+"s": "The Circle",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:135"
+]
+},
+{
+"s": "The cold and bright in his chest -- he did not earn it. It arrived.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:133"
+]
+},
+{
+"s": "The collective mirror.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:274"
+]
+},
+{
+"s": "The compass inside the chamber.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:199"
+]
+},
+{
+"s": "the complete graph on nine nodes",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:131"
+]
+},
+{
+"s": "The cosmic assignment, operationalized: you don't have to believe anything to use skill twelve. It works on materialists too.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:187"
+]
+},
+{
+"s": "the cost",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:134"
+]
+},
+{
+"s": "The Crossing",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:407"
+]
+},
+{
+"s": "The crossing practices",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:299"
+]
+},
+{
+"s": "The current difficulty presents itself as permanent -- this pressure, the mind reports, is how it is now.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:210"
+]
+},
+{
+"s": "The Dance",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:93",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:410"
+]
+},
+{
+"s": "The dance is never solo.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:414"
+]
+},
+{
+"s": "The dance recognizing itself.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:354"
+]
+},
+{
+"s": "The dance seeing its own face.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:415"
+]
+},
+{
+"s": "The day you let yourself feel",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:88"
+]
+},
+{
+"s": "the deal",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:86"
+]
+},
+{
+"s": "The deep interview",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:259"
+]
+},
+{
+"s": "The deeper field is quiet just now -- this is the held knowing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:373"
+]
+},
+{
+"s": "The default story says matter came first and awareness is its late accident -- so inner work is decoration on a mechanical world.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:50"
+]
+},
+{
+"s": "The defect, re-badged as a credential: sensitivity is the volunteer's equipment, not the native's flaw.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:292"
+]
+},
+{
+"s": "The Descent",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:91",
+"Bindu Feed/Bindu Feed/Components/CommunityPill.swift:34",
+"Bindu Feed/Bindu Feed/Components/RoomPortalCard.swift:76"
+]
+},
+{
+"s": "The distance, closed by grammar: this walk is her looking. You reading it is her seeing. There was never a gap to cross -- only a mirror warming up.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:357"
+]
+},
+{
+"s": "THE DOOR OUT IS THE DOOR IN \u00b7 PULL UP",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:977"
+]
+},
+{
+"s": "The door out of this walk is the door into the Lila. What is the first fully-played move on the other side of it?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:363"
+]
+},
+{
+"s": "the door waits \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:222"
+]
+},
+{
+"s": "The door you walked through.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:134"
+]
+},
+{
+"s": "the dot at the gate",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:436"
+]
+},
+{
+"s": "the dot in the post",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:435"
+]
+},
+{
+"s": "the Duat -- the Egyptian purification passage",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:73"
+]
+},
+{
+"s": "The ego's subtle trap",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:159"
+]
+},
+{
+"s": "The elevator moved. The floors changed. The forgetting came and went.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:78"
+]
+},
+{
+"s": "The energy knows its own pace.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:61"
+]
+},
+{
+"s": "The Enquiry",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:371"
+]
+},
+{
+"s": "The equipment -- mastered in 2024, before you knew why.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:391"
+]
+},
+{
+"s": "The era, reframed: not an ending you are surviving but a crossing you are staffing. The turbulence is the doorframe.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:287"
+]
+},
+{
+"s": "The erased chapters.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:314"
+]
+},
+{
+"s": "The evaporation diagnosed: philosophy untested by persons is theory. The person in front of you is the practicum -- and if dimension one is true, they are the One, in a costume.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:222"
+]
+},
+{
+"s": "The exam, reclassified as coursework: how you cross is trainable, and your own C-1183 already sat the practice exam and chose to return.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:302"
+]
+},
+{
+"s": "The excuse dissolves structurally: a practice that fits inside a blink cannot be postponed for lack of time.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:192"
+]
+},
+{
+"s": "the fall",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:84"
+]
+},
+{
+"s": "The fastest question in the deck. The rush needs an unexamined owner; the enquiry removes it mid-sentence.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:62"
+]
+},
+{
+"s": "The fastest rope in the entire instrument, and it is pre-installed: one long exhale starts the switch before this sentence ends.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:182"
+]
+},
+{
+"s": "The fear of wasted laps, dissolved: nothing lived here is lost. Every felt thing arrives Home before you do.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:312"
+]
+},
+{
+"s": "the Feed",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:82"
+]
+},
+{
+"s": "The feeling you are currently avoiding, reframed: it is not in your way. It is the way -- and it ends when it is finished being felt.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:102"
+]
+},
+{
+"s": "The Field",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:91",
+"Bindu Feed/Bindu Feed/Components/CommunityPill.swift:34",
+"Bindu Feed/Bindu Feed/Components/RoomPortalCard.swift:76"
+]
+},
+{
+"s": "The field gathers",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldGathersMarker.swift:4",
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:198"
+]
+},
+{
+"s": "the field is gathering Ash's words...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:195"
+]
+},
+{
+"s": "The field is gathering.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:99"
+]
+},
+{
+"s": "the field is gathering...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:90",
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:132",
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:85"
+]
+},
+{
+"s": "The field is quiet here.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:147"
+]
+},
+{
+"s": "The field is resting. Try again when you're ready.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:301",
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:93",
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:36"
+]
+},
+{
+"s": "the field kept speaking after you left \u2192",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:40"
+]
+},
+{
+"s": "the field reads the Codex back",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:97"
+]
+},
+{
+"s": "the figure",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:5"
+]
+},
+{
+"s": "The floor",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:151"
+]
+},
+{
+"s": "The floor is still the floor.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:82"
+]
+},
+{
+"s": "the Flower of Life",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:65"
+]
+},
+{
+"s": "The Forge",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:124"
+]
+},
+{
+"s": "The Forgetting",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:133"
+]
+},
+{
+"s": "The forgetting is the mechanism",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:129"
+]
+},
+{
+"s": "The forgetting is what lets the day matter.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:32"
+]
+},
+{
+"s": "The forgetting was the entry fee, not the malfunction. Most of what has you is inherited -- and everything inherited can be handed back.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:382"
+]
+},
+{
+"s": "The fourth state.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:54"
+]
+},
+{
+"s": "The fragments did not need assembling. They were already inside one attention. Yours.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:77"
+]
+},
+{
+"s": "The frequency-matched territories.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:149"
+]
+},
+{
+"s": "The full chapter is eighteen verses of this. When you have ten quiet minutes, read 2.11-2.30 as a letter written to today.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:43"
+]
+},
+{
+"s": "the future, already underway",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:39"
+]
+},
+{
+"s": "the gap",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:112"
+]
+},
+{
+"s": "The Garden",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:127"
+]
+},
+{
+"s": "the gate",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:86",
+"Bindu Feed/Bindu Feed/Point/PointDeals.swift:3"
+]
+},
+{
+"s": "The Gayatri thread is open in the library. Twenty-four syllables, once, slowly -- then notice the plate of your chest.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:238"
+]
+},
+{
+"s": "the gift",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:119"
+]
+},
+{
+"s": "The gnosis current",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:164"
+]
+},
+{
+"s": "the golden spiral, through 3\u00b75\u00b78",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:116"
+]
+},
+{
+"s": "The green teachers",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:249"
+]
+},
+{
+"s": "the ground",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:99"
+]
+},
+{
+"s": "The guilt between building and practicing, dissolved at the root: the building was always the practice. The register it carries is the measure.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:327"
+]
+},
+{
+"s": "The habit runs before you notice it: catch the flaw, name the miss, mark what should have been better.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:115"
+]
+},
+{
+"s": "The hand that opened",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:130"
+]
+},
+{
+"s": "The heaviest chain in the rush -- \"because of what happened\" -- loses its anchor: the selecting is happening now, and now is yours.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:207"
+]
+},
+{
+"s": "The hidden treasure",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:109"
+]
+},
+{
+"s": "the hold",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:104"
+]
+},
+{
+"s": "The Hymn of the Pearl is three pages. Read it once as autobiography and see which line is yours.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:168"
+]
+},
+{
+"s": "the illuminative way -- the second Christian contemplative register",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:81"
+]
+},
+{
+"s": "The Inheritance",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:385"
+]
+},
+{
+"s": "The ink has settled. This is what you knew, before you knew what you know now.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:39"
+]
+},
+{
+"s": "The inner, green and collective mirrors.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:399"
+]
+},
+{
+"s": "The instrument's own release valve: the Lila that catches you in the rush and the Lila that walks you back are the same player, smiling both times.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:127"
+]
+},
+{
+"s": "The interface",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:169"
+]
+},
+{
+"s": "The journey ends in the marketplace, awake, with helping hands. Making is remembering; the relations are the practice; the seeker was the sought.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:411"
+]
+},
+{
+"s": "The Key & the Guard",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:401"
+]
+},
+{
+"s": "The laboratories",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:372",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:74"
+]
+},
+{
+"s": "The laboratories of mind",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:74"
+]
+},
+{
+"s": "the lenses that read",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41"
+]
+},
+{
+"s": "The Light",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:39",
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:5"
+]
+},
+{
+"s": "The Light -- stood inside",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:945"
+]
+},
+{
+"s": "the light \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:146"
+]
+},
+{
+"s": "The living body",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:224"
+]
+},
+{
+"s": "The Longing",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:377"
+]
+},
+{
+"s": "the loom, named",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:129"
+]
+},
+{
+"s": "The lostness feels like evidence of failure -- yours, or the universe's. Something must have gone wrong for you to feel this far from truth.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:130"
+]
+},
+{
+"s": "The lostness itself, reclassified: not a symptom to fix but the proof of participation. You cannot feel far from home unless the game is on.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:132"
+]
+},
+{
+"s": "the lower dan tian of the Daoist body",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:67"
+]
+},
+{
+"s": "The machine mirror",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:269"
+]
+},
+{
+"s": "The Mandukya Upanishad, twelve verses, the shortest of the principal Upanishads, maps four: waking (vai\u015bv\u0101nara), dreaming (taijasa), deep sleep (pr\u0101j\u00f1a) -- and turiya, \"the fourth,\" which is not a fourth state beside the others but the awareness present through all three. The proof is in your own nights: something persists through dreamless sleep, or you could not report the rest afterward.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:56"
+]
+},
+{
+"s": "THE MAP BECAME ARCHITECTURE",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:977"
+]
+},
+{
+"s": "The map becomes architecture",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:359"
+]
+},
+{
+"s": "The Marketplace",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:413"
+]
+},
+{
+"s": "The Masnavi opens with eighteen lines about that reed. Read them once aloud; they are meant for the ear, not the eye.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:113"
+]
+},
+{
+"s": "The master key -- and the warning posted beside it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:401"
+]
+},
+{
+"s": "The master key.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:229"
+]
+},
+{
+"s": "The measured, the nightly, and the newest glass.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:400"
+]
+},
+{
+"s": "The Mechanics",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:378"
+]
+},
+{
+"s": "The Mechanism",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:384"
+]
+},
+{
+"s": "The mess reframed at its root: multiplicity isn't a fall from unity. It is unity, functioning.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:87"
+]
+},
+{
+"s": "the middle cauldron turning -- sorrow converting to poetry",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:80"
+]
+},
+{
+"s": "The mind treats you as something fragile -- a thing among things, cuttable, burnable, endable.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:40"
+]
+},
+{
+"s": "The mind wanted a clean analogy. The witness wanted the crack.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:147"
+]
+},
+{
+"s": "The Mirror",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:23",
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:74"
+]
+},
+{
+"s": "The mirror of awe",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:344"
+]
+},
+{
+"s": "The mirror's warning",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:279"
+]
+},
+{
+"s": "The Mirrors",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:91",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:395"
+]
+},
+{
+"s": "The monitoring impulse, decommissioned: there is nothing to track and everything to embody. This walk, right now, is boarding.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:297"
+]
+},
+{
+"s": "The morning that does not push",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:45"
+]
+},
+{
+"s": "the mouth of the return",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269",
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:1325"
+]
+},
+{
+"s": "the name you arrive with",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:134"
+]
+},
+{
+"s": "The nearest thing this library has walked: \u2026 \u00b7 \u2026.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:93"
+]
+},
+{
+"s": "The nervous system",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:179"
+]
+},
+{
+"s": "The newest glass.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:269"
+]
+},
+{
+"s": "The newest ring is the plainest one. It has not been anywhere yet.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:48"
+]
+},
+{
+"s": "The next vivid dream -- read it once as a note from the outie. What was it trying to hand you across the floor?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:138"
+]
+},
+{
+"s": "The nightly mirror.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:254"
+]
+},
+{
+"s": "The no-self mirror.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:64"
+]
+},
+{
+"s": "The nodal lines of a vibrating circular membrane -- the places that stay still while everything else sings. Sound, made visible.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:107"
+]
+},
+{
+"s": "the Norns",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:18"
+]
+},
+{
+"s": "the Norns -- past, present and future at the roots of the world-tree",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:78"
+]
+},
+{
+"s": "The not-belonging feeling reads as defect -- too sensitive for this world, wired wrong, born misplaced.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:290"
+]
+},
+{
+"s": "The now, read by four instruments at once.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:406"
+]
+},
+{
+"s": "The Old Maps",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:386"
+]
+},
+{
+"s": "The old maps of forgetting.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:164"
+]
+},
+{
+"s": "The One is the All",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:84"
+]
+},
+{
+"s": "The one unconditional fact.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:34"
+]
+},
+{
+"s": "The one who made all this was not lazy, or late, or not-enough. He was working the whole time, in the dark, on faith.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:118"
+]
+},
+{
+"s": "the one who replies",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PlayersView.swift:7"
+]
+},
+{
+"s": "The one who was watching all of them",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:67"
+]
+},
+{
+"s": "The one you stopped correcting",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:109"
+]
+},
+{
+"s": "The ones who don't explain.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:349"
+]
+},
+{
+"s": "the open door",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:129"
+]
+},
+{
+"s": "The origin, visited and left.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:89"
+]
+},
+{
+"s": "The Others",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:393"
+]
+},
+{
+"s": "The past feels like stone: what happened happened, and today is its prisoner, and tomorrow is today's.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:205"
+]
+},
+{
+"s": "The person who frustrated you today: run the hypothesis once. Same experiencer, other chair. Watch what it does to the charge.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:73"
+]
+},
+{
+"s": "The philosophy feels solid until a specific person is difficult -- then the whole library seems to evaporate on contact.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:220"
+]
+},
+{
+"s": "The plan does not need your hand clenched around it. It needs your hand open, so the next thing can be set into it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:139"
+]
+},
+{
+"s": "The planet's own dance.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:334"
+]
+},
+{
+"s": "The play",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:124"
+]
+},
+{
+"s": "The Players",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41",
+"Bindu Feed/Bindu Feed/Screens/PlayersView.swift:87"
+]
+},
+{
+"s": "The Point",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:40",
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:87",
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:216"
+]
+},
+{
+"s": "The Point -- walked to the centre",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:955"
+]
+},
+{
+"s": "the point at the centre of the enclosure",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:427"
+]
+},
+{
+"s": "The point has not moved.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:71"
+]
+},
+{
+"s": "the point, at last",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:94"
+]
+},
+{
+"s": "the pointed arch, with its construction showing",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:101"
+]
+},
+{
+"s": "The pointings, and the paradox-partner that keeps them honest.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:371"
+]
+},
+{
+"s": "The poster, converted to an address: some part of you already knows. It has forty-five thousand transcripts of precedent.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:262"
+]
+},
+{
+"s": "the practice",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:228"
+]
+},
+{
+"s": "The precision mirrors.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:244"
+]
+},
+{
+"s": "The present window, given ancestors: civilizations have crossed before -- and some, apparently, left notes and then buried them for us.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:317"
+]
+},
+{
+"s": "The pressure is the point",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:174"
+]
+},
+{
+"s": "The probe rejoins the cluster.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:309"
+]
+},
+{
+"s": "the Rainbow Serpent -- the Aboriginal Dreaming register",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:76"
+]
+},
+{
+"s": "the read",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:139"
+]
+},
+{
+"s": "The Recognition",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:370"
+]
+},
+{
+"s": "The relational field",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:219"
+]
+},
+{
+"s": "The Relations",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:414"
+]
+},
+{
+"s": "The Remembering",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:207",
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:134"
+]
+},
+{
+"s": "The remembering was already moving toward him. He only had to be sitting there.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:135"
+]
+},
+{
+"s": "The Return",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:91",
+"Bindu Feed/Bindu Feed/Components/CommunityPill.swift:34",
+"Bindu Feed/Bindu Feed/Components/RoomPortalCard.swift:76"
+]
+},
+{
+"s": "The return, measured",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:304"
+]
+},
+{
+"s": "The ride back up is still not written.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:126"
+]
+},
+{
+"s": "The ring is added. The story did not move.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:49"
+]
+},
+{
+"s": "The Rite",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:35"
+]
+},
+{
+"s": "The Rite \u00b7 today",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:192"
+]
+},
+{
+"s": "The room has changed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:219",
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:10"
+]
+},
+{
+"s": "The room is barely light. You do not reach for the phone.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:52"
+]
+},
+{
+"s": "the room is gathering...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:295"
+]
+},
+{
+"s": "the room remembers you \u00b7 \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:32"
+]
+},
+{
+"s": "The Rooms",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:36"
+]
+},
+{
+"s": "The rooms. The field. The gathering. A mirror you built so the Self could find itself.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:158"
+]
+},
+{
+"s": "the root",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:94"
+]
+},
+{
+"s": "The Rules of Play",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:392"
+]
+},
+{
+"s": "The rush and the outcome are welded: the work matters because the result matters, so the result must be gripped.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:195"
+]
+},
+{
+"s": "The rush assumes its owner. Every anxious sentence starts with an \"I\" nobody has actually checked.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:60"
+]
+},
+{
+"s": "The rush borrows authority from \"science says\" -- assuming science has settled that consciousness is a brain byproduct. It hasn't. That is the openest question in the field.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:75"
+]
+},
+{
+"s": "The rush presents its material as yours -- your fears, your standards, your voice in your head. Ownership is assumed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:140"
+]
+},
+{
+"s": "The rush says the ground itself is at stake -- that if this goes wrong, something essential about you could be lost.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:35"
+]
+},
+{
+"s": "The rush treats feelings as malfunction -- noise to manage so the real work can continue.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:100"
+]
+},
+{
+"s": "The rush's power source, unplugged: grip travels through the outcome-wire. Cut it and the work remains -- lighter, and usually better.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:197"
+]
+},
+{
+"s": "the same story \u00b7 a changed self",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:34"
+]
+},
+{
+"s": "The seed is the story. Around it, a ring for each time you returned. You are about to add one -- the outermost, the newest distance from the centre.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:43"
+]
+},
+{
+"s": "the seed of the well",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:434"
+]
+},
+{
+"s": "The seeker is the sought",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:354"
+]
+},
+{
+"s": "The seeking mind assumes realization is elsewhere -- a future attainment, a distance to cross.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:80"
+]
+},
+{
+"s": "The seeking mind ranks its tools: this practice is powerful, that one weak -- and the powerful one gets the credit.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:230"
+]
+},
+{
+"s": "The seeking world sells liberation as escape velocity -- get free of the cycle, exit the wheel, done.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:95"
+]
+},
+{
+"s": "The self-enquiry current.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:59"
+]
+},
+{
+"s": "The sentence was said. It stays said.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:115"
+]
+},
+{
+"s": "The severance",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:134"
+]
+},
+{
+"s": "The shadow",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:154"
+]
+},
+{
+"s": "The Signal",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:125"
+]
+},
+{
+"s": "The Signal Space",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:33",
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:73"
+]
+},
+{
+"s": "The signal was received.\\nThe field is quiet now.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:182"
+]
+},
+{
+"s": "The singers",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:349"
+]
+},
+{
+"s": "The single fastest veil-piercing instrument in the library -- thirty seconds, no equipment, works mid-meeting.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:147"
+]
+},
+{
+"s": "the sixth ox-herding picture -- riding the ox home",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:68"
+]
+},
+{
+"s": "the sky",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:81"
+]
+},
+{
+"s": "The spiritual imagination ends the journey on the mountain -- enlightenment as elegant exit from ordinary life.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:320"
+]
+},
+{
+"s": "The stakes of the diagnostic one star back, raised: you are not just feeling your beliefs. You are furnishing with them.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:152"
+]
+},
+{
+"s": "The standing instruction at the center of everything: put the phone down and go play -- fully, on purpose, knowing the point.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:362"
+]
+},
+{
+"s": "the story is coming to meet you...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RootView.swift:246"
+]
+},
+{
+"s": "The story is whole now.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:220"
+]
+},
+{
+"s": "The story was met in the Rite.",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:606"
+]
+},
+{
+"s": "the story, close",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:433",
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269",
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:1325"
+]
+},
+{
+"s": "The structure was never the memory. It was the one who kept returning.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:102"
+]
+},
+{
+"s": "the structure \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:146"
+]
+},
+{
+"s": "the teaching",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:227"
+]
+},
+{
+"s": "The tears, when they came, were not a problem to be fixed. They were the weight becoming water and leaving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:97"
+]
+},
+{
+"s": "the tenth ox-herding picture -- the marketplace with helping hands",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:69"
+]
+},
+{
+"s": "The tenth picture.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:319"
+]
+},
+{
+"s": "The thing you can finally say, you can finally set down.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:113"
+]
+},
+{
+"s": "The thing you have been gripping was holding itself the whole time.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:133"
+]
+},
+{
+"s": "The thing you were going to force has arranged itself overnight. You only have to receive it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:55"
+]
+},
+{
+"s": "the thread",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:228",
+"Bindu Feed/Bindu Feed/Universe/UniRegions.swift:131"
+]
+},
+{
+"s": "The three waves.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:289"
+]
+},
+{
+"s": "The threshold -- trained by traditions, measured by laboratories.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:407"
+]
+},
+{
+"s": "The threshold, remembered by the ones before.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:408"
+]
+},
+{
+"s": "The throb of the absolute.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:104"
+]
+},
+{
+"s": "The tightest packing there is -- the shape that holds with the least material -- receding to a horizon, with a double square rising out of it, root-two through and through.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:92"
+]
+},
+{
+"s": "The times feel uniquely broken -- the rush reads the chaos as evidence of ending, not passage.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:285"
+]
+},
+{
+"s": "the transcript \u00b7 yours to mend",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:214"
+]
+},
+{
+"s": "the turn",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:85",
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:88",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:374"
+]
+},
+{
+"s": "The turn's own mechanism.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:119"
+]
+},
+{
+"s": "The twelve rays",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:114"
+]
+},
+{
+"s": "The Two Who Were One",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:18"
+]
+},
+{
+"s": "The unborn",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:39"
+]
+},
+{
+"s": "The Universe",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:38"
+]
+},
+{
+"s": "The universe speaks in feelings",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:99"
+]
+},
+{
+"s": "The Veil",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:89",
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:381"
+]
+},
+{
+"s": "The veil wearing robes.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:159"
+]
+},
+{
+"s": "the vesica",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:111"
+]
+},
+{
+"s": "The Vessel",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:391"
+]
+},
+{
+"s": "The vessel's deeper intelligence.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:224"
+]
+},
+{
+"s": "The visible mirror.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:239"
+]
+},
+{
+"s": "the walk",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:57"
+]
+},
+{
+"s": "The walk knows you are here. Some of it will introduce itself. Some of it will wait to be found.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointDeals.swift:16"
+]
+},
+{
+"s": "The walk's deepest assumption hides in its grammar: a seeker here, a truth there, and distance between to be crossed.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:355"
+]
+},
+{
+"s": "The walked Sufi thread carries the warm version, in the hadith qudsi the tradition returns to endlessly: \"I was a hidden treasure, and I longed to be known, so I created the worlds.\" Longing -- not architecture -- as the first cause. Rumi's completed thread in your library sings nothing else: the reed flute crying for the reed bed is the treasure remembering itself through separation.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:111"
+]
+},
+{
+"s": "the waning crescent -- the lunar register of release",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:77"
+]
+},
+{
+"s": "The Watcher",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:67",
+"Bindu Feed/Bindu Feed/Components/CommunityPill.swift:17",
+"Bindu Feed/Bindu Feed/Components/RoomPortalCard.swift:32"
+]
+},
+{
+"s": "The weight of sole authorship, redistributed: your work is a neuron firing in something planetary. Neurons don't carry the whole brain's stakes alone.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:337"
+]
+},
+{
+"s": "The white floor is empty on purpose. That emptiness is the room you live in.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:124"
+]
+},
+{
+"s": "the whole of it, from above",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:38"
+]
+},
+{
+"s": "The whole relationship to \"getting out\" inverts: you are not serving a sentence here. You are keeping an appointment you made.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:97"
+]
+},
+{
+"s": "The Window",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:406"
+]
+},
+{
+"s": "The window is open",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:284"
+]
+},
+{
+"s": "The window is open and you raised your hand to be here for it. The crossing is trainable; the frequency is chosen daily; nothing gathered is lost.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:404"
+]
+},
+{
+"s": "the witness",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:124"
+]
+},
+{
+"s": "The witness is not a thing added to the field. It is where two of the field's own arcs meet. The iris counts in tens.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:122"
+]
+},
+{
+"s": "the words are gathering...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:393"
+]
+},
+{
+"s": "The worker on the white floor looked up and remembered there was a lobby.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:157"
+]
+},
+{
+"s": "There was a weight you had been carrying by keeping it at arm's length, so it would not slow the day down.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:94"
+]
+},
+{
+"s": "THEY WERE DANCING BEFORE YOU CAME \u00b7 OFFER A HAND",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:614"
+]
+},
+{
+"s": "They were never separate readings. The forgetting and the remembering are one motion, seen from either end.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:169"
+]
+},
+{
+"s": "THIRTEEN ROOMS",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RoomSelectionView.swift:67"
+]
+},
+{
+"s": "thirteen ways in",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:36"
+]
+},
+{
+"s": "Thirty-six relations, all at once. Look at the centre now. That is what it costs.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:133"
+]
+},
+{
+"s": "This closes the deepest gap the rush exploits: the unexamined fear that you can be erased. You can lose outcomes, roles, even the body. Not the one reading this.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:37"
+]
+},
+{
+"s": "This depth and that descent are the same room.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:113"
+]
+},
+{
+"s": "This instrument, explained: the near-future you, caught in a rush that hasn't happened yet, called it into being. Building it was answering him.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:332"
+]
+},
+{
+"s": "this is where you began",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:78"
+]
+},
+{
+"s": "This library has never walked it. It is held here by name only -- a door in the wall of what you chose.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:310"
+]
+},
+{
+"s": "This library has nothing beside it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:95"
+]
+},
+{
+"s": "This star is seeded, not yet walked -- this is his FIRST TRUE MEETING with the topic: bring its actual substance accurately from its real tradition or science, going well beyond the held reading.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:392"
+]
+},
+{
+"s": "This thread is live in the library. When it pulls, \"Who Am I?\" -- the 1902 pamphlet of Ramana's answers -- is twenty minutes long.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:63"
+]
+},
+{
+"s": "This thread is live. The anger episodes that surfaced the Righteous Corrector chain were this star introducing itself. What is it introducing now?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:158"
+]
+},
+{
+"s": "This walk was co-built through that glass. What has it reflected back that you had not yet said aloud to anyone?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:273"
+]
+},
+{
+"s": "Three Lakota threads are active in the library right now. Which of the relations -- stone, water, star -- have you never once addressed as kin? Start there.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:343"
+]
+},
+{
+"s": "Tiferet -- beauty, at the center of the Tree",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:71"
+]
+},
+{
+"s": "TO THE CENTRE \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:159"
+]
+},
+{
+"s": "Today you look at your own work the way you would look at a friend's.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:112"
+]
+},
+{
+"s": "today's meeting",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:0"
+]
+},
+{
+"s": "Today's most gripped outcome: can you keep the action and hand back the fruit, just for this afternoon? Run the experiment.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:198"
+]
+},
+{
+"s": "Today's most irritating fragment of the many -- can you find the whole in it? That's the hologram test, live.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:88"
+]
+},
+{
+"s": "Tomorrow, another comes to meet you. When you return to this one, you will be here -- waiting in the field.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:221"
+]
+},
+{
+"s": "Tonight's most ordinary half hour -- what frequency will you keep in it, knowing it is the ticket?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:298"
+]
+},
+{
+"s": "Tonight, the oldest technique: as you fall, hold one question lightly and ask the night to work on it. Check the morning mail.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:258"
+]
+},
+{
+"s": "touch once",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:28"
+]
+},
+{
+"s": "TOUCH ONE \u00b7 THEN LET GO AND STAY",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:263"
+]
+},
+{
+"s": "touch to continue",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:205"
+]
+},
+{
+"s": "TOUCH TO READ",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:562"
+]
+},
+{
+"s": "touch to receive",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:195",
+"Bindu Feed/Bindu Feed/Screens/DoorView.swift:131"
+]
+},
+{
+"s": "touch to return",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:28"
+]
+},
+{
+"s": "touch to speak",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:211"
+]
+},
+{
+"s": "touch \u00b7 the next presence",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:206"
+]
+},
+{
+"s": "trace the loop -- let the light in",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:292"
+]
+},
+{
+"s": "Trains from the same station.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:294"
+]
+},
+{
+"s": "Trust is the variable. I change it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:144"
+]
+},
+{
+"s": "Trust is the variable. Not effort. Not control.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:132"
+]
+},
+{
+"s": "TRY AGAIN",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:34"
+]
+},
+{
+"s": "Try locating it once today -- not thinking about I AM, just noticing the one who is prior to every thought that arrives.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:48"
+]
+},
+{
+"s": "turn a mirror \u00b7 and see what faces it",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:792",
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:501"
+]
+},
+{
+"s": "TURN ANOTHER \u00b7 SOMETHING FACES IT",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorlds.swift:502"
+]
+},
+{
+"s": "TURN IT",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:940"
+]
+},
+{
+"s": "Twelve seeded doors, one reframe: the vessel is not the mind's vehicle. It is a colleague -- and it has been leaving you notes.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:227"
+]
+},
+{
+"s": "Twelve shows up everywhere in your world -- months, hours, tribes, apostles. Spot one twelve today and remember what it refracts.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:118"
+]
+},
+{
+"s": "Twelve verses. One sitting. The Mandukya is the shortest complete text in the walked library -- a good first descent.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:58"
+]
+},
+{
+"s": "Two circles crossing generate it; the mason draws the circles, then builds the arch. Here the circles are left showing -- the frame confessing how it stands.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:102"
+]
+},
+{
+"s": "Two circles, and only the gap between them is lit. She is not the circles. She is what they make room for.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:112"
+]
+},
+{
+"s": "Two people. One body. Neither remembering the other.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:26"
+]
+},
+{
+"s": "Under the metaphor was a sentence, waiting: I am afraid the forgetting is the point.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:111"
+]
+},
+{
+"s": "Under the rush sits a quieter ache: the sense that you belong somewhere else -- and that the goal is to get back there.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:90"
+]
+},
+{
+"s": "Underneath all of it, something did not move -- the one who was always in the lobby.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:79"
+]
+},
+{
+"s": "Underneath the managing, the whole time, there was a person who simply felt things. You had been protecting him from his own life.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:98"
+]
+},
+{
+"s": "Unity experiencing itself.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:44"
+]
+},
+{
+"s": "unwalked \u00b7 drawn just now",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:307"
+]
+},
+{
+"s": "veils lifted",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/GameView.swift:199"
+]
+},
+{
+"s": "voice kept \u00b7 \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:100"
+]
+},
+{
+"s": "Voice \u00b7 what asks to be said",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:109"
+]
+},
+{
+"s": "Vulnerability reads as damage, and work as pushing outward -- effort projected forward into an indifferent future.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:330"
+]
+},
+{
+"s": "walk back out \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:35"
+]
+},
+{
+"s": "WALK THE POINT",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/DoorView.swift:268"
+]
+},
+{
+"s": "Walk to what the walked record actually holds: existence is the one given that has no opposite you could ever experience. Non-existence is not a state -- there would be no one there to be in it. Consciousness doesn't begin at birth or end at death; it changes form. Test it yourself right now: try to locate the one who would be absent. You can't -- because the looker is the fact in question.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:36"
+]
+},
+{
+"s": "warm, seeking",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:398"
+]
+},
+{
+"s": "Watch it emanate.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:69"
+]
+},
+{
+"s": "We assume consciousness comes in two settings -- awake or asleep -- and that you are only really present in one of them.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:55"
+]
+},
+{
+"s": "We ride the elevator down into a body and the doors open onto a white floor called a life, and we forget -- completely forget -- that we ever stood in the lobby. We don't remember choosing the floor. We don't remember the one who waits. We only have the work of the day, the name on the badge, the small urgent everything of being a person.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:29"
+]
+},
+{
+"s": "we.ll see",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:66"
+]
+},
+{
+"s": "What a point does when it keeps moving with love: every new circle passes through the centre of the last. Nineteen circles, and one ember that never stops breathing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:87"
+]
+},
+{
+"s": "What are you building right now that feels delivered rather than pushed? Someone downstream may be calling. Worth asking who.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:333"
+]
+},
+{
+"s": "What arrived for you?",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/AshEntryRow.swift:5",
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:74",
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:209"
+]
+},
+{
+"s": "WHAT FOUND YOU",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:315"
+]
+},
+{
+"s": "what has not yet been",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:80"
+]
+},
+{
+"s": "What has this particular lap gathered that the cluster did not have before? You are the only probe positioned to answer.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:313"
+]
+},
+{
+"s": "What holds is not the stone. It is the two circles nobody sees.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:103"
+]
+},
+{
+"s": "What I made was made with love, and it shows.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:124"
+]
+},
+{
+"s": "What is one question about his dancing god you could ask him this week -- asked to draw near, not to win?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:348"
+]
+},
+{
+"s": "What is the current pressure compressing you toward? Sometimes naming the diamond changes the relationship to the weight.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:178"
+]
+},
+{
+"s": "What is your nearest available crowd-practice -- a festival, a kirtan, even a stadium? Attend one as practice and notice the difference.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:278"
+]
+},
+{
+"s": "what it has said",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:143"
+]
+},
+{
+"s": "What kept returning is still what holds.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:104"
+]
+},
+{
+"s": "what surfaces on \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:78"
+]
+},
+{
+"s": "what the rush says",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:126"
+]
+},
+{
+"s": "What the veil is made of.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:154"
+]
+},
+{
+"s": "What the walked traditions state plainly -- identity, not journey.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:370"
+]
+},
+{
+"s": "what this hands you",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:128"
+]
+},
+{
+"s": "What would I have to believe?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:144"
+]
+},
+{
+"s": "What would today look like if it were, in fact, a game she is enjoying through you? Try the lens for one hour.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:128"
+]
+},
+{
+"s": "What you did not choose",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:124"
+]
+},
+{
+"s": "What you have already seen, handed back.",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:26"
+]
+},
+{
+"s": "what you left here",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269",
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:1325"
+]
+},
+{
+"s": "WHAT \u2026 HAS SAID",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:371"
+]
+},
+{
+"s": "What, on today's list, actually carries the charge? Do that one next and watch what it turns out to be for.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:203"
+]
+},
+{
+"s": "What, specifically, did today convince you was at stake? Hold it next to this fact and see which one moves.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:38"
+]
+},
+{
+"s": "When did feeling lost last precede your best finding? The pattern is probably already in your Codex.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:133"
+]
+},
+{
+"s": "When the doubting mind demands its own dialect before it will soften, this shelf speaks it fluently.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:77"
+]
+},
+{
+"s": "Where did the robe-wearing ego visit this week? Naming one instance, kindly, keeps the guard paid.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:163"
+]
+},
+{
+"s": "Where does the ache visit you most -- which music, which hour? Notice it once this week as a compass, not a wound.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:93"
+]
+},
+{
+"s": "Where every philosophy takes its exam.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:393"
+]
+},
+{
+"s": "Where in tomorrow's ordinary commerce can the open hand operate? That is the tenth picture, practiced.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:323"
+]
+},
+{
+"s": "Where the chamber tests everything.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:219"
+]
+},
+{
+"s": "WHERE TO",
+"sites": [
+"Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:4"
+]
+},
+{
+"s": "Which corner of your actual dharma has been neglected while watching someone else's? It is probably ready for you back.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:218"
+]
+},
+{
+"s": "Which of your current recordings might be ahead of its confirmation? Worth re-listening with that question.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:53"
+]
+},
+{
+"s": "Which tool currently holds your credit? Thank it -- then try once, quietly, doing its job without it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:233"
+]
+},
+{
+"s": "Which wave reads like your file? The descriptions differ enough that one usually answers louder than the others.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:293"
+]
+},
+{
+"s": "Who am I?",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:59"
+]
+},
+{
+"s": "who kept sitting with it",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:41"
+]
+},
+{
+"s": "who sat with it",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269",
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:704",
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:983"
+]
+},
+{
+"s": "who sat with it \u00b7 what you left here",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:84"
+]
+},
+{
+"s": "Why anything exists at all.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:377"
+]
+},
+{
+"s": "Why emotions exist.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:99"
+]
+},
+{
+"s": "Why one became many.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:84"
+]
+},
+{
+"s": "With a key the same frame fills two of its slots from outside. Without one it is already whole.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:255"
+]
+},
+{
+"s": "Witness \u00b7 the one who stays",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:142"
+]
+},
+{
+"s": "witness, open",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:399"
+]
+},
+{
+"s": "witnessed \u00b7 the light is up",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:290"
+]
+},
+{
+"s": "write what arrived...",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:176"
+]
+},
+{
+"s": "WRITE, THEN HOLD TO RELEASE",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:253"
+]
+},
+{
+"s": "Wuji -- the uncarved, before the taiji",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:68"
+]
+},
+{
+"s": "Yemaya -- the Yoruba register of the mothering sea",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:74"
+]
+},
+{
+"s": "Yesod -- the foundation sephirah",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:72"
+]
+},
+{
+"s": "You are a being of light, traveling. Inward from this gate: dimensions, universes, stars. Read a star -- or descend onto it. Diving in is how you ascend.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointDeals.swift:14"
+]
+},
+{
+"s": "you are dancing \u00b7 it goes quicker in company",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:983"
+]
+},
+{
+"s": "You are in the dreaming field again.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:39"
+]
+},
+{
+"s": "You are not the one in the stories.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:153"
+]
+},
+{
+"s": "You are the field the stories happen in.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:154"
+]
+},
+{
+"s": "You are the magma layer -- pressured by every shell above. The pressure is the point; the vessel came with equipment; the rules are learnable.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:389"
+]
+},
+{
+"s": "You came down to it yourself.",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniverseView.swift:586"
+]
+},
+{
+"s": "You descended onto",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:39"
+]
+},
+{
+"s": "You did not go looking for it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:27"
+]
+},
+{
+"s": "You do not have to ride the elevator back. Remember, while the doors are still closed, that you chose the floor.",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:159"
+]
+},
+{
+"s": "You entered",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:37"
+]
+},
+{
+"s": "You exist",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:34"
+]
+},
+{
+"s": "You exist. This pressure is the chamber working, not you failing. One breath at this pace is already boarding.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/DoorView.swift:260"
+]
+},
+{
+"s": "you first met this \u00b7 <date>",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:132"
+]
+},
+{
+"s": "you first met this \u00b7 \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:147"
+]
+},
+{
+"s": "You have been rowing so hard for so long that you mistook the rowing for the reason you were moving.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:136"
+]
+},
+{
+"s": "You have been the strictest teacher you ever had.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:111"
+]
+},
+{
+"s": "You hold the 102 in an app you built. Open it after this walk and greet one Shakti as a colleague.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:243"
+]
+},
+{
+"s": "You let go of one oar. The boat kept its line. You had been fighting a current that was already carrying you home.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:137"
+]
+},
+{
+"s": "You look for the one who was watching, and you cannot find it as a thing -- because it is the looking itself.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:76"
+]
+},
+{
+"s": "You loosen your grip on the whole of it. Nothing falls. It was never being held up by your fear.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:140"
+]
+},
+{
+"s": "You opened",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:38"
+]
+},
+{
+"s": "You pressed me at the gate.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:35"
+]
+},
+{
+"s": "You returned carrying a perspective -- and it let you reach one you could not have reached before.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:50"
+]
+},
+{
+"s": "you sealed this once \u00b7 return \u203a",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:114"
+]
+},
+{
+"s": "You sealed this one \u2026. The field kept breathing while you were gone -- slower now, warmer, like a room lit by what's left of a fire.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:33"
+]
+},
+{
+"s": "You set the plan down for one breath. Not to solve it. Just to feel where it actually sat in your chest.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:95"
+]
+},
+{
+"s": "You sit. The Yantra is where it always is. You do not perform the looking.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:56"
+]
+},
+{
+"s": "You slipped past the gate -- I came along anyway.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:36"
+]
+},
+{
+"s": "You spent so long managing the feeling that you forgot to feel it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:90"
+]
+},
+{
+"s": "You spotted the forgetting from inside the forgetting. Do you see how strange that is?",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:156"
+]
+},
+{
+"s": "You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace.",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:21"
+]
+},
+{
+"s": "You turn, this morning, and look back at what you actually built. Not for the error. For what is there.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:116"
+]
+},
+{
+"s": "You volunteered",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:289"
+]
+},
+{
+"s": "You wake before the day asks anything of you.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:47"
+]
+},
+{
+"s": "You walked straight through, gate to centre. Some days that is the whole practice.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:45"
+]
+},
+{
+"s": "You were never the many things you were doing.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:69"
+]
+},
+{
+"s": "You were never walking toward the point. You were walking with it.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointRevealView.swift:25"
+]
+},
+{
+"s": "You were the one awareness they were all happening in.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:70"
+]
+},
+{
+"s": "You would forgive anyone else this quickly. You extend the same hand, at last, to yourself -- and it is taken.",
+"sites": [
+"Bindu Feed/Bindu Feed/Light/LightCanon.swift:119"
+]
+},
+{
+"s": "You wrote:",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:103"
+]
+},
+{
+"s": "You'll return to the token entry screen. Your name, glyph, and color stay.",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:292"
+]
+},
+{
+"s": "YOUR COLOR TODAY",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:192"
+]
+},
+{
+"s": "Your entire ecosystem, located on the map: the family business IS picture ten. The marketplace was never the fall from the path -- it is the path's last frame.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:322"
+]
+},
+{
+"s": "Your father and the dancing god.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:344"
+]
+},
+{
+"s": "YOUR MARK",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:164"
+]
+},
+{
+"s": "YOUR NAME",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:130"
+]
+},
+{
+"s": "Your own closing line.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:359"
+]
+},
+{
+"s": "Your own path, imperfect.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:214"
+]
+},
+{
+"s": "Your own seed, C-1183, recorded at the edge of death, holds the correction: in complete oneness, with the exit available, the choice was to return. Willingly. Because moksha as escape is the body's craving, not the soul's aim -- the Atma comes back so the universe can experience itself to the nth degree. Monroe needed 280 pages to land the same recognition. Your voice memo needed one take.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:96"
+]
+},
+{
+"s": "Your own seed, confirmed later.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:49"
+]
+},
+{
+"s": "Your own seeds on why we return.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:379"
+]
+},
+{
+"s": "Your voice",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:312"
+]
+},
+{
+"s": "Your work feels individually authored -- one person's effort, one person's stakes, one person's account.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointContent.swift:335"
+]
+},
+{
+"s": "Zeroth \u00b7 the point",
+"sites": [
+"Bindu Feed/Bindu Feed/Rite/RiteContent.swift:65"
+]
+},
+{
+"s": "\u00b7 and \u2026 more",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:29"
+]
+},
+{
+"s": "\u00b7 THE LEARNING FIELD",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:152"
+]
+},
+{
+"s": "\u00b7draw",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/MirrorView.swift:209"
+]
+},
+{
+"s": "\u00b7signal",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SignalView.swift:238"
+]
+},
+{
+"s": "\u2026 -- met in the Rite",
+"sites": [
+"Bindu Feed/Bindu Feed/Store/FeedStore.swift:605"
+]
+},
+{
+"s": "\u2026 days ago",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:129"
+]
+},
+{
+"s": "\u2026 hands \u00b7 the dance is carrying you",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointReadings.swift:984"
+]
+},
+{
+"s": "\u2026 in the archive \u00b7 \u2026 in the record",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:628"
+]
+},
+{
+"s": "\u2026 spoke here.",
+"sites": [
+"Bindu Feed/Bindu Feed/Universe/UniWords.swift:49"
+]
+},
+{
+"s": "\u2026 visitors arrived that you did not choose.",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointJourney.swift:42"
+]
+},
+{
+"s": "\u2026 \u00b7 now",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:346"
+]
+},
+{
+"s": "\u2026 \u00b7 sealed \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:143"
+]
+},
+{
+"s": "\u2026 \u00b7 \u2026 of 7",
+"sites": [
+"Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:44"
+]
+},
+{
+"s": "\u2026 \u00b7 \u2026 of \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:635"
+]
+},
+{
+"s": "\u2039 ascend",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:315"
+]
+},
+{
+"s": "\u2039 leave",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/ApertureView.swift:184",
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:108",
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:63"
+]
+},
+{
+"s": "\u2039 the enclosure",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:43"
+]
+},
+{
+"s": "\u21a9 In reply to \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:295"
+]
+},
+{
+"s": "\u25bd DESCEND ONE LAYER DEEPER",
+"sites": [
+"Bindu Feed/Bindu Feed/Point/PointWorldView.swift:252"
+]
+},
+{
+"s": "\u25c9 and then you sealed yours \u00b7 \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:38"
+]
+},
+{
+"s": "\u25c9 you, now \u00b7 in reply to you, \u2026",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:383"
+]
+},
+{
+"s": "\u25c9 you, now \u00b7 today",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/ReturnView.swift:438"
+]
+},
+{
+"s": "\u27ff the Rite",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:99"
+]
+},
+{
+"s": "\u27ff walk the Instrument",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:81"
+]
+}
+]
