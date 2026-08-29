@@ -447,8 +447,16 @@ equal-loudness — is untouched. **Only the peak moved.**
 > **One correction to the ruling as issued.** It specified
 > `1 + (1 − cos 2πp)/2 · 0.24`. Taken literally that spans `[1.0, 1.24]` — unipolar, mean
 > 1.12 — so the bed would sit **12% louder overall**, a loudness change on top of the timing
-> change. The re-centred form above spans exactly `[0.88, 1.12]`, which is what *preserving
-> the 0.12 amplitude across the same range* asks for. Same intent, one term.
+> change, when the ruling was about timing alone. The re-centred form above spans exactly
+> `[0.88, 1.12]`, which is what *preserving the 0.12 amplitude across the same range* asks
+> for. Same intent, one term.
+>
+> **AND THE FRAMING THAT SETTLES THE §10 QUESTION: `1 − cos φ` IS `1 + sin(φ − π/2)`.** The
+> same sinusoid, a quarter turn over — same waveform, same ±12% depth, same range. Written
+> that way, the *do-not-unify* rule is obviously intact rather than arguably so: no curve was
+> replaced by another curve, and the audio did not borrow the visual's function. The visual
+> still travels a full 0 → 1 through a raised cosine and the audio still moves ±12% about
+> unity through a sine. **The only thing that changed is phase.**
 
 **Why it was a defect rather than a choice.** Three places asserted the two media breathe
 together and all three were true of the phase and false of the swell. No design settles it:
@@ -508,12 +516,22 @@ call sites' own constants (I 0.54/13 · III 0.56/12 · IV 0.14/11; the other fou
 call it). Five assertions, calibrated green-on-absent against two mutations: dropping the
 `min` ceiling reds two tests, making the gap unconditional reds two others.
 
-**NOT WIRED, and the reason is structural and already on the record.**
-`PointReadings.swift:61-66` states it: *"in the design the reading OVERLAYS the world and the
-world recedes under it; in the app `PointWorldView` shows the reading INSTEAD of the world, so
-there is nothing behind to dim."* **A stack that displaces a world it is not drawn over
-displaces nothing.** Wiring this is the same structural change as the register-0 recede and
-belongs with it, not ahead of it.
+**NOT WIRED — and the reason recorded here was WRONG.**
+
+> **CORRECTED 2026-08-29.** This row said the wiring was blocked on a structural change: that
+> `PointWorldView` shows the reading INSTEAD of the world, so a stack would displace nothing.
+> **That change had already landed at `0e37d39`.** `PointWorldView:135-152` draws the world
+> behind the reading inside a `ZStack` and multiplies it by `PointRecede.worldAlpha`, with the
+> seven coefficients live. The blocker was quoted from `PointReadings.swift:61-66`, a comment
+> that still read *"NOT YET IMPLEMENTED"* a stage after it was implemented — so **a stale
+> comment became the premise of a ledger row**, which is how a false blocker outlives the
+> thing it describes. The comment is corrected in place.
+>
+> **The register-0 recede row is therefore already closed**, and `stackFrom` is not blocked by
+> it. What genuinely remains for `stackFrom` is its own view work: the reading is a
+> `ScrollView { VStack }` (`PointReadings.swift:328`, `:435`) and the design's stack is
+> bottom-anchored against `floorY()`, which needs each section's measured height — a
+> preference-key pass, not a structural one.
 
 **Filed as `mechanism present · wiring open`, never as absent**, on the F1 `renderAnswers`
 precedent — so a future session finds settled arithmetic instead of inventing it in the middle

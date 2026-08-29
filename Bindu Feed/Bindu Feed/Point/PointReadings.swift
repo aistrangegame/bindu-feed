@@ -58,12 +58,18 @@ import Combine
 // LOOMS where everything else recedes"* (`world-five.js:198-200`). It is not part of the
 // recede; it is its inverse, and it belongs with the guard-pane build.
 //
-// NOT YET IMPLEMENTED, and it is structural rather than a constant. In the design the
-// reading OVERLAYS the world and the world recedes under it; in the app `PointWorldView`
-// shows the reading INSTEAD of the world, so there is nothing behind to dim. Wiring the
-// recede means drawing the world behind the reading and feeding `revealed` back into its
-// alpha — which is also what would stop a world's own chrome reading through, the thing
-// the world-V walk turned up.
+// IMPLEMENTED at `0e37d39`. `PointWorldView:135-152` draws the world BEHIND the reading and
+// multiplies it by `PointRecede.worldAlpha(dimension:revealed:open:)`, so the seven
+// coefficients are live and `revealed` feeds them.
+//
+// **THIS PARAGRAPH READ `NOT YET IMPLEMENTED` FOR A WHOLE STAGE AFTER IT WAS.** It described
+// the app as showing the reading INSTEAD of the world, which was true when it was written and
+// false once the mutually-exclusive `if / else if` became a `ZStack`. Nothing failed: prose
+// is not checked, and the paragraph even carried the correct *reason* the recede mattered,
+// which made it read as current. It then propagated — `Coverage/10-OWED.md` §10 filed
+// `stackFrom` as blocked on a structural change that had already landed, citing these lines.
+// **A stale comment does not merely mislead a reader; it becomes the premise of the next
+// decision.** Fourth instance in this build of documentation outliving the code it describes.
 
 /// WHO IS HOLDING THE GESTURE. `The Instrument v3.html:5876` guards the rope with
 /// `if(!turnEl…('on') && !ropeEl…('on'))` — the rope is reachable from anywhere, and declines
@@ -102,6 +108,30 @@ enum PressClaim {
 /// the ground is the thing he is using.
 ///
 /// A single shared term would have taken those two backwards, which is why one was refused.
+/// WORLD V's TURN GATE — `world-five.js:91,145-154`.
+///
+/// Extracted so it can be asserted: the gesture itself lives in a `DragGesture` inside a
+/// view, and a mechanism sealed there is one no test can reach. `AxisPassage`'s pattern.
+enum MirrorTurn {
+    /// `var GATES=[0,Math.PI,Math.PI*2,Math.PI*3]` — the first give is free, then a
+    /// half-turn of ACCUMULATED rotation each.
+    static let gates = [0.0, Double.pi, Double.pi * 2, Double.pi * 3]
+
+    /// `k=(dx/(rim*0.75))*Math.PI` — a drag of `rim*0.75` is half a turn.
+    static func radians(dx: Double, rim: Double) -> Double {
+        (dx / (rim * 0.75)) * Double.pi
+    }
+
+    /// `if(this.turned<GATES[this.given])return null;` — may a section be given yet?
+    ///
+    /// **The argument is ACCUMULATED turn, not net displacement**, which is the whole of the
+    /// correction: `turned += |k|` counts the work the hand did, so turning the glass out and
+    /// back earns its section where a net-translation test earns nothing.
+    static func gives(turned: Double, given: Int) -> Bool {
+        given < 4 && turned >= gates[given]
+    }
+}
+
 enum PointRecede {
     /// index 1…7
     static let k: [Double] = [0, 0.62, 0.54, 0.50, 0.46, 0.46, 0.44, 0.44]
@@ -852,6 +882,10 @@ private struct ReadTurning: View {
     let hue: Color
     let onClose: () -> Void
     @State private var turn: Double = 0          // half-turns taken
+    /// `WorldMirror.turned` — `world-five.js:97,149`: *"absolute turn since he took hold."*
+    /// Accumulated across the WHOLE hold, reset only on letting go.
+    @State private var turned: Double = 0
+    @State private var lastDX: Double = 0
     @State private var settling = false
     @State private var bk: Double = 0            // this reading's own read of the shared clock
     @State private var withdrawing = false
@@ -943,9 +977,39 @@ private struct ReadTurning: View {
             }
         }
         .contentShape(Rectangle())
+        // THE GIVE IS GATED ON ACCUMULATED TURN, NOT ON WHERE THE DRAG ENDED.
+        //
+        // `world-five.js:145-154`:
+        //
+        //     spin(dx,rim){ var k=(dx/(rim*0.75))*Math.PI*…; this.ga[grp]+=k;
+        //                   this.turned+=Math.abs(k); }
+        //     turn(dt){ if(this.turned<GATES[this.given])return null; this.given++; … }
+        //     var GATES=[0,Math.PI,Math.PI*2,Math.PI*3];
+        //
+        // This read `abs(v.translation.width) > 40` in `onEnded` — the drag's NET
+        // displacement — and gave one section per drag. Two things were wrong with that and
+        // both are the same fault as world III's `partedOnce`, found by the same sweep:
+        //
+        //   · Turning the pane out and back gives a net translation near zero, so a hand
+        //     that turned the glass a full revolution was handed nothing. `turned` accumulates
+        //     `|k|`, so it counts the WORK done, not where the hand finished.
+        //   · The design gives as many sections as the accumulated turn passes gates within
+        //     ONE hold — the first free, then a half-turn each. The app made four sections
+        //     cost four separate drags.
+        //
+        // **World V's sentence is that carrying a face through edge-on is a real act of the
+        // hand** (`:143-144`). A net-displacement test measures where the hand stopped; the
+        // design measures how far the glass was turned. Same outcome for a single clean
+        // swipe, and nothing alike for the gesture the world is actually about.
         .gesture(DragGesture(minimumDistance: 4)
-            .onEnded { v in
-                guard !s.done, abs(v.translation.width) > 40 else { return }
+            .onChanged { v in
+                guard !s.done else { return }
+                let dx = Double(v.translation.width)
+                let rim = 160.0                       // the pane's own half-width on this surface
+                let k = MirrorTurn.radians(dx: dx - lastDX, rim: rim)
+                lastDX = dx
+                turned += abs(k)
+                guard MirrorTurn.gives(turned: turned, given: s.revealed) else { return }
                 withAnimation(.easeInOut(duration: 0.9)) { turn += 0.5 }
                 settling = true
                 s.give()
@@ -955,7 +1019,10 @@ private struct ReadTurning: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     withAnimation(.easeOut(duration: 1.1)) { settling = false }
                 }
-            })
+            }
+            // `:111` — `release(){ … this.turned=0; }`. Letting go forgets the turn, so a
+            // reading is earned inside one hold rather than accumulated across the session.
+            .onEnded { _ in lastDX = 0; turned = 0 })
     }
 }
 

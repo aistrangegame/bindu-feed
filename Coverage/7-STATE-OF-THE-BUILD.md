@@ -128,7 +128,13 @@ Everything else can be closed before he opens the app.
 ## 6 · The method that must not lapse again
 
 1. **Every piece of work references an audit ID or a mechanism name.** The reason 235 findings went untracked is that work was described in its own words instead of against a list.
-2. ~~**Five checkers**~~ **FOUR checkers, all run before any "done":** `check_authored` · `check_rendered` · `check_citations` · `check_audit_ids`, plus the unit suite.
+2. ~~**Five checkers**~~ ~~**FOUR checkers**~~ **FIVE checkers, all run before any "done":** `check_authored` · `check_rendered` · `check_citations` · `check_audit_ids` · `check_status`, plus the unit suite.
+   > **`check_status.py` added 2026-08-29**, and this time the count went UP for a real
+   > reason rather than down for a wrong one. It guards a claim nothing checked: a Swift
+   > comment asserting the app's OWN current state. `check_citations` covers quotations of
+   > the design; a comment saying *"not yet implemented"* is a claim about the code beside
+   > it, and the code moves while the prose sits still. It reached a decision before it was
+   > caught — see `CLAUDE.md` §10.
    > **CORRECTED 2026-08-29.** This line named five and two of them were not programs.
    > **`reconcile_audit.py` never existed** — no file, no git history for that path on any
    > branch. The **mechanism sweep** is `extract_mechanisms.py`, an EXTRACTOR: its output is

@@ -469,10 +469,26 @@ private struct WorldVeil: View {
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture().onChanged { v in
                     part = min(1, max(0, abs(v.translation.width) / (geo.size.width * 0.5)))
+                    // LATCHED DURING THE GESTURE, NOT AT ITS END. `world-three.js:102-104`
+                    // calls `handBack` the moment `open` reaches a gate — mid-drag — so a
+                    // zone is permanently thin from the instant it is passed. This was
+                    // `if part > 0.5 { partedOnce = true }` inside `onEnded`, reading the
+                    // FINAL value: part the veil past halfway, drift back, let go, and the
+                    // design says that zone stays thin forever while the app said nothing
+                    // had happened.
+                    //
+                    // `part` is `abs(v.translation.width)`-derived and therefore NOT
+                    // monotone — the hand goes out and comes back — which is what makes a
+                    // single end-of-gesture reading lossy. A threshold on a quantity that
+                    // can rise past and fall back has to be watched, not sampled.
+                    //
+                    // Semantically it is also the ninth shape: the veil's claim is *once
+                    // parted, never closes all the way again*, and the end-reading turned it
+                    // into *parted AND STILL PARTED when you let go*.
+                    if part > 0.5 { partedOnce = true }
                     closing.hold()                       // a veil being held is not closing
                 }.onEnded { _ in
                     let held = part > 0.02
-                    if part > 0.5 { partedOnce = true }
                     withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 }
                     closing.release(held: held)          // releasing nothing closes nothing
                 })

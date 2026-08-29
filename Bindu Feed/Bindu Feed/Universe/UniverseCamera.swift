@@ -31,7 +31,11 @@ import QuartzCore
 // (nx=(wx+490)/980, ny=(wy+1030)/1930), so the draw path is fed unchanged.
 @MainActor
 final class UniverseCamera: ObservableObject {
-    // THE WORLD'S TURN — `uni-deep.js:250-303`, and it was never built.
+    // STATUS(2026-08-29): THE WORLD'S TURN — `uni-deep.js:250-303`. **BUILT.**
+    // `UniverseView:703` carries it — three faces at TAU/3. This line read "and it was
+    // never built" after it had been, while the view's own comment said "never built until
+    // now": two comments in one build disagreeing about the same mechanism, and the stale
+    // one sitting on the file a reader opens first.
     //
     // `The Instrument v3.html:5906-5926` gives the law: the vertical always walks the axis,
     // and the horizontal is the register's own gesture — `else if(|Z+2|<0.75) turnV += dx*0.0016`.

@@ -51,12 +51,26 @@ import Foundation
         #expect(fired.isEmpty, "a slip-through struck \(fired)")
     }
 
-    @Test("a gate cannot be skipped by a long frame")
+    @Test("a long frame fires every gate it passed over")
     func aSlowFrameStillFiresBothGates() {
-        // The gates are tested against an INTERVAL, not against `t >= g` at one instant. On a
-        // dropped frame — 0.5 of a passage in one step — an instant test fires only the gate
-        // it happens to land past, and the other is silently lost. That is the shape of bug
-        // that appears once on a loaded device and never in a test.
+        // CORRECTED. This was written claiming that testing `t >= g` at one instant loses a
+        // gate on a dropped frame, and that the interval form fixes it. **That was false**,
+        // and it was asserted in a commit message before it was checked.
+        //
+        // `!hit[i] && t >= g` is a "currently PAST" test, not a "crossed this frame" test.
+        // With the latch and a monotone `t`, a gate passed during a skipped interval still
+        // satisfies `t >= g` on the next frame: it fires late, but it fires. Simulated over
+        // 60fps, one 0→0.9 frame, a half-then-end pair, and a single frame straight to 1,
+        // the two forms are identical in every case.
+        //
+        // So `gatesCrossing(from:to:)` is not a bug fix. What it is worth keeping for: it
+        // makes the swift exclusion a property of the FUNCTION rather than of the call site,
+        // and it states the interval it covers instead of relying on a caller's latch. The
+        // claim it does NOT make is that it rescues a dropped frame.
+        //
+        // The shape that genuinely loses an event is different, and is swept for separately:
+        // a threshold on a NON-MONOTONE quantity, where the value can rise past and fall
+        // back between two samples. See §10.
         let jumped = AxisPassage.gatesCrossing(from: 0.0, to: 0.9, swift: false)
         #expect(jumped.sorted() == [0, 1], "a long frame lost a gate: \(jumped)")
     }
