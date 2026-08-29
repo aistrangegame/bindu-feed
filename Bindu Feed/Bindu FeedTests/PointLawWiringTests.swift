@@ -10,18 +10,16 @@ import Testing
 // view files with no engine in scope. Each world hands up the one quantity it is about
 // (`PointLawSignal`) and `PointWorldView`, which owns the engine, applies the law.
 //
-// **WHERE THE LINE IS.** Three different kinds of claim live in this pass and they are not
-// equally settled:
+// **WHERE THE LINE IS** — see `VerificationBoundary.swift`, which is the standing form of
+// this and governs every sound claim in the target, not only this pass.
 //
-//   1 · THE LAWS — measured. `RegisterLawTests` renders each against a real graph.
-//   2 · THE SIGNALS' ARITHMETIC — measured, here. Each quantity's mapping from the world's
-//       own state to the law's input is a pure function and is asserted below.
-//   3 · THE GESTURES — **OWED, and no offline render can pay it.** That `part` actually
-//       reaches 1 under a real drag, that `panX` spans its spread, that `settle` bottoms out
-//       — those are walks. This suite deliberately does NOT claim them.
-//
-// That boundary is where a "verified" claim would go soft, so it is written down rather
-// than left to be inferred from what happens to be asserted.
+//   THE LAWS          MEASURED   · `RegisterLawTests` renders each against a real graph
+//   THE SIGNALS       ARITHMETIC · each mapping is a pure function, asserted below
+//   THE GESTURES      OWED       · that `part` reaches 1 under a real drag, that `panX`
+//                                  spans its spread, that `settle` bottoms out. Walks.
+//                                  This suite deliberately does NOT claim them.
+//   V's inverted tone E-BLOCKED  · built and measured; the world cannot ask for it
+//   VII's chain       E-BLOCKED  · built and measured; the world has no bodies
 @Suite("C1 · the wiring · world → law")
 struct PointLawWiringTests {
 
@@ -152,7 +150,9 @@ struct PointLawWiringTests {
     /// `join`/`ensemble`/`leaveAll` and `DancerVoice` are built and measured. `WorldDance`
     /// has `offeredOnce` and nothing else — no chain, no lock, no bodies — so there is no
     /// signal for VII in `PointLawSignal` at all. That is `8-ACTION-PLAN.md` **E1**
-    /// (`AUDIT D5.8`, BLOCKER), not C1, and it is asserted here so the absence is a recorded
+    /// (`AUDIT D5.8`, BLOCKER). **E-BLOCKED, not C-open**: the sound is finished and the
+    /// WORLD is what is missing, so carrying it as C1 residue would name the wrong stage and
+    /// send the next session to the wrong file. Asserted here so the absence is a recorded
     /// state rather than an oversight someone later reads as done.
     @Test("VII · the dance has a voice and nothing to give it")
     func seventhIsBlockedOnE1() {

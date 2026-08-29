@@ -97,9 +97,11 @@ private struct StarMark: View {
 /// | V   | the pane angle | `WorldMirrors` — `rotation3DEffect` 42° edge-ward → 0° face on |
 /// | VI  | `settle`       | `WorldReturn.settle` — how far down through the strata he is |
 ///
-/// **VII IS NOT HERE.** `WorldDance` has `offeredOnce` and nothing else: no chain, no lock,
-/// no bodies. `join`/`ensemble`/`leaveAll` and `DancerVoice` are built and measured and have
-/// nothing to drive them. That is `8-ACTION-PLAN.md` **E1**, not C1.
+/// **VII IS NOT HERE, AND THAT IS AN E-BLOCK, NOT A C-GAP.** `WorldDance` has `offeredOnce`
+/// and nothing else: no chain, no lock, no bodies. `join`/`ensemble`/`leaveAll` and
+/// `DancerVoice` are built and measured; the WORLD is what is missing. Carrying it as C1
+/// residue would name the wrong stage and send the next session to the wrong file.
+/// `8-ACTION-PLAN.md` **E1** · `AUDIT D5.8`, BLOCKER.
 enum PointLawSignal: Equatable {
     /// I · `narrow(f)` — how much of the reading has been given.
     case admitted(Double)
@@ -264,6 +266,9 @@ private struct WorldPoint: View {
     @EnvironmentObject private var breath: Breath
     @State private var dwell: String? = nil
     @State private var lastStir: Date = Date()      // the points approach only when the hand is still
+    /// D · `world-one.js:66,85` — *"the soft close when he moves."* `leaving = 1` the moment
+    /// `near` is lost, and the world says one thing while it goes.
+    @State private var leaving = PointLeaving.decay(dimension: 1)!
     var body: some View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
@@ -288,15 +293,24 @@ private struct WorldPoint: View {
                             // 0.9s long-press, which is the opposite gesture: acting is what
                             // this world suspends.
                             .gesture(DragGesture(minimumDistance: 0)
-                                .onChanged { _ in dwell = p.id; lastStir = Date() }
+                                .onChanged { _ in dwell = p.id; lastStir = Date(); leaving.hold() }
                                 .onEnded { _ in
                                     if dwell == p.id { onOpen(p.star) }
                                     dwell = nil
+                                    leaving.release()
                                 })
                     }
                     // The prompt is canon and can ship now that the gesture under it is the
                     // design's. `world-one.js:183`.
-                    if dwell == nil { WorldCue(text: "TOUCH ONE · THEN LET GO AND STAY") }
+                    // D · the close, and the world's one word while it closes. `t` is the
+                    // TimelineView's own clock, so this repaints as the scalar falls.
+                    if dwell == nil {
+                        if leaving.isClosing(at: tl.date), let line = PointLeaving.line(dimension: 1) {
+                            WorldCue(text: line).opacity(leaving.value(at: tl.date))
+                        } else {
+                            WorldCue(text: "TOUCH ONE · THEN LET GO AND STAY")
+                        }
+                    }
                 }
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in lastStir = Date() })
@@ -321,6 +335,12 @@ private struct WorldTurn: View {
     /// own 0.5s time constant is what carries it between, which is the design's idiom —
     /// `setTargetAtTime` is given an endpoint, never a curve.
     private func drawLaw(_ id: String?) { onLaw(.drawn(id == nil ? 0 : 1)) }
+
+    /// D · `world-two.js:116` — `release(){ if(this.following) this.reeling = 1; }`. II is
+    /// the one world that decays and says NOTHING: `:226-232` has no closing branch, and its
+    /// held words already end at *"far out, and still leaving"* — a world that never closes.
+    /// The scalar exists anyway, because `given` stays alive while it runs.
+    @State private var reeling = PointLeaving.decay(dimension: 2)!
 
     // precompute each star's ring + slot once (was a per-frame filter/firstIndex per star)
     private var placement: [String: (ring: Int, idx: Int, count: Int)] {
@@ -374,7 +394,10 @@ private struct WorldTurn: View {
                 }
             }
         }
-        .onChange(of: drawingId) { _, id in drawLaw(id) }
+        .onChange(of: drawingId) { _, id in
+            drawLaw(id)
+            if id == nil { reeling.release() } else { reeling.hold() }
+        }
         .onDisappear { onLaw(.drawn(0)) }
     }
 }
@@ -397,6 +420,10 @@ private struct WorldVeil: View {
     /// is the FACT of a parting, and the floor is the design's own base `0.06`. Nothing
     /// invented: a veil once parted never closes all the way again.
     private var veilFloor: Double { partedOnce ? 0.06 : 0 }
+
+    /// D · `world-three.js:121,130` — `closing = 1` the moment the hand comes off, decaying
+    /// at 0.8. *"IT CLOSED BEHIND YOU. IT ALWAYS DOES."*
+    @State private var closing = PointLeaving.decay(dimension: 3)!
 
     var body: some View {
         GeometryReader { geo in
@@ -428,7 +455,13 @@ private struct WorldVeil: View {
                     // `world-three.js:235` — TWO-STATE on `this.back.length`, the zones already
                     // parted: the world stops asking for the first parting once one has been
                     // made, and asks for another somewhere else. Replaced "part the veil ›".
-                    if part < 0.4 {
+                    // D · while it closes, the world says the one thing it has to say.
+                    // `world-three.js:242-244` puts this branch AFTER the held words and
+                    // BEFORE the asking, so a world that has just closed does not ask again
+                    // in the same breath.
+                    if closing.isClosing(at: tl.date), let line = PointLeaving.line(dimension: 3) {
+                        WorldCue(text: line).opacity(closing.value(at: tl.date))
+                    } else if part < 0.4 {
                         WorldCue(text: partedOnce ? "PART IT AGAIN, SOMEWHERE ELSE"
                                                   : "PART IT WITH YOUR HAND · AND HOLD IT OPEN")
                     }
@@ -436,9 +469,12 @@ private struct WorldVeil: View {
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture().onChanged { v in
                     part = min(1, max(0, abs(v.translation.width) / (geo.size.width * 0.5)))
+                    closing.hold()                       // a veil being held is not closing
                 }.onEnded { _ in
+                    let held = part > 0.02
                     if part > 0.5 { partedOnce = true }
                     withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 }
+                    closing.release(held: held)          // releasing nothing closes nothing
                 })
             }
         }
@@ -456,6 +492,9 @@ private struct WorldChamber: View {
     var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var panX: CGFloat = 0
     @State private var panBase: CGFloat = 0
+    /// D · `world-four.js:135` — `easing`, at 0.8. *"THE WALL EASED. WHAT WAS STRUCK STAYS
+    /// STRUCK."* The one closing line that says what the world KEEPS, not what it lets go.
+    @State private var easing = PointLeaving.decay(dimension: 4)!
     var body: some View {
         GeometryReader { geo in
             let W = geo.size.width, H = geo.size.height
@@ -508,11 +547,20 @@ private struct WorldChamber: View {
                 }
                 .allowsHitTesting(false)
                 // `world-four.js:269`. Replaced "move along the walls", invented.
-                WorldCue(text: "PRESS A WALL · AND BEAR IT")
+                // D · and `:275-277`, the wall easing after the hand comes off it.
+                if easing.isClosing(), let line = PointLeaving.line(dimension: 4) {
+                    WorldCue(text: line).opacity(easing.value())
+                } else {
+                    WorldCue(text: "PRESS A WALL · AND BEAR IT")
+                }
             }
             .contentShape(Rectangle())
-            .simultaneousGesture(DragGesture().onChanged { v in panX = max(-spread + W * 0.5, min(0, panBase + v.translation.width)) }
-                .onEnded { _ in panBase = panX })
+            .simultaneousGesture(DragGesture()
+                .onChanged { v in
+                    panX = max(-spread + W * 0.5, min(0, panBase + v.translation.width))
+                    easing.hold()
+                }
+                .onEnded { _ in panBase = panX; easing.release(held: abs(panX) > 1) })
         }
         // IV · `bear(f)`. The pan IS the load — `world-four.js` puts the pressure on the
         // wall he is leaning into, and `spread` is the chamber's own full travel, so the
@@ -536,6 +584,17 @@ private struct WorldMirrors: View {
     var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var turned: Set<String> = []
 
+    /// D · **V's LEAVING DECAY IS E-BLOCKED, for the same reason `reflect(−1)` is.**
+    /// `world-five.js:182` is `release(){ if(this.held) this.settling = 1; }` — the close
+    /// begins when a HELD pane is let go, and `settling` decays at 0.55 into
+    /// *"THE GLASS LET GO. WHAT FACED YOU, FACED YOU."* The app's panes are TAPPED, not
+    /// held: there is no `held`, so there is no release moment to raise the scalar from.
+    /// `PointLeaving` carries V's rate and line and nothing here can call them.
+    ///
+    /// One missing piece, two consequences — the same `held` state that would let a pane turn
+    /// past 90° is the one that would let it be let go. Both are Stage E on world V, not
+    /// Stage D or C residue.
+    ///
     /// V · `reflect(c)` — `world-five.js:124`, `facing(){return this.held?Math.cos(this.angleOf(this.held)):1;}`.
     /// **`facing()` IS `c`**, and the app has the angle: `mirrorStar` draws a pane at
     /// `rotation3DEffect(.degrees(turned ? 0 : ±42))`, so `cos(42°) = 0.743` edge-ward and
@@ -545,7 +604,7 @@ private struct WorldMirrors: View {
     /// `reflect(−1)` is *"the same note at the same pitch, arriving inverted… it goes
     /// HOLLOW"* — and it needs a pane past 90°. These turn 42° → 0° and never further, so
     /// world V as built can only ever ask for `c ∈ [0.743, 1]`. The sound is complete; the
-    /// world cannot yet reach the half that matters. An E-stage item, recorded here.
+    /// world cannot yet reach the half that matters. **E-BLOCKED, not C-open.**
     private static let paneEdgeDegrees = 42.0
     private func facing() -> Double {
         turned.isEmpty ? cos(Self.paneEdgeDegrees * .pi / 180) : 1
