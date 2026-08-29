@@ -36,6 +36,20 @@ struct ReturnStrata: View {
         .allowsHitTesting(false)
     }
 
+    /// E3.1 · WHICH RINGS GET DRAWN, and in what order.
+    ///
+    /// Lifted out of `draw` so the off-by-one is checkable without a canvas. Index 0 is the
+    /// seed (`The Return v2.html:1268`), drawn separately, so a story with `k` returns
+    /// walks `k … 1` — outermost and newest first, so the old sit on top of the new
+    /// (`return-strata.js:97`).
+    ///
+    /// Before this, `draw` walked `stride(from: rings - 1, through: 1, by: -1)`, which is
+    /// EMPTY at `rings == 1`: the very first return anyone sealed drew nothing at all, and
+    /// every count after that drew one ring too few.
+    static func ringIndices(returns: Int) -> StrideThrough<Int> {
+        stride(from: max(0, returns), through: 1, by: -1)
+    }
+
     // ── ported helpers ──
     private func nz(_ x: Double) -> Double { sin(x * 1.7) * 0.5 + sin(x * 3.9 + 1.3) * 0.31 + sin(x * 7.3 + 2.7) * 0.19 }
     private func rnd(_ i: Double) -> Double { let x = sin(i * 127.1 + 31.4) * 43758.5453; return x - x.rounded(.down) }
@@ -60,9 +74,19 @@ struct ReturnStrata: View {
         let W = size.width, H = size.height
         let a = max(0, min(1, age))
         let warm = 0.30 + 0.70 * a, breathMul = 1 + 0.45 * a
-        // Zero rings is a real state — the seed with nothing around it yet. The loop below
-        // already draws nothing for n < 2, so this only needs to stop clamping upward.
-        let n = max(0, rings)
+        // E3.1 · THE FIRST RETURN ANYONE SEALS DREW NOTHING.
+        //
+        // `return-strata.js:65,97` — `n = S.rings.length` over `S.rings =
+        // [{when:'the seed'}, ...age.returns]` (`The Return v2.html:1268`). Index 0 IS the
+        // seed, drawn separately below; the loop `for(i=n-1;i>=1;i--)` therefore draws one
+        // ring per RETURN. `n` is returns **+ 1**.
+        //
+        // This passed `rings: storyData.returnCount` straight in, so `n` was one short at
+        // every count: `stride(from: n-1, through: 1, by: -1)` is EMPTY at `n == 1`, and one
+        // return drew no ring at all. Two returns drew one. `ringAges` is already built as
+        // `[0] + ringDays` — seed-first, matching the design — and its last element was
+        // provably never read, which is the same off-by-one seen from the other side.
+        let n = max(0, rings) + 1
         let s = 1.0                               // arrived (z = 1)
         let cx = W / 2, cy = H * camY
         let bs = 9.0 * breathMul
@@ -78,7 +102,7 @@ struct ReturnStrata: View {
 
         // the strata — newest (outermost) drawn first, so the old sit on top of the new
         let gap = min(W, H) * 0.088
-        for i in stride(from: n - 1, through: 1, by: -1) {
+        for i in Self.ringIndices(returns: rings) {
             let R = (8 + Double(i) * gap) * s
             if R < 0.6 { continue }
             // ORDER — where this ring sits in the strata. Never its age.
