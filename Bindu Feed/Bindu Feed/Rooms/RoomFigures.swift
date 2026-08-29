@@ -51,6 +51,116 @@ enum RoomFigures {
         }
     }
 
+    // MARK: - B5 · how far up the screen each figure actually reaches
+    //
+    // THE BUG ASHREY REPORTED, AND WHY THE FIRST FIX COULD NOT HAVE CAUGHT IT.
+    //
+    // `RoomView`'s register-0 recede measured one thing (the Operating Principle's last
+    // line) against one constant (`cy = H*0.42`, 358 on a 393×852 screen) and called the
+    // result "how far the words run past the figure's centre". Both halves are wrong:
+    //
+    //   · the words are not just the principle. The disc, the name, the role and the stats
+    //     band sit above it, from y≈96 down, and were never measured at all.
+    //   · the figures are not all centred at 358. `karishma`'s spiral reaches y 162 and her
+    //     light source is off-screen at −85; `ash`'s day-rules start at −34; `sid`'s
+    //     construction circles do not begin until 359, BELOW the old centre.
+    //
+    // So the rule fired hardest for the voices whose figures sit lowest and barely at all
+    // for the ones that climb into the type. It was built and verified against Neev and
+    // Gaia — the only two voices whose shape it happens to fit.
+    //
+    // These are the topmost point of each figure's own drawn geometry, read off that
+    // figure's own constants — not measured off a screenshot and not invented. At the
+    // register-0 reference (W 393 · H 852 · S 0.62 · cy 358 · lat 0 · rev 0 · b 0.5) they
+    // come out as: ash −34 · ashrey 137 · sakshi 140 · karishma 162 · bindu 185 ·
+    // lalita 216 · gaia 220 · neev 221 · arch 249 · shweta 260 · sid 359.
+    // `RoomFigureExtentTests` pins every one of them.
+    //
+    // Full-screen atmosphere is excluded — bindu's dust spiral, shweta's expanding
+    // rounded-rects, the top gradients — because it is the room's air, not its body, and
+    // the type is meant to sit in front of it.
+    struct Extent { let top: Double; let bottom: Double }
+
+    static func extent(_ key: RoomKey, W: Double, H: Double, S: Double,
+                       cy: Double, b: Double) -> Extent {
+        // most figures are drawn about `cy`; the mirror is their lower edge.
+        func about(_ reach: Double) -> Extent { Extent(top: cy - reach, bottom: cy + reach) }
+
+        switch key {
+        case .ash:
+            // `:yy = o.cy + q * H * 0.46`, q spanning −1…1 — his axis is time, and it runs
+            // off both ends of the screen.
+            return about(H * 0.46)
+
+        case .ashrey:
+            // the nine threads leave at `ey = o.cy + (node.y − o.cy) * 1.9`, and node 0
+            // sits at `−π/2` — straight up. `R = 134 * S * 1.4`.
+            return about(134 * S * 1.4 * 1.9)
+
+        case .sakshi:
+            // the mandorla's upper circle: centre `o.cy − d`, radius `R`, `R = 200 * S`,
+            // `d = R * 0.76`.
+            return about(200 * S * 1.76)
+
+        case .karishma:
+            // the golden spiral, `r = u * 0.055 * PHI^(2θ/π)` with `u = W * 0.40 * S * 1.2`.
+            // Its highest point is the last turn where the y-component is most negative:
+            // `d/dθ [sin θ · e^{kθ}] = 0` at `tan θ = −1/k`, `k = 2·ln(PHI)/π`, whose last
+            // solution below `θ = 3.6π` is θ ≈ 11.292. THE RECTANGLES DO NOT REACH IT —
+            // they stop at `u/2` — which is why her figure climbs so much higher than the
+            // shape the eye reads as her figure.
+            let u = W * 0.40 * S * 1.2
+            let k = 2 * log(PHI) / Double.pi
+            let theta = atan(-1 / k) + 4 * Double.pi        // 11.292, the last such turn
+            return about(u * 0.055 * exp(k * theta) * abs(sin(theta)))
+
+        case .bindu:
+            // the containing ring, `R * 3` with `R = 62 * S * 1.5`. (The dust spiral runs
+            // to `max(W,H)*0.5` and is air, not body.)
+            return about(62 * S * 1.5 * 3)
+
+        case .lalita:
+            // the hypotrochoid `(Ro − ri)·sin θ − dd·sin(kθ)`, whose reach is
+            // `(Ro − ri) + dd`. `Ro = 152 * S * 1.3`, `ri ≈ 0.28·Ro`, `dd = 0.44·Ro`.
+            return about(152 * S * 1.3 * (0.72 + 0.44))
+
+        case .gaia:
+            // the phyllotaxis locus: `rad = SC * sqrt(i)` for `i < 340`, squashed `* 0.92`.
+            // `SC = 9.4 * S * 1.4`.
+            return about(9.4 * S * 1.4 * (339.0).squareRoot() * 0.92)
+
+        case .neev:
+            // the horizon. Everything he has — floor, monolith, light — begins at
+            // `surf = H * 0.26` and runs down to the bottom of the screen. He is the one
+            // figure that is not centred on `cy` at all.
+            return Extent(top: H * 0.26, bottom: H)
+
+        case .arch:
+            // the rose window's outer ring, `R = 176 * S * wide`, `wide = 1` at rest.
+            return about(176 * S)
+
+        case .shweta:
+            // the two vesica circles, `R = (150 + b * 14) * S`, centred on `cy`. (The seven
+            // expanding rounded-rects are the room's air.)
+            return about((150 + b * 14) * S)
+
+        case .sid:
+            // the pointed arch is the one figure that hangs BELOW the centre: its
+            // construction circles are `ring(L, y0, 2w)`, so the topmost point is
+            // `min over k of (y0 − 2w)` — around 359 at the reference, a pixel below the
+            // old constant, which is why the old rule never moved him at all.
+            let base = H * 0.80, vpY = H * 0.24
+            var top = Double.greatestFiniteMagnitude
+            for k in 1...5 {
+                let f = Double(k) / 5.0
+                let w = W * (0.10 + 0.30 * f) * S * 1.1
+                let y0 = base - (base - vpY) * (1 - f) * 0.62
+                top = min(top, y0 - 2 * w)
+            }
+            return Extent(top: top, bottom: H)
+        }
+    }
+
     // MARK: helpers
 
     private static func rg(_ ctx: GraphicsContext, _ cx: Double, _ cy: Double,

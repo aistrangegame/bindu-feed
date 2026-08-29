@@ -27,6 +27,9 @@ struct RoomView: View {
     @State private var sub = 0
     /// Where the Operating Principle actually ends, in the room's frame.
     @State private var saysBottom: Double = 0
+    /// B5 · the TOP of the register-0 stack — the disc, not the principle. The recede
+    /// rule needs the whole block of type, and this half was never measured.
+    @State private var saysTop: Double = .greatestFiniteMagnitude
     /// THE MARK UNDER THE HAND, named but not yet opened. `realIndex`.
     @State private var armed: Int?
     @State private var story = 0
@@ -115,6 +118,7 @@ struct RoomView: View {
             // which is exactly what a Return produces.
             .coordinateSpace(name: "room")
             .onPreferenceChange(RoomSaysBottom.self) { saysBottom = $0 }
+            .onPreferenceChange(RoomSaysTop.self) { saysTop = $0 }
         }
         .ignoresSafeArea()
         .overlay(alignment: .topLeading) {
@@ -299,12 +303,35 @@ struct RoomView: View {
         // barely cross it, Neev's six lines bury it. So the figure recedes in proportion,
         // which is the design's idiom everywhere else — a continuous function of a continuous
         // quantity, not a switch.
-        let over = saysBottom > 0 ? RoomGeo.sm(cyFor(d), cyFor(d) + 90, saysBottom) : 0
+        //
+        // B5 · AND IT WAS STILL WRONG, which is the bug Ashrey reported. The rule above has
+        // one input where it needs two, and both of the ones it had were the wrong shape:
+        //
+        //   · `saysBottom` alone is not the words. The disc, the name, the role and the
+        //     stats band run from y≈96 down to the principle's first line and were never
+        //     measured — so a voice with a SHORT principle read as barely overlapping even
+        //     when its stack buried the figure. Karishma has the joint-shortest principle of
+        //     the eleven, so the old rule gave her the WEAKEST recede of all of them.
+        //   · `cyFor(d)` is not the figure. It is one constant, 358, for eleven figures that
+        //     start anywhere from −34 (ash) to 359 (sid) — see `RoomFigures.extent`.
+        //
+        // So: two real boxes, and the fraction of the TYPE that is standing on the figure.
+        // Neev and Gaia are the regression check — they are the two the old rule fit, and
+        // they must not move much.
+        let S = (0.62 + RoomGeo.sm(0, 1, d) * 0.52) * min(1, W / 393)
+        let cy = cyFor(d, H)
+        let over: Double = {
+            guard let key,
+                  saysBottom > 0,
+                  saysTop < saysBottom                      // measured, and the right way up
+            else { return 0 }
+            let fig = RoomFigures.extent(key, W: W, H: H, S: S, cy: cy, b: b)
+            let lo = max(saysTop, fig.top), hi = min(saysBottom, fig.bottom)
+            return max(0, min(1, (hi - lo) / (saysBottom - saysTop)))
+        }()
         let pres = (0.34 + RoomGeo.sm(0, 1, d) * 0.66 - RoomGeo.sm(1.4, 2.2, d) * 0.42)
                  * (sub > 0 ? 0.42 : 1)
                  * (1 - over * 0.58 * (1 - RoomGeo.sm(0, 1, d)))
-        let S = (0.62 + RoomGeo.sm(0, 1, d) * 0.52) * min(1, W / 393)
-        let cy = cyFor(d, H)
 
         if let key {
             RoomFigures.draw(key, ctx, size, t, RoomFigureParams(
@@ -416,6 +443,13 @@ struct RoomView: View {
                     .font(.system(size: 42))
                     .foregroundStyle(Color.white.opacity(0.94))
             }
+            // B5 · the top of the stack. `.padding(.top, 96)` below puts the disc at
+            // y ≈ 96, and everything the greeting says hangs from here — so this is where
+            // the words begin, and the recede rule needs it as much as it needs the end.
+            .background(GeometryReader { g in
+                Color.clear.preference(key: RoomSaysTop.self,
+                                       value: g.frame(in: .named("room")).minY)
+            })
             .padding(.bottom, 16)
             Text(archetype.name)
                 .font(.lora(25, weight: .medium)).tracking(-0.012 * 25)
@@ -708,5 +742,18 @@ struct RoomSaysBottom: PreferenceKey {
     static var defaultValue: Double = 0
     static func reduce(value: inout Double, nextValue: () -> Double) {
         value = max(value, nextValue())
+    }
+}
+
+/// Where the register-0 stack BEGINS — the disc's top edge, same space. B5.
+///
+/// The default is deliberately `+∞` rather than 0 so that "never measured" and "measured
+/// at the very top of the screen" are different states: a 0 default with a `min` reduce
+/// would silently report a stack starting at the status bar on the first frame, and the
+/// overlap would read as total for every voice.
+struct RoomSaysTop: PreferenceKey {
+    static var defaultValue: Double = .greatestFiniteMagnitude
+    static func reduce(value: inout Double, nextValue: () -> Double) {
+        value = min(value, nextValue())
     }
 }
