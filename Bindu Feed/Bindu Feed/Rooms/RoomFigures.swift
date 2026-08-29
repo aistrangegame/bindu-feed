@@ -345,6 +345,38 @@ enum RoomFigures {
             ctx.draw(Text(deg).font(.spaceMono(9)).foregroundStyle(col([200, 255, 190], off * 0.6)),
                      at: CGPoint(x: o.cx, y: o.cy + SC * sqrt(Double(N)) * 1.06))
         }
+
+        // WHAT IT GROWS OUT OF — `The Rooms v4.html:306-312`, whose comment is those five
+        // words. Four trees rise from the floor at `W*(i+0.5)/4`, five levels deep, each
+        // limb `len*0.74` of its parent and splitting in two.
+        //
+        // This was ABSENT for the whole build and no checker could have found it. It has no
+        // string, no symbol the app was missing, and no visible hole — the phyllotaxis above
+        // is complete and reads as the finished figure, so its absence looked like the
+        // design. It is the reason a mechanism sweep keyed on DECLARATIONS exists.
+        //
+        // Why it belongs to Gaia and not to decoration: the spiral above is the LAW — 137.507°,
+        // the angle the hand pulls off true. The trees are that law having actually grown
+        // something. Without them her room states a principle; with them it stands on what
+        // the principle produced.
+        func branch(_ px: Double, _ py: Double, _ a: Double,
+                    _ len: Double, _ d: Int, _ seed: Double) {
+            if d <= 0 || len < 4 { return }
+            let sway = sin(t * 0.3 + seed) * 0.06
+            let ex = px + cos(a + sway) * len, ey = py + sin(a + sway) * len
+            var limb = Path()
+            limb.move(to: CGPoint(x: px, y: py)); limb.addLine(to: CGPoint(x: ex, y: ey))
+            ctx.stroke(limb, with: .color(col([120, 192, 132], 0.18 * o.p)),
+                       lineWidth: Double(d) * 0.45)
+            for k in 0..<2 {
+                branch(ex, ey, a - 0.5 + RoomGeo.rnd(seed * 3 + Double(k)) * 1.0,
+                       len * 0.74, d - 1, seed * 7 + Double(k) + 1)
+            }
+        }
+        for i in 0..<4 {
+            branch(W * (Double(i) + 0.5) / 4, H,
+                   -Double.pi / 2 + (RoomGeo.rnd(Double(i)) - 0.5) * 0.45, H * 0.14, 5, Double(i) + 1)
+        }
     }
 
     // MARK: - SID · the pointed arch, with its construction showing

@@ -378,3 +378,33 @@ would have been inventing the mechanic to fit the plan.
 The plan's ceiling fix was right and necessary. But `riteThreshold(hz:dur:)` carries the
 FIELD threshold's signature, and 10 of the 19 sites wanted three *different* voices at
 0.032, 0.06 and 0.07. See `Coverage/9-BOWL-CALL-SITE-MAP.md`, applied.
+
+---
+
+## 8 · A KNOWN FLAKE THAT IS NOT OURS, RECORDED SO IT IS NOT RE-DISCOVERED
+
+The three-consecutive-run bar was run on the full scheme 2026-08-29. **The unit suite was
+162 passed / 0 failed in all three runs.** Run 2 of 3 reported `** TEST FAILED **` on three
+UI tests:
+
+| test | run 2 | runs 1 & 3 |
+|---|---|---|
+| `Bindu_FeedUITests.testLaunchPerformance()` | failed at 693s — *"Received unexpected number of metrics: 0 in iteration with index 1"* | passed |
+| `Bindu_FeedUITestsLaunchTests.testLaunch()` | failed ×2 (Dark, Light) at 150s / 335s | passed |
+
+**These are the stock Xcode template tests**, untouched since `83c8b70` (Phase 7). They
+assert nothing about this app: one measures launch time with the boilerplate
+`measure(metrics: [XCTApplicationLaunchMetric()])`, the other takes launch screenshots. The
+failure is the metric harness getting zero samples on a machine running three back-to-back
+clean builds, not a property of the build.
+
+**Recorded rather than waved through, because the §10 rule is that a flake is not noise.**
+The distinction that makes this one safe to carry: the standing rule exists because a flaky
+test can be a real defect arriving at random, and the test that flakes must therefore be
+asked *what it pins.* These pin **wall-clock launch timing under load**, which is a property
+of the host and not of the code — so there is no latent defect they could be reporting.
+
+**What would change that ruling:** a failure that is not a timeout or a zero-sample metric —
+an actual assertion about app state — or the same flake appearing while the machine is idle.
+Neither has been seen. **They are excluded from the unit bar and must not be cited as
+evidence for or against any build claim in either direction.**

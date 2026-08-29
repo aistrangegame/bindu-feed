@@ -68,8 +68,9 @@ The true gap is between the two and cannot be closed by grep.
 > which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
 > · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
 >
-> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` · `ana` · `branch` (Gaia's
-> four recursive trees) · `doorField` · `stackFrom` · `renderRings`' body text · `swift`/`hit`.
+> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` · `ana` · `doorField` ·
+> `stackFrom` · `renderRings`' body text · `swift`/`hit`. **`branch` closed 2026-08-29**
+> (Gaia's four recursive trees), with `figFail` ported as its purpose rather than its form.
 > **This is the comp lane's real backlog** — the re-judged remainder of 31, not the 37 below.
 >
 > **The rule underneath: a verdict register decays the moment work starts, and nothing marks
