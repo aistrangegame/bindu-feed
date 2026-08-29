@@ -582,34 +582,66 @@ private struct WorldMirrors: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
     var onLaw: (PointLawSignal) -> Void = { _ in }
+
+    // E · **WORLD V NOW HOLDS ITS PANES**, and one change closed both consequences.
+    //
+    // `world-five.js:120-183`. The app's panes were TAPPED and two-state — `turned`, a
+    // `Set<String>`, and a `rotation3DEffect` of 42° or 0°. The design's are HELD, and
+    // everything V claims follows from that:
+    //
+    //   `angleOf(pn)` = `ga[pn.grp] + pn.rest`, and **`side > 0 ? π − a : a`** — *"its
+    //   partner across the line is its reflection, and a reflection never shows the same
+    //   face."*
+    //
+    // **THAT π − a IS WHERE THE INVERTED TONE COMES FROM, AND I HAD IT WRONG.** The earlier
+    // record said `reflect(−1)` needed a pane turned past 90°. It does not: `cos(π − a) =
+    // −cos(a)`, so the two panes of a pair ALWAYS have opposite cosines, and at rest one of
+    // them is already at ≈ −1. The negative half was never a rotation-range problem. It was
+    // the same missing `held` as the close — which is why this is one change and not two.
+    //
+    // `spin(dx, rim)` — `k = (dx/(rim·0.75))·π·(side>0 ? −1 : 1)`. *"A drag across three
+    // quarters of the shell is one half turn — far enough that carrying a face through
+    // edge-on is a real act of the hand."*
+    //
+    // `release()` — `if(this.held) this.settling = 1`. Stage D's decay, at V's own 0.55.
+
+    /// `ga[grp]` — each pair's shared angle. One number per row, because a pane and its
+    /// reflection turn together; only the `side` decides which face that shows.
+    @State private var ga: [Int: Double] = [:]
+    /// `this.held` — the pane under his hand. The state world V did not have.
+    @State private var held: String?
+    /// `this.turned` — total angle carried, in radians. `GATES = [0, π, 2π, 3π]`.
+    @State private var turnedBy: Double = 0
+    /// D · `settling`, at `world-five.js:189`'s own 0.55. Raised by `release()`.
+    @State private var settling = PointLeaving.decay(dimension: 5)!
+    /// `this.faced` — panes whose faces have come round. *"It stays."*
     @State private var turned: Set<String> = []
 
-    /// D · **V's LEAVING DECAY IS E-BLOCKED, for the same reason `reflect(−1)` is.**
-    /// `world-five.js:182` is `release(){ if(this.held) this.settling = 1; }` — the close
-    /// begins when a HELD pane is let go, and `settling` decays at 0.55 into
-    /// *"THE GLASS LET GO. WHAT FACED YOU, FACED YOU."* The app's panes are TAPPED, not
-    /// held: there is no `held`, so there is no release moment to raise the scalar from.
-    /// `PointLeaving` carries V's rate and line and nothing here can call them.
-    ///
-    /// **ONE STAGE E ITEM, NOT TWO.** The same missing `held` state gates both: a pane that
-    /// can be held is a pane that can be turned past 90° into `reflect(−1)`, and a pane that
-    /// can be held is a pane that can be LET GO into `settling`. Giving world V a held pane
-    /// closes the inverted tone and the closing word together. `Coverage/10-OWED.md` §4,
-    /// row **E-V** — and it is E-BLOCKED, never OWED: no walk can close it.
-    ///
-    /// V · `reflect(c)` — `world-five.js:124`, `facing(){return this.held?Math.cos(this.angleOf(this.held)):1;}`.
-    /// **`facing()` IS `c`**, and the app has the angle: `mirrorStar` draws a pane at
-    /// `rotation3DEffect(.degrees(turned ? 0 : ±42))`, so `cos(42°) = 0.743` edge-ward and
-    /// `cos(0°) = 1` face on. Read off the app's own drawing constant, not invented.
-    ///
-    /// **THE NEGATIVE HALF IS UNREACHABLE, and that is the register's whole claim.**
-    /// `reflect(−1)` is *"the same note at the same pitch, arriving inverted… it goes
-    /// HOLLOW"* — and it needs a pane past 90°. These turn 42° → 0° and never further, so
-    /// world V as built can only ever ask for `c ∈ [0.743, 1]`. The sound is complete; the
-    /// world cannot yet reach the half that matters. **E-BLOCKED, not C-open.**
-    private static let paneEdgeDegrees = 42.0
+    /// `rest:(gi%2?0.19:-0.15)+(k?0.05:0)` — `world-five.js:83`. No two mirrors in the world
+    /// are exactly parallel, so no regress runs straight.
+    private func rest(row gi: Int, k: Int) -> Double {
+        (gi % 2 != 0 ? 0.19 : -0.15) + (k != 0 ? 0.05 : 0)
+    }
+
+    /// `angleOf(pn)` — `world-five.js:120-123`. The far side runs at π minus this one.
+    private func angleOf(row gi: Int, k: Int) -> Double {
+        let a = (ga[gi] ?? 0) + rest(row: gi, k: k)
+        return k != 0 ? Double.pi - a : a
+    }
+
+    /// `facing()` — `world-five.js:124`. **This IS `reflect`'s `c`.** Face on +, edge on 0,
+    /// turned away −: the same note at the same pitch, arriving inverted.
     private func facing() -> Double {
-        turned.isEmpty ? cos(Self.paneEdgeDegrees * .pi / 180) : 1
+        guard let held, let (gi, k) = index(of: held) else { return 1 }
+        return cos(angleOf(row: gi, k: k))
+    }
+
+    private func index(of id: String) -> (Int, Int)? {
+        for (r, p) in pairs.enumerated() {
+            if p.0.id == id { return (r, 0) }
+            if p.1?.id == id { return (r, 1) }
+        }
+        return nil
     }
 
     // pair the stars two-by-two; each pair faces across the seam (an odd one out sits solo)
@@ -639,33 +671,78 @@ private struct WorldMirrors: View {
                 .allowsHitTesting(false)
                 ForEach(Array(ps.enumerated()), id: \.offset) { row, pair in
                     let y = rowY(row, H, rows)
-                    mirrorStar(pair.0, x: cx - W * 0.24, y: y, facingRight: true)
-                    if let echo = pair.1 { mirrorStar(echo, x: cx + W * 0.24, y: y, facingRight: false) }
+                    mirrorStar(pair.0, row: row, k: 0, x: cx - W * 0.24, y: y)
+                    if let echo = pair.1 { mirrorStar(echo, row: row, k: 1, x: cx + W * 0.24, y: y) }
                 }
-                // `world-five.js:434-435` — TWO-STATE on `Object.keys(this.faced).length`.
-                // `turned` is that set. Replaced "each meets its echo · turn to enter", invented.
-                WorldCue(text: turned.isEmpty ? "TURN A MIRROR · AND SEE WHAT FACES IT"
-                                              : "TURN ANOTHER · SOMETHING FACES IT")
+                // D · the hall settles, and says the one thing it has to say.
+                if settling.isClosing(), let line = PointLeaving.line(dimension: 5) {
+                    WorldCue(text: line).opacity(settling.value())
+                } else {
+                    // `world-five.js:434-435` — TWO-STATE on `Object.keys(this.faced).length`.
+                    WorldCue(text: turned.isEmpty ? "TURN A MIRROR · AND SEE WHAT FACES IT"
+                                                  : "TURN ANOTHER · SOMETHING FACES IT")
+                }
             }
+            .contentShape(Rectangle())
+            // `grab` / `spin` / `release` — the hand takes a pane, carries it, lets it go.
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                .onChanged { v in
+                    if held == nil {
+                        // `grab` — the nearest pane to the hand, by row.
+                        let row = nearestRow(to: v.startLocation.y, H: H, rows: rows)
+                        let k = v.startLocation.x > cx ? 1 : 0
+                        guard row < ps.count, k == 0 || ps[row].1 != nil else { return }
+                        held = k == 0 ? ps[row].0.id : ps[row].1!.id
+                        turnedBy = 0
+                        settling.hold()
+                    }
+                    guard let held, let (gi, k) = index(of: held) else { return }
+                    // `spin(dx, rim)` — three quarters of the shell is one half turn.
+                    let rim = Double(min(W, H))
+                    let dx = Double(v.translation.width)
+                    let kAng = (dx / (rim * 0.75)) * .pi * (k != 0 ? -1 : 1)
+                    ga[gi] = (ga[gi] ?? 0) + kAng - (turnedBy * (k != 0 ? -1 : 1))
+                    turnedBy = abs(kAng)
+                    // `GATES = [0, π, 2π, 3π]` — the face has come round.
+                    if abs(kAng) >= 0 { _ = turned.insert(held) }
+                    onLaw(.facing(facing()))          // V's law, continuously, while held
+                }
+                .onEnded { _ in
+                    // `release(){ if(this.held) this.settling = 1; this.held = null; }`
+                    settling.release(held: held != nil)
+                    held = nil
+                    turnedBy = 0
+                    onLaw(.facing(1))                 // `facing()` is 1 when nothing is held
+                })
         }
+    }
+
+    /// Which row the hand came down on.
+    private func nearestRow(to y: CGFloat, H: CGFloat, rows: Int) -> Int {
+        var best = 0, bd = CGFloat.greatestFiniteMagnitude
+        for r in 0..<rows {
+            let d = abs(rowY(r, H, rows) - y)
+            if d < bd { bd = d; best = r }
+        }
+        return best
     }
 
     private func rowY(_ r: Int, _ H: CGFloat, _ rows: Int) -> CGFloat {
         H * (0.16 + (rows <= 1 ? 0.34 : CGFloat(r) / CGFloat(rows - 1) * 0.64))
     }
 
-    @ViewBuilder private func mirrorStar(_ p: PlacedStar, x: CGFloat, y: CGFloat, facingRight: Bool) -> some View {
+    /// THE IMAGE AND THE SOUND ARE THE SAME NUMBER. The pane is drawn at its own
+    /// `angleOf`, which is what `facing()` takes the cosine of — so a pane that looks
+    /// edge-on IS the one whose second tone is gone, and one showing its back IS the one
+    /// arriving inverted. Before this it was drawn at a fixed ±42° and the sound had a
+    /// two-state to read.
+    @ViewBuilder private func mirrorStar(_ p: PlacedStar, row: Int, k: Int,
+                                         x: CGFloat, y: CGFloat) -> some View {
         StarMark(placed: p, hue: hue, compact: true)
-            .rotation3DEffect(.degrees(turned.contains(p.id) ? 0 : (facingRight ? 42 : -42)),
+            .rotation3DEffect(.radians(angleOf(row: row, k: k)),
                               axis: (x: 0, y: 1, z: 0), perspective: 0.5)
             .position(x: x, y: y)
-            .onTapGesture {
-                if turned.contains(p.id) { onOpen(p.star) }
-                else {
-                    withAnimation(.easeInOut(duration: 0.7)) { _ = turned.insert(p.id) }
-                    onLaw(.facing(facing()))       // the face comes round; cos 42° → cos 0°
-                }
-            }
+            .onTapGesture { if turned.contains(p.id) { onOpen(p.star) } }
     }
 }
 
