@@ -219,10 +219,17 @@ for incompleteness **twice** — both times it was the design being honest.
 not happened. A walk that meets one of these reads a working surface as a broken one, and
 "fixes" it by inventing what the design deliberately left for a person to write.
 
-| # | The mechanism | Why an empty surface is CORRECT |
-|---|---|---|
-| **M1** | **`renderAnswers` · a sealed return is answered** | `The Return.html:264` marks every answer *"authored · for approval"*. They are written by a person and held in the base as `Return Answer` rows. **The app renders what the base holds and invents nothing.** A story with no authored answers correctly reads *"no voice has spoken twice here yet"* — which is also, exactly, what a broken Return would show. **On the walk that is a PASS.** The mechanism is proven by `ReturnAnswerTests`, not by the screen. |
-| **M2** | **The Light's six scenes** | `canon/spine-light.js:13` — *"Six scenes, one family"* Six is the canon's NUMBER, not a shortfall; `7-STATE-OF-THE-BUILD.md` §4 already records this after it was read as a gap once. A seventh would be invented content. |
+> ### ⬤ ON THE WALK, AN EMPTY SURFACE HERE IS A **PASS** — WRITE "PASS", NOT A FINDING.
+>
+> This is the sentence that matters on the day. Everything else in this file trains the eye to
+> read absence as defect, and here absence is the mechanism working. **Anyone who did not write
+> this distinction will see a broken screen** — both times content-versus-mechanism has come up
+> in this build it was read as incompleteness, and both times the design was being honest.
+
+| # | The mechanism | The verdict on the walk | Why an empty surface is CORRECT |
+|---|---|---|---|
+| **M1** | **`renderAnswers` · a sealed return is answered** | **PASS** — *"no voice has spoken twice here yet"* is the correct reading of a story with no authored answers. **Do not file it.** | `The Return.html:264` marks every answer *"authored · for approval"*. They are written by a person and held in the base as `Return Answer` rows. **The app renders what the base holds and invents nothing.** A story with no authored answers correctly reads *"no voice has spoken twice here yet"* — which is also, exactly, what a broken Return would show. **On the walk that is a PASS.** The mechanism is proven by `ReturnAnswerTests`, not by the screen. |
+| **M2** | **The Light's six scenes** | **PASS** — six is the number. **Do not file a seventh as missing.** | `canon/spine-light.js:13` — *"Six scenes, one family"* Six is the canon's NUMBER, not a shortfall; `7-STATE-OF-THE-BUILD.md` §4 already records this after it was read as a gap once. A seventh would be invented content. |
 
 **THE TELL THEY SHARE:** the design says, in its own words, that the content is someone's to
 write — *"authored · for approval"*, *"one family"*. **Where the design names the content as an

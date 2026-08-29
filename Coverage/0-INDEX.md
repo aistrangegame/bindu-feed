@@ -48,3 +48,8 @@ only the final version**, so this accumulates through every stage and is read as
 the end. A pass that produces an OWED claim and does not record it there has not finished.
 §5 is B5/Karishma, which needs a measured eleven-row table rather than a look. §6 carries
 corrections to `8-ACTION-PLAN.md`'s own rows.
+
+## 11 · `11-COMP-BLIND-SPOT.md` — **READ BEFORE STAGE G**
+The audit never read `comps/`. **124 of the 485 in-scope mechanisms are comp-sourced and 37
+are named nowhere in `AUDIT.md`**, so an ID-ordered pass cannot reach them. Stage G runs in
+two lanes. Also: `143 of 254` measures the audit, not the work.

@@ -118,3 +118,71 @@ struct ReturnSurfaceTests {
         #expect(row(3).answerLine == "3 voices answered")
     }
 }
+
+// E3.3 · THE RECORD'S CORPUS
+@Suite("E3.3 · the Record is the gathering REMEMBERED")
+struct ReturnRecordTests {
+
+    /// *"ten condensed, single-line record entries, deliberately distinct from the Rite's
+    /// three-line voices."* Ten, and the count is the ten who spoke — not eleven, because
+    /// Ash is not in the gathering (§10: *"`spoke` is the LENSES; Ash is never in it"*).
+    @Test("ten entries, and Ash is not among them")
+    func tenNotEleven() {
+        #expect(ReturnRecord.gathering.count == 10)
+        #expect(!ReturnRecord.gathering.contains { $0.key == "ash" },
+                "the Record is the gathering, and he is the one it gathered for")
+        #expect(Set(ReturnRecord.gathering.map(\.key)).count == 10, "no voice twice")
+    }
+
+    /// **THE ASSERTION THAT PROTECTS THE FINDING.** E3.3 is not "the Record is empty" — it is
+    /// that the Record showed the RITE's voices, so returning re-read the ceremony instead of
+    /// recalling it. A future pass filling the Record from `RiteVoices` would look like MORE
+    /// content and would restore exactly the fault.
+    @Test("the Record's lines are the Record's, not the Rite's")
+    func notTheRitesVoices() {
+        let record = Set(ReturnRecord.gathering.map(\.line))
+        let rite = Set(RiteVoices.all.flatMap(\.lines))
+        #expect(record.intersection(rite).isEmpty,
+                "the Record is repeating the ceremony rather than remembering it")
+        // and the Rite says it across MORE lines — that is the compression, measured
+        let riteLen = RiteVoices.all.map { $0.lines.joined(separator: " ").count }
+        let recLen = ReturnRecord.gathering.map { $0.line.count }
+        #expect(recLen.reduce(0,+) < riteLen.reduce(0,+),
+                "the Record must be shorter than the ceremony it remembers")
+    }
+
+    /// *"condensed"* — one line each, where the Rite's are three. The compression IS the
+    /// difference between reading a thing and recalling it.
+    @Test("every entry is one line")
+    func condensed() {
+        #expect(ReturnRecord.isCondensed)
+        for e in ReturnRecord.gathering {
+            #expect(!e.line.isEmpty, "\(e.key) has no line")
+            #expect(!e.role.isEmpty, "\(e.key) has no role")
+            #expect(e.hex.hasPrefix("#"), "\(e.key) has no colour of its own")
+        }
+    }
+
+    /// Ported verbatim, and the audit's own example is the check: Neev's Record line ends on
+    /// *"the one who was always in the lobby"*, which the Rite's Neev never says.
+    @Test("the lines are the design's, character for character")
+    func verbatim() {
+        let neev = ReturnRecord.gathering.first { $0.key == "neev" }
+        #expect(neev?.line.contains("the one who was always in the lobby") == true)
+        let bindu = ReturnRecord.gathering.first { $0.key == "bindu" }
+        #expect(bindu?.line.hasPrefix("One point, always moving, with love.") == true)
+        #expect(bindu?.role == "Zeroth · the point")
+    }
+
+    /// The patina applies to these, not to the Rite's — a Record entry is a kept thing and
+    /// takes `towardGold` at the name's own weight.
+    @Test("a Record entry takes the patina at the name's weight")
+    func takesThePatina() {
+        let neev = ReturnRecord.gathering.first { $0.key == "neev" }!
+        let raw = RoomGeo.hex(neev.hex)
+        let golded = ReturnPatina.mix(raw, ReturnPatina.name)
+        #expect(golded != raw, "a Record entry is not shown in its raw ceremony colour")
+        #expect(ReturnPatina.mix(raw, ReturnPatina.border) != golded,
+                "and a border takes more of it than a name")
+    }
+}
