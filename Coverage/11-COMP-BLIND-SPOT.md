@@ -68,10 +68,12 @@ The true gap is between the two and cannot be closed by grep.
 > which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
 > · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
 >
-> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` · `ana` · `stackFrom` ·
+> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` · `stackFrom` ·
 > `renderRings`' body text · `swift`/`hit`. **Closed 2026-08-29:** `branch` (Gaia's four
 > recursive trees) · `doorField` (the door's eleven orbiting glows) · `figFail`, ported as
-> its purpose rather than its form.
+> its purpose rather than its form · **`ana`, ported as the one-breath coupling it stands
+> for rather than as an AnalyserNode** — see `10-OWED.md` §9, which moved three of its four
+> claims from OWED to MEASURED and surfaced a 2.5s peak offset needing a ruling.
 > **This is the comp lane's real backlog** — the re-judged remainder of 31, not the 37 below.
 >
 > **The rule underneath: a verdict register decays the moment work starts, and nothing marks

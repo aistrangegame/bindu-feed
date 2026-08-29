@@ -408,3 +408,55 @@ of the host and not of the code — so there is no latent defect they could be r
 an actual assertion about app state — or the same flake appearing while the machine is idle.
 Neither has been seen. **They are excluded from the unit bar and must not be cited as
 evidence for or against any build claim in either direction.**
+
+---
+
+## 9 · `ana` · THE ONE-BREATH COUPLING IS NOW MEASURED — AND IT NEEDS A RULING
+
+`The Sound.html:57`'s `ana` was recorded ABSENT because *"the app's visuals read a separate
+`Breath` clock, so visual/audio agreement is ASSERTED, never measured."* It was the one comp
+row sitting behind the walk gate: the sound is OWED in full, so a drift between the two had
+exactly one detector — one person's eye and ear, once.
+
+**An AnalyserNode was the wrong port.** The app does not need visuals riding the signal; it
+has the stronger thing, the ONE-BREATH CONTRACT — *"Phase is universal. The curve is
+per-medium and fixed per medium."* Both media derive phase from one launch-anchored origin.
+**That is a claim achieved BY CONSTRUCTION, which is the kind never checked.**
+`Bindu FeedTests/OneBreathTests.swift` now checks it.
+
+### What moved from OWED to MEASURED
+
+| claim | verdict |
+|---|---|
+| the visual curve peaks at mid-cycle | **MEASURED** — sampled through `Breath.eased(offset:)`, the app's own method, not a retyped formula |
+| the audio LFO is a 10s sine at ±12% | **MEASURED** — from a real offline render of `BreathVoice` |
+| one period, one origin constant | **MEASURED** |
+| the per-buffer re-anchor from `mHostTime` | **STILL OWED** — `mHostTime` is 0 under offline manual rendering and `BreathVoice.swift:194-196` guards on exactly that, so the re-anchor cannot run in this harness. Stated rather than implied. |
+
+### The finding, and why it is not fixed here
+
+    visual   (1 − cos 2πp)/2      peaks at p = 0.50
+    audio    1 + sin(2πp)·0.12    peaks at p = 0.25, troughs at p = 0.75
+
+**A quarter of a 10-second breath is 2.5 SECONDS between the felt peaks.** When the visual
+swell is at maximum, the audio is back at unity and already falling.
+
+`Breath.swift`'s contract states the purpose as *"one body, everything rising and falling together"*.
+
+It gives the per-medium curve's reason as `serving perceived simultaneity`.
+
+And the re-anchor's comment at `BreathVoice.swift:152` says it *"keeps this voice breathing in phase with the visuals"*.
+
+**All three are true of the phase variable and none is true of the swell.** Phase-locking two curves does not align
+what a person perceives unless the curves peak together.
+
+**Left as it is, deliberately.** The *"do NOT unify the two curves"* rule is §10-protected and
+its reasoning is sound — equal-brightness is not equal-loudness. But that rule governs the
+SHAPE and does not settle where each shape's peak falls, and the design does not settle it
+either: `field-sound.js:64-68` is a Web Audio sine anchored to BED START, and the
+shared-origin phase-lock is this app's own addition on top of it. Changing a curve is audible
+on every surface at once, so this is a ruling and not a fix.
+
+**Either answer should land in `OneBreathTests.theTwoMediaPeakApart`** — if the offset is
+intended, that test documents it; if it is not, that test is where the change lands. What must
+not happen again is that it stays unmeasured.
