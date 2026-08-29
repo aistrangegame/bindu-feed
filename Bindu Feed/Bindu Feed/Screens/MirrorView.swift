@@ -169,7 +169,20 @@ struct MirrorView: View {
         guard store.foundationLoaded else { return }
 
         await store.loadMirrorCards()
-        let cards = store.mirrorCards
+        // A1.5 · **A CARD WITH NO REGISTER IS NOT SHOWN, RATHER THAN SHOWN AS THE WRONG ONE.**
+        //
+        // `MirrorCard.register` is optional, and the render asked `card.register == .koan`,
+        // so a nil silently became a VOW — upright Lora, *"A VOW · ARRIVED"*, closing `·` —
+        // on a card that may be a koan. Not an absence: **a confident assertion of the other
+        // register.**
+        //
+        // This is §6's blank-`Status` lesson in a second field. That rule is that a record
+        // missing a discriminator is invisible rather than guessed, and it is enforced on
+        // every reader; `Card Register` is a discriminator too — §8: *"The `Card Register`
+        // field drives render"* — and it was being guessed. Filtering costs nothing today
+        // (all 24 Live cards carry one) and is the only behaviour that cannot be wrong: the
+        // app does not know which register a blank card belongs to, so it does not choose.
+        let cards = store.mirrorCards.filter { $0.register != nil }
 
         if cards.isEmpty {
             loadError = store.error != nil
@@ -197,7 +210,11 @@ struct MirrorView: View {
     // revealing" if the pool is too small to honour the gap.
     private func drawAlternate() {
         guard !drawn else { return }
-        let cards = store.mirrorCards
+        // A1.5 · the DRAW reads the same pool and must filter identically. One reader
+        // filtered and the other not is the shape §10 records for claims: *every* path
+        // its owner can leave by, not only the polite one. A blank-register card the
+        // day-pick refuses would otherwise arrive through the Bindu Draw instead.
+        let cards = store.mirrorCards.filter { $0.register != nil }
         guard cards.count > 3 else {
             drawn = true
             persist(idx: nil, drawn: true)

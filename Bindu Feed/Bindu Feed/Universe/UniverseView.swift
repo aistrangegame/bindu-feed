@@ -630,10 +630,24 @@ struct UniverseView: View {
     }
     // The star's world position: strung on its region's own armature (uni-rooms.js place()).
     private func starWorld(_ rm: UniRoom, _ i: Int, _ story: Story) -> (Double, Double) {
+        // B3.6 · **STARS COLLIDED WHEN A ROOM HELD MORE STORIES THAN ITS ARMATURE HAS SLOTS.**
+        //
+        // `i % rm.n` wraps: in a room with eight slots, story 8 landed exactly on story 0 and
+        // the two stars drew on top of each other. The jitter below is keyed on the story id
+        // and is ±10% of `r`, so it disguised the collision without preventing it — two stars
+        // a few points apart, which reads as one star, and the second story is unreachable.
+        //
+        // It is the comp's-fixed-geometry family again (§10): an armature drawn for the
+        // archive as it was, meeting a base that grew. The wrap is what has to go — a slot is
+        // taken or it is not — so the extra stories are strung on a SECOND turn of the same
+        // armature, pushed out by one radius-step per lap. The armature's shape is untouched;
+        // it simply continues rather than starting over.
+        let lap = i / max(1, rm.n)
         let p = rm.place(i % max(1, rm.n))
+        let spread = 1 + Double(lap) * 0.18          // each lap sits one step further out
         let jx = (hash(story.id) - 0.5) * rm.r * 0.10
         let jy = (hash(story.id + "j") - 0.5) * rm.r * 0.10
-        return (rm.x + p.0 + jx, rm.y + p.1 + jy)
+        return (rm.x + p.0 * spread + jx, rm.y + p.1 * spread + jy)
     }
 
     // MARK: - Draw

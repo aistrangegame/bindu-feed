@@ -52,7 +52,7 @@ Open findings by severity:
 | A1.2 | MAJOR | DATA | cohort A is not Mirror content at all | NEEDS-JUDGMENT | Code never reads `Category`. Cohort membership is a base fact. |
 | A1.3 | MAJOR | DATA | register back-filled uniformly, Koan under-represented | NEEDS-JUDGMENT | 12/12 split claimed in CLAUDE.md §8 but is a base fact. |
 | A1.4 | MINOR | DATA | one design reflection paraphrased, not stored | NEEDS-JUDGMENT | Base fact; app carries no copy either way. |
-| A1.5 | MAJOR | DATA | `Card Register` optional; nil silently renders as Vow | OPEN | `Models.swift:333` optional; `MirrorView.swift:265-266` nil falls to "A VOW · ARRIVED". |
+| A1.5 | MAJOR | DATA | `Card Register` optional; nil silently renders as Vow | **CLOSED 2026-08-29** | A card with no register is filtered from the pool rather than guessed — §6's blank-`Status` lesson in a second discriminator field. **Both** readers filter: the day-pick and the Bindu Draw. Original evidence: | `Models.swift:333` optional; `MirrorView.swift:265-266` nil falls to "A VOW · ARRIVED". |
 | A1.6 | MAJOR | DATA | day-hash and draw index a mutable, growing pool | OPEN | `MirrorView.swift:181,208-209` modulus is still the live record count. |
 | A2.1 | MAJOR | DATA | display-lines replaced by runtime sentence-splitter | CLOSED | `SignalView.swift:285-290` now splits on `\n` only. |
 | A2.2 | MAJOR | DATA | Signal pool carries 12 Codex/business rows | NEEDS-JUDGMENT | Pool composition is a base fact. |
@@ -87,7 +87,7 @@ Open findings by severity:
 | B3.3 | MAJOR | DATA | nebula brightness not derived from region contents | OPEN | `UniverseView.swift:675,677` no `litN`, no falloff. |
 | B3.4 | MAJOR | DATA | per-room WEATHER table and DENS absent | CLOSED | `UniRegions.swift:540-573` + fed at `InstrumentView.swift:543,556`. |
 | B3.5 | MAJOR | VISUAL | region weather is binary and single-region | OPEN | `UniverseView.swift:661-663` one nearest region, no distance term, no frame tint. |
-| B3.6 | MAJOR | DATA | stars collide when a room holds more than `n` stories | OPEN | `UniverseView.swift:633` `i % rm.n` — story 8 lands on slot 0. |
+| B3.6 | MAJOR | DATA | stars collide when a room holds more than `n` stories | **CLOSED 2026-08-29** | Extra stories are strung on a second lap of the same armature (`spread = 1 + lap*0.18`) instead of wrapping onto taken slots. The armature's shape is untouched inside the first lap. Original evidence: | `UniverseView.swift:633` `i % rm.n` — story 8 lands on slot 0. |
 | B3.7 | none | none | structures: exact match | CLOSED | `UniRegions.swift:146-180`. |
 | B3.8 | MINOR | COSMETIC | region arms don't fade; labels wrong size/side | CLOSED | `UniverseView.swift:670,685-689`. |
 | B4.1 | BLOCKER | VISUAL | stars never grow; continuity mechanism missing | CLOSED | `UniverseView.swift:857` `R = st.pr * zoom`; planet handoff at `R >= 6`. |
