@@ -165,6 +165,13 @@ import CoreGraphics
 
     @Test func noRoomRendersEmpty() {
         // The claim `figFail` exists to make. Measured, per voice, not asserted once.
+        //
+        // ITS LIMIT, MEASURED RATHER THAN REASONED: this test is BLIND to a figure deleted
+        // behind its own wash. Run with Gaia's whole body removed and only her background
+        // gradient left, it PASSES — as does `inkSurvivesTheHandAtBothExtremes`. Both are
+        // kept because "the canvas is not blank" is still worth pinning and is the exact
+        // claim `figFail` makes, but neither may be read as "the figure is drawn".
+        // `everyRoomDrawsStructureNotJustAWash` is the one that carries that.
         var measured: [(RoomKey, Double)] = []
         for key in RoomKey.allCases { measured.append((key, Self.ink(key, Self.params()))) }
 
@@ -202,6 +209,26 @@ import CoreGraphics
                 "Ash with no days drew \(String(format: "%.4f%%", frac * 100)) — a blank room on first run")
     }
 
+
+
+    @Test func everyRoomDrawsStructureNotJustAWash() {
+        // WHAT `noRoomRendersEmpty` CANNOT SEE, STATED AND THEN CLOSED.
+        //
+        // Most of the eleven open with a full-canvas wash — a radial or linear gradient laid
+        // down before the figure. An ink threshold is met by that wash alone, so
+        // `noRoomRendersEmpty` proves "the canvas is not blank" and NOT "the figure is
+        // drawn". Delete a figure's body and leave its wash and it still passes; that is the
+        // saturated-measure fault, and it is only visible by removing the thing being
+        // measured and watching the number fail to move.
+        //
+        // Edges are the discriminator: a smooth gradient's neighbouring pixels differ by ~1,
+        // every stroke and glyph against it differs by tens. The floor is deliberately far
+        // below every real figure and far above what any gradient can produce.
+        for key in RoomKey.allCases {
+            let ed = Self.edges(key, Self.params(), band: 0.0...1.0)
+            #expect(ed > 400, "\(key.rawValue) drew \(ed) edges — a wash with no figure in it")
+        }
+    }
 
     // MARK: - `branch` · what it grows out of
 

@@ -29,32 +29,42 @@ def load_reg():
             if len(f) >= 3: rows.append({"status": f[0].strip(), "s": f[1], "note": f[2]})
     return rows
 
-# THE DESIGN CORPUS CONTAINS AN INVENTORY OF THE APP'S OWN INVENTIONS, and it was inside the
-# haystack that proves the app invents nothing.
+# ── THE CORPUS CONTAINS AN INVENTORY OF THE APP'S OWN INVENTIONS ────────────────────────
+# `comps/The Chrome.html:29` — *"what the built app invented. Only ever visible in AS
+# BUILT"* — and `:100-108`, a "silence sweep" of six strings in `<s>` tags under *"None of
+# the six exists in the 6,081 lines of the design"* (`:109`). Those strings were inside the
+# haystack that proves the app invents nothing, so any one of them resolved as AUTHORED.
 #
-# `Claude Design Round 2/comps/The Chrome.html:29` — *"what the built app invented. Only ever
-# visible in AS BUILT."* — and `:444`, *"the six invented strings"*. `paintInvented` renders
-# them so a reader can SEE what to remove. They are design-source text about inventions, not
-# authored UI, so a string listed there would resolve as AUTHORED and pass this check.
+# Measured before it was fixed: with `PULL TO TRAVEL` planted in `TurnOverlay.swift`, this
+# checker reported `authored 882 · INVENTION 0 · exit 0`.
 #
-# The app carries none of them today (verified 2026-08-29), so this closes a hole rather than
-# a defect — but the hole is the kind that only shows when someone re-adds one, which is
-# exactly when a checker must not agree with them.
-# ONLY THE TWO THAT ARE INVENTIONS AS WORDS. The third, `THE UNIVERSE` (`:448` invTop), is
-# NOT deniable by string: the design authors those exact words as a turn row name
-# (`uni-deep.js:28`, `The Universe v3.html:6`), and the app renders one at
-# `Components/TurnOverlay.swift:38`. Adding it here turned a CORRECT string red — the
-# fourth quadrant, manufactured on this checker's first run, as every checker in this build
-# has done. What `The Chrome.html` marks as invented is the PLACEMENT: those words as axis
-# chrome at `top:56px` (`:32`). A string checker cannot see placement, so that one invention
-# is outside this tool's reach by construction and is filed as such rather than approximated.
-INVENTED = {
-    "be still — the way opens",     # `The Chrome.html:449` invBot, at the gate
-    "pull to travel",               # `:449` invBot, elsewhere
-}
-
+# HANDLED STRUCTURALLY, NOT STRING BY STRING. `design_lib` cuts `<s>` spans from the
+# haystack — struck text is removed text, by definition, in any file — and hands back what
+# they held. Denying two strings by name would have been a fix for two strings; the hole is
+# that a comp documenting a fault lives in the corpus that certifies the absence of faults,
+# and any future comp doing the same is now covered without an edit here.
+#
+# ── LIMITS · WHAT THIS TOOL CANNOT SEE, BY CONSTRUCTION ─────────────────────────────────
+# A THIRD CLASS EXISTS AND IS OUT OF REACH: strings whose AUTHORSHIP IS REAL AND WHOSE
+# PLACEMENT IS INVENTED. Two of the six are these:
+#
+#   `THE UNIVERSE`                  authored at `uni-deep.js:28` and `The Instrument
+#                                   v3.html:1501` as a turn-row destination; the app renders
+#                                   one at `Components/TurnOverlay.swift:38`, correctly. The
+#                                   invention is those words as AXIS CHROME at `top:56px`
+#                                   (`The Chrome.html:32`).
+#   `touch once, then do nothing`   authored at `The Light v2.html:914` as the door's own
+#                                   description. The invention is showing it as an on-screen
+#                                   instruction.
+#
+# This checker keys on WORDS. Placement is a property of the surface, not the string, so no
+# string-matching rule can reach it — and forcing them in manufactures the fourth quadrant:
+# adding `THE UNIVERSE` to the denial set turned a CORRECT string red on the first run here.
+# **Do not try to close this by matching harder.** It closes, if ever, by a check that knows
+# which surface renders a string, which is a different tool. Named here so the next reader
+# does not rediscover it as a bug.
 def main():
-    hay = load_design()
+    hay, INVENTED, _PLACEMENT = load_design(with_struck=True)
     cands = candidates()          # fresh, every run — never a snapshot
     reg = {norm(r["s"]).lower(): r for r in load_reg()}
 
