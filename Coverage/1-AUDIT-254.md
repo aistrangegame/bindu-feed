@@ -13,6 +13,24 @@ never read `comps/`, a quarter of the mechanism sweep's scope. The headline numb
 - **NEEDS-JUDGMENT** — 15
 - **NOT-YET-EXAMINED** — 0
 
+> ### 🔴 THIS REGISTER DRIFTS, AND IT DRIFTED. Re-verify a row before working it.
+>
+> Stage G was about to work ~90 findings **in audit-ID order** out of this file. Re-reading
+> the nine open BLOCKERs first, **four were already closed** — E3.1 (B4), E4.1 and G3.1 (B3
+> plus the comp lane), and D5.8's chain — and their rows still carried the original evidence,
+> including phrases like *"0 hits"* for symbols that now exist. One, E4.2, was still true and
+> was fixed.
+>
+> This is `_mechverdicts1.md`'s decay in the register Stage G would be worked FROM, and it is
+> the same shape as the stale Swift comments `check_status.py` now guards: **a verdict is a
+> claim with a date, and nothing marks it stale.** The rule already recorded for the mech
+> sweep applies here without change — *anything worked out of this file is re-judged against
+> the tree first, never quoted forward.*
+>
+> Line numbers drift too: `resolve`'s row in `10-OWED.md` §7 named
+> `InstrumentView.swift:290` as the one line that would change; `spineThreshold` is now at
+> `:307`, and `:290` is `setStillness`. Corrected there.
+
 **NOT-YET-EXAMINED is zero** — every one of the 254 was checked in this pass. That was the number you asked for; the answer is that none is now unexamined, and 143 are open.
 
 Open findings by severity:
@@ -218,7 +236,7 @@ Open findings by severity:
 | E2.4 | MAJOR | VISUAL | the Sealing stacks instead of replaces | OPEN | `RiteView.swift:284,300,307` all three accumulate in one VStack. |
 | E2.5 | MAJOR | DATA | Recognition's prompt and label swapped | OPEN | `RiteRecognitionView.swift:35-45` label permanent, prompt only in `.prompt`, wrong font/ink. |
 | E2.6 | none | — | smaller Rite deltas | OPEN | `RiteRecognitionView.swift:57-59` invented affordance; prompt 20pt inkPrimary. |
-| E3.1 | BLOCKER | DATA | strata draw ZERO rings in default case | OPEN | `ReturnStrata.swift:65,81` stride still `n-1 … 1`; at `rings == 1` the stride is empty. `ringAges` last element provably never read. |
+| E3.1 | BLOCKER | DATA | strata draw ZERO rings in default case | **CLOSED 2026-08-29** | `ReturnStrata.ringIndices` is `stride(from: max(0, returns), through: 1, by: -1)`, so `rings == 1` yields `[1]`. Closed as B4; this row read OPEN for the whole stage after. |
 | E3.2 | BLOCKER | DATA | Rings movement has no rings list | OPEN | `ReturnView.swift:367-377` no rows/when/fragments/seed line; model has no `returns:[{when,frag,words}]`. |
 | E3.3 | MAJOR | DATA | the Record's corpus does not exist | OPEN | `ReturnView.swift:314` uses `RiteVoices.all`; the Return's ten condensed GATHERING lines absent. |
 | E3.4 | MAJOR | DATA | age computed from ring count not days | CLOSED | `ReturnCanon.swift:173-198` `pow(days/1095, 0.55)`; per-ring ages passed. |
@@ -231,8 +249,8 @@ Open findings by severity:
 | E3.11 | MAJOR | VISUAL | the Sealing never shows him what he kept | OPEN | `ReturnView.swift:437-446` `replyText` never rendered back. |
 | E3.12 | none | — | smaller Return deltas | OPEN | `camY` never overridden; motes fixed 24; ring N=120. |
 | E3.13 | none | — | what the Return gets right | CLOSED | Stage order, wording, forward detector intact. |
-| E4.1 | BLOCKER | DATA | Light functionally silent, 7 of 8 events missing | OPEN | 6 of 8 now built and wired. Still missing `closeTheRoom`/`darkReturns` (0 hits); `backOut` fires no sound. |
-| E4.2 | BLOCKER | DATA | the stillness gate makes no sound at all | OPEN | `setStillness` has ONE call site, in InstrumentView. `LightView` never calls it — the 4600ms gate is silent. |
+| E4.1 | BLOCKER | DATA | Light functionally silent, 7 of 8 events missing | **CLOSED 2026-08-29** | All eight built and wired. `darkReturns` closed as B3; `lightOff`/`closeTheRoom(6)` closed in the comp lane and both now fire from `backOut`. |
+| E4.2 | BLOCKER | DATA | the stillness gate makes no sound at all | **CLOSED 2026-08-29** | `LightView`'s gate timer now calls `setStillness(fill: still, touching:)` every tick and outside the idle branch, so the drone follows the fill in both directions. Verified OPEN by re-reading before fixing — the one BLOCKER of the five whose row was still true. |
 | E4.3 | MAJOR | DATA | Rite Hz table diverges; timbres collapse | CLOSED | `RiteGatheringView.swift:204-205` + `RoomVoices.swift:35-42` exact. Residual: bed does not step back to 0.018. |
 | E4.4 | none | — | the Rite's thresholds are exact | CLOSED | `RiteView.swift:106,110,114,334`. |
 | E4.5 | MAJOR | DATA | Return crossings exact; two signature voices missing | OPEN | `agedBed` → 0 hits; ring is an immediate bowl, no growth, no 3400ms delay. |
@@ -281,6 +299,6 @@ Open findings by severity:
 | G1.1 | MAJOR | DATA | bed is root+fifth in design, binaural pair in code | CLOSED | `BreathVoice.swift:63-66,122-160` field bed is root+fifth both ears; binaural confined to climbing. |
 | G1.2 | MAJOR | VISUAL | no room: both convolution layers absent | CLOSED | `SoundEngine.swift:358-361,371,578-586`. |
 | G1.3 | MINOR | VISUAL | `CEIL` and the master ramp | OPEN | grep `CEIL` → 0 hits; no master ceiling; per-voice peaks absolute. |
-| G3.1 | BLOCKER | DATA | Light's five-movement sound architecture absent | OPEN | 4 built; `lightOff`/`closeTheRoom`/`darkReturns` → 0 hits. The removal half is unbuilt. |
+| G3.1 | BLOCKER | DATA | Light's five-movement sound architecture absent | **CLOSED 2026-08-29** | The removal half is built: `lightOff`/`closeTheRoom` fade the room tone from a retained voice, `darkReturns` restores the bed. |
 | G3.2 | MAJOR | DATA | the Return's two signature voices absent | OPEN | `agedBed` → 0 hits; ring strikes immediately. |
 | G3.3 | MAJOR | VISUAL | `bowl` 4x too loud with the wrong spectrum | OPEN | `SoundEngine.swift:646` peak 0.32 vs 0.075; `RiteTones.swift:119` partials `[1,2.756,5.404]` vs `[1,2.004,2.98,4.02]`; no bed duck. |

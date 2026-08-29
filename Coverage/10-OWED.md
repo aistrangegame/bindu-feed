@@ -340,8 +340,10 @@ this here" are different claims and only the second is a caller.
 **WHERE IT NOW LIVES.** An axis row, alongside the plan's Stage G axis work — the passage's
 `swift`/`hit`/`dur`/`after`, the shader's pinned uniforms, `#trav`. Not a Point row, not a
 Stage C row, and not OWED: it is not waiting on a walk, it is waiting on a decision about
-whether the axis's z = 9 crossing takes a voice of its own. **`InstrumentView.swift:290`'s
+whether the axis's z = 9 crossing takes a voice of its own. **`InstrumentView.swift:307`'s
 `spineThreshold(hz: reg.hz)` is the line that would change**, and it is the only one.
+(Was cited as `:290` — the line drifted, and `:290` is now `setStillness`. A ledger row that
+names a line inherits that line's drift; cite the SYMBOL and let the number be the hint.)
 
 **FOUND WHILE READING, AND FIXED:** the app's reveal called `om()` alone where `:1341` calls
 `shimmer()` and `om()`. One of the two moments the design *does* mark was marked incompletely.

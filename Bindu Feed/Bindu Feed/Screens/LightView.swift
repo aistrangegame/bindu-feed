@@ -468,6 +468,19 @@ struct LightView: View {
                 stillMs = min(gateMs, stillMs + 50)
                 if stillMs >= gateMs { openTheLight() }
             }
+            // E4.2 · **THE GATE MADE AUDIBLE, IN THE ONE REGISTER THAT IS ABOUT WAITING.**
+            //
+            // `setStillness` existed and had exactly ONE caller, `InstrumentView:290`. The
+            // Light — the register whose entire approach IS a 4600ms accumulation — never
+            // called it, so the gate ran in silence and the only sign of progress was
+            // visual. §10 names why that matters: this drone does not accompany the
+            // accumulator, **it IS the accumulator, audible.**
+            //
+            // Called every tick rather than on a threshold, and OUTSIDE the idle branch, so
+            // it follows the fill in both directions: a touch must be heard cutting it, not
+            // just heard failing to advance it. `still` is the same 0…1 the visuals ride, so
+            // the two cannot drift apart.
+            soundEngine.setStillness(fill: still, touching: touching)
         }
     }
 
