@@ -52,7 +52,8 @@ device.
 
 | measure | number |
 |---|---|
-| audit findings OPEN | **143 of 254** (8 BLOCKER · 86 MAJOR · 43 MINOR · 4 COSMETIC) |
+| design mechanisms ABSENT — **the headline** | **83 of 485**, plus 74 PARTIAL |
+| audit findings OPEN — *measures the audit, not the work* | **143 of 254** (8 BLOCKER · 86 MAJOR · 43 MINOR · 4 COSMETIC) |
 | design mechanisms ABSENT | **83 of 485**, plus 74 PARTIAL |
 | acceptance-gate lines walked or measured | **12 of 44** |
 | design files the app cites nowhere | **14 of 46** |

@@ -6,7 +6,7 @@ Coverage, not status. No fixes were made while producing this. Where something w
 
 | file | what it enumerates | the number |
 |---|---|---|
-| `1-AUDIT-254.md` | every AUDIT.md finding, verdict + evidence | **143 of 254 OPEN** · 96 closed · 15 need a ruling · **0 unexamined** |
+| `1-AUDIT-254.md` | every AUDIT.md finding, verdict + evidence | **143 of 254 OPEN** *(measures the audit — it never read `comps/`)* · 96 closed · 15 need a ruling · **0 unexamined** |
 | `2-MECHANISM-SWEEP.md` | every function/method/state var in the design | **83 of 485 ABSENT** · 74 partial |
 | `3-FILE-COVERAGE.md` | how well each design file is actually known | **14 of 46 files cited nowhere** |
 | `4-HANDOFF-44.md` | the acceptance gate, line by line + method | **12 of 44 walked or measured** · 1 outright FAIL |

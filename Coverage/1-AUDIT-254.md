@@ -4,7 +4,9 @@ Generated 2026-08-28 17:39. Every finding in `AUDIT.md`, one row, re-verified ag
 
 ## Headline
 
-**143 of 254 findings are OPEN.**
+**143 of 254 findings are OPEN — but that measures THE AUDIT, not the work.** The audit
+never read `comps/`, a quarter of the mechanism sweep's scope. The headline number is
+**83 absent of 485** (`Coverage/2`), which read everything. See `11-COMP-BLIND-SPOT.md`.
 
 - **CLOSED** — 96
 - **OPEN** — 143

@@ -47,8 +47,34 @@ audit never opened.**
 
 `61%` is an **upper bound** on coverage: a name appearing in the audit does not mean a finding
 covers that mechanism. `37` is a **lower bound** on the gap: those are named nowhere at all.
-The true gap is between the two and cannot be closed by grep — it needs the hand-judging that
-`Coverage/2`'s 465 REVIEW rows also need.
+The true gap is between the two and cannot be closed by grep.
+
+> ### CORRECTION, same day — the hand-judging already existed, and it is STALE
+>
+> This section was written as though the comp mechanisms had never been judged. **They had.**
+> `Coverage/_mechverdicts1.md` opens `COUNTS-M1: PORTED 111 · PARTIAL 14 · ABSENT 17 · N-A 20`
+> over **162 rows** covering all eight comp files plus `field-sound.js`. So "the 37 named
+> nowhere" is a **grep proxy for a register that already existed** — and I reached for the
+> proxy without asking whether the real thing was on disk, which is the same failure this
+> file names, committed inside the file that names it.
+>
+> **The 465 are a different backlog.** They are authored *strings* (`Tools/authored-strings.tsv`:
+> `743 REQUIRED · 465 REVIEW · 189 ANNOTATION · 140 FRAGMENT · 78 CSSVALUE · 4 SUPERSEDED`),
+> 267 of them comp-sourced. Strings, not mechanisms; Stage H, not this lane.
+>
+> **And the real register is out of date.** `_mechverdicts1.md` was written before Stages A–F.
+> Re-judged against the current tree on 2026-08-29, **7 of its 31 ABSENT/PARTIAL rows are
+> closed by this build**: `muted`/`setMuted`/`setOn` (B2) · `darkReturns` (B3) · `duckBreath`,
+> which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
+> · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
+>
+> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` · `ana` · `branch` (Gaia's
+> four recursive trees) · `doorField` · `stackFrom` · `renderRings`' body text · `swift`/`hit`.
+> **This is the comp lane's real backlog** — the re-judged remainder of 31, not the 37 below.
+>
+> **The rule underneath: a verdict register decays the moment work starts, and nothing marks
+> it stale.** `_mechverdicts1.md` reads as current because a prose ledger has no timestamp per
+> row. Anything worked out of it is re-judged against the tree first, never quoted forward.
 
 ---
 
@@ -63,8 +89,10 @@ name.
 **So Stage G runs in two lanes, not one:**
 
 1. **The ID lane** — the ~90 open findings, in audit-ID order, as planned.
-2. **The COMP lane** — the 37 below, worked by mechanism name against the sweep, because
-   the audit is not the register that can see them.
+2. **The COMP lane** — worked by mechanism name against **`_mechverdicts1.md` re-judged**
+   (see the correction above: 24 of 31 still open), not the 37 grep-proxy names below,
+   because the audit is not the register that can see them. **`The Rooms v4.html` first**,
+   and `figFail` first within it.
 
 **And `143 of 254` was never a measure of the work.** It is a measure of the audit, and the
 audit's scope is now known to exclude a quarter of the mechanism sweep. The honest headline
