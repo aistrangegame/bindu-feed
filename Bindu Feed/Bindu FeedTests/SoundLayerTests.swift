@@ -24,34 +24,47 @@ struct BowlTests {
     /// node carries: partial 0's weight is `1/(0*2.2+1) = 1`, so the envelope's crest and
     /// the fundamental's amplitude are the same number. The raw sample peak is higher —
     /// four partials sum — and the design does not normalise them either.
-    @Test("the sealing bowl's fundamental does not exceed the 0.075 ceiling")
+    /// A ceremony bowl is CENTRED — `CeremonyVoice` writes the same sample to both buffers
+    /// unless the voice carries a pan — so the ceiling must hold in each ear independently,
+    /// and the two must agree. Asserted on both rather than on whichever one a defaulted
+    /// parameter happened to pick.
+    @Test("the sealing bowl's fundamental does not exceed the 0.075 ceiling, in both ears")
     func bowlRespectsCeiling() throws {
         let r = try OfflineRender.render(SoundEngine.bowlVoice(hz: 220).sourceNode, seconds: 1.0)
-        let f = r.magnitude(at: 220, from: 0.05, to: 0.35)
-        #expect(f <= 0.0785, "fundamental \(f) exceeds the 0.075 event ceiling")
-        #expect(f > 0.055, "fundamental \(f) — the bowl went quiet, not correct")
+        let (l, rt) = r.magnitudes(at: 220, from: 0.05, to: 0.35)
+        for (name, f) in [("left", l), ("right", rt)] {
+            #expect(f <= 0.0785, "\(name) fundamental \(f) exceeds the 0.075 event ceiling")
+            #expect(f > 0.055, "\(name) fundamental \(f) — the bowl went quiet, not correct")
+        }
+        #expect(abs(l - rt) < 1e-9, "a centred voice must be identical in both ears")
     }
 
-    @Test("the movement-transition bowl does not exceed the 0.075 ceiling")
+    @Test("the app-own strike does not exceed the 0.075 ceiling, in both ears")
     func thresholdRespectsCeiling() throws {
         let r = try OfflineRender.render(
             SoundEngine.thresholdVoice(hz: 220, dur: 5).sourceNode, seconds: 1.4)
-        let f = r.magnitude(at: 220, from: 0.5, to: 1.1)
-        #expect(f <= 0.0785, "fundamental \(f) exceeds the 0.075 event ceiling")
-        #expect(f > 0.040, "fundamental \(f) — the bowl went quiet, not correct")
+        let (l, rt) = r.magnitudes(at: 220, from: 0.5, to: 1.1)
+        for (name, f) in [("left", l), ("right", rt)] {
+            #expect(f <= 0.0785, "\(name) fundamental \(f) exceeds the 0.075 event ceiling")
+            #expect(f > 0.040, "\(name) fundamental \(f) — the bowl went quiet, not correct")
+        }
+        #expect(abs(l - rt) < 1e-9, "a centred voice must be identical in both ears")
     }
 
     @Test("the bowl's four inharmonic partials are at 1/(i*2.2+1)")
     func bowlPartials() throws {
         let hz = 220.0
         let r = try OfflineRender.render(SoundEngine.bowlVoice(hz: hz).sourceNode, seconds: 2.5)
-        let f = r.magnitude(at: hz, from: 0.1, to: 2.4)
-        #expect(f > 0.01)
-        for (i, m) in [1.0, 2.004, 2.98, 4.02].enumerated() {
-            let want = 1 / (Double(i) * 2.2 + 1)
-            let got = r.magnitude(at: hz * m, from: 0.1, to: 2.4) / f
-            #expect(abs(got - want) < 0.05,
-                    "partial \(m): weight \(got), design says \(want)")
+        // the spectrum must be the same spectrum in each ear, not merely present in one
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            let f = r.magnitude(at: hz, ear: ear, from: 0.1, to: 2.4)
+            #expect(f > 0.01)
+            for (i, m) in [1.0, 2.004, 2.98, 4.02].enumerated() {
+                let want = 1 / (Double(i) * 2.2 + 1)
+                let got = r.magnitude(at: hz * m, ear: ear, from: 0.1, to: 2.4) / f
+                #expect(abs(got - want) < 0.05,
+                        "\(ear) partial \(m): weight \(got), design says \(want)")
+            }
         }
     }
 
@@ -62,9 +75,11 @@ struct BowlTests {
     func bowlHasNoOldPartials() throws {
         let hz = 220.0
         let r = try OfflineRender.render(SoundEngine.bowlVoice(hz: hz).sourceNode, seconds: 2.5)
-        let f = r.magnitude(at: hz, from: 0.1, to: 2.4)
-        #expect(r.magnitude(at: hz * 2.756, from: 0.1, to: 2.4) / f < 0.08)
-        #expect(r.magnitude(at: hz * 5.404, from: 0.1, to: 2.4) / f < 0.08)
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            let f = r.magnitude(at: hz, ear: ear, from: 0.1, to: 2.4)
+            #expect(r.magnitude(at: hz * 2.756, ear: ear, from: 0.1, to: 2.4) / f < 0.08)
+            #expect(r.magnitude(at: hz * 5.404, ear: ear, from: 0.1, to: 2.4) / f < 0.08)
+        }
     }
 
     /// The third part of G3.3 — *"the bed holds its breath."* The duck is applied to the

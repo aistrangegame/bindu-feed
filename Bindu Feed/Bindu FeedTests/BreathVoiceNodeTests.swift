@@ -45,12 +45,15 @@ struct BreathVoiceNodeTests {
         let a = try OfflineRender.render(voice().sourceNode, seconds: 0.5)
         let b = try OfflineRender.render(voice().sourceNode, seconds: 0.5)
         #expect(a.frameCount == b.frameCount)
-        var maxDiff = 0.0
+        var maxDiffL = 0.0, maxDiffR = 0.0
         for i in 0..<min(a.left.count, b.left.count) {
-            maxDiff = max(maxDiff, abs(Double(a.left[i]) - Double(b.left[i])))
+            maxDiffL = max(maxDiffL, abs(Double(a.left[i]) - Double(b.left[i])))
+            maxDiffR = max(maxDiffR, abs(Double(a.right[i]) - Double(b.right[i])))
         }
-        #expect(maxDiff == 0, "the default path is not deterministic: \(maxDiff)")
-        #expect(a.peak() > 0.001, "and it is not silence")
+        #expect(maxDiffL == 0, "left is not deterministic: \(maxDiffL)")
+        #expect(maxDiffR == 0, "right is not deterministic: \(maxDiffR)")
+        #expect(a.peak(ear: .left) > 0.001, "and it is not silence")
+        #expect(a.peak(ear: .right) > 0.001, "in either ear")
     }
 
     // ── each node does what the design says, when moved ────────────────
@@ -145,16 +148,20 @@ struct BreathVoiceNodeTests {
     func peakBoosts() throws {
         let f = 174.0
         let flat = try OfflineRender.render(pointVoice().sourceNode, seconds: 1.5)
-        let flatAtPeak = flat.magnitude(at: f * 2, from: 0.2, to: 1.4)
-        #expect(flatAtPeak > 1e-5, "no octave to grip: \(flatAtPeak)")
-
         let v = pointVoice()
         v.peak.write(PeakSettings(frequencyHz: f * 2, q: 1.2 + 7, gainDB: 13))   // bear(1.0)
         let rung = try OfflineRender.render(v.sourceNode, seconds: 1.5)
-        let rungAtPeak = rung.magnitude(at: f * 2, from: 0.2, to: 1.4)
 
-        #expect(rungAtPeak > flatAtPeak * 2.5,
-                "13 dB is ~4.5x; measured \(rungAtPeak / max(flatAtPeak, 1e-12))x")
+        // `pk` sits on the OCTAVE at f×2, which both ears carry — the biquad is per channel,
+        // so the boost must appear in each. Asserting one ear would leave the other's filter
+        // untested, and they are separate objects with separate state.
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            let flatAtPeak = flat.magnitude(at: f * 2, ear: ear, from: 0.2, to: 1.4)
+            let rungAtPeak = rung.magnitude(at: f * 2, ear: ear, from: 0.2, to: 1.4)
+            #expect(flatAtPeak > 1e-5, "\(ear): no octave to grip: \(flatAtPeak)")
+            #expect(rungAtPeak > flatAtPeak * 2.5,
+                    "\(ear): 13 dB is ~4.5x; measured \(rungAtPeak / max(flatAtPeak, 1e-12))x")
+        }
     }
 
     /// The other half of the same fact, stated so it cannot be mistaken for a defect later:
@@ -181,7 +188,10 @@ struct BreathVoiceNodeTests {
         let change = abs(rung.peak() - flat.peak()) / flat.peak()
         #expect(change < 0.10, "the field bed moved by \(change * 100)%")
         #expect(change > 0.02, "…but not by nothing: the skirt reaches the fifth")
-        #expect(rung.magnitude(at: f, from: 0.2, to: 0.9) > 1e-3, "the root is still there")
+        // the field bed is the same in both ears — root + fifth, no binaural width
+        let (rl, rr) = rung.magnitudes(at: f, from: 0.2, to: 0.9)
+        #expect(rl > 1e-3 && rr > 1e-3, "the root is still there: L \(rl) R \(rr)")
+        #expect(abs(rl - rr) < 1e-9, "the field bed has no width; it must be identical")
     }
 
     @Test("pk at 0 dB is unity — a flat filter is not a filter")

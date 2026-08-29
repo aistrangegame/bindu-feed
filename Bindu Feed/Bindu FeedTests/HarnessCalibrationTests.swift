@@ -25,7 +25,10 @@ struct HarnessCalibrationTests {
         let r = try OfflineRender.render(OfflineRender.probe(hz: 220, peak: 0.075), seconds: 0.5)
         #expect(r.frameCount == 24000)
         #expect(abs(r.peak() - 0.075) < 0.002)
-        #expect(abs(r.magnitude(at: 220) - 0.075) < 0.002)
+        // the probe is centred, so the amplitude must read the same in each ear
+        let (l, rt) = r.magnitudes(at: 220)
+        #expect(abs(l - 0.075) < 0.002)
+        #expect(abs(rt - 0.075) < 0.002)
     }
 
     @Test("a known spectrum reports its known partial weights")
@@ -34,20 +37,27 @@ struct HarnessCalibrationTests {
         let partials: [(Double, Double)] = [(1, 1), (2.004, 1 / 3.2), (2.98, 1 / 5.4), (4.02, 1 / 7.6)]
         let r = try OfflineRender.render(
             OfflineRender.probe(hz: 220, peak: 0.075, partials: partials), seconds: 2.0)
-        let f = r.magnitude(at: 220)
-        #expect(abs(f - 0.075) < 0.003)
-        #expect(abs(r.magnitude(at: 220 * 2.004) / f - 1 / 3.2) < 0.03)
-        #expect(abs(r.magnitude(at: 220 * 2.98) / f - 1 / 5.4) < 0.03)
-        #expect(abs(r.magnitude(at: 220 * 4.02) / f - 1 / 7.6) < 0.03)
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            let f = r.magnitude(at: 220, ear: ear)
+            #expect(abs(f - 0.075) < 0.003)
+            #expect(abs(r.magnitude(at: 220 * 2.004, ear: ear) / f - 1 / 3.2) < 0.03)
+            #expect(abs(r.magnitude(at: 220 * 2.98, ear: ear) / f - 1 / 5.4) < 0.03)
+            #expect(abs(r.magnitude(at: 220 * 4.02, ear: ear) / f - 1 / 7.6) < 0.03)
+        }
     }
 
     @Test("a centred voice has no channel divergence; a panned one does")
     func divergence() throws {
         let centred = try OfflineRender.render(OfflineRender.probe(hz: 110, peak: 0.05), seconds: 0.25)
         #expect(centred.channelDivergence < 1e-6)
+        #expect(abs(centred.peak(ear: .left) - centred.peak(ear: .right)) < 1e-9)
+
         let panned = try OfflineRender.render(
             OfflineRender.probe(hz: 110, peak: 0.05, pan: -1), seconds: 0.25)
         #expect(panned.channelDivergence > 0.04)
+        // and it is the LEFT that carries it — a divergence with no direction proves nothing
+        #expect(panned.peak(ear: .left) > panned.peak(ear: .right) * 4,
+                "L \(panned.peak(ear: .left)) R \(panned.peak(ear: .right))")
     }
 
     // ── the red direction: hand it wrong answers and require disagreement ──
@@ -70,14 +80,14 @@ struct HarnessCalibrationTests {
         let partials: [(Double, Double)] = [(1, 1), (2.004, 1 / 3.2), (2.98, 1 / 5.4), (4.02, 1 / 7.6)]
         let r = try OfflineRender.render(
             OfflineRender.probe(hz: 220, peak: 0.075, partials: partials), seconds: 2.0)
-        let f = r.magnitude(at: 220)
-        #expect(r.magnitude(at: 220 * 2.756) / f < 0.05)
-        #expect(r.magnitude(at: 220 * 5.404) / f < 0.05)
+        let f = r.magnitude(at: 220, ear: .left)
+        #expect(r.magnitude(at: 220 * 2.756, ear: .left) / f < 0.05)
+        #expect(r.magnitude(at: 220 * 5.404, ear: .left) / f < 0.05)
         // and the converse: rendering the OLD spectrum, it finds them
         let old: [(Double, Double)] = [(1, 1), (2.756, 0.5), (5.404, 0.25)]
         let o = try OfflineRender.render(
             OfflineRender.probe(hz: 220, peak: 0.075, partials: old), seconds: 2.0)
-        #expect(o.magnitude(at: 220 * 2.756) / o.magnitude(at: 220) > 0.4)
+        #expect(o.magnitude(at: 220 * 2.756, ear: .left) / o.magnitude(at: 220, ear: .left) > 0.4)
     }
 
     @Test("silence is not mistaken for signal")

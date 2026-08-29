@@ -93,8 +93,11 @@ struct RegisterLawTests {
         let clear = pointVoice(rootHz: f)              // default is already open
         let b = try OfflineRender.render(clear.sourceNode, seconds: 5.0)
 
-        #expect(a.peak(from: settle) < b.peak(from: settle) * 0.95,
-                "the veil did not close: veiled \(a.peak(from: settle)), clear \(b.peak(from: settle))")
+        // the veil is one filter per channel, so it must close in BOTH ears
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            #expect(a.peak(ear: ear, from: settle) < b.peak(ear: ear, from: settle) * 0.95,
+                    "\(ear): veiled \(a.peak(ear: ear, from: settle)), clear \(b.peak(ear: ear, from: settle))")
+        }
     }
 
     @Test("the floor keeps a veil from ever closing all the way again")
@@ -117,12 +120,20 @@ struct RegisterLawTests {
         let r = try OfflineRender.render(v.sourceNode, seconds: 5.0)
         let flat = try OfflineRender.render(pointVoice(rootHz: f).sourceNode, seconds: 5.0)
 
-        // the resonance swells at the register's own frequency …
-        #expect(r.magnitude(at: f * 2, from: settle, to: 4.8)
-                > flat.magnitude(at: f * 2, from: settle, to: 4.8) * 2.5)
-        // … and the fundamental has gone flat: 174 × 0.98 = 170.52
-        #expect(r.magnitude(at: f * 0.98, from: settle, to: 4.8)
-                > r.magnitude(at: f, from: settle, to: 4.8))
+        // The resonance sits on the OCTAVE, which both ears carry, so it must swell in both.
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            #expect(r.magnitude(at: f * 2, ear: ear, from: settle, to: 4.8)
+                    > flat.magnitude(at: f * 2, ear: ear, from: settle, to: 4.8) * 2.5,
+                    "\(ear) did not ring")
+        }
+        // BOTH TONES SAG, and they are different tones in different ears — the left at
+        // f×0.98 = 170.52 and the right at (f+beat)×0.98. Asserting only the left would
+        // leave half the law unmeasured.
+        #expect(r.magnitude(at: f * 0.98, ear: .left, from: settle, to: 4.8)
+                > r.magnitude(at: f, ear: .left, from: settle, to: 4.8))
+        let beat = 8.0
+        #expect(r.magnitude(at: (f + beat) * 0.98, ear: .right, from: settle, to: 4.8)
+                > r.magnitude(at: f + beat, ear: .right, from: settle, to: 4.8))
     }
 
     @Test("the sag is 2% at full load and nothing at rest")
@@ -268,10 +279,12 @@ struct ReturnRegisterTests {
                               envelope: .linearExp)
         let r = try OfflineRender.render(v.sourceNode, seconds: 2.0)
         // early it is up at f×2; by the end it has fallen to f×1.12
-        #expect(r.magnitude(at: f * 2, from: 0.02, to: 0.30)
-                > r.magnitude(at: f * 1.12, from: 0.02, to: 0.30))
-        #expect(r.magnitude(at: f * 1.12, from: 1.2, to: 1.6)
-                > r.magnitude(at: f * 2, from: 1.2, to: 1.6))
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            #expect(r.magnitude(at: f * 2, ear: ear, from: 0.02, to: 0.30)
+                    > r.magnitude(at: f * 1.12, ear: ear, from: 0.02, to: 0.30))
+            #expect(r.magnitude(at: f * 1.12, ear: ear, from: 1.2, to: 1.6)
+                    > r.magnitude(at: f * 2, ear: ear, from: 1.2, to: 1.6))
+        }
         #expect(abs(r.peak() - 0.075) < 0.010, "peak \(r.peak()), design says 0.075")
     }
 
@@ -335,9 +348,12 @@ struct ReturnRegisterTests {
         let v = CeremonyVoice(hz: hz, peak: 0.04, attackSeconds: 1.15, releaseSeconds: 2.25,
                               synth: .sineOctaveBelow, envelope: .expSwellExp)
         let r = try OfflineRender.render(v.sourceNode, seconds: 3.0)
-        let f = r.magnitude(at: hz, from: 0.9, to: 2.0)
-        #expect(abs(r.magnitude(at: hz * 0.5, from: 0.9, to: 2.0) / f - 0.34) < 0.08)
-        #expect(r.magnitude(at: hz * 2, from: 0.9, to: 2.0) / f < 0.08, "no octave above")
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            let f = r.magnitude(at: hz, ear: ear, from: 0.9, to: 2.0)
+            #expect(abs(r.magnitude(at: hz * 0.5, ear: ear, from: 0.9, to: 2.0) / f - 0.34) < 0.08)
+            #expect(r.magnitude(at: hz * 2, ear: ear, from: 0.9, to: 2.0) / f < 0.08,
+                    "\(ear): no octave above")
+        }
     }
 }
 
@@ -380,13 +396,16 @@ struct DanceRegisterTests {
         let loose = try OfflineRender.render(e.sourceNode, seconds: 3.0)
 
         // in tune, the energy sits on the harmonic; out of tune it has moved off it
-        let onPitch = locked.magnitude(at: 1278, from: 1.5, to: 2.9)
-        let offPitch = loose.magnitude(at: 1278, from: 1.5, to: 2.9)
+        // body 1 is panned RIGHT — `(k odd ? +1 : −1)·min(0.7, 0.18 + k·0.16)` = +0.34 — so
+        // the right ear is where its energy actually is.
+        let onPitch = locked.magnitude(at: 1278, ear: .right, from: 1.5, to: 2.9)
+        let offPitch = loose.magnitude(at: 1278, ear: .right, from: 1.5, to: 2.9)
+        #expect(locked.peak(ear: .right) > locked.peak(ear: .left), "body 1 pans right")
         #expect(onPitch > offPitch * 1.5,
                 "lock did not tune them: locked \(onPitch), loose \(offPitch)")
         // 16 cents at 1278 Hz is ~11.8 Hz sharp — that is where the loose one went
         let sharpHz: Double = 1278 * pow(2.0, 16.0 / 1200.0)
-        let atSharp = loose.magnitude(at: sharpHz, from: 1.5, to: 2.9)
+        let atSharp = loose.magnitude(at: sharpHz, ear: .right, from: 1.5, to: 2.9)
         #expect(atSharp > offPitch)
     }
 

@@ -19,9 +19,13 @@ struct StrikeVoiceTests {
     func fieldThresholdPeak() throws {
         let r = try OfflineRender.render(
             SoundEngine.fieldThresholdVoice(hz: 220, dur: 5).sourceNode, seconds: 6.0)
-        let f = r.magnitude(at: 220, from: 1.8, to: 2.4)      // around the 0.42·dur crest
-        #expect(abs(f - 0.032) < 0.004, "fundamental \(f), design says 0.032")
-        #expect(f < 0.045, "still carrying the bowl's 0.075")
+        // centred voice: the claim holds in each ear, and the two must agree
+        let (l, rt) = r.magnitudes(at: 220, from: 1.8, to: 2.4)   // around the 0.42·dur crest
+        for (name, f) in [("left", l), ("right", rt)] {
+            #expect(abs(f - 0.032) < 0.004, "\(name) fundamental \(f), design says 0.032")
+            #expect(f < 0.045, "\(name) still carrying the bowl's 0.075")
+        }
+        #expect(abs(l - rt) < 1e-9, "a centred voice must be identical in both ears")
     }
 
     /// The half that separates it from every other event in the app: it ENDS.
@@ -48,11 +52,14 @@ struct StrikeVoiceTests {
         let hz = 220.0
         let r = try OfflineRender.render(
             SoundEngine.fieldThresholdVoice(hz: hz, dur: 6).sourceNode, seconds: 5.0)
-        let f = r.magnitude(at: hz, from: 0.5, to: 4.0)
-        #expect(abs(r.magnitude(at: hz * 2.002, from: 0.5, to: 4.0) / f - 0.22) < 0.04)
-        // and none of the bowl's spectrum
-        for m in [2.004, 2.98, 4.02] where m != 2.004 {
-            #expect(r.magnitude(at: hz * m, from: 0.5, to: 4.0) / f < 0.08, "bowl partial \(m)")
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            let f = r.magnitude(at: hz, ear: ear, from: 0.5, to: 4.0)
+            #expect(abs(r.magnitude(at: hz * 2.002, ear: ear, from: 0.5, to: 4.0) / f - 0.22) < 0.04)
+            // and none of the bowl's spectrum
+            for m in [2.98, 4.02] {
+                #expect(r.magnitude(at: hz * m, ear: ear, from: 0.5, to: 4.0) / f < 0.08,
+                        "\(ear) bowl partial \(m)")
+            }
         }
     }
 
@@ -82,13 +89,16 @@ struct StrikeVoiceTests {
             SoundEngine.spineThresholdVoice(hz: f).sourceNode, seconds: 4.0)
 
         // early: nearer the flat pitch than the true one
-        let earlyFlat = r.magnitude(at: flat, from: 0.05, to: 0.5)
-        let earlyTrue = r.magnitude(at: f, from: 0.05, to: 0.5)
+        let earlyFlat = r.magnitude(at: flat, ear: .left, from: 0.05, to: 0.5)
+        let earlyTrue = r.magnitude(at: f, ear: .left, from: 0.05, to: 0.5)
         #expect(earlyFlat > earlyTrue, "it did not arrive flat: \(earlyFlat) vs \(earlyTrue)")
+        // centred, so the right ear must tell the same story
+        #expect(r.magnitude(at: flat, ear: .right, from: 0.05, to: 0.5)
+                > r.magnitude(at: f, ear: .right, from: 0.05, to: 0.5))
 
         // late: in tune
-        let lateFlat = r.magnitude(at: flat, from: 2.4, to: 3.4)
-        let lateTrue = r.magnitude(at: f, from: 2.4, to: 3.4)
+        let lateFlat = r.magnitude(at: flat, ear: .left, from: 2.4, to: 3.4)
+        let lateTrue = r.magnitude(at: f, ear: .left, from: 2.4, to: 3.4)
         #expect(lateTrue > lateFlat, "it never came into tune: \(lateTrue) vs \(lateFlat)")
     }
 
@@ -101,7 +111,10 @@ struct StrikeVoiceTests {
         #expect(abs(r.peak() - 0.07) < 0.008, "peak \(r.peak()), design says 0.07")
         #expect(r.peakTime < 0.05, "0.02s attack; crested at \(r.peakTime)s")
         // the octave carries it, not the fundamental
-        #expect(r.magnitude(at: hz * 2, from: 0, to: 0.5) > r.magnitude(at: hz, from: 0, to: 0.5) * 4)
+        for ear in [OfflineRender.Rendered.Ear.left, .right] {
+            #expect(r.magnitude(at: hz * 2, ear: ear, from: 0, to: 0.5)
+                    > r.magnitude(at: hz, ear: ear, from: 0, to: 0.5) * 4, "\(ear)")
+        }
         // and it is over — an 11s bowl would be at a third of its peak here
         #expect(r.peak(from: 0.75) < 0.002, "still ringing at \(r.peak(from: 0.75))")
     }
@@ -118,9 +131,12 @@ struct StrikeVoiceTests {
             let v = CeremonyVoice(hz: hz, peak: want, attackSeconds: 0.9,
                                   releaseSeconds: 8.1, synth: .sine, envelope: .linearExp)
             let r = try OfflineRender.render(v.sourceNode, seconds: 2.0)
-            let got = r.magnitude(at: hz, from: 0.85, to: 1.3)
-            #expect(abs(got - want) < want * 0.25, "tone \(i) at \(got), design says \(want)")
-            #expect(got <= 0.0755, "above the event ceiling")
+            let (gl, gr) = r.magnitudes(at: hz, from: 0.85, to: 1.3)
+            for (name, got) in [("left", gl), ("right", gr)] {
+                #expect(abs(got - want) < want * 0.25,
+                        "\(name) tone \(i) at \(got), design says \(want)")
+                #expect(got <= 0.0755, "\(name) above the event ceiling")
+            }
         }
     }
 

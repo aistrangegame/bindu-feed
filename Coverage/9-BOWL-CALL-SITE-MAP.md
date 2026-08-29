@@ -219,16 +219,27 @@ the corpus, not about the app, and it governs how C1 must be written:
 
 - `spine-sound.js:164` `nul:function(secs)` — **no caller in any design-source file.**
 - `spine-sound.js:176` `distance:function(f)` — **no caller in any design-source file.**
+- `spine-sound.js:189` `send:function(f,pan)` — **no caller in any design-source file.**
+  *(Found while writing C1; the same fact, one further in.)*
 
 Every other register law has one. `narrow` · `widen` · `unveil` · `bear` · `reflect` are
-invoked; these two are declared, documented, wired into `_voice`'s graph — and never run.
+invoked; these three are declared, documented, wired into `_voice`'s graph — and never run.
+
+**AND THEY ARE NOT AN ARBITRARY THREE.** `nul` is world V's whole claim; `distance` and
+`send` are world VI's. Those are the two registers whose **sound is the mechanism** rather
+than an accompaniment to it — a null that is silence rather than quiet, a room that IS the
+distance travelled. Every other law colours a voice that would still make sense without it.
+These two are the thing the register is about. The design specified exactly the two hardest
+to fake and stopped at the specification.
 
 **Two consequences.**
 
-1. **C1 writes the caller, so `nul` and `distance` are the app's own idiom** — the same
-   standing as the Light's six scenes and `CeremonySynth.drain`, both of which are behaviour
-   the design states and mechanism the app supplies. The code says so at the call sites. A
-   future session must not go looking for a source that is not there.
+1. **C1 did not port them. It completed them.** *Specified by the design, never invoked by
+   it, completed here* — that is what the labels say at each call site, and it is a stronger
+   and more accurate claim than "app-own idiom". The numbers are the design's and exact; the
+   invocation is this build's, because there was none. Nothing was invented and nothing
+   upstream was ignored — there was simply nothing upstream to call. A future session must
+   not go looking for a source that is not there.
 
 2. **The echo send's tap was moved to pre-null for the stronger reason.** Not *"the design
    taps there"* — an appeal to a graph the design never exercised — but *exclusivity could

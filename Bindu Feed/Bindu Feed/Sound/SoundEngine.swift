@@ -560,23 +560,34 @@ final class SoundEngine: ObservableObject {
     /// and beat at one index (`PointLadder.drone`), so this can never drift from the drone.
     private var beatHz: Double { currentBreath?.snapshot.binauralHz ?? 4 }
 
-    // ── the two with no caller in the design ──────────────────────────────
+    // ── SPECIFIED BY THE DESIGN, NEVER INVOKED BY IT, COMPLETED HERE ──────
     //
-    // **`nul()` AND `distance()` ARE DEFINED IN THE DESIGN AND CALLED NOWHERE.**
-    // `spine-sound.js:164` and `:176` are declared, documented, and wired into `_voice`'s
-    // graph — and no file in the design corpus invokes either. Every other register law has a
-    // caller; these two do not, so **C1 wrote the caller** and the callers below are the
-    // app's own idiom, the same standing as the Light's six scenes and `CeremonySynth.drain`:
-    // behaviour the design states, mechanism the app supplies. The NUMBERS are the design's
-    // and are exact. **There is no upstream call site to compare against — a future session
-    // should not go looking for a source that is not there.** `Coverage/9` §5b.
+    // Three mechanisms are declared in `spine-sound.js`, documented there at length, wired
+    // into `_voice`'s graph — and called by nothing in the design corpus: `nul` (`:164`),
+    // `distance` (`:176`) and `send` (`:189`). Every other register law has a caller.
+    //
+    // **AND THEY ARE NOT AN ARBITRARY THREE.** `nul` is world V's whole claim and
+    // `distance`/`send` are world VI's — the two registers whose SOUND IS THE MECHANISM
+    // rather than an accompaniment to it. A null that is silence rather than quiet; a room
+    // that IS the distance travelled. Every other law colours a voice that would still make
+    // sense without it; these two are the thing the register is about. The design specified
+    // exactly the two hardest to fake and stopped at the specification.
+    //
+    // So C1 did not *port* them. **It completed them.** The numbers below are the design's
+    // and are exact; the invocation is this build's, because there was none. That is a
+    // different claim from "the app's own idiom" and a stronger one: nothing was invented,
+    // and nothing upstream was ignored — there was simply nothing upstream to call.
+    //
+    // **A future session should not go looking for a source that is not there.**
+    // `Coverage/9` §5b.
 
     /// The one deliberate silence in the Point. *"Not a fade — the voice summed against
     /// itself, which is exact. The stone tail already in the air keeps decaying, so the hall
     /// dies away and then there is nothing."* `spine-sound.js:164-171` — `nul.gain → −1` over
     /// 0.09s, back to 0 after `secs` over 1.8s.
     ///
-    /// **CALLER IS THE APP'S.** The design defines this and never runs it.
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** This is world V's entire claim as
+    /// physics, and the design wrote the mechanism and no caller.
     func nul(secs: Double = 4.4) {
         guard isRunning, let voice = currentBreath else { return }
         setNull(-1)
@@ -593,7 +604,8 @@ final class SoundEngine: ObservableObject {
     /// everything is home the world is dry again. Nothing is added — the same note, arriving
     /// late."* `spine-sound.js:176-186` — `ech.gain → f·0.62` and `delayTime → 0.30 + f·1.35`.
     ///
-    /// **CALLER IS THE APP'S.** The design defines this and never runs it.
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** World VI's whole physics, and the
+    /// design wrote the mechanism and no caller.
     func distance(_ f: Double) {
         let f = max(0, min(1, f))
         setEchoSend(f * 0.62)
@@ -602,8 +614,8 @@ final class SoundEngine: ObservableObject {
 
     // ── VI · what is sent, and what comes back ────────────────────────────
 
-    /// **CALLER IS THE APP'S**, like `distance` — `send` is called nowhere in the design
-    /// either; only `arrive`'s numbers have a home. *"the departure. It bends down and away
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE**, like `distance` — world VI's departure.
+    /// *"the departure. It bends down and away
     /// as it goes, the way a thing leaving does, and it goes straight into the delay — which
     /// is to say it is already on its way back the moment he lets go."*
     /// `spine-sound.js:189-203`: `f*2` bending to `f*1.12` over 1.5s, 0 → 0.075 at 0.05s,
@@ -623,6 +635,22 @@ final class SoundEngine: ObservableObject {
     /// sixth, a seventh, and on the fourth return the octave: the lap that finally arrives
     /// home. It swells IN, backwards, because that is the shape of a thing approaching."*
     /// `spine-sound.js:208-221`.
+    ///
+    /// **TWO THINGS HERE ARE THE REGISTER'S SENTENCE, NOT PARAMETERS. DO NOT NORMALISE THEM.**
+    ///
+    /// 1 · **It swells IN.** `.expSwellExp` ramps *up* exponentially from silence across
+    ///     1.15s. Every other event in this app strikes and decays, so this one reads as
+    ///     wrong to any pass tidying envelopes toward a common shape — and a linear or
+    ///     instant attack turns a lap coming home into a note that started. The backwards
+    ///     swell IS the approach.
+    /// 2 · **The octave is BELOW, at 0.34.** `o2` at `f·r·0.5`, not `f·r·2`. A thing
+    ///     returning from a distance sounds LARGER, not brighter — more of it arrives than
+    ///     left. An octave above would be the same interval and the opposite meaning, and it
+    ///     is a one-character edit away, which is exactly why it is written down here.
+    ///
+    /// Both are cheap to flatten by accident and neither would fail a peak or a ceiling
+    /// check. `ReturnRegisterTests.arriveSwellsIn` and `.arriveIsLargerNotBrighter` are what
+    /// stand between them and a future optimisation.
     func arrive(hz: Double, n: Int = 1, after: Double = 0) {
         let ratios = [1.5, 5.0 / 3.0, 15.0 / 8.0, 2.0]
         let lap = max(1, min(4, n))

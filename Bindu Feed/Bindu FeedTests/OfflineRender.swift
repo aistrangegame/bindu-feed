@@ -49,7 +49,9 @@ enum OfflineRender {
             return ch[a..<b]
         }
 
-        /// Largest absolute sample across both channels in a window (whole buffer by default).
+        /// Largest absolute sample across BOTH channels — the loudest thing in the buffer,
+        /// whichever ear it was in. Right for a ceiling check; use `peak(ear:)` when the
+        /// claim is about one side.
         func peak(from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
             let l = slice(left, from, to).reduce(0.0) { max($0, abs(Double($1))) }
             let r = slice(right, from, to).reduce(0.0) { max($0, abs(Double($1))) }
@@ -65,6 +67,20 @@ enum OfflineRender {
         enum Ear { case left, right }
         private func channel(_ ear: Ear) -> [Float] { ear == .left ? left : right }
 
+        /// Both, for the claims that must hold in each ear independently. A centred voice
+        /// writes the same sample to both buffers and should read identically; the binaural
+        /// pair should NOT, and saying which is expected is the point.
+        func magnitudes(at hz: Double, from: Double = 0,
+                        to: Double = .greatestFiniteMagnitude) -> (left: Double, right: Double) {
+            (magnitude(at: hz, ear: .left, from: from, to: to),
+             magnitude(at: hz, ear: .right, from: from, to: to))
+        }
+
+        /// Loudest sample in ONE ear.
+        func peak(ear: Ear, from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
+            slice(channel(ear), from, to).reduce(0.0) { max($0, abs(Double($1))) }
+        }
+
         func rms(from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
             let s = slice(left, from, to)
             guard !s.isEmpty else { return 0 }
@@ -77,7 +93,12 @@ enum OfflineRender {
         /// the bowl's partials are inharmonic (`2.004 · 2.98 · 4.02`) and would each land
         /// between bins. Returns the amplitude of that sinusoid, in the same units as the
         /// samples, so `magnitude(at: f)` of a `0.075·sin(2πft)` signal is `0.075`.
-        func magnitude(at hz: Double, ear: Ear = .left,
+        /// `ear` has NO DEFAULT, deliberately. It defaulted to `.left` when it was added, and
+        /// every assertion written before it kept reading the left channel silently — which
+        /// for the binaural pair is the wrong tone entirely, and for a centred voice was
+        /// right only by accident. A measurement that is right by accident is not a
+        /// measurement, so the compiler now asks which ear each claim is about.
+        func magnitude(at hz: Double, ear: Ear,
                        from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
             let s = slice(channel(ear), from, to)
             guard s.count > 1 else { return 0 }
