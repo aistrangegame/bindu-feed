@@ -160,6 +160,23 @@ struct InstrumentView: View {
                     .ignoresSafeArea().allowsHitTesting(false)
             }
 
+            // `flare` — `The Chrome.html:211`. THE TWO GATES, at `t = 0.34` and `0.68`.
+            //
+            // *"They exist so the crossing has a middle."* Drawn tighter and dimmer than the
+            // crossing flash above: the flash says a membrane GAVE, the gates say the passage
+            // is still under way. A 5.4s glide with nothing in it reads as a stall, and this
+            // is what tells the hand it is being carried rather than stuck.
+            //
+            // Never fires on a slip-through, because `AxisPassage.gatesCrossing` returns none
+            // when `swift` — the difference the whole ledger rests on, and it must be visible
+            // rather than merely true.
+            if travel.gateFlare > 0.01 {
+                Circle().fill(RadialGradient(
+                    colors: [here.color.opacity(0.22 * travel.gateFlare), .clear],
+                    center: .center, startRadius: 0, endRadius: 240 * (1 + travel.gateFlare)))
+                    .ignoresSafeArea().allowsHitTesting(false)
+            }
+
             // The passage flash on crossing.
             if travel.flash > 0.01 {
                 Circle().fill(RadialGradient(

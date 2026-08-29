@@ -24,6 +24,18 @@ final class AxisTravel: ObservableObject {
     @Published private(set) var tension: Double = 0     // how hard the near membrane is felt, 0…1
     @Published private(set) var crossing = false        // inside a passage — the camera is out of the hand
     @Published private(set) var passageT: Double = 0     // 0…1 through the passage
+
+    /// `flare` — `The Chrome.html:199-212`. **THE PASSAGE HAS A MIDDLE.**
+    ///
+    /// Two gates at `t = 0.34` and `0.68`, each firing once per crossing. The comp's own
+    /// note is the whole reason they exist: *"They exist so the crossing has a middle."* A
+    /// 5.4-second glide with nothing in it is a wait; two strikes inside it make it a
+    /// passage with structure, and it is what tells the hand the crossing is still happening
+    /// rather than stalled. `AxisTravel` published only `passageT`, so there was no middle
+    /// and nothing could have drawn one.
+    ///
+    /// Decays like `flash`, and is **not** raised on a swift crossing — see `glideSwift`.
+    @Published private(set) var gateFlare: Double = 0
     @Published private(set) var passageDir: Double = 1   // +1 inward (wormhole) · −1 outward (whitehole)
     @Published private(set) var speed: Double = 0        // |velocity| — feeds the glide's level
 
@@ -38,6 +50,10 @@ final class AxisTravel: ObservableObject {
 
     // The membranes.
     private var mem = [Bool](repeating: false, count: 14)
+    /// `PS.swift` / `PS.hit` — the current passage's kind, and which gates have fired.
+    private var glideSwift = false
+    private var gateHit = [false, false]
+    private var lastPassageT = 0.0
     private var push = 0.0, curS = -1, dir = 1.0, gave = -1
 
     /// The fourteen surfaces' opened state (surface s sits between register s and s+1), read by
@@ -196,10 +212,26 @@ final class AxisTravel: ObservableObject {
             glideT += dt / glideDur
             let tt = Swift.min(1, glideT)
             passageT = tt
+            // `:210-211` — the two gates, once each, and NEVER on a slip-through. A surface
+            // you have already opened has no middle to mark: that is the difference the
+            // whole ledger rests on, so the gates are what a crossing HAS and a slip-through
+            // does not.
+            for i in AxisPassage.gatesCrossing(from: lastPassageT, to: tt, swift: glideSwift)
+            where !gateHit[i] {
+                gateHit[i] = true
+                gateFlare = 1
+            }
+            lastPassageT = tt
+            gateFlare = Swift.max(0, gateFlare - dt * 2.2)      // `:262` flare decay
             let e = tt * tt * (3 - 2 * tt)               // smoothstep
             z = glideFrom + (glideTo - glideFrom) * e
             flash = Swift.max(0, flash - dt / 0.9)
-            if tt >= 1 { z = glideTo; crossing = false; passageT = 0; zv = 0; force = 0 }
+            if tt >= 1 {
+                z = glideTo; crossing = false; passageT = 0; force = 0
+                // A slip-through keeps what it was given; an earned crossing ends at rest.
+                // `:249` zeroes `zv`; `:255` multiplies it by 0.45 and lets him carry on.
+                if !glideSwift { zv = 0 }
+            }
             detectCross()
             return
         }
@@ -211,7 +243,32 @@ final class AxisTravel: ObservableObject {
         zv *= pow(DAMP, f)
         speed = abs(zv)
 
-        if gave >= 0 { beginPassage(surface: gave, dir: dir); gave = -1; zv = 0 }
+        if gave >= 0 {
+            beginPassage(surface: gave, dir: dir, swift: false); gave = -1; zv = 0
+        } else {
+            // `swift` — `The Chrome.html:250-256`. **A SURFACE ALREADY OPENED IS A
+            // SLIP-THROUGH, NOT AN EVENT.**
+            //
+            //     const s = surfaceAt(Z);
+            //     if (s >= 0 && TR.mem[s] && Math.abs(zv) > 0.004) {
+            //       const at = s+0.5, q = Z+5, prev = q-zv;
+            //       if ((prev<at && q>=at) || (prev>at && q<=at)) { PS.begin(s,TR.dir,true,Z); zv *= 0.45; }
+            //     }
+            //
+            // `_mechverdicts1.md` recorded it ABSENT: *"Re-crossing a surface you already
+            // meant costs the same full 5.4s ceremony as the first time — the reward for
+            // having meant it is invisible."* The memory was already here (`mem`,
+            // `openedSurfaces`); nothing read it on the way back through.
+            //
+            // **The reward is the whole point.** `0.85s` against `5.4`, no gates, and
+            // `zv ×= 0.45` so he comes out of it STILL MOVING rather than stopped — the comp
+            // calls it *"quick and still a crossing"*. An instrument that charges full
+            // ceremony for a door you have already opened teaches you not to go back.
+            if let sIdx = AxisPassage.slipThrough(z: z, zv: zv, opened: mem) {
+                beginPassage(surface: sIdx, dir: dir, swift: true)
+                zv *= AxisPassage.slipSpeedKept
+            }
+        }
 
         // ── THE STILLNESS GATE ─────────────────────────────────────────────────────────────
         // `The Instrument v3.html:5518-5520`, verbatim in its numbers:
@@ -307,15 +364,18 @@ final class AxisTravel: ObservableObject {
 
     // MARK: - The passage
 
-    private func beginPassage(surface s: Int, dir d: Double) {
+    private func beginPassage(surface s: Int, dir d: Double, swift: Bool = false) {
         let target = d > 0 ? Double((s + 1) - 5) : Double(s - 5)
-        beginPassage(toZ: target, dir: d)
+        beginPassage(toZ: target, dir: d, swift: swift)
     }
 
-    private func beginPassage(toZ target: Double, dir d: Double) {
+    private func beginPassage(toZ target: Double, dir d: Double, swift: Bool = false) {
         glideFrom = z
         glideTo = Swift.min(Swift.max(target, MINZ), MAXZ)
-        glideT = 0; glideDur = 5.4
+        // `:203` — `this.dur = swift ? 0.85 : TR.DUR`.
+        glideSwift = swift
+        gateHit = [false, false]
+        glideT = 0; glideDur = AxisPassage.duration(swift: swift); lastPassageT = 0
         dir = d; passageDir = d; passageT = 0
         crossing = true
         flash = 1

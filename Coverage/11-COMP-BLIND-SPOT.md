@@ -68,7 +68,15 @@ The true gap is between the two and cannot be closed by grep.
 > which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
 > · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
 >
-> **Still open, spot-checked by symbol:** `renderRings`' body text · `swift`/`hit`.
+> **Still open, spot-checked by symbol:** `renderRings`' body text — a CONTENT gap, not a
+> mechanism one: `ReturnRing` carries no body text at all, so the words a return was left
+> with cannot be shown until the model carries them.
+> **`swift` · `dur` · `hit` closed 2026-08-29.** The passage now has a middle (two gates at
+> `t 0.34` and `0.68`, drawn), and a surface already opened is a slip-through — `0.85s`
+> against `5.4`, no gates, and `zv ×= 0.45` so he comes out still moving. `AxisTravel`
+> already held the memory (`mem`/`openedSurfaces`) and nothing read it on the way back
+> through. Decisions extracted to `AxisPassage` so a display-link-driven mechanism could be
+> asserted at all.
 > **`lightOff` and `inkTouch` closed 2026-08-29.** `lightOff` needed `CeremonyVoice` to grow
 > a fade gate and `lightRoomTone` to RETAIN its voice — a bloom is over when it is over, but
 > a room is not, and the tone had been following the user out for the whole build. It is the
