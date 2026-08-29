@@ -67,11 +67,22 @@ enum CeremonyEnvelope {
     /// constant is `ln(peak/0.0001)/release`, so the tone reaches inaudibility exactly when
     /// the design says it does instead of at a constant borrowed from another voice.
     case linearExp
+    /// **It swells IN, backwards.** `spine-sound.js:214-216` — `arrive` ramps
+    /// *exponentially* from 0.0001 UP to its peak over 1.15s and then exponentially back
+    /// down. Every other event in the app strikes and decays; this one is *"the shape of a
+    /// thing approaching"*, and a linear attack would make it a note that started rather
+    /// than a lap coming home. Both halves share one constant, because both ramp between the
+    /// same two values.
+    case expSwellExp
 }
 
 enum CeremonySynth {
     case sine        // pure tone
     case sineOctave  // sine + a near-octave partial (the choir voice)
+    /// VI's arrival — `spine-sound.js:212-217`, `o` at `f·r` with `o2` an octave BELOW at
+    /// `f·r·0.5` through `g2.gain = 0.34`. Below, not above: the lap coming home sounds
+    /// larger than it left, not brighter. Not normalised, as the design is not.
+    case sineOctaveBelow
     case bowl        // struck-bowl partials (thresholds, the Sealing bowl)
     /// ONE PRESENCE, IN ITS OWN BODY — `field-sound.js:13-25 CHAR`. Pitch comes from the
     /// VOICES table and never from here; this is only how that voice SOUNDS.
@@ -122,6 +133,11 @@ final class CeremonyVoice {
         /// `spine-sound.js:357` reaches tune at **2.2s** inside a 6s event.
         glideSeconds: Double? = nil,
         envelope: CeremonyEnvelope = .sinExp,
+        /// `send` is the one event that MOVES across the head: `pn.pan` ramps 0 → `pan` over
+        /// 1.4s (`spine-sound.js:200-202`), because a thing leaving goes somewhere. Equal
+        /// power, which is what `StereoPannerNode` does.
+        panTo: Double? = nil,
+        panSeconds: Double = 1.4,
         sampleRate: Double = 48000
     ) {
         let flag = OSAllocatedUnfairLock<Bool>(initialState: false)
@@ -140,6 +156,8 @@ final class CeremonyVoice {
         var noiseState: UInt32 = 0x9E3779B9  // air, for Shweta alone
         let panL = char.map { 0.5 - $0.pan * 0.5 } ?? 0.5
         let panR = char.map { 0.5 + $0.pan * 0.5 } ?? 0.5
+        let panTarget = panTo.map { max(-1, min(1, $0)) }
+        let panSamples = max(1, Int(panSeconds * sampleRate))
 
         let attackSamples = max(1, Int(attackSeconds * sampleRate))
         let releaseSamples = max(1, Int(releaseSeconds * sampleRate))
@@ -177,13 +195,17 @@ final class CeremonyVoice {
                 let env: Double
                 if sampleIndex < attackSamples {
                     let a = Double(sampleIndex) / Double(attackSamples)
-                    env = envelope == .sinExp ? sin(a * .pi / 2.0) : a
+                    switch envelope {
+                    case .sinExp:      env = sin(a * .pi / 2.0)
+                    case .expSwellExp: env = exp(-expDecay * (1 - a))
+                    default:           env = a
+                    }
                 } else if sampleIndex < totalSamples {
                     let t = Double(sampleIndex - attackSamples) / Double(releaseSamples)
                     switch envelope {
-                    case .sinExp:      env = exp(-3.0 * t)
+                    case .sinExp:       env = exp(-3.0 * t)
                     case .linearToZero: env = 1.0 - t
-                    case .linearExp:   env = exp(-expDecay * t)
+                    case .linearExp, .expSwellExp: env = exp(-expDecay * t)
                     }
                 } else {
                     bufL?[frame] = 0; bufR?[frame] = 0
@@ -215,6 +237,10 @@ final class CeremonyVoice {
                         if bowlPhases[k] >= 2.0 * .pi { bowlPhases[k] -= 2.0 * .pi }
                         raw += sin(bowlPhases[k]) * bowlWeights[k]
                     }
+                case .sineOctaveBelow:
+                    partialPhase += 2.0 * .pi * (hz * 0.5) / sampleRate
+                    if partialPhase >= 2.0 * .pi { partialPhase -= 2.0 * .pi }
+                    raw = sin(phase) + sin(partialPhase) * 0.34
                 case .fieldThreshold:
                     // `o` at hz, `o2` at hz*2.002 through `g2.gain = 0.22`
                     partialPhase += 2.0 * .pi * (hz * 2.002) / sampleRate
@@ -268,6 +294,12 @@ final class CeremonyVoice {
 
                 var lGain = 1.0, rGain = 1.0
                 if case .presence = synth { lGain = panL * 2; rGain = panR * 2 }
+                if let panTarget {
+                    // equal power, 0 → panTarget across panSamples
+                    let p = panTarget * min(1.0, Double(sampleIndex) / Double(panSamples))
+                    let a = (p + 1) * Double.pi / 4
+                    lGain *= cos(a) * 1.41421356; rGain *= sin(a) * 1.41421356
+                }
                 // the pitch ramp, if this voice was given one
                 if hzEnd != hzStart {
                     let span = glideSamples ?? totalSamples
@@ -335,6 +367,87 @@ final class InkVoice {
                 let s = Float(sin(phase) * peak * env)
                 bufL?[frame] = s
                 bufR?[frame] = s
+            }
+            return noErr
+        }
+    }
+}
+
+/// VII · A DANCER. `spine-sound.js:236-252` — the only polyphonic register in the instrument.
+///
+/// *"Every world before this was ONE voice being acted on — narrowed, widened, filtered,
+/// rung, inverted, delayed. Here each body that joins the chain is a real voice of its own at
+/// a harmonic of 852, entering out of tune and pulling into lock as the figure holds. Nothing
+/// is added from outside. They simply find each other."*
+///
+/// Sustained, like `InkVoice`, and unlike it the pitch MOVES: `detune` is in cents and closes
+/// toward zero as `ensemble(lock)` rises, so the chord beats when it forms and tunes itself
+/// as they dance. Held until `leave()`.
+final class DancerVoice {
+    let sourceNode: AVAudioSourceNode
+    /// The harmonic this body sings — `852 × [1, 1.5, 2, 2.5, 3][k]`.
+    let hz: Double
+    /// Its resting detune in cents — `(k odd ? +1 : −1) × (11 + k·5)`.
+    let restingDetuneCents: Double
+
+    private let detuneCents: OSAllocatedUnfairLock<Double>
+    private let gate: OSAllocatedUnfairLock<Bool>
+    private let doneFlag: OSAllocatedUnfairLock<Bool>
+    var isDone: Bool { doneFlag.withLock { $0 } }
+
+    /// `ensemble(lock)` — `detune.setTargetAtTime(det·(1−lock), t, 0.5)`.
+    func setDetune(cents: Double) { detuneCents.withLock { $0 = cents } }
+    /// `leaveAll()` — `gain.setTargetAtTime(0, t, 0.8)`.
+    func leave() { gate.withLock { $0 = false } }
+
+    init(k: Int, sampleRate: Double = 48000) {
+        let ratios = [1.0, 1.5, 2.0, 2.5, 3.0]
+        let idx = max(0, min(4, k))
+        let f = 852 * ratios[idx]
+        let det = (idx % 2 != 0 ? 1.0 : -1.0) * (11 + Double(idx) * 5)
+        let peak = 0.030 / (1 + Double(idx) * 0.42)
+        let pan = (idx % 2 != 0 ? 1.0 : -1.0) * min(0.7, 0.18 + Double(idx) * 0.16)
+        self.hz = f
+        self.restingDetuneCents = det
+
+        let cents = OSAllocatedUnfairLock<Double>(initialState: det)
+        let g = OSAllocatedUnfairLock<Bool>(initialState: true)
+        let flag = OSAllocatedUnfairLock<Bool>(initialState: false)
+        self.detuneCents = cents; self.gate = g; self.doneFlag = flag
+
+        var phase = 0.0, env = 0.0, curCents = det
+        var alreadyFlagged = false
+        let attackRate = 1.0 / (1.3 * sampleRate)      // `linearRampToValueAtTime(..., t+1.3)`
+        let releaseRate = 1.0 / (0.8 * sampleRate)     // `setTargetAtTime(0, t, 0.8)`
+        let detuneCoef = 1 - exp(-1.0 / (0.5 * sampleRate))   // `ensemble`'s own tau
+        let a = (pan + 1) * Double.pi / 4
+        let gl = cos(a) * 1.41421356, gr = sin(a) * 1.41421356
+
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)
+        else { fatalError("DancerVoice: format") }
+
+        self.sourceNode = AVAudioSourceNode(format: format) { _, _, frameCount, abl in
+            let buffers = UnsafeMutableAudioBufferListPointer(abl)
+            let bufL = buffers[0].mData?.assumingMemoryBound(to: Float.self)
+            let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)
+            let holding = g.withLock { $0 }
+            let target = cents.withLock { $0 }
+
+            for frame in 0..<Int(frameCount) {
+                env = holding ? min(1.0, env + attackRate) : max(0.0, env - releaseRate)
+                if !holding && env <= 0.0 {
+                    bufL?[frame] = 0; bufR?[frame] = 0
+                    if !alreadyFlagged { alreadyFlagged = true; flag.withLock { $0 = true } }
+                    continue
+                }
+                curCents += (target - curCents) * detuneCoef
+                // cents → ratio. The detune is the whole mechanism: they enter out of tune
+                // and pull into lock, so the chord beats as it forms.
+                phase += 2.0 * .pi * (f * pow(2.0, curCents / 1200.0)) / sampleRate
+                if phase >= 2.0 * .pi { phase -= 2.0 * .pi }
+                let s = sin(phase) * peak * env
+                bufL?[frame] = Float(s * gl)
+                bufR?[frame] = Float(s * gr)
             }
             return noErr
         }

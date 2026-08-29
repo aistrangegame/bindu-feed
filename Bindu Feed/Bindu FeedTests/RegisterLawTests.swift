@@ -249,3 +249,155 @@ struct AppOwnLawTests {
         #expect(abs((0.30 + 1.35) - 1.65) < 1e-12)
     }
 }
+
+// ── VI · what is sent, and what comes back ────────────────────────────
+//
+// `spine-sound.js:189-228`. The register whose whole physics is the delay line A2 built:
+// *"the room IS the distance it travelled."* `send` is called nowhere in the design either —
+// like `nul` and `distance`, the caller is the app's; the numbers are the design's.
+@Suite("C1 · VI · send, arrive, arriveAll")
+struct ReturnRegisterTests {
+
+    /// *"It bends down and away as it goes, the way a thing leaving does."* `f×2 → f×1.12`
+    /// across 1.5s — a fall of nearly an octave while it goes.
+    @Test("send bends down and away as it leaves")
+    func sendBendsDown() throws {
+        let f = 396.0
+        let v = CeremonyVoice(hz: f * 2, peak: 0.075, attackSeconds: 0.05, releaseSeconds: 1.65,
+                              synth: .sine, endHz: f * 1.12, glideSeconds: 1.5,
+                              envelope: .linearExp)
+        let r = try OfflineRender.render(v.sourceNode, seconds: 2.0)
+        // early it is up at f×2; by the end it has fallen to f×1.12
+        #expect(r.magnitude(at: f * 2, from: 0.02, to: 0.30)
+                > r.magnitude(at: f * 1.12, from: 0.02, to: 0.30))
+        #expect(r.magnitude(at: f * 1.12, from: 1.2, to: 1.6)
+                > r.magnitude(at: f * 2, from: 1.2, to: 1.6))
+        #expect(abs(r.peak() - 0.075) < 0.010, "peak \(r.peak()), design says 0.075")
+    }
+
+    /// *"a thing leaving goes somewhere."* The pan ramps 0 → pan across 1.4s, so it starts
+    /// centred and ends off to one side.
+    @Test("send travels across the head")
+    func sendPans() throws {
+        let f = 396.0
+        let v = CeremonyVoice(hz: f * 2, peak: 0.075, attackSeconds: 0.05, releaseSeconds: 1.65,
+                              synth: .sine, endHz: f * 1.12, glideSeconds: 1.5,
+                              envelope: .linearExp, panTo: 1.0, panSeconds: 1.4)
+        let r = try OfflineRender.render(v.sourceNode, seconds: 2.0)
+        let earlyL = r.magnitude(at: f * 2, ear: .left, from: 0.05, to: 0.2)
+        let earlyR = r.magnitude(at: f * 2, ear: .right, from: 0.05, to: 0.2)
+        #expect(abs(earlyL - earlyR) < earlyL * 0.25, "it must start centred")
+        let lateL = r.magnitude(at: f * 1.12, ear: .left, from: 1.3, to: 1.6)
+        let lateR = r.magnitude(at: f * 1.12, ear: .right, from: 1.3, to: 1.6)
+        #expect(lateR > lateL * 3, "it must end to one side: L \(lateL) R \(lateR)")
+    }
+
+    /// THE SHAPE OF A THING APPROACHING. Every other event in the app strikes and decays;
+    /// this one swells in. A linear attack would make it a note that started.
+    @Test("arrive swells in backwards, cresting at 1.15s")
+    func arriveSwellsIn() throws {
+        let v = CeremonyVoice(hz: 528 * 1.5, peak: 0.052 / 1.22, attackSeconds: 1.15,
+                              releaseSeconds: 2.25, synth: .sineOctaveBelow,
+                              envelope: .expSwellExp)
+        let r = try OfflineRender.render(v.sourceNode, seconds: 3.6)
+        #expect(abs(r.peakTime - 1.15) < 0.12, "crest at \(r.peakTime)s, design says 1.15")
+        // it really swells: quiet at the start, loud at the crest
+        #expect(r.peak(to: 0.2) < r.peak(from: 1.0, to: 1.3) * 0.2,
+                "it started loud — that is a strike, not an approach")
+    }
+
+    /// *"one interval up — a fifth, a sixth, a seventh, and on the fourth return the octave:
+    /// the lap that finally arrives home."* And each lap is quieter than the last.
+    @Test("the four laps are a fifth, a sixth, a seventh and the octave")
+    func fourLaps() {
+        let R = [1.5, 5.0 / 3.0, 15.0 / 8.0, 2.0]
+        #expect(abs(R[0] - 1.5) < 1e-12)          // a fifth
+        #expect(abs(R[1] - 1.6667) < 1e-3)        // a sixth
+        #expect(abs(R[2] - 1.875) < 1e-12)        // a seventh
+        #expect(R[3] == 2.0)                      // home
+        var peaks: [Double] = []
+        for n in 1...4 { peaks.append(0.052 / (1 + Double(n) * 0.22)) }
+        var quieter = true
+        for i in 1..<peaks.count where peaks[i] >= peaks[i - 1] { quieter = false }
+        #expect(quieter, "each lap quieter than the last: \(peaks)")
+        // arriveAll hands over all four at 0.30s apart — the crossing made before him
+        var offsets: [Double] = []
+        for n in 1...4 { offsets.append(Double(n - 1) * 0.30) }
+        let want: [Double] = [0, 0.30, 0.60, 0.90]
+        var spaced = true
+        for i in 0..<4 where abs(offsets[i] - want[i]) > 1e-9 { spaced = false }
+        #expect(spaced, "0.30s apart: \(offsets)")      // 3×0.30 is 0.8999…, not 0.9
+    }
+
+    @Test("arrive carries an octave BELOW, not above")
+    func arriveIsLargerNotBrighter() throws {
+        let hz = 528.0 * 1.5
+        let v = CeremonyVoice(hz: hz, peak: 0.04, attackSeconds: 1.15, releaseSeconds: 2.25,
+                              synth: .sineOctaveBelow, envelope: .expSwellExp)
+        let r = try OfflineRender.render(v.sourceNode, seconds: 3.0)
+        let f = r.magnitude(at: hz, from: 0.9, to: 2.0)
+        #expect(abs(r.magnitude(at: hz * 0.5, from: 0.9, to: 2.0) / f - 0.34) < 0.08)
+        #expect(r.magnitude(at: hz * 2, from: 0.9, to: 2.0) / f < 0.08, "no octave above")
+    }
+}
+
+// ── VII · THE DANCE — the only polyphonic register ────────────────────
+@Suite("C1 · VII · join, ensemble, leaveAll")
+struct DanceRegisterTests {
+
+    /// *"each body that joins the chain is a real voice of its own at a harmonic of 852."*
+    @Test("the five bodies are harmonics of 852, each quieter than the last")
+    func harmonicsOf852() {
+        let expected = [852.0, 1278.0, 1704.0, 2130.0, 2556.0]
+        for k in 0..<5 {
+            let d = DancerVoice(k: k)
+            #expect(abs(d.hz - expected[k]) < 0.001, "body \(k) at \(d.hz)")
+        }
+    }
+
+    /// *"entering out of tune and pulling into lock as the figure holds."* The detune
+    /// alternates side and grows with k — they are not merely mistuned, they are mistuned
+    /// away from each other.
+    @Test("they enter out of tune, alternating and widening")
+    func enterOutOfTune() {
+        let cents = (0..<5).map { DancerVoice(k: $0).restingDetuneCents }
+        #expect(cents == [-11, 16, -21, 26, -31])
+        #expect(cents.allSatisfy { $0 != 0 }, "a dancer that enters in tune has nothing to find")
+        let alternates = zip(cents, cents.dropFirst()).allSatisfy { $0 * $1 < 0 }
+        #expect(alternates, "they must alternate: the chord beats because they disagree")
+        let widening = zip(cents, cents.dropFirst()).allSatisfy { abs($1) > abs($0) }
+        #expect(widening, "each body enters further out than the last")
+    }
+
+    /// `ensemble(lock)` closes the detune to `det·(1−lock)`, so at full lock they are in tune
+    /// and the beating stops. That IS the register's claim: they find each other.
+    @Test("ensemble closes the detune to zero at full lock")
+    func ensembleLocks() throws {
+        let d = DancerVoice(k: 1)
+        d.setDetune(cents: 0)                        // ensemble(1.0)
+        let locked = try OfflineRender.render(d.sourceNode, seconds: 3.0)
+        let e = DancerVoice(k: 1)                    // ensemble(0) — resting detune
+        let loose = try OfflineRender.render(e.sourceNode, seconds: 3.0)
+
+        // in tune, the energy sits on the harmonic; out of tune it has moved off it
+        let onPitch = locked.magnitude(at: 1278, from: 1.5, to: 2.9)
+        let offPitch = loose.magnitude(at: 1278, from: 1.5, to: 2.9)
+        #expect(onPitch > offPitch * 1.5,
+                "lock did not tune them: locked \(onPitch), loose \(offPitch)")
+        // 16 cents at 1278 Hz is ~11.8 Hz sharp — that is where the loose one went
+        let sharpHz: Double = 1278 * pow(2.0, 16.0 / 1200.0)
+        let atSharp = loose.magnitude(at: sharpHz, from: 1.5, to: 2.9)
+        #expect(atSharp > offPitch)
+    }
+
+    @Test("a dancer fades rather than cutting when it leaves")
+    func leavingIsAFade() throws {
+        let d = DancerVoice(k: 0)
+        let r = try OfflineRender.render(d.sourceNode, seconds: 2.0, afterStart: { _ in })
+        #expect(r.peak(from: 1.4) > 0.001, "it should still be holding")
+        #expect(!d.isDone)
+        d.leave()
+        let after = try OfflineRender.render(d.sourceNode, seconds: 2.0)
+        #expect(after.peak(from: 1.5) < after.peak(to: 0.2), "it must come down")
+    }
+}

@@ -600,6 +600,96 @@ final class SoundEngine: ObservableObject {
         setDelayTime(0.30 + f * 1.35)
     }
 
+    // ── VI · what is sent, and what comes back ────────────────────────────
+
+    /// **CALLER IS THE APP'S**, like `distance` — `send` is called nowhere in the design
+    /// either; only `arrive`'s numbers have a home. *"the departure. It bends down and away
+    /// as it goes, the way a thing leaving does, and it goes straight into the delay — which
+    /// is to say it is already on its way back the moment he lets go."*
+    /// `spine-sound.js:189-203`: `f*2` bending to `f*1.12` over 1.5s, 0 → 0.075 at 0.05s,
+    /// exponential to 0.0001 at 1.7s, panning 0 → `pan` over 1.4s, into the bus AND the delay.
+    ///
+    /// DIVERGENCE: the design bends the pitch with `exponentialRampToValueAtTime`; this is
+    /// linear across the same 1.5s. Recorded, not silently matched.
+    func send(hz: Double, pan: Double = 0) {
+        playCeremony(CeremonyVoice(hz: hz * 2, peak: 0.075,
+                                   attackSeconds: 0.05, releaseSeconds: 1.65,
+                                   synth: .sine, endHz: hz * 1.12, glideSeconds: 1.5,
+                                   envelope: .linearExp, panTo: pan, panSeconds: 1.4),
+                     maxWait: 2.0, intoDelay: true)
+    }
+
+    /// *"the arrival. The same note he sent, later, quieter, and one interval up — a fifth, a
+    /// sixth, a seventh, and on the fourth return the octave: the lap that finally arrives
+    /// home. It swells IN, backwards, because that is the shape of a thing approaching."*
+    /// `spine-sound.js:208-221`.
+    func arrive(hz: Double, n: Int = 1, after: Double = 0) {
+        let ratios = [1.5, 5.0 / 3.0, 15.0 / 8.0, 2.0]
+        let lap = max(1, min(4, n))
+        let r = ratios[lap - 1]
+        let peak = 0.052 / (1 + Double(lap) * 0.22)
+        Task { @MainActor [weak self] in
+            if after > 0 { try? await Task.sleep(nanoseconds: UInt64(after * 1_000_000_000)) }
+            guard let self else { return }
+            self.playCeremony(CeremonyVoice(hz: hz * r, peak: peak,
+                                            attackSeconds: 1.15, releaseSeconds: 2.25,
+                                            synth: .sineOctaveBelow, envelope: .expSwellExp),
+                              maxWait: 3.8, intoDelay: true)
+        }
+    }
+
+    /// *"Deep Time hands over all four at once, so all four intervals sound together: the
+    /// crossing was made before him, complete."* `spine-sound.js:225-228`.
+    func arriveAll(hz: Double) {
+        for i in 1...4 { arrive(hz: hz, n: i, after: Double(i - 1) * 0.30) }
+    }
+
+    // ── VII · THE DANCE — the only polyphonic register ────────────────────
+
+    private var dancers: [DancerVoice] = []
+
+    /// `join(k)` — a body enters the chain at `852 × [1, 1.5, 2, 2.5, 3][k]`, out of tune by
+    /// `(k odd ? + : −)(11 + k·5)` cents, and a blip at a quarter of its own pitch marks the
+    /// moment. `spine-sound.js:236-252`.
+    func join(_ k: Int) {
+        guard isRunning, dancers.count < 5 else { return }
+        let d = DancerVoice(k: k)
+        engine.attach(d.sourceNode)
+        engine.connect(d.sourceNode, to: bus,
+                       format: d.sourceNode.outputFormat(forBus: 0))
+        dancers.append(d)
+        blip(hz: d.hz * 0.25)          // `this.blip(f*0.25)`
+    }
+
+    /// `ensemble(lock)` — *"how in time they are. The detune closes as the lock rises, so the
+    /// chord beats when it forms and tunes itself as they dance."* `:255-261`.
+    func ensemble(lock: Double) {
+        let k = 1 - max(0, min(1, lock))
+        for d in dancers { d.setDetune(cents: d.restingDetuneCents * k) }
+    }
+
+    /// `leaveAll()` — `:262-266`. They go the way they came: a fade, not a cut.
+    func leaveAll() {
+        let leaving = dancers
+        dancers.removeAll()
+        for d in leaving { d.leave() }
+        let deadline = Date().addingTimeInterval(4.0)
+        Task { @MainActor [weak self] in
+            while leaving.contains(where: { !$0.isDone }) && Date() < deadline {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard let self else { return }
+            for d in leaving {
+                self.engine.disconnectNodeInput(d.sourceNode)
+                self.engine.detach(d.sourceNode)
+            }
+        }
+    }
+
+    /// How many bodies are in the chain. `dancers.length` — the caption in world VII prints
+    /// this, and `AUDIT D5.8` records that it printed a count of hands that did not exist.
+    var dancerCount: Int { dancers.count }
+
     /// `nul(secs)` — the Point's one deliberate silence. STAGE C1 drives this; A1/A2 only
     /// need the path to exist and to be open.
     func setNull(_ nul: Double) {
@@ -1069,11 +1159,22 @@ final class SoundEngine: ObservableObject {
     /// eleven places to forget one.
     private var eventsSuppressed: Bool { UIAccessibility.isReduceMotionEnabled }
 
-    private func playCeremony(_ voice: CeremonyVoice, maxWait: Double) {
+    /// `intoDelay` is VI's whole point: `send` and `arrive` connect to the bus AND the echo
+    /// line (`gn.connect(this.bus); if(this.echoIn)gn.connect(this.echoIn)`), so a thing sent
+    /// out *is already on its way back the moment he lets go*.
+    private func playCeremony(_ voice: CeremonyVoice, maxWait: Double, intoDelay: Bool = false) {
         guard isRunning, !eventsSuppressed else { return }
         engine.attach(voice.sourceNode)
         let format = voice.sourceNode.outputFormat(forBus: 0)
-        engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        if intoDelay {
+            engine.connect(voice.sourceNode,
+                           to: [AVAudioConnectionPoint(node: engine.mainMixerNode,
+                                                       bus: engine.mainMixerNode.nextAvailableInputBus),
+                                AVAudioConnectionPoint(node: delay, bus: 0)],
+                           fromBus: 0, format: format)
+        } else {
+            engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        }
         let deadline = Date().addingTimeInterval(maxWait)
         Task { @MainActor [weak self] in
             while !voice.isDone && Date() < deadline {
