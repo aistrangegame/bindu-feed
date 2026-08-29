@@ -143,6 +143,18 @@ struct DanceChainTests {
     /// is not asked."* It can never be the body that takes an offered hand.
     @Test("d-map cannot be taken by the hand")
     func theMapIsNotOffered() {
+        // THE CONTROL FIRST. Without it this test passes if `offer` reaches NOBODY — the
+        // chain would be empty, `contains { $0.last }` false, and the assertion satisfied
+        // for a reason that has nothing to do with d-map. A negative that can be met by
+        // universal absence is not evidence; it has to be shown that the same gesture at the
+        // same distance DOES take a hand when the body is an ordinary one.
+        floor()
+        let ordinary = PointDance.bodies.first { !$0.last }!
+        PointDance.offer(x: ordinary.x, y: ordinary.y)
+        dance(seconds: 3)
+        #expect(!PointDance.chain.isEmpty,
+                "the control failed: an ordinary body did not take an offered hand, so the assertion below would pass on absence rather than on refusal")
+
         floor()
         let map = PointDance.bodies.first { $0.last }!
         PointDance.offer(x: map.x, y: map.y)

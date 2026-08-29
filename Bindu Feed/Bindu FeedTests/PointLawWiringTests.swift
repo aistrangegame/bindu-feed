@@ -18,8 +18,13 @@ import Testing
 //   THE GESTURES      OWED       · that `part` reaches 1 under a real drag, that `panX`
 //                                  spans its spread, that `settle` bottoms out. Walks.
 //                                  This suite deliberately does NOT claim them.
-//   V's inverted tone E-BLOCKED  · built and measured; the world cannot ask for it
-//   VII's chain       E-BLOCKED  · built and measured; the world has no bodies
+//   V's inverted tone MEASURED   · CORRECTED 2026-08-29. This line read *"E-BLOCKED · built
+//                                  and measured; the world cannot ask for it"* after world
+//                                  V's `held` had already closed it. The boundary table is a
+//                                  claim like any other and nothing checks a comment.
+//   VII's chain       MEASURED   · CORRECTED 2026-08-29 along with V. Read *"E-BLOCKED ·
+//                                  built and measured; the world has no bodies"* after
+//                                  Stage E's `PointDance` had given it bodies.
 @Suite("C1 · the wiring · world → law")
 struct PointLawWiringTests {
 
@@ -64,17 +69,50 @@ struct PointLawWiringTests {
         #expect(edge < 1, "edge-ward must be less than face on")
     }
 
-    /// **AND THE HALF THAT MATTERS IS OUT OF REACH.** `reflect(−1)` is the register's whole
-    /// claim — *"the same note at the same pitch, arriving inverted… it goes HOLLOW"* — and
-    /// it needs a pane past 90°. The app's turn 42° → 0° and never further, so world V as
-    /// built can only ask for `c ∈ [0.743, 1]`. The sound is complete; the world cannot yet
-    /// reach it. Asserted so the gap cannot be forgotten or quietly closed by a wrong fix.
-    @Test("V · world V cannot yet ask for the inverted tone")
-    func theHollowIsUnreachable() {
-        let reachable = [cos(42.0 * .pi / 180), cos(0.0)]
-        #expect(reachable.allSatisfy { $0 > 0 },
-                "a negative c needs a pane past 90°, and none of these is")
-        #expect(cos(120.0 * .pi / 180) < 0, "…which is what turned-away would look like")
+    /// **THIS TEST ASSERTED A LIMITATION THAT HAD ALREADY BEEN LIFTED, AND PASSED FOR IT.**
+    ///
+    /// It was written in `14c39ed` as *"world V cannot yet ask for the inverted tone"*, when
+    /// that was true: the reasoning was that `reflect(−1)` needs a pane past 90° and the
+    /// app's turn only runs 42° → 0°. World V's `held` landed afterwards and closed it — and
+    /// corrected the REASON at the same time, because `angleOf` runs a pane's partner at
+    /// `π − a`, so the two panes of a pair are always opposite and no turn past 90° was ever
+    /// required. `MirrorPaneTests.invertedNeedsOnlyAHold` measures exactly that.
+    ///
+    /// The test did not fail when the world changed underneath it, because its body never
+    /// touched world V: it computed `cos(42°)` and `cos(0°)` and found them positive, which
+    /// is still true and is now beside the point. **A green checkmark reading "world V
+    /// cannot ask for the inverted tone" is a false claim about the build, and the name is
+    /// the only part of a test anyone reads in a list of 168 of them.** That is the ninth
+    /// shape — semantically inverted, functionally passing — arrived at through the LABEL
+    /// rather than the code, and nothing in the suite could have caught it: the assertions
+    /// were true, the suite was green, and only reading the name against the body found it.
+    ///
+    /// Rewritten to the claim that is now load-bearing, and kept rather than deleted so the
+    /// old reasoning stays on the record next to the thing that replaced it.
+    @Test("V · the inverted tone is reached by a held pane, not by a turn past 90°")
+    func theHollowIsReachedByAHold() {
+        // The superseded reasoning, preserved: the two-state turn alone never reaches it.
+        #expect(cos(42.0 * .pi / 180) > 0, "42° faces forward")
+        #expect(cos(0.0) > 0, "and so does 0°")
+        #expect(cos(120.0 * .pi / 180) < 0, "a turn past 90° is what the old reading demanded")
+
+        // What actually reaches it: the pairing. A pane's partner runs at `π − a`, so one of
+        // any pair is always turned away — no matter where the turn itself stops.
+        // `angleOf(pn)` — `world-five.js:120-123`. The app's copy is private to
+        // `PointWorlds`, so this is the design's own two lines, not a paraphrase. The
+        // MEASURED form of this claim belongs to `MirrorPaneTests.invertedNeedsOnlyAHold`,
+        // which owns it; what is asserted here is only that the pairing makes it reachable
+        // at all, which is what this file got wrong.
+        func facing(row gi: Int, k: Int, ga: Double = 0) -> Double {
+            let rest = Double(gi) * 0.42 + Double(k) * 0.0     // at rest, before any turn
+            let a = ga + rest
+            return cos(k != 0 ? Double.pi - a : a)
+        }
+        for row in 0..<3 {
+            let near = facing(row: row, k: 0), far = facing(row: row, k: 1)
+            #expect(near * far < 0,
+                    "row \(row): the pair must face opposite ways — near \(near), far \(far)")
+        }
     }
 
     /// VI · settling through the strata IS the distance. `maxSettle = H * 0.7` is the
@@ -145,23 +183,40 @@ struct PointLawWiringTests {
         #expect(maxDiff == 0, "release is not a no-op: \(maxDiff)")
     }
 
-    // ── VII has nothing to drive it, and that is the finding ───────────
+    // ── VII reaches its voice, and NOT through this file's signal ──────
 
-    /// `join`/`ensemble`/`leaveAll` and `DancerVoice` are built and measured. `WorldDance`
-    /// has `offeredOnce` and nothing else — no chain, no lock, no bodies — so there is no
-    /// signal for VII in `PointLawSignal` at all. That is `8-ACTION-PLAN.md` **E1**
-    /// (`AUDIT D5.8`, BLOCKER). **E-BLOCKED, not C-open**: the sound is finished and the
-    /// WORLD is what is missing, so carrying it as C1 residue would name the wrong stage and
-    /// send the next session to the wrong file. Asserted here so the absence is a recorded
-    /// state rather than an oversight someone later reads as done.
-    @Test("VII · the dance has a voice and nothing to give it")
-    func seventhIsBlockedOnE1() {
-        // the sound exists …
+    /// **THE SECOND STALE CLAIM THIS FILE CARRIED.** Named
+    /// `seventhIsBlockedOnE1` — *"the dance has a voice and nothing to give it"* — and it
+    /// passed for the same reason V's did: the body asserted a fact that stayed true
+    /// (`PointLawSignal` has six cases and none is VII's) while the NAME asserted a
+    /// blockage that Stage E had lifted. `PointDance` gave VII its bodies, and
+    /// `PointReadings.swift:1236-1239` drives `soundEngine.join(...)` and
+    /// `ensemble(lock:)` from them, with `leaveAll()` on the way out at `:1205,1212`.
+    ///
+    /// **Both stale claims were found by reading names against bodies, and by nothing
+    /// else.** Every assertion was true, the suite was green three runs deep, and four
+    /// checkers passed — because a checker reads code and a reader reads the name.
+    ///
+    /// What remains true and is worth pinning: VII's route is DIFFERENT in kind. The six
+    /// registers hand up a scalar through `PointLawSignal` and `PointWorldView` applies the
+    /// law; VII's chain is a population, not a scalar, so it drives its voices directly
+    /// from the registry. That asymmetry is deliberate and is what this now asserts.
+    @Test("VII · the dance drives its voices from the registry, not through PointLawSignal")
+    func theSeventhTakesADifferentRoute() {
         #expect(DancerVoice(k: 0).hz == 852)
         #expect(DancerVoice(k: 4).hz == 2556)
-        // … and PointLawSignal has no case for it, by construction
+
+        // Six scalar registers reach their law through the signal; VII is not among them,
+        // and that is a fact about the SHAPE of what VII has to say, not about a gap.
         let cases: [PointLawSignal] = [.admitted(0), .drawn(0), .parted(0, floor: 0),
                                        .load(0), .facing(1), .away(0)]
-        #expect(cases.count == 6, "six registers reach their law; VII does not")
+        #expect(cases.count == 6, "six registers reach their law by signal")
+
+        // And the thing the old name denied — that there ARE bodies to give it — is
+        // asserted by `DanceChainTests`, which owns `PointDance`. It is NOT re-asserted
+        // here, deliberately: seeding the registry from a second suite would put two hands
+        // on one static floor, which is the TENTH SHAPE and the exact trap `.serialized`
+        // exists for. The first draft of this test did seed it. Naming the owner is the
+        // cheaper correctness, and a cross-suite flake is not worth one redundant expect.
     }
 }
