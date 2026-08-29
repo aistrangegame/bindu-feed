@@ -108,7 +108,7 @@ Checked against the repo, four of its items were wrong:
 
 - **The five instructional-string rulings are already done.** `descend onto this star` is at `PointWorldView.swift:330`.
 - **The z:0 `open the rite` door is correctly absent.** The design declares three doors and filters that one out at its only render site (`The Instrument v3.html:5104`).
-- **The Light's six scenes are the canon's number**, not a shortfall — `canon/spine-light.js:97`, *"Six scenes, one family."* A seventh would be invented content.
+- **The Light's six scenes are the canon's number**, not a shortfall — `canon/spine-light.js:13`, *"Six scenes, one family."* A seventh would be invented content.
 - **`#carry` and `#seam` are fully built.**
 
 And one thing no list contained at all: the bowl at 4× the ceiling.
@@ -127,7 +127,23 @@ Everything else can be closed before he opens the app.
 ## 6 · The method that must not lapse again
 
 1. **Every piece of work references an audit ID or a mechanism name.** The reason 235 findings went untracked is that work was described in its own words instead of against a list.
-2. **Five checkers, all run before any "done":** `check_authored` · `check_rendered` · `check_citations` · `reconcile_audit` · the mechanism sweep.
-3. **Calibrate every checker in both directions before trusting it.** Every verification tool in this build shipped, on its first run, with the exact fault it was built to catch — the hook-stripper left an empty body twice; the authored-string guard passed a deleted string because a comment quoted the design; the citation checker reported a false OK. Break it on purpose, watch it go red; hand it something correct, watch it stay green.
+2. ~~**Five checkers**~~ **FOUR checkers, all run before any "done":** `check_authored` · `check_rendered` · `check_citations` · `check_audit_ids`, plus the unit suite.
+   > **CORRECTED 2026-08-29.** This line named five and two of them were not programs.
+   > **`reconcile_audit.py` never existed** — no file, no git history for that path on any
+   > branch. The **mechanism sweep** is `extract_mechanisms.py`, an EXTRACTOR: its output is
+   > 485 raw declarations and its verdicts live as prose in `_mechverdicts1-3.md`, so it
+   > cannot be re-run as a gate. Making it one needs machine-readable verdicts — Stage H.
+   > `check_audit_ids.py` was built 2026-08-29 to cover what `reconcile_audit` was supposed
+   > to: every `Audit X.Y` reference resolving to a real finding, with the finding's own words
+   > printed beside the claim.
+3. **Calibrate every checker in ALL FOUR QUADRANTS before trusting it.** Every verification tool in this build shipped, on its first run, with the exact fault it was built to catch — the hook-stripper left an empty body twice; the authored-string guard passed a deleted string because a comment quoted the design; the citation checker reported a false OK.
+   > **AND "BOTH DIRECTIONS" WAS ONLY EVER TWO OF FOUR.** It meant **red on bad** and **green
+   > on good**. The pair never tested is about the tool's own honesty: **green on bad** is a
+   > miss and leaves you where you were, but **RED ON GOOD is the only quadrant that
+   > MANUFACTURES the fault rather than missing it** — a checker that reds on correct input
+   > teaches its user to make it pass, and the cheapest way to make a drift pass is to move
+   > the line number until it stops complaining. `check_citations` did exactly that: it could
+   > not match a quote spanning an em-dash, so it flagged a TRUE citation as DRIFTED. All four
+   > checkers now have that quadrant tested. See `CLAUDE.md` §10.
 4. **`ON DEVICE` and `BY READING` are different verdicts.** Positions and behaviour verify by walking. Only values verify by reading.
 5. **A walk is invalidated by later code changes underneath it.** Re-walk or mark it open.

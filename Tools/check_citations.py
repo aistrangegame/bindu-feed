@@ -35,7 +35,8 @@ WINDOW = 12
 # and the row is only as trustworthy as that citation.
 DOCS = [ROOT/"Bindu Feed"/"CLAUDE.md", ROOT/"HANDOFF-NOTE.md", ROOT/"OPEN-ITEMS.md",
         ROOT/"Coverage"/"10-OWED.md", ROOT/"Coverage"/"9-BOWL-CALL-SITE-MAP.md",
-        ROOT/"Coverage"/"8-ACTION-PLAN.md"]
+        ROOT/"Coverage"/"8-ACTION-PLAN.md", ROOT/"Coverage"/"7-STATE-OF-THE-BUILD.md",
+        ROOT/"Coverage"/"0-INDEX.md"]
 # The ledgers cite the AUDIT and the design's own checklist, so both are reachable now. They
 # were not, and three citations in `Coverage/9` resolved to nothing the moment the ledgers
 # came into scope — which is the checker doing its job on its first run against them.
