@@ -16,6 +16,39 @@ import os
 // Gathering's breath is carried by the bed + the silent presences' visual
 // breathing). Centered (mono) — the choir is a bloom, not the binaural breath.
 
+/// THE BOWL'S VOICING — `field-sound.js:154-170`, in one place. *AUDIT G3.3.*
+///
+/// The struck bowl is the most-heard sound in the app: `SoundEngine.riteThreshold` and
+/// `riteBowl` are called from 19 sites across Door, Rite, Rooms, Universe, Return, Light,
+/// Point and Instrument. It shipped at `peak 0.30`/`0.32` against a stated master ceiling
+/// of `0.075` (`README.md:192`, *"no event exceeds 0.075"*), with partials
+/// `[1, 2.756, 5.404]` where the design has four, and with no bed-duck at all.
+///
+/// Named constants rather than literals at the call sites so `SoundLayerTests` can render
+/// the SHIPPING voice and measure it, instead of asserting against its own copy of the
+/// numbers.
+enum BowlVoicing {
+    /// `g.gain.linearRampToValueAtTime(0.075, t+0.09)` — the event ceiling, and the
+    /// weight of the fundamental, which carries `1/(0*2.2+1) = 1`.
+    static let peak: Double = 0.075
+
+    /// `[1, 2.004, 2.98, 4.02].forEach(...)` — inharmonic, which is what makes it a bowl
+    /// and not an organ. None of them lands on a harmonic of the fundamental.
+    static let partials: [Double] = [1, 2.004, 2.98, 4.02]
+
+    /// `pg.gain.value = 1/(i*2.2+1)` — 1 · 0.3125 · 0.185 · 0.132.
+    static let weights: [Double] = partials.indices.map { 1 / (Double($0) * 2.2 + 1) }
+
+    /// `bg.linearRampToValueAtTime(0.006, t+1.2); bg.linearRampToValueAtTime(0.030, t+9)`
+    /// — *"the bed holds its breath."* The bed's resting gain is `0.030`
+    /// (`field-sound.js:56`), so the duck is a fall to one fifth and a slow return.
+    static let bedRest: Double = 0.030
+    static let bedDucked: Double = 0.006
+    static let duckInSeconds: Double = 1.2
+    static let duckOutSeconds: Double = 9.0
+    static var duckFactor: Double { bedDucked / bedRest }
+}
+
 enum CeremonySynth {
     case sine        // pure tone
     case sineOctave  // sine + a near-octave partial (the choir voice)
@@ -79,6 +112,12 @@ final class CeremonyVoice {
         var drainState: UInt32 = 0x5EED1E55
         var drainLP: Double = 0
         let partialInc = 2.0 * .pi * (hz * 2.001) / sampleRate
+        // AUDIT G3.3 — the bowl's four inharmonic partials and their weights, read from
+        // `BowlVoicing` and captured HERE, at init. The render block indexes them; it never
+        // allocates (§15, the Sound Layer's render discipline).
+        let bowlRatios = BowlVoicing.partials
+        let bowlWeights = BowlVoicing.weights
+        var bowlPhases = [Double](repeating: 0, count: BowlVoicing.partials.count)
 
         guard let format = AVAudioFormat(
             standardFormatWithSampleRate: sampleRate, channels: 2
@@ -116,7 +155,17 @@ final class CeremonyVoice {
                     if partialPhase >= 2.0 * .pi { partialPhase -= 2.0 * .pi }
                     raw = (sin(phase) + sin(partialPhase) * 0.28) / 1.28
                 case .bowl:
-                    raw = (sin(phase) + sin(phase * 2.756) * 0.5 + sin(phase * 5.404) * 0.25) / 1.75
+                    // `field-sound.js:158-163` — each partial is its own oscillator at
+                    // `hz*m` through its own `1/(i*2.2+1)` gain, summed into the one
+                    // envelope. It is NOT normalised in the design and is not here: the
+                    // envelope's 0.075 is the fundamental's amplitude, which is what
+                    // `README.md:192` means by an event's ceiling.
+                    raw = 0
+                    for k in bowlRatios.indices {
+                        bowlPhases[k] += 2.0 * .pi * (hz * bowlRatios[k]) / sampleRate
+                        if bowlPhases[k] >= 2.0 * .pi { bowlPhases[k] -= 2.0 * .pi }
+                        raw += sin(bowlPhases[k]) * bowlWeights[k]
+                    }
                 case .drain:
                     drainState = drainState &* 1_664_525 &+ 1_013_904_223
                     let white = Double(drainState >> 8) / 8_388_608.0 - 1.0

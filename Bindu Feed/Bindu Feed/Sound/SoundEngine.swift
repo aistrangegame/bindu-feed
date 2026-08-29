@@ -498,10 +498,31 @@ final class SoundEngine: ObservableObject {
 
     /// A movement-transition threshold bloom (bowl), e.g. 220 / 146 / 261 Hz.
     func riteThreshold(hz: Double, dur: Double) {
-        playCeremony(
-            CeremonyVoice(hz: hz, peak: 0.30, attackSeconds: 0.6, releaseSeconds: dur, synth: .bowl),
-            maxWait: dur + 1
-        )
+        playCeremony(Self.thresholdVoice(hz: hz, dur: dur), maxWait: dur + 1)
+        duckBreath()
+    }
+
+    /// THE BOWL, BUILT IN ONE PLACE. `AUDIT.md:944` G3.3.
+    ///
+    /// `field-sound.js:154-170` is the bowl: `0 → 0.075` over 0.09s, an exponential decay
+    /// across 11s, four inharmonic partials `[1, 2.004, 2.98, 4.02]` each at `1/(i*2.2+1)`,
+    /// and the bed ducking to 0.006 while it rings. It shipped at `peak 0.30`/`0.32` with
+    /// partials `[1, 2.756, 5.404]` and no duck — four times the ceiling `README.md:192`
+    /// states, from **19 call sites** across Door, Rite, Rooms, Universe, Return, Light,
+    /// Point and Instrument.
+    ///
+    /// These two factories are the only places the app builds a bowl, so
+    /// `SoundLayerTests` renders what SHIPS instead of a second copy of the numbers — the
+    /// failure mode `7-STATE-OF-THE-BUILD.md` §1 describes, where a checker and the thing
+    /// it checks agree with each other and neither agrees with the code.
+    nonisolated static func thresholdVoice(hz: Double, dur: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz, peak: BowlVoicing.peak,
+                      attackSeconds: 0.6, releaseSeconds: dur, synth: .bowl)
+    }
+
+    nonisolated static func bowlVoice(hz: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz, peak: BowlVoicing.peak,
+                      attackSeconds: 0.05, releaseSeconds: 11.0, synth: .bowl)
     }
 
     /// A presence's choir voice — a quiet sine-plus-octave bloom over the bed.
@@ -642,10 +663,8 @@ final class SoundEngine: ObservableObject {
 
     /// The Sealing bowl — struck once, long decay while the bed holds.
     func riteBowl(hz: Double) {
-        playCeremony(
-            CeremonyVoice(hz: hz, peak: 0.32, attackSeconds: 0.05, releaseSeconds: 11.0, synth: .bowl),
-            maxWait: 12
-        )
+        playCeremony(Self.bowlVoice(hz: hz), maxWait: 12)
+        duckBreath()
     }
 
     /// `prefers-reduced-motion` — **suppresses EVENTS and leaves the BED.**
@@ -801,15 +820,46 @@ final class SoundEngine: ObservableObject {
                            peak: 0.03, attackSeconds: 0.3, releaseSeconds: 3.4, mode: .tone), maxWait: 4)
     }
 
-    // MARK: - Resonance Depth hook (silent stub)
+    // MARK: - The bed holds its breath · AUDIT G3.3
 
-    // Reserved for the future voice layer. The Sound Layer's locked
-    // scope is three generated layers (Breath + room coloration +
-    // threshold tones) — no voice layer in this scope, so nothing to
-    // duck. The hook stays callable so StoryDetailView's Resonance
-    // Depth code path can be wired without conditional checks; this
-    // implementation is intentionally empty.
+    private var duckTask: Task<Void, Never>?
+
+    /// *"The bed holds its breath."* `field-sound.js:168-169` — when the bowl is struck the
+    /// bed falls to `0.006` at `t+1.2` and comes back to `0.030` at `t+9`.
+    ///
+    /// This was an empty stub with a comment reserving it for a voice layer that is not in
+    /// scope, and it had **no callers at all**. It is now what the design says it is: the
+    /// third of G3.3's three parts, and the reason the bowl reads as a strike rather than
+    /// as one more thing added on top of everything already sounding.
+    ///
+    /// The bed's own gain lives in the snapshot, so the duck is applied to the crossfade
+    /// level as a MULTIPLIER (`0.006/0.030`) — the one place the level is a ratio rather
+    /// than an absolute, and the only way to duck a voice whose resting level differs per
+    /// room without teaching every room its own ducked value.
     func duckBreath() {
-        // Intentionally empty — see the comment above.
+        guard isRunning, !eventsSuppressed, let voice = currentBreath else { return }
+        duckTask?.cancel()
+        let level = voice.crossfadeLevel
+        let from = level.read()
+        guard from > 0 else { return }
+        let to = from * BowlVoicing.duckFactor
+        duckTask = Task { @MainActor in
+            let start = Date()
+            while !Task.isCancelled {
+                let e = Date().timeIntervalSince(start)
+                if e < BowlVoicing.duckInSeconds {
+                    let f = e / BowlVoicing.duckInSeconds
+                    level.write(from + (to - from) * f)
+                } else if e < BowlVoicing.duckOutSeconds {
+                    let f = (e - BowlVoicing.duckInSeconds)
+                          / (BowlVoicing.duckOutSeconds - BowlVoicing.duckInSeconds)
+                    level.write(to + (from - to) * f)
+                } else {
+                    level.write(from)
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
     }
 }
