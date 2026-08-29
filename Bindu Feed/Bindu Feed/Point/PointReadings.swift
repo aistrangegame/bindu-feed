@@ -485,16 +485,39 @@ private struct ReadParting: View {
     @State private var part: CGPoint?      // where the hand is holding it open
     @State private var thinned: [CGPoint] = []   // permanently thinner, one per section received
 
+    // E3 · THE REVERSAL. `world-three.js:96-108` — *"he is holding it open. Sections arrive
+    // while he holds, and only while."*
+    //
+    // This gave on `onEnded`, one section per release, with a comment above it that read
+    // *"holding it open long enough to read is what hands a section back"* — describing the
+    // design correctly and doing the opposite. **A reversed mechanism is worse than an absent
+    // one, because it reads as working**: four sections still arrive, the words are right, the
+    // curtains still open, and the only thing wrong is the sentence the world is making. The
+    // veil's whole claim is that *presence* decides and distance decides nothing; giving on
+    // release makes letting go the thing that gives.
+    //
+    // `open` is the design's own scalar and the app had none — `ReadParting`'s note said so:
+    // *"`this.open` … has no app scalar (the app's `part` is a point or nothing)"*. It has one
+    // now, so the `open < 0.30 → 'holding it open'` word is portable too.
+    @State private var open: Double = 0
+    @State private var holding = false
+    @State private var running = false
+    /// `var gates=[0.30,0.52,0.74,0.94]` — `world-three.js:100`.
+    private let gates = [0.30, 0.52, 0.74, 0.94]
+
     /// `world-three.js:208-215` — the one star that watches back. When the parting is open
     /// over `v-shadow`, a second hand shows in it, and the world names it. The design gates
     /// on `this.reading.shadow && this.open>0.30`; the app's star key IS that flag.
     private var shadowNamed: Bool { s.star.key == "v-shadow" && part != nil && s.revealed > 0 }
 
-    /// `world-three.js:238-241`, less the `open<0.30` branch the app has no scalar for.
+    /// `world-three.js:238-241`, now COMPLETE. The `open < 0.30` branch was unported because
+    /// the app had no `open`; E3 gave it one, so *"holding it open"* — the word for the moment
+    /// before the first section arrives — is restored with the rest.
     private var partWord: String {
         if part == nil { return "part it with your hand · and hold it open" }
         if s.revealed == 0 { return "nothing here yet" }
         if s.revealed >= 4 { return "handed back" }
+        if open < 0.30 { return "holding it open" }
         return s.revealed < 2 ? "it is thinning" : "thinner"
     }
 
@@ -568,15 +591,57 @@ private struct ReadParting: View {
             // does not claim — so the fault fell precisely on the readings whose gesture is
             // VERTICAL and sits outside the scroll. That is II and III, and only those.
             .simultaneousGesture(DragGesture(minimumDistance: 0)
-                .onChanged { v in part = v.location }
-                .onEnded { v in
-                    // holding it open long enough to read is what hands a section back
-                    if !s.done {
-                        thinned.append(v.location)
-                        s.give()
-                    }
+                .onChanged { v in
+                    // `place(qx,qy)` — the hand goes down and the veil opens 0.34 at once,
+                    // which is already past the first gate: the first section arrives on
+                    // contact, and the other three are earned by staying.
+                    if part == nil { open = min(1, open + 0.34) }
+                    part = v.location
+                    holding = true
+                }
+                .onEnded { _ in
+                    // `release()` — the hand comes off. It hands back NOTHING: everything
+                    // this parting gave, it gave while it was held.
+                    holding = false
                     part = nil
                 })
+            .onAppear { run() }
+            // A hold must be released by every path its owner can leave by (§10) — the strip
+            // can vanish mid-press when the fourth give sets `s.done`, and `onEnded` never
+            // fires. Same fault as `PressClaim`, one register over.
+            .onDisappear { holding = false }
+        }
+    }
+
+    /// `hold(dt)` and `update(dt, holding)` — `world-three.js:96-108,124-131`.
+    ///
+    /// `open` grows at **0.42/s while held** and falls at **0.70/s when it is not**, and the
+    /// four sections arrive at `[0.30, 0.52, 0.74, 0.94]` as it passes them. Each give hands
+    /// its zone back — *"that zone stays thin"* — and a zone once thinned is permanent.
+    ///
+    /// **AND THE PARTING CLOSES BEHIND HIM.** `:127-128` — below 0.02 the veil takes the
+    /// reading back. `given` resets there in the design; here `s.revealed` is the reading's
+    /// own progress and is not reset, because the app's sections are a reading that has been
+    /// opened rather than a parting being held — resetting it would delete text he has read.
+    /// Recorded as a divergence rather than ported blind.
+    private func run() {
+        guard !running else { return }
+        running = true
+        Task {
+            while !s.done {
+                try? await Task.sleep(nanoseconds: 16_000_000)
+                let dt = 0.016
+                if holding {
+                    open = min(1, open + dt * 0.42)
+                    if s.revealed < 4 && open >= gates[s.revealed] {
+                        if let p = part { thinned.append(p) }   // `handBack` — it stays thin
+                        s.give()
+                    }
+                } else {
+                    open = max(0, open - dt * 0.70)             // it closes behind his hand
+                }
+            }
+            running = false
         }
     }
 }
