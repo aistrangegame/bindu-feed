@@ -4,6 +4,29 @@
 
 This file is the persistent, in-repo memory for Bindu Feed — the one document a fresh reader (human or AI) should read **first**. It is authoritative on the **build state** and routes you to the authoritative **design canon** below. (§4–§15 describe the Phase-9 layer in detail and remain accurate for it; the Instrument era, Aug 2026, sits on top — see the precedence section and §3.)
 
+## 🔴 START HERE — the build is NOT complete. Read `Coverage/` before claiming anything is done.
+
+A full coverage audit was run on **2026-08-28** because the app had repeatedly been reported
+as finished when it was not. The reason was structural: three separate lists existed
+(`AUDIT.md`, `OPEN-ITEMS.md`, and a chat-reconstructed one) and none had ever been
+reconciled against another or against the code — **only 19 of AUDIT.md's 254 findings appear
+anywhere outside that file.**
+
+**Read in this order:**
+1. **`Coverage/7-STATE-OF-THE-BUILD.md`** — the complete picture and the honest numbers.
+2. **`Coverage/8-ACTION-PLAN.md`** — the sequence out, ordered by dependency.
+3. `Coverage/0-INDEX.md` → files 1–6, the raw evidence every claim rests on.
+
+**The numbers as of that audit:** 143 of 254 audit findings OPEN · 83 of 485 design
+mechanisms ABSENT (74 more PARTIAL) · 12 of 44 acceptance-gate lines ever walked · 14 of 46
+design files cited nowhere in the app.
+
+**Two standing rules that come out of it:**
+- **No item is "done" until its commit names an audit ID or a mechanism name, and all five checkers are green** (`Tools/check_authored.py`, `check_rendered.py`, `check_citations.py`, plus the audit reconciliation and mechanism sweep inputs). 235 findings went untracked because work was described in its own words instead of against a list.
+- **Calibrate every checker in both directions before trusting it.** Every verification tool in this build shipped, on its first run, with the exact fault it was built to catch. Break it on purpose and watch it go red; hand it something correct and watch it stay green.
+
+---
+
 ## ⚠️ SOURCE OF TRUTH & CANON PRECEDENCE — read this before building anything
 
 The most expensive mistake on this project is **building to the wrong source** — e.g. rendering the Instrument from *prose descriptions* of the design instead of the actual *rendered* design file, which produced a "pale comparison" that had to be torn out and rebuilt (Aug 2026). To avoid repeating it, resolve every design question in **this order**, and never build from anything below the line:
