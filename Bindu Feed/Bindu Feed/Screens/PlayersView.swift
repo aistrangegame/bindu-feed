@@ -20,6 +20,29 @@ struct PlayersView: View {
     /// name — the display string is device-local and changeable at any time.
     private static let ashRecordID = "rec9BUbHMuylYiVwH"
 
+    /// Colours come from the live `Hex Color`, never from constants (§10).
+    private var doorVoices: [Color] {
+        PlayersDoorField.order.compactMap { name in
+            store.archetypes.first { $0.name == name }?.color
+        }
+    }
+
+    /// The geometry is `PlayersDoorField`; this only paints it.
+    private func drawDoorField(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
+        let voices = doorVoices
+        guard !voices.isEmpty else { return }        // no invented colours before the fetch
+        let R = PlayersDoorField.radius
+        for (i, c) in voices.enumerated() {
+            let p = PlayersDoorField.point(i, count: voices.count,
+                                           W: Double(size.width), H: Double(size.height), t: t)
+            ctx.fill(
+                Path(ellipseIn: CGRect(x: p.x - R, y: p.y - R, width: R * 2, height: R * 2)),
+                with: .radialGradient(
+                    Gradient(colors: [c.opacity(PlayersDoorField.innerAlpha), c.opacity(0)]),
+                    center: p, startRadius: 0, endRadius: R))
+        }
+    }
+
     private var lenses: [Archetype] {
         // Preserve the canonical lens order regardless of Airtable Sort.
         Self.lensNames.compactMap { name in
@@ -45,6 +68,21 @@ struct PlayersView: View {
     var body: some View {
         ZStack {
             BinduTheme.bgDeep.ignoresSafeArea()
+
+            // `doorField` — `The Rooms v4.html:1030`, drawn on the door itself (`:1010`
+            // guards it with `if(!who)`, so it is what the surface looks like when no voice
+            // has been entered). Eleven coloured glows orbiting behind the grid.
+            //
+            // ITS POINT IS A CLAIM ABOUT WHAT THE DOOR IS. A flat ground makes this a menu
+            // of eleven cards; the glows make it a FIELD the voices are already standing in,
+            // which is the same sentence the app makes everywhere else — *already alive when
+            // you arrive*. That is why it is worth porting a background nobody would name.
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                Canvas { ctx, sz in drawDoorField(ctx, sz, t) }
+                    .allowsHitTesting(false)
+                    .ignoresSafeArea()
+            }
 
             ScrollView {
                 VStack(spacing: 0) {
