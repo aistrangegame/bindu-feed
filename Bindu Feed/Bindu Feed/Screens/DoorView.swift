@@ -181,7 +181,7 @@ struct DoorView: View {
         DragGesture(minimumDistance: 14)
             .onChanged { v in
                 guard !showTurn, !showRope, v.translation.height > 84 else { return }
-                soundEngine.riteThreshold(hz: 146, dur: 4)
+                soundEngine.spineThreshold(hz: 146)   // `openTurn(){B.threshold(146)}` — Instrument v3:5082
                 withAnimation(.easeInOut(duration: 0.5)) { showTurn = true }
             }
     }
@@ -190,7 +190,7 @@ struct DoorView: View {
 
     private func receiveTheRite() {
         guard !showTurn, !showRope else { return }
-        soundEngine.riteThreshold(hz: 220, dur: 5)
+        soundEngine.spineThreshold(hz: 220)   // `crossDoor(){B.threshold(...)}` — Instrument v3:5022
         withAnimation(.easeInOut(duration: 0.8)) { enteringRite = true }
     }
 

@@ -252,7 +252,7 @@ struct LightView: View {
                     }
                     if armed == k {
                         sceneIndex = k
-                        soundEngine.riteBowl(hz: 174)      // `:5873` — `B.blip(174)`
+                        soundEngine.blip(hz: 174)          // `:5873` — `B.blip(174)`, and now actually a blip
                         withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
                     } else {
                         withAnimation(.easeInOut(duration: 0.7)) { armed = k }

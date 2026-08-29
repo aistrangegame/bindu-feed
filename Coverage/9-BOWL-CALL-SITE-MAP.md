@@ -179,6 +179,37 @@ Not applied. Four steps, in this order.
 *different* voices; one number would fix the loudness and keep the sameness, which is the
 part that is actually wrong.
 
+### Applied 2026-08-29 — steps 1, 2, 3 and 4
+
+All four done in one pass, since step 2's repointing is meaningless without step 1's voices.
+`StrikeVoiceTests` renders each from its shipping factory:
+
+| voice | peak | crest | the assertion that matters |
+|---|---|---|---|
+| `fieldThreshold(hz:dur:)` | 0.032 | `0.42·dur` | it reaches **zero** at `dur` — the only event in the app that ends rather than decays |
+| `spineThreshold(hz:)` | 0.06 | 0.5s | it arrives at `f×0.985` and is in tune by 2.2s — measured on both sides of the glide |
+| `blip(hz:)` | 0.07 | 0.02s | it sounds at `f×2` and is gone by 0.7s |
+| `om()` | `0.06/(i+1)` | 0.9s | **three** tones, 136.1 · 272.2 · 408.3 |
+
+`fourVoicesNotOne` holds the whole point: the three thresholds' rendered peaks must be three
+distinct numbers in the design's order, `0.032 < 0.06 < 0.07`. Before this they were one.
+
+`CeremonyVoice` gained `CeremonyEnvelope` — the design's strike voices no more share an
+envelope than a spectrum, and the app had exactly one shape. `.linearToZero` is the field
+threshold's ending; `.linearExp` is the design's own `exponentialRampToValueAtTime(0.0001,…)`
+with the decay taken from `ln(peak/0.0001)/release`, so each voice reaches inaudibility when
+its own line says rather than at a constant borrowed from another. `.sinExp` stays the
+default, so nothing else moved.
+
+Step 4 landed with step 2: `ReturnView.swift:131` now passes **`dur: 7`**, per
+`The Return v2.html:1314`.
+
+`riteThreshold` survives for the three §4 sites only, at the bowl's corrected 0.075. The
+bowl keeps its four: `LightView:286` · `RiteView:336` · `ReturnView:171` · `ReturnView:422`.
+
+This also closes `8-ACTION-PLAN.md` **C4** — the blip's `0.02s / 0.7s at f×2` and the
+threshold's `f×0.985 → tune over 2.2s` are both built and measured.
+
 ---
 
 ## 6 · Queue — recorded, not fixed

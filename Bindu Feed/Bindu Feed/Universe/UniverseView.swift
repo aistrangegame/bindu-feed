@@ -216,7 +216,7 @@ struct UniverseView: View {
             guard let id = crossed,
                   let story = store.stories.first(where: { $0.id == id })
             else { return }
-            soundEngine.riteThreshold(hz: 126, dur: 9)          // DOORS[0].tone — spine-axis.js:62
+            soundEngine.fieldThreshold(hz: 126, dur: 9)         // `The Universe v3.html:1716`
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { onFall(story) }
         }
         .onChange(of: store.stories) { rebuild() }
@@ -416,7 +416,7 @@ struct UniverseView: View {
         let R = b.st.pr * zoom
         if R > 34, b.st.depth > 0 {
             openFall(b.st)
-            soundEngine.riteThreshold(hz: room(story(for: b.st)?.room ?? "").hz, dur: 9)
+            soundEngine.fieldThreshold(hz: room(story(for: b.st)?.room ?? "").hz, dur: 9)  // `:1545`
             return
         }
         let nx = (b.st.wx + 490) / 980, ny = (b.st.wy + 1030) / 1930
@@ -529,7 +529,7 @@ struct UniverseView: View {
     /// Cross into the story. `threshold(room.hz, 6)`, then 620ms, then the surface itself —
     /// which is `StoryDetailView`, bit-exact and protected: we route to it, we do not touch it.
     private func openStory(_ story: Story, room: UniRoom) {
-        soundEngine.riteThreshold(hz: room.hz, dur: 6)
+        soundEngine.fieldThreshold(hz: room.hz, dur: 6)   // `The Universe v3.html:1570`, `:1669`
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.62) {
             $path.pushDissolve(FeedRoute.story(story))
         }

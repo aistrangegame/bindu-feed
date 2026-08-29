@@ -287,7 +287,7 @@ struct InstrumentView: View {
                     soundEngine.axisGate(hz: reg.hz)
                     PointJourney.reachedGate = true
                 } else {
-                    soundEngine.riteThreshold(hz: reg.hz, dur: 3)   // the crossing, struck
+                    soundEngine.spineThreshold(hz: reg.hz)   // `B.threshold(S.at(Z).hz)` — Instrument v3:5354
                 }
             }
             soundEngine.setContext(.base)

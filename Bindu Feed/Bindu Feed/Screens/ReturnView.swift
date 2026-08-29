@@ -128,7 +128,7 @@ struct ReturnView: View {
     }
 
     private func cross(_ hz: Double, _ next: ReturnStage) {
-        soundEngine.riteThreshold(hz: hz, dur: 5)
+        soundEngine.fieldThreshold(hz: hz, dur: 7)   // `The Return v2.html:1314` — threshold(hz,7)
         withAnimation(.easeInOut(duration: 1.1)) { stage = next }
     }
 

@@ -49,6 +49,26 @@ enum BowlVoicing {
     static var duckFactor: Double { bedDucked / bedRest }
 }
 
+/// HOW AN EVENT RISES AND GOES. `Coverage/9` §1 — the design's strike voices do not share
+/// an envelope any more than they share a spectrum, and the app had exactly one.
+enum CeremonyEnvelope {
+    /// The shape the app already had: a sine ease up over the attack, then `exp(-3t)` over
+    /// the release. Default, so nothing that already ships changes.
+    ///
+    /// It is also a recorded divergence in its own right — `AUDIT.md:671`. The design's
+    /// `exponentialRampToValueAtTime(0.0001, …)` from 0.075 across 11s is `exp(-6.62t)`,
+    /// nearly twice as fast, so every bowl in the app rings longer than it should.
+    case sinExp
+    /// Linear up, then linear down to **zero** at a named time. The field's threshold is
+    /// the only event in the app that ENDS rather than decaying — `field-sound.js:144-145`,
+    /// `linearRampToValueAtTime(0, t+dur)`.
+    case linearToZero
+    /// Linear up, then the design's own exponential to 0.0001 across the release. The decay
+    /// constant is `ln(peak/0.0001)/release`, so the tone reaches inaudibility exactly when
+    /// the design says it does instead of at a constant borrowed from another voice.
+    case linearExp
+}
+
 enum CeremonySynth {
     case sine        // pure tone
     case sineOctave  // sine + a near-octave partial (the choir voice)
@@ -56,6 +76,19 @@ enum CeremonySynth {
     /// ONE PRESENCE, IN ITS OWN BODY — `field-sound.js:13-25 CHAR`. Pitch comes from the
     /// VOICES table and never from here; this is only how that voice SOUNDS.
     case presence(VoiceCharacter)
+    /// THE FIELD'S THRESHOLD — `field-sound.js:145-147`. A sine plus a near-octave at
+    /// `hz*2.002`, the partial at 0.22. Not a bowl: two components, no inharmonicity, and an
+    /// envelope that goes back to ZERO at its own duration. `Coverage/9` §2 maps seven call
+    /// sites to it.
+    case fieldThreshold
+    /// THE SPINE'S THRESHOLD — `spine-sound.js:353-361`. One sine, and the whole mechanism
+    /// is that it arrives FLAT: `o.frequency.setValueAtTime(f*0.985)` then
+    /// `linearRampToValueAtTime(f, t+2.2)`. *"struck, and slightly flat, so the crossing is
+    /// heard as a crossing."* Played in tune, a crossing is not heard as one.
+    case spineThreshold
+    /// THE BLIP — `spine-sound.js:343-350`. One sine at `f*2`, 0.02s up and 0.7s down. The
+    /// shortest event in the app, and the app was playing an 11-second bowl for it.
+    case blip
     /// THE SOUND OF SUBTRACTION — `The Light v2.html:327-331` describes it; **this synth is
     /// the app's, not a port.** The design builds it from a WebAudio convolver buffer and a
     /// ramped biquad, which this engine has no equivalent for, so it is a one-pole low-pass on
@@ -85,6 +118,10 @@ final class CeremonyVoice {
         /// `frequency` on the WebAudio graph; there is no upstream `endHz` to compare against.
         /// The 110 → 165 slide it produces IS canon; the mechanism is ours.
         endHz: Double? = nil,
+        /// When the pitch ramp finishes, if not at the end of the envelope.
+        /// `spine-sound.js:357` reaches tune at **2.2s** inside a 6s event.
+        glideSeconds: Double? = nil,
+        envelope: CeremonyEnvelope = .sinExp,
         sampleRate: Double = 48000
     ) {
         let flag = OSAllocatedUnfairLock<Bool>(initialState: false)
@@ -109,6 +146,13 @@ final class CeremonyVoice {
         let totalSamples = attackSamples + releaseSamples
         var inc = 2.0 * .pi * hz / sampleRate
         let hzStart = hz, hzEnd = endHz ?? hz
+        // `exponentialRampToValueAtTime(0.0001, …)` — the design's floor. Reaching it across
+        // the release is `exp(-ln(peak/0.0001) · t)`, which for the bowl's 0.075 over 11s is
+        // exp(-6.62t) and for the blip's 0.07 over 0.68s is exp(-6.55t) — the same shape at
+        // two very different speeds, which is the point.
+        let expDecay = log(max(peak, 0.0002) / 0.0001)
+        // the pitch ramp's own clock, when it does not run the length of the envelope
+        let glideSamples = glideSeconds.map { max(1, Int($0 * sampleRate)) }
         var drainState: UInt32 = 0x5EED1E55
         var drainLP: Double = 0
         let partialInc = 2.0 * .pi * (hz * 2.001) / sampleRate
@@ -132,10 +176,15 @@ final class CeremonyVoice {
             for frame in 0..<Int(frameCount) {
                 let env: Double
                 if sampleIndex < attackSamples {
-                    env = sin(Double(sampleIndex) / Double(attackSamples) * .pi / 2.0)
+                    let a = Double(sampleIndex) / Double(attackSamples)
+                    env = envelope == .sinExp ? sin(a * .pi / 2.0) : a
                 } else if sampleIndex < totalSamples {
                     let t = Double(sampleIndex - attackSamples) / Double(releaseSamples)
-                    env = exp(-3.0 * t)
+                    switch envelope {
+                    case .sinExp:      env = exp(-3.0 * t)
+                    case .linearToZero: env = 1.0 - t
+                    case .linearExp:   env = exp(-expDecay * t)
+                    }
                 } else {
                     bufL?[frame] = 0; bufR?[frame] = 0
                     if !alreadyFlagged { alreadyFlagged = true; flag.withLock { $0 = true } }
@@ -166,6 +215,15 @@ final class CeremonyVoice {
                         if bowlPhases[k] >= 2.0 * .pi { bowlPhases[k] -= 2.0 * .pi }
                         raw += sin(bowlPhases[k]) * bowlWeights[k]
                     }
+                case .fieldThreshold:
+                    // `o` at hz, `o2` at hz*2.002 through `g2.gain = 0.22`
+                    partialPhase += 2.0 * .pi * (hz * 2.002) / sampleRate
+                    if partialPhase >= 2.0 * .pi { partialPhase -= 2.0 * .pi }
+                    raw = sin(phase) + sin(partialPhase) * 0.22
+                case .spineThreshold, .blip:
+                    // one sine; the pitch ramp (spineThreshold) and the octave (blip) are
+                    // both carried by `hz`/`endHz` at construction, so the body is bare
+                    raw = sin(phase)
                 case .drain:
                     drainState = drainState &* 1_664_525 &+ 1_013_904_223
                     let white = Double(drainState >> 8) / 8_388_608.0 - 1.0
@@ -212,7 +270,8 @@ final class CeremonyVoice {
                 if case .presence = synth { lGain = panL * 2; rGain = panR * 2 }
                 // the pitch ramp, if this voice was given one
                 if hzEnd != hzStart {
-                    let prog = Double(sampleIndex) / Double(max(1, totalSamples))
+                    let span = glideSamples ?? totalSamples
+                    let prog = min(1.0, Double(sampleIndex) / Double(max(1, span)))
                     inc = 2.0 * .pi * (hzStart + (hzEnd - hzStart) * prog) / sampleRate
                 }
                 let s = Float(raw * peak * env)

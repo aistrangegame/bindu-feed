@@ -674,7 +674,44 @@ final class SoundEngine: ObservableObject {
 
     private var inkVoice: InkVoice?
 
-    /// A movement-transition threshold bloom (bowl), e.g. 220 / 146 / 261 Hz.
+    /// `Sound.threshold(hz, dur)` — a ceremony crossing in the field: the Rite's movements,
+    /// the Return's `cross`, the Universe's stars. `Coverage/9` §2 maps seven sites here.
+    func fieldThreshold(hz: Double, dur: Double) {
+        playCeremony(Self.fieldThresholdVoice(hz: hz, dur: dur), maxWait: dur + 1)
+    }
+
+    /// `B.threshold(f)` — a crossing on the axis. Three sites: the register crossing, the
+    /// turn opening, and the day's own door.
+    func spineThreshold(hz: Double) {
+        playCeremony(Self.spineThresholdVoice(hz: hz), maxWait: 6.5)
+    }
+
+    /// `B.blip(f)` — a small confirming arrival. One site in the nineteen: the Light's
+    /// place-selection.
+    func blip(hz: Double) {
+        playCeremony(Self.blipVoice(hz: hz), maxWait: 1.2)
+    }
+
+    /// `om()` — `spine-sound.js:374-384`. **Three** oscillators at 136.1 · 272.2 · 408.3,
+    /// each at `0.06/(i+1)`, 0.9s up and exponential to 0.0001 at 9s.
+    ///
+    /// `PointRevealView`'s own comment says *"one tone fanning into three, then collapsing to
+    /// the one point"* and the visual does exactly that; the sound was a single bowl. There
+    /// is no collision with Bindu's voice — she is **136** through `RoomKey.hz` and
+    /// `VoiceCharacter`, this is **136.1** and reads no table. `Coverage/9` §4b.
+    func om() {
+        for (i, f) in [136.1, 272.2, 408.3].enumerated() {
+            playCeremony(CeremonyVoice(hz: f, peak: 0.06 / (Double(i) + 1),
+                                       attackSeconds: 0.9, releaseSeconds: 8.1,
+                                       synth: .sine, envelope: .linearExp),
+                         maxWait: 9.4)
+        }
+    }
+
+    /// The app-own strike. `Coverage/9` §4: two sites have no design counterpart — a room
+    /// that resolves without a voice, and the arming tap — and one, the Door's `.absorbed`,
+    /// is deliberately left unresolved until Waves 5/6. None of them is a crossing, so none
+    /// gets a threshold's identity; they keep the bowl at its corrected 0.075.
     func riteThreshold(hz: Double, dur: Double) {
         playCeremony(Self.thresholdVoice(hz: hz, dur: dur), maxWait: dur + 1)
         duckBreath()
@@ -696,6 +733,41 @@ final class SoundEngine: ObservableObject {
     nonisolated static func thresholdVoice(hz: Double, dur: Double) -> CeremonyVoice {
         CeremonyVoice(hz: hz, peak: BowlVoicing.peak,
                       attackSeconds: 0.6, releaseSeconds: dur, synth: .bowl)
+    }
+
+    /// `threshold(hz, dur)` — `field-sound.js:139-151`. Peak **0.032**, a sine plus
+    /// `hz*2.002` at 0.22, up over `dur*0.42` and back to **zero** at `dur`.
+    ///
+    /// The signature is the giveaway `Coverage/9` §1 turns on: `riteThreshold(hz:dur:)` took
+    /// a duration because it was written against THIS function, and was then given a bowl's
+    /// body. Seven crossings — the Rite's three movements, the Return's `cross`, and all
+    /// three of the Universe's — ran at 0.075 with four inharmonic partials and an 11s tail
+    /// where the design has two components that end when they say they will.
+    nonisolated static func fieldThresholdVoice(hz: Double, dur: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz, peak: 0.032,
+                      attackSeconds: dur * 0.42, releaseSeconds: dur * 0.58,
+                      synth: .fieldThreshold, envelope: .linearToZero)
+    }
+
+    /// `threshold(f)` — `spine-sound.js:353-361`. Peak **0.06**, one sine, entering at
+    /// `f*0.985` and reaching tune at **2.2s**; up at 0.5s, exponential to 0.0001 at 6s.
+    ///
+    /// *"struck, and slightly flat, so the crossing is heard as a crossing."* The detune IS
+    /// the mechanism. Played in tune — which is what a bowl does — a crossing is just a
+    /// sound that happened. Takes no duration: its envelope is its own.
+    nonisolated static func spineThresholdVoice(hz: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz * 0.985, peak: 0.06,
+                      attackSeconds: 0.5, releaseSeconds: 5.5,
+                      synth: .spineThreshold,
+                      endHz: hz, glideSeconds: 2.2, envelope: .linearExp)
+    }
+
+    /// `blip(f)` — `spine-sound.js:343-350`. One sine at `f*2`, 0.02s up, 0.7s and gone.
+    /// The shortest event in the app; it was playing an 11-second bowl.
+    nonisolated static func blipVoice(hz: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz * 2, peak: 0.07,
+                      attackSeconds: 0.02, releaseSeconds: 0.68,
+                      synth: .blip, envelope: .linearExp)
     }
 
     nonisolated static func bowlVoice(hz: Double) -> CeremonyVoice {

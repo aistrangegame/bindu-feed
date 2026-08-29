@@ -100,7 +100,7 @@ struct PointRevealView: View {
         PointJourney.reset()                            // captured; the next walk is fresh
 
         // One tone fanning into three, then collapsing to the one point.
-        soundEngine.riteBowl(hz: 136.1)                 // the year-octave / OM
+        soundEngine.om()                                // `spine-sound.js:374` — three tones, not one
         withAnimation(.easeInOut(duration: 2.0)) { split = 1 }        // fan apart
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
             withAnimation(.easeInOut(duration: 2.0)) { split = 0; collapsed = true }   // collapse to one

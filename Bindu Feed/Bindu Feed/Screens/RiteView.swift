@@ -103,15 +103,15 @@ struct RiteView: View {
     // MARK: - Movement transitions (each with its threshold tone)
 
     private func begin() {
-        soundEngine.riteThreshold(hz: 220, dur: 6)   // the threshold into Reading
+        soundEngine.fieldThreshold(hz: 220, dur: 6)   // `The Rite v3.html:1538` — threshold(220,6)
         withAnimation(.easeInOut(duration: 1.0)) { movement = .reading }
     }
     private func toGathering() {
-        soundEngine.riteThreshold(hz: 146, dur: 7)
+        soundEngine.fieldThreshold(hz: 146, dur: 7)   // `The Rite v3.html:1542` — threshold(146,7)
         withAnimation(.easeInOut(duration: 1.2)) { movement = .gathering }
     }
     private func toRecognition() {
-        soundEngine.riteThreshold(hz: 261, dur: 7)
+        soundEngine.fieldThreshold(hz: 261, dur: 7)   // `The Rite v3.html:1436` — threshold(261,7)
         withAnimation(.easeInOut(duration: 1.2)) { movement = .recognition }
     }
     private func toSealed(_ text: String, _ audioRef: String?) {
