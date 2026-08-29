@@ -355,7 +355,14 @@ struct LightView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(scene.landing)
                             .font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-                        Button { withAnimation(.easeInOut(duration: 1.0)) { stage = .out } } label: {
+                        Button {
+                            // `The Light v2.html:801` — `const leave = () => {
+                            // Sound.closeTheRoom(6); Sound.darkReturns(); onLeave(); }`.
+                            // This called no sound at all, so the bed `lightVeilLift`
+                            // drained never came back. *AUDIT E4.1 / G3.1.*
+                            soundEngine.darkReturns()
+                            withAnimation(.easeInOut(duration: 1.0)) { stage = .out }
+                        } label: {
                             Text(LightCanon.walkBackOut)
                                 .font(.spaceMono(10)).tracking(2)
                                 .foregroundStyle(Color(hex: "#EDE3CE"))

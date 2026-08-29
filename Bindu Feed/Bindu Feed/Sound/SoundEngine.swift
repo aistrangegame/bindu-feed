@@ -713,6 +713,43 @@ final class SoundEngine: ObservableObject {
                                    releaseSeconds: 40, synth: .sineOctave), maxWait: 47)
     }
 
+    /// `darkReturns()` — *"walking back out — the dark returns, and with it the
+    /// breathing."* `field-sound.js:315-322`. **AUDIT E4.1 / G3.1.**
+    ///
+    /// THE APP LEAKED SILENCE. `lightVeilLift` ramps the bed's level to zero on the way in
+    /// (`:600`, `currentBreath?.crossfadeLevel.write(bedFrom * (1 - f))`) and nothing ever
+    /// put it back — `LightView`'s walk-back-out called no sound at all. Every trip through
+    /// the Light left the whole app quieter than it was found, permanently, for the rest of
+    /// the session.
+    ///
+    /// The design restores three things over 7s: the bed's filter to 900, its LFO to 0.1
+    /// and its gain to 0.030. Only the third has an equivalent here, and this is why:
+    /// `BreathVoice` bakes its cutoff (from `snapshot.brightness`) and its 0.1 Hz LFO at
+    /// init and exposes neither, so the app's `lightBreathIn` never performed the other two
+    /// halves of the breath IN either — `spine-sound.js:63`'s per-voice filter nodes are
+    /// STAGE A1 and do not exist yet. Restoring what was never moved would be theatre. So
+    /// this restores the level, and the room, and the other two stay open.
+    func darkReturns(dur: Double = 7) {
+        guard isRunning else { return }
+        naveTask?.cancel()
+        breathFadeTask?.cancel()
+        duckTask?.cancel()
+        let voice = currentBreath
+        let from = voice?.crossfadeLevel.read() ?? 0
+        let roomFrom = Double(room.wetDryMix)
+        room.loadFactoryPreset(.mediumRoom)          // out of the nave, back into the field's air
+        breathFadeTask = Task { @MainActor [weak self] in
+            let start = Date()
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                voice?.crossfadeLevel.write(from + (1.0 - from) * f)
+                self?.room.wetDryMix = Float(roomFrom + (50 - roomFrom) * f)
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
     /// The Sealing bowl — struck once, long decay while the bed holds.
     func riteBowl(hz: Double) {
         playCeremony(Self.bowlVoice(hz: hz), maxWait: 12)
