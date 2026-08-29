@@ -88,6 +88,11 @@ struct RiteRecognitionView: View {
                         .font(.spaceMono(9)).tracking(1.5)
                         .foregroundStyle(BinduTheme.inkTertiary)
                     TextEditor(text: $text)
+                        // `inkTouch()` — `field-sound.js:203-209`. The field leans in on each
+                        // keystroke and settles back over 1.1s. This is the ONLY writing
+                        // surface the ink runs under (`:123` turns it on), so it is the only
+                        // place the design's call has a caller.
+                        .onChange(of: text) { soundEngine.inkTouch() }
                         .focused($editing)
                         .font(.lora(16))
                         .foregroundStyle(BinduTheme.inkPrimary)

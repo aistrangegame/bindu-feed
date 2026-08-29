@@ -68,8 +68,13 @@ The true gap is between the two and cannot be closed by grep.
 > which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
 > · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
 >
-> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` ·
-> `renderRings`' body text · `swift`/`hit`. **`stackFrom` is mechanism-delivered and
+> **Still open, spot-checked by symbol:** `renderRings`' body text · `swift`/`hit`.
+> **`lightOff` and `inkTouch` closed 2026-08-29.** `lightOff` needed `CeremonyVoice` to grow
+> a fade gate and `lightRoomTone` to RETAIN its voice — a bloom is over when it is over, but
+> a room is not, and the tone had been following the user out for the whole build. It is the
+> same mechanism as `The Light v2.html:283 closeTheRoom(dur)` under a second name, and the
+> two files carry different defaults (5 and 6), so the Light's own call site number is passed
+> explicitly. `inkTouch` needed a per-keystroke lean on a voice that was already retained. **`stackFrom` is mechanism-delivered and
 > wiring-open** (`10-OWED.md` §10) — its wiring is the register-0 recede's structural change,
 > not its own row. NOTE: `floorY` was flagged `app` by the name proxy on a `LightNave.swift`
 > constant of the same name and unrelated meaning — a false positive, and one more reason the

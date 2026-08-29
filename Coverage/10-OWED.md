@@ -527,3 +527,27 @@ not a defect: the reading does not begin shoving the world aside for one line. T
 version of the assertion demanded a rise at every step and failed, and the correct reading of
 `min(originMax, floor − total)` is two claims — *never descends*, and *rises once it outgrows
 the headroom*. Both are asserted, in one run, so neither can pass alone.
+
+---
+
+## 11 · `inkTouch`'s RETRIGGER — OWED, and named rather than approximated
+
+`field-sound.js:203-209` re-ramps the ink's gain on every keystroke, from wherever the last
+ramp had reached. `InkVoice` implements it with a counter rather than a flag for that reason:
+a boolean would coalesce a fast typist's presses into one lean, and the field would go still
+exactly while the writing was most alive — a mechanism that works when tested one press at a
+time and fails on the real gesture.
+
+**What is MEASURED:** the lean's ratio (`0.022/0.014`), that a keystroke raises the ink, and
+that one touch completes its whole excursion — 0.12s up, 1.1s down — and is back at rest
+inside 1.5s.
+
+**What is OWED:** the retrigger itself. It means a second press DURING the 1.1s decay, and
+`OfflineRender.render` is one synchronous call, so there is no instant between buffers at
+which a test can press a key.
+
+**This row exists because a test almost claimed it.** `typingRetriggers` was written, passed,
+and tested nothing — both of its renders were single touches, so it compared two identical
+things and passed on determinism. It was caught by asking the green-on-absent question of the
+name: *what would have to break for this to fail?* Nothing would. Renamed to
+`oneTouchSettlesInsideItsRamp`, which is what it proves.

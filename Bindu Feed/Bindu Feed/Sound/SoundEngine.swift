@@ -70,6 +70,9 @@ final class SoundEngine: ObservableObject {
     // wired (voices then free-run their own LFO — the pre-fold behavior).
     private var breathOriginSeconds: Double?
 
+    /// The Light's room tone, held so it can be put out. See `lightOff(dur:)`.
+    private var lightToneVoice: CeremonyVoice?
+
     // 4s equal-power crossfade for room transitions. The initial
     // cold-launch Breath fade-in uses the Breath's own attackSeconds
     // (12s seeded) — that's a slower, ceremonial ramp, not the same
@@ -1225,8 +1228,25 @@ final class SoundEngine: ObservableObject {
     /// so the silence has an edge to it."* 528 with 792 at 0.3, rising to 0.012 over 6s.
     func lightRoomTone() {
         guard isRunning else { return }
-        playCeremony(CeremonyVoice(hz: 528, peak: 0.012, attackSeconds: 6,
-                                   releaseSeconds: 40, synth: .sineOctave), maxWait: 47)
+        // RETAINED, where every other ceremony is fire-and-forget. A bloom is over when it is
+        // over; a ROOM is not, and `field-sound.js:305` keeps `this.lightNode` for exactly
+        // that reason. Without the handle the 40s release outlived the register and the tone
+        // followed the user out — `_mechverdicts1.md`'s ABSENT verdict on `lightOff`.
+        let voice = CeremonyVoice(hz: 528, peak: 0.012, attackSeconds: 6,
+                                  releaseSeconds: 40, synth: .sineOctave)
+        lightToneVoice = voice
+        playCeremony(voice, maxWait: 47)
+    }
+
+    /// `lightOff(dur)` — `field-sound.js:307-312`. Fade the Light's room tone and let go.
+    ///
+    /// The design's `dur||5` default is kept. Calling it with no tone running is a no-op, as
+    /// it is upstream (`if(!this.lightNode||!this.ctx)return`), so a leave that happens twice
+    /// or happens first costs nothing.
+    func lightOff(dur: Double = 5) {
+        guard let voice = lightToneVoice else { return }
+        lightToneVoice = nil
+        voice.fadeOut(seconds: dur)
     }
 
     // MARK: - F2 · THE RETURN'S OWN SOUND
@@ -1370,6 +1390,16 @@ final class SoundEngine: ObservableObject {
         let format = ink.sourceNode.outputFormat(forBus: 0)
         engine.connect(ink.sourceNode, to: engine.mainMixerNode, format: format)
         inkVoice = ink
+    }
+
+    /// `inkTouch()` — `field-sound.js:203-209`. One keystroke; the field leans in.
+    ///
+    /// Guarded exactly as the design guards it — `if(!this.inkNode||this.muted||reduced)` —
+    /// so it is silent with no ink running, silent when muted, and silent under Reduce
+    /// Motion. `eventsSuppressed` is this app's name for the last of those.
+    func inkTouch() {
+        guard isRunning, !eventsSuppressed, let ink = inkVoice else { return }
+        ink.touch()
     }
 
     func inkOff() {

@@ -360,6 +360,15 @@ struct LightView: View {
                             // Sound.closeTheRoom(6); Sound.darkReturns(); onLeave(); }`.
                             // This called no sound at all, so the bed `lightVeilLift`
                             // drained never came back. *AUDIT E4.1 / G3.1.*
+                            //
+                            // `closeTheRoom(6)` is the FIRST half and was still missing after
+                            // that fix: the room tone kept sounding for its own 40s release
+                            // wherever he went next. It is the same mechanism as
+                            // `field-sound.js:307 lightOff(dur)` under a second name — both
+                            // cancel the schedule and ramp the room's gain to zero — and the
+                            // two files carry different defaults (6 and 5), so the Light's own
+                            // number is passed explicitly rather than left to either default.
+                            soundEngine.lightOff(dur: 6)
                             soundEngine.darkReturns()
                             withAnimation(.easeInOut(duration: 1.0)) { stage = .out }
                         } label: {

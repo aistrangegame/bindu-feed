@@ -115,6 +115,31 @@ final class CeremonyVoice {
     private let doneFlag: OSAllocatedUnfairLock<Bool>
     var isDone: Bool { doneFlag.withLock { $0 } }
 
+    /// `lightOff(dur)` — `field-sound.js:307-312`. **A WAY TO PUT THE LIGHT'S TONE OUT.**
+    ///
+    ///     n.g.gain.cancelScheduledValues(t);
+    ///     n.g.gain.linearRampToValueAtTime(0, t+(dur||5));
+    ///     n.o.stop(t+(dur||5)+0.2); …
+    ///
+    /// `_mechverdicts1.md` had it ABSENT: *"No way to fade the Light's room tone out. It runs
+    /// to its own 40s release wherever the user goes."* A ceremony voice is one-shot by
+    /// design and that is right for a bloom — but the Light's room tone is not a bloom, it is
+    /// a ROOM, and a room you have walked out of should not still be sounding. The design
+    /// keeps a handle for exactly this and the app kept none, which is why the tone outlived
+    /// the register.
+    ///
+    /// **A linear ramp from WHEREVER IT IS**, not a restart of the envelope. `cancelScheduled
+    /// Values` discards the future and ramps from the current value, so a tone cut at its
+    /// peak and one cut in its tail both take `dur` to reach silence and neither jumps.
+    private let fadeRate = OSAllocatedUnfairLock<Double?>(initialState: nil)
+
+    /// Begin a linear fade to silence over `seconds`, from the level it is at now.
+    /// Idempotent: a second call while already fading is ignored, so a double-leave cannot
+    /// shorten the fade into a click.
+    func fadeOut(seconds: Double = 5) {
+        fadeRate.withLock { if $0 == nil { $0 = max(0.01, seconds) } }
+    }
+
     init(
         hz: Double,
         peak: Double,
@@ -158,6 +183,9 @@ final class CeremonyVoice {
         var partialPhase: Double = 0
         var frameIndex: Int = 0
         var alreadyFlagged = false
+        let fadeLock = fadeRate
+        var fadeGain = 1.0
+        var fadeStep: Double? = nil
 
         // Per-partial phase, allocated ONCE here and only mutated in the render block —
         // the Sound Layer's render discipline (§15): no allocation on the audio thread.
@@ -329,7 +357,18 @@ final class CeremonyVoice {
                         : hzStart + (hzEnd - hzStart) * prog
                     inc = 2.0 * .pi * hz / sampleRate
                 }
-                let s = Float(raw * peak * env)
+                // The fade, if one has been asked for. Read once per buffer, applied per
+                // sample, and it overrides the envelope rather than racing it.
+                if fadeStep == nil, let secs = fadeLock.withLock({ $0 }) {
+                    fadeStep = 1.0 / (secs * sampleRate)
+                }
+                if let step = fadeStep {
+                    fadeGain = max(0.0, fadeGain - step)
+                    if fadeGain <= 0.0 && !alreadyFlagged {
+                        alreadyFlagged = true; flag.withLock { $0 = true }
+                    }
+                }
+                let s = Float(raw * peak * env * fadeGain)
                 bufL?[frame] = Float(Double(s) * lGain)
                 bufR?[frame] = Float(Double(s) * rGain)
             }
@@ -345,6 +384,27 @@ final class InkVoice {
     private let gate: OSAllocatedUnfairLock<Bool>     // true = holding, false = releasing
     private let doneFlag: OSAllocatedUnfairLock<Bool>
     var isDone: Bool { doneFlag.withLock { $0 } }
+
+    /// `inkTouch()` — `field-sound.js:203-209`. **THE FIELD LEANS IN WHILE HE WRITES.**
+    ///
+    ///     g.linearRampToValueAtTime(0.022, t+0.12);
+    ///     g.linearRampToValueAtTime(0.014, t+1.1);
+    ///
+    /// `_mechverdicts1.md` had it ABSENT: *"The ink turns on once, off once, and never
+    /// responds to the writing."* One tone held flat under a person writing says the surface
+    /// is a backdrop; leaning in on each keystroke says it is listening. It is the same claim
+    /// `doorField` makes on the door and `stackFrom` makes in a reading — the app is not a
+    /// container for the act.
+    ///
+    /// A COUNTER, NOT A FLAG, because keystrokes retrigger. `linearRampToValueAtTime` after
+    /// `cancelScheduledValues` restarts the ramp from wherever it had got to; a boolean would
+    /// coalesce a fast typist's presses into one lean and the field would go still exactly
+    /// when the writing was most alive. The render block compares sequence numbers, so every
+    /// press restarts the envelope from its current height.
+    private let touches = OSAllocatedUnfairLock<UInt64>(initialState: 0)
+
+    /// One keystroke. Safe to call from the main thread at typing rate.
+    func touch() { touches.withLock { $0 &+= 1 } }
 
     /// Begin the fade-out. The render block eases to silence, then flags done.
     func release() { gate.withLock { $0 = false } }
@@ -362,6 +422,17 @@ final class InkVoice {
         let attackRate = 1.0 / (1.2 * sampleRate)   // ~1.2s in
         let releaseRate = 1.0 / (2.4 * sampleRate)  // ~2.4s out
 
+        // The lean, as a multiplier on `peak`. `0.022 / 0.014` is the design's own ratio;
+        // expressing it that way rather than as two absolute gains keeps `inkOn(hz:)`'s peak
+        // the single place the ink's level is set.
+        let leanTop = 0.022 / 0.014
+        let leanRiseRate = (leanTop - 1.0) / (0.12 * sampleRate)   // to 0.022 over 0.12s
+        let leanFallRate = (leanTop - 1.0) / (1.1 * sampleRate)    // back to 0.014 over 1.1s
+        let seen = touches
+        var lastSeq: UInt64 = 0
+        var lean = 1.0
+        var rising = false
+
         guard let format = AVAudioFormat(
             standardFormatWithSampleRate: sampleRate, channels: 2
         ) else { fatalError("InkVoice: format") }
@@ -372,12 +443,20 @@ final class InkVoice {
             let bufL = buffers[0].mData?.assumingMemoryBound(to: Float.self)
             let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)
             let holding = g.withLock { $0 }
+            let seq = seen.withLock { $0 }
+            if seq != lastSeq { lastSeq = seq; rising = true }   // a key went down
 
             for frame in 0..<Int(frameCount) {
                 if holding {
                     env = min(1.0, env + attackRate)
                 } else {
                     env = max(0.0, env - releaseRate)
+                }
+                if rising {
+                    lean += leanRiseRate
+                    if lean >= leanTop { lean = leanTop; rising = false }
+                } else if lean > 1.0 {
+                    lean = max(1.0, lean - leanFallRate)
                 }
                 if !holding && env <= 0.0 {
                     bufL?[frame] = 0; bufR?[frame] = 0
@@ -386,7 +465,7 @@ final class InkVoice {
                 }
                 phase += inc
                 if phase >= 2.0 * .pi { phase -= 2.0 * .pi }
-                let s = Float(sin(phase) * peak * env)
+                let s = Float(sin(phase) * peak * env * lean)
                 bufL?[frame] = s
                 bufR?[frame] = s
             }
