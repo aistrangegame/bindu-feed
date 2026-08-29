@@ -21,9 +21,27 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from authored_lib import ROOT, norm
 
 WINDOW = 12
-DOCS = [ROOT/"Bindu Feed"/"CLAUDE.md", ROOT/"HANDOFF-NOTE.md", ROOT/"OPEN-ITEMS.md"]
+# THE LEDGERS ARE DOCS TOO, and were outside this checker's reach for the whole build.
+#
+# A ledger row's VERDICT can be right while its REASON is wrong, and nothing checked reasons.
+# `Coverage/10-OWED.md` row E-V was correctly blocked and incorrectly explained: it said
+# `reflect(-1)` needed a pane past 90 degrees, when `world-five.js:120-123` runs the partner
+# at `PI - a` and the sign comes from the PAIRING. Caught by re-reading the constants, not by
+# any tool. Reasons in ledgers drift exactly as citations in prose do — this build has found
+# four instances of documentation drift and had zero mechanisms aimed at the ledgers.
+#
+# So: **every E-BLOCKED and OWED row cites the design line its reason rests on**, in this
+# checker's own checkable form — one `source:line` and one verbatim *"quote"* on the line —
+# and the row is only as trustworthy as that citation.
+DOCS = [ROOT/"Bindu Feed"/"CLAUDE.md", ROOT/"HANDOFF-NOTE.md", ROOT/"OPEN-ITEMS.md",
+        ROOT/"Coverage"/"10-OWED.md", ROOT/"Coverage"/"9-BOWL-CALL-SITE-MAP.md",
+        ROOT/"Coverage"/"8-ACTION-PLAN.md"]
+# The ledgers cite the AUDIT and the design's own checklist, so both are reachable now. They
+# were not, and three citations in `Coverage/9` resolved to nothing the moment the ledgers
+# came into scope — which is the checker doing its job on its first run against them.
 SEARCH = [ROOT/"canon", ROOT/"Claude Design Round 2"/"design-source",
-          ROOT/"Claude Design Round 2"/"comps", ROOT/"Bindu Feed"/"Bindu Feed"]
+          ROOT/"Claude Design Round 2"/"comps", ROOT/"Claude Design Round 2",
+          ROOT/"Bindu Feed"/"Bindu Feed", ROOT]
 
 CITE = re.compile(r'`([A-Za-z0-9 _./-]+\.(?:html|js|swift|md)):(\d+)(?:-\d+)?`')
 # ONLY a real quotation counts. Backticked spans are code and identifiers — treating them

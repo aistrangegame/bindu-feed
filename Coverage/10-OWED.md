@@ -30,6 +30,24 @@ Each row carries four things, and the third is the one that stops a row rotting:
 `Bindu FeedTests/VerificationBoundary.swift` is the code-side form of the same distinction:
 **MEASURED** · **ARITHMETIC** · **OWED** · **E-BLOCKED**.
 
+### The convention every row keeps
+
+**EVERY E-BLOCKED AND OWED ROW CITES THE DESIGN LINE ITS REASON RESTS ON**, in
+`Tools/check_citations.py`'s own checkable form: one `` `source:line` `` and one verbatim
+*"quote"* on the same line, so the checker can reach it. The ledgers are in its `DOCS` list
+as of 2026-08-29 and were outside its reach for the whole build before that.
+
+**WHY, and it is not tidiness.** A row's VERDICT can be right while its REASON is wrong, and
+nothing checked reasons. Row **E-V** was correctly blocked and incorrectly explained: it said
+`reflect(−1)` needed a pane turned past 90°, when `world-five.js:120` runs the partner at
+`π − a` — *"its partner across the line is its reflection, and a reflection never shows the
+same face"* — so the sign comes from the PAIRING and no turn was ever required. That was
+caught by re-reading the constants, not by any tool. **Reasons in ledgers drift exactly as
+citations in prose do**, and this build has now found four instances of documentation drift
+and had zero mechanisms aimed at the ledgers themselves.
+
+A row whose reason cannot be cited is a row whose reason has not been checked.
+
 ### The two rules that decide whether a row belongs here at all
 
 **RULE 1 · OWED MEANS A WALK CAN CLOSE IT. If the blocker is code, it is not OWED.**
@@ -86,16 +104,16 @@ measured; that a real finger reaches the range is not.
 
 | # | What must be true | Why offline cannot reach it | What the walk must show | Stage |
 |---|---|---|---|---|
-| O9 ⚠ | **`darkReturns` restores the bed over 7s.** You do not leave the Light quieter than you found it. | The ramp lives on `AVAudioEngine` state with no source node to render; there is no assertion for it at all. **Verified BY READING only.** | **NULL-SHAPED:** a working restore and a broken one both sound like "the field is there." Positive condition: enter and leave the Light **three times in one session** and the field is *the same loudness on the third pass as on the first*. The defect was cumulative, so a single trip cannot distinguish them — and "it sounded fine" after one trip is what a broken build reports too. | B3 |
+| O9 ⚠ | **`darkReturns` restores the bed over 7s.** You do not leave the Light quieter than you found it. | `field-sound.js:314` — *"walking back out — the dark returns, and with it the breathing"*. The ramp lives on `AVAudioEngine` state with no source node to render; there is no assertion for it at all. **Verified BY READING only.** | **NULL-SHAPED:** a working restore and a broken one both sound like "the field is there." Positive condition: enter and leave the Light **three times in one session** and the field is *the same loudness on the third pass as on the first*. The defect was cumulative, so a single trip cannot distinguish them — and "it sounded fine" after one trip is what a broken build reports too. | B3 |
 | O10 | **The mute is a 1.4s fade, and a muted launch is silent from the first buffer.** | `mainMixerNode.outputVolume` on a live graph. The state and its persistence are measured; the fade is not. | `⊙ sound` toggled and the field riding down rather than cutting; the app relaunched muted and silent before anything appears. | B2 |
-| O11 ⚠ | **The guard star's `nul` is heard as cancellation, not as omission.** | The §10 EIGHTH SHAPE in its purest form: defect and fix both render as silence. | **NULL-SHAPED, and the archetype.** Positive condition: the guard star opened in world V and **the bed heard STOPPING** — a drop into nothing while the room's reverb tail keeps decaying over it — and then **the bed heard COMING BACK** after ~4.4s. Two transitions, both audible. **"Nothing happened" is the failure report, not the pass.** | C1 |
+| O11 ⚠ | **The guard star's `nul` is heard as cancellation, not as omission.** | `spine-sound.js:167` — *"the voice summed against itself, which is exact"*. The §10 EIGHTH SHAPE in its purest form: defect and fix both render as silence. | **NULL-SHAPED, and the archetype.** Positive condition: the guard star opened in world V and **the bed heard STOPPING** — a drop into nothing while the room's reverb tail keeps decaying over it — and then **the bed heard COMING BACK** after ~4.4s. Two transitions, both audible. **"Nothing happened" is the failure report, not the pass.** | C1 |
 | O12 ⚠ | **The bed-duck under the bowl.** `duckBreath` takes the bed to a fifth and returns it over 9s. | `crossfadeLevel` on a live voice; the ratio is MEASURED, the ramp is not. | **NULL-SHAPED:** a duck that never fires and a duck that works both leave "a bowl over a bed." Positive condition: with the bed clearly audible first, strike a bowl and hear the bed **step back within 1.2s** and **come home by 9s** — the return is the half that proves it fired, since a missing duck also has no return. | B1 |
 | O13 | **The twelve repointed sites sound like four different things.** | The voices are measured apart; that the *right* voice is at the *right* moment is a walk. | The Rite's three movements, the Return's cross, the Universe's three, the axis crossing, the two Door crossings, the Light's blip, and the Point's OM — each identified as its own event. | Coverage/9 |
 | O15 | **`resolve` is heard as nine becoming one, then rising.** | The nine bends and the tenth's rise are MEASURED; that a 12-second event reads as one gesture rather than nine notes is a judgement, and it has no caller yet (see §7). | The close of the Point walked, and the chord collapsing to a unison before the last step lifts out of it. | C2 |
-| O17 | **World III gives while the hand is held.** | The gate arithmetic is ARITHMETIC and the timings are asserted; that a real finger holds past 1.43s, and that `onChanged` fires continuously under a stationary finger rather than only on movement, is a walk. | The veil parted and **held without moving**, and all four sections arriving in one contact — at roughly 0s, 0.43s, 0.95s and 1.43s. A single give under a long hold means `onChanged` is not firing while still, and the reversal is back by another route. | E3 |
-| O18 | **World V's pane turns under a real drag, and carries through edge-on.** | The angle arithmetic is ARITHMETIC; that a drag across three quarters of the shell reaches π, and that `onChanged` tracks a continuous carry rather than jumping, is a walk. | A pane **held and carried a half turn**, and the second tone heard going to nothing at edge-on and coming back inverted on the other side — three states in one gesture, not two. | E |
+| O17 | **World III gives while the hand is held.** | `world-three.js:95` — *"he is holding it open. Sections arrive while he holds, and only while."* The gate arithmetic is ARITHMETIC and the timings are asserted; that a real finger holds past 1.43s, and that `onChanged` fires continuously under a stationary finger rather than only on movement, is a walk. | The veil parted and **held without moving**, and all four sections arriving in one contact — at roughly 0s, 0.43s, 0.95s and 1.43s. A single give under a long hold means `onChanged` is not firing while still, and the reversal is back by another route. | E3 |
+| O18 | **World V's pane turns under a real drag, and carries through edge-on.** | `world-five.js:142` — *"far enough that carrying a face through edge-on is a real act of the hand"*. The angle arithmetic is ARITHMETIC; that a drag across three quarters of the shell reaches π, and that `onChanged` tracks a continuous carry rather than jumping, is a walk. | A pane **held and carried a half turn**, and the second tone heard going to nothing at edge-on and coming back inverted on the other side — three states in one gesture, not two. | E |
 | O16 ⚠ | **The descent and the ascent glide, and the aperture shimmers.** | The curves are MEASURED; that each fires at the right transition, at the right enclosure, is a walk. | **NULL-SHAPED in one direction:** the ascent's glide ends where the descent began, so a glide that never fires and one that fires twice both leave you "back where you started." Positive condition: **descend and ascend from two DIFFERENT enclosures** and hear two different pitches fall and rise — one pair alone cannot show the enclosure is being read. | C3 |
-| O14 ⚠ | **The delay line is inaudible until something is away.** | Built silent; that nothing leaks in before `distance` opens is a graph claim on a running engine. | **NULL-SHAPED — and it is the one row here whose pass condition IS an absence**, which is why it needs its opposite attached. Positive condition: world VI entered and **the room dry**, then `settle` taken to the floor and **the room heard lengthening**, then released and **heard drying again**. A delay that never opens and a delay that is not wired both sound dry; only the lengthening tells them apart. | A2 |
+| O14 ⚠ | **The delay line is inaudible until something is away.** | `spine-sound.js:52` — *"It is built once and sits silent until something is actually away."* That nothing leaks in before `distance` opens is a graph claim on a running engine. | **NULL-SHAPED — and it is the one row here whose pass condition IS an absence**, which is why it needs its opposite attached. Positive condition: world VI entered and **the room dry**, then `settle` taken to the floor and **the room heard lengthening**, then released and **heard drying again**. A delay that never opens and a delay that is not wired both sound dry; only the lengthening tells them apart. | A2 |
 
 **The other eleven are not null-shaped**, and the reason is worth stating: each has a
 positive observable that a broken build cannot produce. O1 names four distinct voices; O2 is
@@ -120,8 +138,8 @@ until the build that unblocks it lands — at which point it becomes an ordinary
 | — | *(E-V closed; struck through below, kept for the correction it carries)* | | |
 |---|---|---|---|
 | ~~E-V~~ | ~~`reflect(−1)` and world V's `settling` close~~ | **CLOSED 2026-08-29.** World V holds its panes: `ga[grp]`, `angleOf`, `facing()`, `spin`, `release`. One change, both consequences, as recorded. **AND THE REASON RECORDED HERE WAS WRONG** — `reflect(−1)` never needed a pane past 90°. `angleOf` runs the partner at **π − a**, so `cos(π − a) = −cos(a)` and the two panes of a pair are ALWAYS opposite; at rest one of them is already at ≈ −1. The negative half was a consequence of the pairing, not of the rotation range, and the only thing missing was `held`. See `MirrorPaneTests`. | ~~E~~ |
-| E1 | `join` · `ensemble` · `leaveAll` · `DancerVoice` | World VII has no chain. `WorldDance` holds `offeredOnce` and nothing else — no bodies, no lock. `AUDIT D5.8`, BLOCKER. | E1 |
-| E2 | `send` · `arrive` · `arriveAll` | World VI's arc registry lives in a `DispatchQueue` chain inside the view, so leaving the register kills the flight. Nothing tracks what is away. | E2 |
+| E1 | `join` · `ensemble` · `leaveAll` · `DancerVoice` | `world-seven.js:117` — *"bodies dancing with him, in the order they joined"*. `WorldDance` holds `offeredOnce` and nothing else: no chain, no bodies, no lock. `AUDIT D5.8`, BLOCKER. | E1 |
+| E2 | `send` · `arrive` · `arriveAll` | `world-six.js:101` — *"leaving the register closes the reading. It does not cancel a lap"*. The app's arc lives in a `DispatchQueue` chain inside the view, so leaving kills the flight and nothing tracks what is away. | E2 |
 
 ---
 
@@ -165,7 +183,13 @@ is the entire difference between this row and the rest of the OWED band.
 
 ---
 
-## 7 · `resolve` — settled by reading. It is the axis's, not the aperture's.
+## 7 · `resolve` — AN AXIS-SIDE ROW. Filed here so it is not looked for in the Point.
+
+**Stage: the axis (plan Stage G), NOT Stage C.** `resolve` was found while building the
+Point's sound and every instinct filed it there; the mapping put it on the axis instead, and
+a row filed under the wrong surface is found in the wrong stage or not at all. The three
+proofs below are why, and they are the same discipline as `riteThreshold`: **the mapping
+proved the guess wrong.**
 
 `resolve()` is built and measured (`CloseOfThePointTests`) and called by nothing. The question
 was whether the 852 → 963 lift and the aperture's close are the same moment. **They are not**,
@@ -197,9 +221,13 @@ would have had nothing stopping it.
 into z = 9 — and the axis plays `B.threshold(S.at(Z).hz)` at *every* register (`:5354`),
 including that one. The design has a generic crossing where `resolve` describes a specific
 one. **Still not wired**, because "the design describes this moment" and "the design fires
-this here" are different claims and only the second is a caller. This is the `riteThreshold`
-shape exactly: mapping first turned a plausible guess into a proof, and the proof says the
-guess was wrong.
+this here" are different claims and only the second is a caller.
+
+**WHERE IT NOW LIVES.** An axis row, alongside the plan's Stage G axis work — the passage's
+`swift`/`hit`/`dur`/`after`, the shader's pinned uniforms, `#trav`. Not a Point row, not a
+Stage C row, and not OWED: it is not waiting on a walk, it is waiting on a decision about
+whether the axis's z = 9 crossing takes a voice of its own. **`InstrumentView.swift:290`'s
+`spineThreshold(hz: reg.hz)` is the line that would change**, and it is the only one.
 
 **FOUND WHILE READING, AND FIXED:** the app's reveal called `om()` alone where `:1341` calls
 `shimmer()` and `om()`. One of the two moments the design *does* mark was marked incompletely.
