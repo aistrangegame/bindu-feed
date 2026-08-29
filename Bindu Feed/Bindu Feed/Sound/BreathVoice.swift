@@ -42,18 +42,29 @@ final class BreathVoice {
     /// `nul` — `nul.gain = 0`. *"the SAME signal, summed at exactly minus one. Not a fade
     /// and not a duck — a copy of the voice cancelling the voice."* At −1 the output is
     /// exactly zero, and the stone tail already in the air keeps decaying.
+    ///
+    /// Applied by the ENGINE, on a mixer in the direct path, not here. `spine-sound.js:95`
+    /// is `pk.connect(bus)` **and** `pk.connect(nul); nul.connect(bus)` — the dry signal and
+    /// an inverted copy of it, summed. That sum is `1 + nul`, which for `nul ∈ [−1, 0]` is
+    /// `[0, 1]` — exactly the range of `AVAudioMixerNode.outputVolume`, and 0 there is
+    /// exactly zero. One mixer, same arithmetic, and it leaves this node emitting the
+    /// PRE-null signal so the echo send can tap where the design taps it.
     let null: ScalarHolder
 
     /// `ech` — `ech.gain = 0`. The send into the delay line, *"shut for every register but
     /// VI, where what is away is heard as the room getting longer."* The gain is applied
     /// here; the engine routes this node's output to the delay (A2).
     ///
-    /// DIVERGENCE, recorded: the design taps the send from `pk`, BEFORE the null
-    /// (`spine-sound.js:96-97` — `pk.connect(nul)` and `pk.connect(ech)` are siblings), so
-    /// a voice with `nul` open would still feed the echo. Here the send is taken from this
-    /// node's output, which is post-null, because an `AVAudioSourceNode` has one output and
-    /// a second tap would need a second render state. `spine-sound.js` never opens both:
-    /// `nul` is the Point's one deliberate silence and `ech` belongs to world VI alone.
+    /// The send taps this node's output, which is now the PRE-null signal — the same place
+    /// `spine-sound.js:96-97` taps it, where `pk.connect(nul)` and `pk.connect(ech)` are
+    /// siblings hanging off `pk`.
+    ///
+    /// This was post-null for one commit, on the argument that the design never opens both.
+    /// That argument could not be made: **nothing in the design corpus calls `nul()` or
+    /// `distance()` at all** — both are defined in `spine-sound.js` and invoked nowhere, so
+    /// there is no call graph to prove exclusivity from, and C1 is the pass that writes the
+    /// callers. An unprovable assumption underneath the layer C1 builds on is not worth the
+    /// one mixer it saves.
     let echoSend: ScalarHolder
 
     init(
@@ -73,8 +84,10 @@ final class BreathVoice {
         let nullHolder = ScalarHolder(0)
         let echoHolder = ScalarHolder(0)
         self.peak = peakHolder
+        // `nul` and `ech` are both engine-side: they hang off this node's output as mixers,
+        // the way the design hangs them off `pk`. These are the values of record.
         self.null = nullHolder
-        self.echoSend = echoHolder     // read by the engine, not by the render block
+        self.echoSend = echoHolder
 
         // Per-voice render state — captured by the closure, persists
         // across calls. The audio thread serializes calls for a single
@@ -145,8 +158,6 @@ final class BreathVoice {
             // level. `nul` sums the voice against itself, so the direct path is scaled by
             // (1 + nul): at 0 that is unity and at −1 it is exactly zero.
             let peakSettings = peakHolder.read()
-            let nullGain = nullHolder.read()
-            let directGain = 1.0 + nullGain
             if peakSettings != peakCurrent {
                 peakCurrent = peakSettings
                 peakL.setCoefficients(peakSettings, sampleRate: sampleRate)
@@ -246,14 +257,11 @@ final class BreathVoice {
                     sigR = peakR.process(sigR)
                 }
 
-                // Final gain chain: voice level × LFO × crossfade × (1 + nul).
-                //
-                // `ech` is NOT here. It is a parallel SEND, not a trim on the direct path —
-                // `spine-sound.js:96-97` hangs `nul` and `ech` off `pk` as siblings — so it
-                // is realised as a real second connection in the engine's graph, a send
-                // mixer feeding the delay line. `echoSend` above is the value of record;
-                // `SoundEngine.setEchoSend(_:)` moves the mixer with it.
-                let gain = snap.level * lfoAmp * currentLevel * directGain
+                // Final gain chain: voice level × LFO × crossfade. This node's output IS
+                // `pk` — post-filter, PRE-null — and both `nul` and `ech` hang off it in the
+                // engine's graph exactly as they hang off `pk` in `spine-sound.js:95-97`.
+                // Neither is applied here, so a null can never silence the echo.
+                let gain = snap.level * lfoAmp * currentLevel
                 bufL?[frame] = Float(sigL * gain)
                 bufR?[frame] = Float(sigR * gain)
             }

@@ -59,20 +59,71 @@ struct BreathVoiceNodeTests {
     /// duck — a copy of the voice cancelling the voice."* At −1 the direct path is exactly
     /// zero. This is the assertion that separates a null from a fade: a fade approaches
     /// zero, a null IS zero.
+    ///
+    /// The null lives on a mixer in the ENGINE's direct path, not in the render block, so
+    /// that the echo send can tap `pk` before it — `spine-sound.js:95-97`. So it is measured
+    /// through a graph, with the same volume the engine would set.
     @Test("nul at −1 is exactly zero, not merely quiet")
     func nullCancels() throws {
-        let open = try OfflineRender.render(voice().sourceNode, seconds: 0.3)
-        #expect(open.peak() > 0.001)
+        // The volume must be set on a RUNNING engine — see `afterStart`.
+        func rendered(_ nul: Double) throws -> OfflineRender.Rendered {
+            try OfflineRender.render(voice().sourceNode,
+                                     through: [AVAudioMixerNode()],
+                                     seconds: 1.0,
+                                     afterStart: { chain in
+                (chain[0] as! AVAudioMixerNode).outputVolume = SoundEngine.nullVolume(for: nul)
+            })
+        }
+        // Measured well AFTER the mixer's own volume ramp. AVAudioMixerNode smooths a
+        // volume change rather than stepping, so the head of the buffer carries the tail of
+        // the previous setting — which is not the null failing, it is the null arriving. The
+        // design ramps too: `nul.gain.setTargetAtTime(-1, t, 0.09)`.
+        //
+        // Half a second, not fifty milliseconds. At 0.05 this passed alone and failed inside
+        // the full suite — a flaky assertion, which is worse than a failing one, because the
+        // ramp's length is not something this test should be pinning at all. The profile
+        // rides in the failure message so a real regression arrives with its data.
+        let settled = 0.5
+        let open = try rendered(0).peak(from: settled)
+        #expect(open > 0.001)
 
+        let nulled = try rendered(-1)
+        let profile = stride(from: 0.0, to: 1.0, by: 0.1)
+            .map { String(format: "%.2f:%.5f", $0, nulled.peak(from: $0, to: $0 + 0.05)) }
+            .joined(separator: " ")
+        #expect(nulled.peak(from: settled) == 0,
+                "a null is exact; anything above zero is a fade. profile \(profile)")
+        #expect(nulled.peak(to: 0.005) > 0, "…and it ramps in rather than cutting")
+
+        // half open is a fade, and must NOT be zero — the two are different things
+        let half = try rendered(-0.5).peak(from: settled)
+        #expect(half > 0)
+        #expect(half < open)
+    }
+
+    /// The arithmetic on its own. `pk.connect(bus)` plus `pk.connect(nul); nul.connect(bus)`
+    /// sums to `1 + nul`, and −1 must land on exactly zero rather than near it.
+    @Test("nullVolume maps the design's range exactly")
+    func nullVolumeMath() {
+        #expect(SoundEngine.nullVolume(for: 0) == 1)
+        #expect(SoundEngine.nullVolume(for: -1) == 0)
+        #expect(SoundEngine.nullVolume(for: -0.5) == 0.5)
+        #expect(SoundEngine.nullVolume(for: -2) == 0)      // clamped, never inverted
+        #expect(SoundEngine.nullVolume(for: 1) == 1)
+    }
+
+    /// THE REASON THE TAP MOVED. With the send taken from the node's output and the null on
+    /// a mixer downstream of it, a fully-open null leaves the send untouched. Nothing in the
+    /// design corpus calls `nul()` or `distance()` — both are defined in `spine-sound.js`
+    /// and invoked nowhere — so their exclusivity could not be proven, and C1 is the pass
+    /// that writes the callers.
+    @Test("a null does not silence the echo send")
+    func nullDoesNotSilenceTheSend() throws {
         let v = voice()
-        v.null.write(-1)
-        let nulled = try OfflineRender.render(v.sourceNode, seconds: 0.3)
-        #expect(nulled.peak() == 0, "a null is exact; \(nulled.peak()) is a fade")
-
-        // and it comes back — `nul.gain.setTargetAtTime(0, t + secs, 1.8)`
-        let w = voice()
-        w.null.write(0)
-        #expect(try OfflineRender.render(w.sourceNode, seconds: 0.3).peak() > 0.001)
+        v.null.write(-1)                       // the deliberate silence, fully open
+        // the send taps the node itself, which is pre-null — so it still carries signal
+        let atTheTap = try OfflineRender.render(v.sourceNode, seconds: 0.3)
+        #expect(atTheTap.peak() > 0.001, "the tap went silent: the null is upstream of it")
     }
 
     /// The Point's own voice — `point-sound.js:42,55-57`, a climbing bed with the octave at

@@ -119,20 +119,38 @@ enum OfflineRender {
     /// would hand the hardware, minus the reverb (which the engine attaches separately and
     /// which `7-STATE-OF-THE-BUILD.md` §5 lists as one of the three things only ears can
     /// judge).
+    /// `through` inserts nodes in series between the source and the main mixer — for the
+    /// parts of a voice that live in the ENGINE's graph rather than in its render block.
+    /// `nul` is one of those: `spine-sound.js:95` sums the signal with an inverted copy of
+    /// itself, which is a mixer at `1 + nul`, so measuring a null means rendering a graph.
+    /// `afterStart` runs once the engine is running, before any frame is pulled. Mixer
+    /// parameters set before `start()` do not survive it — the first version of the null
+    /// test set `outputVolume` on a detached mixer and every setting rendered identically,
+    /// which is a graph that silently ignores you rather than one that fails.
     static func render(_ node: AVAudioSourceNode,
+                       through chain: [AVAudioNode] = [],
                        seconds: Double,
-                       sampleRate: Double = 48000) throws -> Rendered {
+                       sampleRate: Double = 48000,
+                       afterStart: ([AVAudioNode]) -> Void = { _ in }) throws -> Rendered {
         guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)
         else { throw Failure.format }
 
         let engine = AVAudioEngine()
         engine.attach(node)
         _ = engine.mainMixerNode          // pull the output node into the graph before start
-        engine.connect(node, to: engine.mainMixerNode, format: node.outputFormat(forBus: 0))
+        let nodeFormat = node.outputFormat(forBus: 0)
+        var upstream: AVAudioNode = node
+        for link in chain {
+            engine.attach(link)
+            engine.connect(upstream, to: link, format: nodeFormat)
+            upstream = link
+        }
+        engine.connect(upstream, to: engine.mainMixerNode, format: nodeFormat)
 
         try engine.enableManualRenderingMode(.offline, format: format, maximumFrameCount: 4096)
         try engine.start()
         defer { engine.stop(); engine.disableManualRenderingMode() }
+        afterStart(chain)
 
         guard let buffer = AVAudioPCMBuffer(pcmFormat: engine.manualRenderingFormat,
                                             frameCapacity: engine.manualRenderingMaximumFrameCount)

@@ -485,6 +485,26 @@ final class SoundEngine: ObservableObject {
     /// the delay independently, and this mixer's volume IS `ech.gain`.
     private var sends: [ObjectIdentifier: AVAudioMixerNode] = [:]
 
+    /// One null mixer per live voice, in the DIRECT path only. `spine-sound.js:95` is
+    /// `pk.connect(bus)` **and** `pk.connect(nul); nul.connect(bus)` — the signal plus an
+    /// inverted copy of it, summed, which is `1 + nul`. One mixer at that volume is the same
+    /// arithmetic in one node, and it puts the null AFTER the point the send taps.
+    private var nulls: [ObjectIdentifier: AVAudioMixerNode] = [:]
+
+    /// `nul.gain` → the direct path's volume. Pure, so it can be asserted without a graph.
+    /// `nul ∈ [−1, 0]` maps to `[0, 1]`, and −1 gives exactly 0 — a null, not a fade.
+    nonisolated static func nullVolume(for nul: Double) -> Float {
+        Float(max(0, min(1, 1 + nul)))
+    }
+
+    /// `nul(secs)` — the Point's one deliberate silence. STAGE C1 drives this; A1/A2 only
+    /// need the path to exist and to be open.
+    func setNull(_ nul: Double) {
+        guard let voice = currentBreath else { return }
+        voice.null.write(nul)
+        nulls[ObjectIdentifier(voice)]?.outputVolume = Self.nullVolume(for: nul)
+    }
+
     /// `distance(f)` will drive this in STAGE C1. A1/A2 only need it to exist and to be
     /// shut, so the delay line is inaudible until something is actually away.
     func setEchoSend(_ level: Double) {
@@ -504,17 +524,30 @@ final class SoundEngine: ObservableObject {
         let format = voice.sourceNode.outputFormat(forBus: 0)
         setRoom(for: voice.snapshot.bed)
 
-        // A2 · the voice reaches the room AND the delay, independently — `pk.connect(bus)`
-        // and `pk.connect(ech); ech.connect(echoIn)`. The send mixer starts at zero, so
-        // this changes nothing anyone can hear until `setEchoSend` opens it.
+        // A1/A2 · the voice's node IS `pk`, and two things hang off it, as they do in
+        // `spine-sound.js:95-97`: the direct path through the null, and the send into the
+        // delay. Both mixers start where the design starts them — the null wide open, the
+        // send shut — so this changes nothing anyone can hear until C1 moves them.
+        let null = AVAudioMixerNode()
+        engine.attach(null)
+        engine.connect(null, to: bus, format: format)
+        nulls[ObjectIdentifier(voice)] = null
+
         let send = AVAudioMixerNode()
-        send.outputVolume = Float(voice.echoSend.read())
         engine.attach(send)
         engine.connect(send, to: delay, format: format)
         sends[ObjectIdentifier(voice)] = send
 
+        // VOLUMES AFTER ATTACH AND CONNECT, never before. A mixer parameter set on a node
+        // that is not yet in a running graph does not survive being wired in — the offline
+        // test that first measured the null set `outputVolume` on a detached mixer and every
+        // setting rendered identically, a graph silently ignoring the write rather than
+        // refusing it. Same ordering hazard here, and the same fix.
+        null.outputVolume = Self.nullVolume(for: voice.null.read())
+        send.outputVolume = Float(voice.echoSend.read())
+
         engine.connect(voice.sourceNode,
-                       to: [AVAudioConnectionPoint(node: bus, bus: bus.nextAvailableInputBus),
+                       to: [AVAudioConnectionPoint(node: null, bus: 0),
                             AVAudioConnectionPoint(node: send, bus: 0)],
                        fromBus: 0, format: format)
     }
@@ -522,9 +555,10 @@ final class SoundEngine: ObservableObject {
     private func detach(_ voice: BreathVoice) {
         engine.disconnectNodeInput(voice.sourceNode)
         engine.detach(voice.sourceNode)
-        if let send = sends.removeValue(forKey: ObjectIdentifier(voice)) {
-            engine.disconnectNodeInput(send)
-            engine.detach(send)
+        let id = ObjectIdentifier(voice)
+        for node in [nulls.removeValue(forKey: id), sends.removeValue(forKey: id)].compactMap({ $0 }) {
+            engine.disconnectNodeInput(node)
+            engine.detach(node)
         }
     }
 

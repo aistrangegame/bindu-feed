@@ -91,21 +91,71 @@ same object every time something happens.
 
 ---
 
-## 4 · The three with no design counterpart
+## 4 · The three with no design counterpart — RECORDED, not normalised
 
-Not defects; recorded so they are not mistaken for ports.
+Not defects, and **not to be repointed**. Each is a moment the app has and the design does
+not, so there is no line to port and nothing to be faithful to. Written down so a future map
+does not re-open them as unmapped.
 
-- **#15 `RoomView.swift:240`** — the `else` branch when a room has no `RoomKey`, where the
-  design would always have a voice. `presence(k)` is the real call; this is a fallback.
-- **#16 `RoomView.swift:243`** — *"arming: not a voice."* The app's two-tap arming gesture;
-  `The Rooms v4.html` contains no sound calls at all.
-- **#11 `DoorView.swift:214`** — the `.absorbed` case, *"not yet a place — force is absorbed,
-  no navigation (Waves 5/6)."* `B.blip(285)` at `The Instrument v3.html:5168` shares the
-  frequency but sits in the Still's section-reveal, which is a different moment. **Left
-  unresolved rather than guessed.**
+**#15 · `RoomView.swift:240` — the voiceless room.**
+*What it is:* the `else` of `if let k = key { soundEngine.presence(k, dur: 3) }`, struck when
+a room resolves without a `RoomKey`.
+*Why nothing maps:* the design's rooms always have a voice — `The Rooms v4.html` contains no
+sound calls at all, and every room in the base carries a key. This fires only when the data
+is short a key, so it is an app-own fallback for a state the design cannot reach.
+*Ruling:* leave as a bowl-class strike, or make it silent. It should not be given a
+threshold's identity, because nothing is being crossed.
+
+**#16 · `RoomView.swift:243` — arming.**
+*What it is:* the first tap of the app's two-tap arming gesture, at `key.hz × 0.5` for 1.4s.
+The comment already says it: *"arming: not a voice."*
+*Why nothing maps:* the gesture is the app's. `The Rooms v4.html` has no arming step and no
+sound layer, so there is no design event at this moment at all.
+*Ruling:* app-own by construction. It is a UI acknowledgement, not a register event, and it
+is the one site where a half-pitched short strike is doing exactly the right job.
+
+**#11 · `DoorView.swift:214` — the absorbed force.**
+*What it is:* the `.absorbed` case of the turn's destination switch — *"Not yet a place —
+force is absorbed, no navigation (Waves 5/6)."*
+*Why nothing maps:* the design's turn routes all eight destinations to real places
+(`AUDIT F11.3` confirms all eight exact), so it never has a destination that goes nowhere.
+`.absorbed` exists because the app shipped ahead of Waves 5/6. `B.blip(285)`
+(`The Instrument v3.html:5168`) shares the frequency but sits in the Still's section-reveal,
+a different moment entirely — a coincidence of pitch, not a match.
+*Ruling:* **left unresolved rather than guessed.** When Waves 5/6 land, this case either
+disappears or becomes a real crossing; it should be mapped then, not now.
 
 Also noted while mapping, and **not** in the nineteen: `openRope(){…B.blip(110);}`
 (`The Instrument v3.html:5088`) — the app's rope opens silent.
+
+---
+
+## 4b · The `om()` site: checked for a collision, and there is none
+
+136.1 Hz is OM and Bindu is a voice in the archetype table, so #8 was checked before being
+touched. **The two do not meet.** They are not even the same number, and no path resolves
+both.
+
+| | Bindu's voice | OM |
+|---|---|---|
+| pitch | **136** — `RoomKey.bindu.hz` (`RoomVoices.swift:37`) | **136.1** |
+| built by | `presence(_ key:)` → `CeremonyVoice(hz: key.hz, synth: .presence(…))` | its own ceremony voice, from the design's `[136.1, 272.2, 408.3]` |
+| timbre from | `VoiceCharacter.CHAR["bindu"]` — partials `[1,2,3]`, gain 0.055, flicker 6.2 | `spine-sound.js:374`, three oscillators at `0.06/(i+1)` |
+| called from | `RoomView.swift:239`, `RiteGatheringView.swift:205` | `PointRevealView.swift:103` |
+
+The three consumers of 136.1 are all elsewhere and all separate from `presence`:
+`PointLadder.freqs[9]` (the tenth enclosure's **drone**, a `BreathVoice` bed, not a strike);
+`AxisModel`'s `i:5, z:0, key:"feed"` register; and `AxisTones`' glide/stillness root.
+`PointRevealView.swift:103` carries 136.1 as a **literal at the call site**, read from no
+table at all — so giving it `om()` moves nothing else.
+
+One rhyme worth naming, not a collision: once #1 becomes the spine threshold, an axis
+crossing at `z = 0` strikes at 136.1 too, because the Feed register IS the ladder's landing
+home. Same frequency, different voice, and that is the design's own intent.
+
+Separately noted, out of scope: `RoomKey.bindu.hz = 136` where `field-sound.js:27` has
+`HZ.bindu = 110`. `SoundEngine.presence` already flags that the two tables disagree on four
+voices; this is that known area, not a new finding.
 
 ---
 
