@@ -487,3 +487,43 @@ what a person perceives unless the curves peak together.
 **This was left unfixed pending a ruling, and the ruling came: align them.** The record of
 the measured offset is kept above the decision rather than replaced by it, so the reasoning
 survives its own conclusion.
+
+---
+
+## 10 · `stackFrom` · MECHANISM DELIVERED, WIRING OPEN — and the two are recorded apart
+
+`The Reading.html:286-294`. `_mechverdicts1.md` records it ABSENT: *"The reading does not
+displace the world. Sections stack DOWNWARD in a ScrollView instead of carrying themselves
+upward against the field."* Those ScrollViews are `PointReadings.swift:328` and `:435`.
+
+**What the mechanism claims.** The stack is anchored at its BOTTOM against `floorY()` and
+grows UPWARD; the star is placed at that same `y` (`:334`), so the reading does not appear
+beside the world — **it pushes the world up out of its own way, and the star it came from
+rises with it.** The comp's own comment at `:331` is `the sections surface out of the white,
+stacked, displacing it`. Stacking downward makes the weaker claim that a reading is a
+document below the star.
+
+**BUILT AND TESTED:** `Point/PointReadingStack.swift` — `floorY`, `stackFrom`, and the three
+call sites' own constants (I 0.54/13 · III 0.56/12 · IV 0.14/11; the other four worlds never
+call it). Five assertions, calibrated green-on-absent against two mutations: dropping the
+`min` ceiling reds two tests, making the gap unconditional reds two others.
+
+**NOT WIRED, and the reason is structural and already on the record.**
+`PointReadings.swift:61-66` states it: *"in the design the reading OVERLAYS the world and the
+world recedes under it; in the app `PointWorldView` shows the reading INSTEAD of the world, so
+there is nothing behind to dim."* **A stack that displaces a world it is not drawn over
+displaces nothing.** Wiring this is the same structural change as the register-0 recede and
+belongs with it, not ahead of it.
+
+**Filed as `mechanism present · wiring open`, never as absent**, on the F1 `renderAnswers`
+precedent — so a future session finds settled arithmetic instead of inventing it in the middle
+of the harder change, and so nobody reads the row as done.
+
+### One thing the tests turned up that the verdict did not say
+
+`originMax` is a CEILING, so **the stack does not move at all until the sections outgrow their
+headroom** — with four modest sections it never reaches it. That is the design's behaviour and
+not a defect: the reading does not begin shoving the world aside for one line. The first
+version of the assertion demanded a rise at every step and failed, and the correct reading of
+`min(originMax, floor − total)` is two claims — *never descends*, and *rises once it outgrows
+the headroom*. Both are asserted, in one run, so neither can pass alone.

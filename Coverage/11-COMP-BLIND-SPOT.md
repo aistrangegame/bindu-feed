@@ -68,8 +68,12 @@ The true gap is between the two and cannot be closed by grep.
 > which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
 > · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
 >
-> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` · `stackFrom` ·
-> `renderRings`' body text · `swift`/`hit`. **Closed 2026-08-29:** `branch` (Gaia's four
+> **Still open, spot-checked by symbol:** `lightOff` · `inkTouch` ·
+> `renderRings`' body text · `swift`/`hit`. **`stackFrom` is mechanism-delivered and
+> wiring-open** (`10-OWED.md` §10) — its wiring is the register-0 recede's structural change,
+> not its own row. NOTE: `floorY` was flagged `app` by the name proxy on a `LightNave.swift`
+> constant of the same name and unrelated meaning — a false positive, and one more reason the
+> 37-name list was never the register. **Closed 2026-08-29:** `branch` (Gaia's four
 > recursive trees) · `doorField` (the door's eleven orbiting glows) · `figFail`, ported as
 > its purpose rather than its form · **`ana`, ported as the one-breath coupling it stands
 > for rather than as an AnalyserNode** — see `10-OWED.md` §9, which moved three of its four
