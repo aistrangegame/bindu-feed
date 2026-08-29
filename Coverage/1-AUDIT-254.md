@@ -198,7 +198,7 @@ Open findings by severity:
 | C7.6 | MAJOR | VISUAL | RUSH is a one-shot | OPEN | `SoundEngine.swift:771-776` single playAxis; nothing drives it from `passageT`. |
 | C7.7 | MAJOR | DATA | GATE: right synth, wrong trigger | OPEN | Bound to the register name, never to `PS.t = 0.34/0.68`. |
 | C7.8 | MINOR | DATA | CARRY is dead code | OPEN | `SoundEngine.swift:781-790` flat peak; `axisCarry` 0 call sites. |
-| C7.9 | BLOCKER | VISUAL | THIN: a blip, half the voice missing | OPEN | Continuity fixed, but `root = 136.1` + 1.5→2.0 ratio; design is 174 fixed + 261+f*87. The 174 partial is absent. |
+| C7.9 | BLOCKER | VISUAL | THIN: a blip, half the voice missing | **CLOSED 2026-08-29** | `StillnessVoice` now sounds `174` fixed with a twin at `261 + f·87` — The Point and The Archive, the Archive climbing to 174's octave. The app had `136.1` with a `1.5→2.0` ratio: a reasonable gesture off the wrong anchor, with 174 absent entirely. **A test of mine had pinned `136.1` as canon** (`theRootIs1361`), written from the code rather than the design — corrected, and the rule recorded in §10. Original:  Continuity fixed, but `root = 136.1` + 1.5→2.0 ratio; design is 174 fixed + 261+f*87. The 174 partial is absent. |
 | C7.10 | COSMETIC | VISUAL | UNGRIP | OPEN | peak 0.03 vs 0.024; attack 0.3 vs 0.45. |
 | C7.11 | MAJOR | DATA | invented threshold tone on every boundary | OPEN | `InstrumentView.swift:289-291` every non-gate crossing strikes a bell. |
 | D2.1 | BLOCKER | DATA | the gate's five DEALS absent | CLOSED | `PointDeals.swift:13-22` verbatim; rendered by `PointGateView`. |

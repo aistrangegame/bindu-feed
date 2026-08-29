@@ -169,9 +169,31 @@ final class StillnessVoice {
         let t = OSAllocatedUnfairLock<(fill: Double, cut: Bool)>(initialState: (0, false))
         self.target = t
 
+        // C7.9 · **THE TWO PITCHES ARE THE AXIS'S OWN POLES, AND ONE OF THEM WAS ABSENT.**
+        //
+        // `The Instrument v3.html:4276-4287` builds THIN from two fixed oscillators:
+        //
+        //     o.frequency.value  = 174;                         // never moves
+        //     o2.frequency.value = 261;
+        //     o2.frequency.setTargetAtTime(261 + f*87, t, 0.5); // 261 → 348
+        //
+        // **174 is The Point** (`:1541` `hz:174, z:1`) and **261 is The Archive** (`:1537`).
+        // The thinning is the axis's two ends sounding together, and the Archive's note
+        // climbing 261 → 348 arrives at 174's octave: *everything as it stands* rising to
+        // meet *everything you know, arranged.* That is why the pair is these two notes and
+        // not an interval off one root.
+        //
+        // The app had `root = 136.1` with a twin at `root × (1.5 → 2.0)` — 204 → 272 Hz. A
+        // fifth opening to an octave is a reasonable-sounding gesture and it is not this one:
+        // **174 was absent entirely**, and the moving voice was moving off the wrong anchor,
+        // so the arrival at the octave landed on nothing the axis names. `AUDIT C7.9`,
+        // BLOCKER — *"a blip, half the voice missing."*
+        //
+        // 136.1 is OM and the centre's own pitch, which is why it read as canon here; it
+        // belongs to `om()` and to the shader's centre, not to the thinning.
         var phase = 0.0, twinPhase = 0.0
-        var curLevel = 0.0, curRatio = 1.5
-        let root = 136.1
+        var curLevel = 0.0, curTwinHz = 261.0
+        let root = 174.0
 
         guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)
         else { fatalError("StillnessVoice: format") }
@@ -186,15 +208,17 @@ final class StillnessVoice {
             let wanted = goal.cut ? 0 : goal.fill * goal.fill * 0.062
             // ~0.2s to silence on a touch; the swell follows the accumulator's own pace
             let k = goal.cut ? 0.00025 : 0.00004
-            // the fifth opening toward the octave as the way thins
-            let wantedRatio = 1.5 + 0.5 * goal.fill
+            // `261 + f*87` — the Archive's note climbing to the Point's octave (348 = 174×2).
+            // An ABSOLUTE target, not a ratio: the design moves one oscillator's frequency,
+            // and a ratio off a root is a different mechanism that happens to sweep.
+            let wantedTwinHz = 261.0 + 87.0 * goal.fill
 
             for frame in 0..<Int(frameCount) {
                 curLevel += (wanted - curLevel) * k
-                curRatio += (wantedRatio - curRatio) * 0.00002
+                curTwinHz += (wantedTwinHz - curTwinHz) * 0.00002
                 phase += 2 * .pi * root / sampleRate
                 if phase >= 2 * .pi { phase -= 2 * .pi }
-                twinPhase += 2 * .pi * (root * curRatio) / sampleRate
+                twinPhase += 2 * .pi * curTwinHz / sampleRate
                 if twinPhase >= 2 * .pi { twinPhase -= 2 * .pi }
                 let s = Float((sin(phase) + sin(twinPhase)) * 0.5 * curLevel)
                 bufL?[frame] = s
