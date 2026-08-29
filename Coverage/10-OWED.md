@@ -28,8 +28,29 @@ Each row carries four things, and the third is the one that stops a row rotting:
 | **Stage** | which pass produced it, so the walk can be ordered by surface |
 
 `Bindu FeedTests/VerificationBoundary.swift` is the code-side form of the same distinction:
-**MEASURED** · **ARITHMETIC** · **OWED** · **E-BLOCKED**. E-BLOCKED rows are NOT here — they
-are in §4 below, because they are not waiting on a walk. They are waiting on a build.
+**MEASURED** · **ARITHMETIC** · **OWED** · **E-BLOCKED**.
+
+### The two rules that decide whether a row belongs here at all
+
+**RULE 1 · OWED MEANS A WALK CAN CLOSE IT. If the blocker is code, it is not OWED.**
+Anything waiting on a build cannot be closed by any walk, so filing it here would spend the
+one walk Ashrey gets on a row that was never closable — and would return from that walk with
+the row still open and no way to tell it apart from a row that failed. E-BLOCKED lives in §4
+and never in the tables above it. The test in reverse is the same test: *ask what would have
+to change for this row to pass. If the answer is a commit, it is not OWED.*
+
+**RULE 2 · A ROW THAT CAN BE SATISFIED BY NOTHING APPEARING TO CHANGE CANNOT BE CLOSED.**
+This is §10's **EIGHTH SHAPE** written into acceptance rather than into documentation. Where a
+defect and its fix produce *indistinguishable observations*, "I walked it and it was fine" is
+not evidence — it is the exact report a broken build would also produce. **Every such row's
+close condition must name something POSITIVE to observe**, and the rows below that carry the
+property are marked **⚠ NULL-SHAPED** with the positive condition spelled out. A row that
+cannot be given one does not belong in this file; it needs a different verification route.
+
+Audited across all sixteen rows: **five** carry the property. They are O9, O11, O12, O14 and
+O16 — and the reason four of the five are in the sound layer is that silence is the medium's
+own null. **A visual defect usually looks like something; an audio one usually looks like
+nothing.**
 
 ---
 
@@ -65,14 +86,21 @@ measured; that a real finger reaches the range is not.
 
 | # | What must be true | Why offline cannot reach it | What the walk must show | Stage |
 |---|---|---|---|---|
-| O9 | **`darkReturns` restores the bed over 7s.** You do not leave the Light quieter than you found it. | The ramp lives on `AVAudioEngine` state with no source node to render; there is no assertion for it at all. **Verified BY READING only.** | The Light entered and walked back out **twice in one session**, and the field as loud the second time as the first. The defect was cumulative, so one trip cannot show it. | B3 |
+| O9 ⚠ | **`darkReturns` restores the bed over 7s.** You do not leave the Light quieter than you found it. | The ramp lives on `AVAudioEngine` state with no source node to render; there is no assertion for it at all. **Verified BY READING only.** | **NULL-SHAPED:** a working restore and a broken one both sound like "the field is there." Positive condition: enter and leave the Light **three times in one session** and the field is *the same loudness on the third pass as on the first*. The defect was cumulative, so a single trip cannot distinguish them — and "it sounded fine" after one trip is what a broken build reports too. | B3 |
 | O10 | **The mute is a 1.4s fade, and a muted launch is silent from the first buffer.** | `mainMixerNode.outputVolume` on a live graph. The state and its persistence are measured; the fade is not. | `⊙ sound` toggled and the field riding down rather than cutting; the app relaunched muted and silent before anything appears. | B2 |
-| O11 | **The guard star's `nul` is heard as cancellation, not as omission.** | This is the §10 EIGHTH SHAPE, and it is the one thing in the layer whose defect and whose fix both render as silence. | The guard star opened in world V and the *hall dying away* — the bed cancelling while the room's tail keeps decaying — not simply nothing happening. **If it sounds like nothing happened, it is still broken.** | C1 |
-| O12 | **The bed-duck under the bowl.** `duckBreath` takes the bed to a fifth and returns it over 9s. | `crossfadeLevel` on a live voice; the ratio is measured, the ramp is not. | A bowl struck with the bed audible underneath, and the bed stepping back and coming home. | B1 |
+| O11 ⚠ | **The guard star's `nul` is heard as cancellation, not as omission.** | The §10 EIGHTH SHAPE in its purest form: defect and fix both render as silence. | **NULL-SHAPED, and the archetype.** Positive condition: the guard star opened in world V and **the bed heard STOPPING** — a drop into nothing while the room's reverb tail keeps decaying over it — and then **the bed heard COMING BACK** after ~4.4s. Two transitions, both audible. **"Nothing happened" is the failure report, not the pass.** | C1 |
+| O12 ⚠ | **The bed-duck under the bowl.** `duckBreath` takes the bed to a fifth and returns it over 9s. | `crossfadeLevel` on a live voice; the ratio is MEASURED, the ramp is not. | **NULL-SHAPED:** a duck that never fires and a duck that works both leave "a bowl over a bed." Positive condition: with the bed clearly audible first, strike a bowl and hear the bed **step back within 1.2s** and **come home by 9s** — the return is the half that proves it fired, since a missing duck also has no return. | B1 |
 | O13 | **The twelve repointed sites sound like four different things.** | The voices are measured apart; that the *right* voice is at the *right* moment is a walk. | The Rite's three movements, the Return's cross, the Universe's three, the axis crossing, the two Door crossings, the Light's blip, and the Point's OM — each identified as its own event. | Coverage/9 |
 | O15 | **`resolve` is heard as nine becoming one, then rising.** | The nine bends and the tenth's rise are MEASURED; that a 12-second event reads as one gesture rather than nine notes is a judgement, and it has no caller yet (see §7). | The close of the Point walked, and the chord collapsing to a unison before the last step lifts out of it. | C2 |
-| O16 | **The descent and the ascent glide, and the aperture shimmers.** | The curves are MEASURED; that the glide is triggered by the right transition, at the right enclosure, is a walk. | Descending onto a star and hearing the enclosure's tone fall an octave; ascending and hearing it climb back; the aperture opening on five tones. | C3 |
-| O14 | **The delay line is inaudible until something is away.** | It is built silent; that nothing leaks into it before `distance` opens is a graph claim on a running engine. | World VI entered with nothing sent, and the room dry. | A2 |
+| O16 ⚠ | **The descent and the ascent glide, and the aperture shimmers.** | The curves are MEASURED; that each fires at the right transition, at the right enclosure, is a walk. | **NULL-SHAPED in one direction:** the ascent's glide ends where the descent began, so a glide that never fires and one that fires twice both leave you "back where you started." Positive condition: **descend and ascend from two DIFFERENT enclosures** and hear two different pitches fall and rise — one pair alone cannot show the enclosure is being read. | C3 |
+| O14 ⚠ | **The delay line is inaudible until something is away.** | Built silent; that nothing leaks in before `distance` opens is a graph claim on a running engine. | **NULL-SHAPED — and it is the one row here whose pass condition IS an absence**, which is why it needs its opposite attached. Positive condition: world VI entered and **the room dry**, then `settle` taken to the floor and **the room heard lengthening**, then released and **heard drying again**. A delay that never opens and a delay that is not wired both sound dry; only the lengthening tells them apart. | A2 |
+
+**The other eleven are not null-shaped**, and the reason is worth stating: each has a
+positive observable that a broken build cannot produce. O1 names four distinct voices; O2 is
+two rooms that must differ; O4–O7 are ranges a gesture must reach; O8 is four sentences that
+must appear on screen; O10 is a fade with a direction; O13 is twelve events that must be
+distinguishable from each other; O15 is a chord collapsing. None of them can be satisfied by
+nothing changing.
 
 ---
 
@@ -81,6 +109,10 @@ measured; that a real finger reaches the range is not.
 Built, measured, and with nothing to drive them. **These are not waiting on a walk. They are
 waiting on a build**, and carrying them in the OWED band would mean a final walk that cannot
 close them.
+
+**RULE 1 applied:** every row here fails the *"what would have to change"* test with the
+answer *a commit*. None can be closed by any walk, and none may migrate into the tables above
+until the build that unblocks it lands — at which point it becomes an ordinary OWED row.
 
 | # | The sound | What is missing | Stage |
 |---|---|---|---|
@@ -130,18 +162,44 @@ is the entire difference between this row and the rest of the OWED band.
 
 ---
 
-## 7 · `resolve` has no caller, and one is not invented here
+## 7 · `resolve` — settled by reading. It is the axis's, not the aperture's.
 
-`resolve()` is built and measured (`CloseOfThePointTests`). It is the **fourth** mechanism
-specified in `spine-sound.js` and invoked nowhere — after `nul`, `distance` and `send` — and
-it is the largest of them: the close of the whole register.
+`resolve()` is built and measured (`CloseOfThePointTests`) and called by nothing. The question
+was whether the 852 → 963 lift and the aperture's close are the same moment. **They are not**,
+and the design says so in three places without being asked.
 
-`glide` and `shimmer` both had design callers and are wired at them (`The Point v9.html:1236`,
-`:1263`, `:1286`). **`resolve` did not, and none was invented for it.** The app's nearest
-candidate is the aperture's close, but the aperture is Avarana VIII and `resolve` is the close
-of the ladder — those may be the same moment or may not, and guessing would be the thing this
-whole exercise exists to stop. It stays callable and uncalled, recorded here, until a walk of
-the Point's ending says which moment it belongs to.
+**1 · `resolve` is not on the Point's sound facade at all.**
+`The Instrument v3.html:4862-4863` — `window.Snd = {breath, blip, shimmer, world, glide, om,
+threshold}`. Seven entries, and `resolve` is not among them. The Point *cannot* call it. It
+lives on `B` (`spine-sound.js`, `g.BODY`), which is the INSTRUMENT's body.
+
+**2 · 852 → 963 is the axis's own step, and it has a name.**
+`The Instrument v3.html:1018` — `{z: 9, key:'centre', name:'the centre', sub:'the point, at
+last', hz: 963}`, and `:982`'s ladder line reads `+9  the centre  963 → 136.1`. The lift
+`resolve` performs is the axis arriving at **z = 9, the centre**. The app already has it:
+`AxisModel.swift:94`, same z, same name, same 963.
+
+**3 · Both of the aperture's moments ARE marked, and neither is `resolve`.**
+`The Point v9.html:1286` — the aperture opening — is `Journey.visitors++; Snd.shimmer();
+YANTRA.flare()`. `:1341` — the reveal, as `.encl[9]` goes bare at 136.1, the landing home —
+is `Snd.shimmer(); Snd.om(); YANTRA.flare()`. A design that had wanted `resolve` at either
+would have had nothing stopping it.
+
+**Every sound call in `The Point v9.html`, in full:** `:943` `world(i)` · `:1011` `blip(0)`
+(the gate) · `:1190` `blip(dimN)` · `:1198` `blip(cur)` · `:1236` `glide(cur, true)` ·
+`:1263` `glide(cur, false)` · `:1286` `shimmer()` · `:1341` `shimmer(); om()`. Eight, and
+`resolve` is not one of them.
+
+**So the ambiguity is gone and the gap has moved.** `resolve` belongs to the axis's crossing
+into z = 9 — and the axis plays `B.threshold(S.at(Z).hz)` at *every* register (`:5354`),
+including that one. The design has a generic crossing where `resolve` describes a specific
+one. **Still not wired**, because "the design describes this moment" and "the design fires
+this here" are different claims and only the second is a caller. This is the `riteThreshold`
+shape exactly: mapping first turned a plausible guess into a proof, and the proof says the
+guess was wrong.
+
+**FOUND WHILE READING, AND FIXED:** the app's reveal called `om()` alone where `:1341` calls
+`shimmer()` and `om()`. One of the two moments the design *does* mark was marked incompletely.
 
 ---
 

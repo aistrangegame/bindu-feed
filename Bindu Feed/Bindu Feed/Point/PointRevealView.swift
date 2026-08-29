@@ -100,6 +100,12 @@ struct PointRevealView: View {
         PointJourney.reset()                            // captured; the next walk is fresh
 
         // One tone fanning into three, then collapsing to the one point.
+        // `The Point v9.html:1341` — `Snd.shimmer(); Snd.om(); YANTRA.flare();`, fired as
+        // `.encl[9]` goes bare: enclosure 9 is 136.1, the landing home an octave down. The
+        // app played the OM and not the shimmer beside it. Found while reading the corpus to
+        // settle where `resolve` belongs; the reveal is one of the two moments that ARE
+        // marked, and it was marked incompletely.
+        soundEngine.shimmer()                           // five solfeggio tones, an octave up
         soundEngine.om()                                // `spine-sound.js:374` — three tones, not one
         withAnimation(.easeInOut(duration: 2.0)) { split = 1 }        // fan apart
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {

@@ -41,11 +41,26 @@ import Foundation
 // into `Coverage/10-OWED.md` **in the same commit that produces it**, and stays open.
 // A pass that produces an OWED claim and does not record it there has not finished.
 //
+// TWO RULES DECIDE WHETHER A CLAIM IS OWED AT ALL. Both live in `Coverage/10-OWED.md`.
+//
+//   1 · **OWED MEANS A WALK CAN CLOSE IT. If the blocker is code, it is not OWED.** Ask what
+//       would have to change for the claim to pass; if the answer is a commit, it is
+//       E-BLOCKED. Filing it as OWED spends the one walk on a row that was never closable
+//       and returns with it open and indistinguishable from a row that failed.
+//
+//   2 · **A CLAIM THAT CAN BE SATISFIED BY NOTHING APPEARING TO CHANGE CANNOT BE CLOSED.**
+//       §10's EIGHTH SHAPE, in acceptance rather than in documentation. Where a defect and
+//       its fix produce indistinguishable observations, *"I walked it and it was fine"* is
+//       the report a broken build gives too. Such a claim needs a close condition naming
+//       something POSITIVE to observe, or a different verification route entirely.
+//       Five of the sixteen carry this property, four of them in the sound layer — because
+//       **a visual defect usually looks like something and an audio one usually looks like
+//       nothing.**
+//
 // STAGE-E-BLOCKED is neither MEASURED nor OWED: built, measured, and with nothing to drive
-// it. It is waiting on a BUILD, not on a walk, so it must never sit in the OWED band — a
-// final walk cannot close it. `Coverage/10-OWED.md` §4 carries the three, of which world V
-// is **one item with two consequences**: the same missing `held` state gates both
-// `reflect(−1)` past 90° and `release()` into `settling`.
+// it. `Coverage/10-OWED.md` §4 carries the three, of which world V is **one item with two
+// consequences** — the same missing `held` state gates both `reflect(−1)` past 90° and
+// `release()` into `settling`.
 enum VerificationBoundary {
     /// Rendered and asserted against the design's own numbers.
     static let measured = "MEASURED"
