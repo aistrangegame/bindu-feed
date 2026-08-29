@@ -4,13 +4,19 @@
 Every string the app renders must be AUTHORED (traceable to the design), a recorded
 DIVERGENCE, or deliberate APP-OWN copy. Anything else is an INVENTION by construction.
 
-  ./Tools/check_rendered.py             enforce (exit 1 on any INVENTION)
+  ./Tools/check_rendered.py             extract, then enforce (exit 1 on any INVENTION)
   ./Tools/check_rendered.py --triage    show untriaged rendered strings not in the design
+
+EXTRACTION IS UNCONDITIONAL. This read Tools/rendered-candidates.json — a cached snapshot
+written by a separate script that nothing forced anyone to run — so it reported green on a
+build that no longer existed, and any string added since the last manual extraction was
+invisible to it, invented or not. One command now: extract, then check.
 """
 import sys, json, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from authored_lib import ROOT, norm
 from design_lib import load_design, in_design
+from extract_rendered import candidates
 
 REG = ROOT/"Tools"/"rendered-strings.tsv"
 
@@ -25,7 +31,7 @@ def load_reg():
 
 def main():
     hay = load_design()
-    cands = json.load(open(ROOT/"Tools"/"rendered-candidates.json"))
+    cands = candidates()          # fresh, every run — never a snapshot
     reg = {norm(r["s"]).lower(): r for r in load_reg()}
 
     inventions, untriaged, authored = [], [], 0

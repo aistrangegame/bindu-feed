@@ -7,6 +7,13 @@ require each to match an authored row or carry a recorded divergence. Anything l
 an invention BY CONSTRUCTION — no list of eight, nothing to remember.
 
 Writes Tools/rendered-candidates.json. Tools/rendered-strings.tsv carries the verdicts.
+
+`candidates()` is the extraction itself and is imported by check_rendered.py, which
+EXTRACTS EVERY RUN rather than reading the JSON. The JSON stayed as the checker's only
+input for the whole build, which meant the forward half of Rule 4 was reporting on a
+snapshot of the app rather than on the app: two strings added in one session passed it
+green and were invisible until the extractor was re-run by hand. A gate that reads a cache
+is not a gate. The file is now an artifact for diffing and for the record, nothing more.
 """
 import re, json, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -46,7 +53,8 @@ NEVER_RENDERS = re.compile(r'UserDefaults|forKey:|\.rawValue|case\s+\w+\s*=|'
                            r'"fields"|"records"|"typecast"|Notification\.Name|'
                            r'#selector|withIdentifier|systemName:|symbolName')
 
-def main():
+def candidates():
+    """Every string literal the app renders, extracted fresh from the source."""
     out = {}
     for p in sorted(APP.rglob("*.swift")):
         rel = str(p.relative_to(ROOT))
@@ -73,7 +81,12 @@ def main():
             e["sites"].add(f"{rel}:{ln}")
     rows = [{"s": v["s"], "sites": sorted(v["sites"])[:3]} for v in out.values()]
     rows.sort(key=lambda d: d["s"].lower())
+    return rows
+
+def main():
+    rows = candidates()
     json.dump(rows, open(ROOT/"Tools"/"rendered-candidates.json", "w"), indent=0)
     print(f"rendered candidates: {len(rows)}")
 
-main()
+if __name__ == "__main__":
+    main()
