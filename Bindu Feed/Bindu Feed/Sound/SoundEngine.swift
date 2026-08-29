@@ -556,6 +556,28 @@ final class SoundEngine: ObservableObject {
         currentBreath?.laws.mutate { $0.reflect = Smoothed(max(-1, min(1, c)), tau: 0.10) }
     }
 
+    /// EVERY REGISTER LEAVES AS IT ARRIVED.
+    ///
+    /// A law is a state on the voice, not an event, so it outlives the register that set it.
+    /// Walking out of world III with the veil half-closed would leave every register after it
+    /// muffled; leaving IV under load would leave the room ringing; leaving VI away would
+    /// leave the delay long. The design never has to say this because `_voice` is rebuilt per
+    /// register and the new one starts at the defaults — the app crossfades voices for the
+    /// BED but keeps one law-carrier, so it has to say it.
+    ///
+    /// Called on entering a register and on leaving it. Both, deliberately: entering must not
+    /// inherit, and leaving must not bequeath.
+    func releaseRegisterLaws() {
+        currentBreath?.laws.write(RegisterLaws())          // narrow/widen/unveil/bear/reflect
+        if let voice = currentBreath {
+            voice.peak.write(.flat(at: voice.snapshot.rootHz * 2))   // bear's resonance
+        }
+        setNull(0)                                          // V's silence, if it was open
+        setEchoSend(0)                                      // VI's send
+        setDelayTime(0.42)                                  // and the room back to its own length
+        leaveAll()                                          // VII's chain, if any
+    }
+
     /// The register's own beat, for the two laws that move it. The Point's ladder pairs pitch
     /// and beat at one index (`PointLadder.drone`), so this can never drift from the drone.
     private var beatHz: Double { currentBreath?.snapshot.binauralHz ?? 4 }

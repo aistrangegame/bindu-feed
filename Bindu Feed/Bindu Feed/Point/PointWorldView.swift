@@ -31,6 +31,35 @@ struct PointWorldView: View {
 
     private var dim: PointDimension? { PointContent.dimensions.first { $0.n == dimensionN } }
 
+    // ── C1 · THE WIRING · a register reaches its law ─────────────────────────────
+    //
+    // `7-STATE-OF-THE-BUILD.md` §3.1: *"`PointReadings.swift` and `PointWorlds.swift` contain
+    // no `soundEngine` calls at all."* They still do not, and should not — they are model and
+    // view files with no engine in scope. Each world hands up the ONE quantity it is about
+    // (`PointLawSignal`) and this, which owns the engine, applies the law.
+    //
+    // Ordered by REGISTER, not by law, so each is walkable as a unit.
+    //
+    // WHAT CAN BE ASSERTED OFFLINE, and what cannot:
+    //   · the LAWS themselves — every one is measured in `RegisterLawTests` against a
+    //     rendered graph. Those numbers are settled.
+    //   · this MAPPING — pure, and `PointLawTests` asserts each case reaches its own law.
+    //   · **the SIGNALS need the device.** That `part` actually reaches 1, that `panX` spans
+    //     its spread, that `settle` bottoms out at `H*0.7` — those are gestures, and no
+    //     offline render can walk them. This is exactly the boundary where a "verified" claim
+    //     could go soft, so it is named: **the laws are measured, the wiring is read, and
+    //     the walk is owed.**
+    private func apply(_ signal: PointLawSignal) {
+        switch signal {
+        case .admitted(let f):            soundEngine.narrow(f)
+        case .drawn(let f):               soundEngine.widen(f)
+        case .parted(let f, let floor):   soundEngine.unveil(f, floor: floor)
+        case .load(let f):                soundEngine.bear(f)
+        case .facing(let c):              soundEngine.reflect(c)
+        case .away(let f):                soundEngine.distance(f)
+        }
+    }
+
     // ── #carry · TAKE IT UP ──────────────────────────────────────────────────────
     // `The Instrument v3.html:4682` the affordance, `:4621-4627` its dress, `:5334`
     // `sealCarry()`. *"Taking it up is weightless — no list, no collection, nothing
@@ -115,7 +144,7 @@ struct PointWorldView: View {
             // chrome belongs to the level he is not on.
             if let star = openStar, let u = selectedUniverse {
                 PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue,
-                           onOpen: { _ in }, quiet: true)
+                           onOpen: { _ in }, quiet: true, onLaw: apply)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
                     .opacity(PointRecede.worldAlpha(dimension: dimensionN,
@@ -134,7 +163,8 @@ struct PointWorldView: View {
             } else if let u = selectedUniverse {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).
-                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue) { s in
+                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue,
+                           onOpen: { s in
                     // `world-five.js:49-50` — *"at the exact instant every other star sounds
                     // its arrival, this one is silent: a true null, the only deliberate
                     // silence in the Point. Sakshi's register — it witnesses, it does not
@@ -142,10 +172,23 @@ struct PointWorldView: View {
                     // build; it is read HERE. This silence is the design, never a gap to fix.
                     if s.key != "r-guard" {
                         soundEngine.riteVoice(hz: ladder[(dimensionN - 1) % 7], dur: 6)
+                    } else {
+                        // C1 · **THE CALLER `nul` NEVER HAD.** The comment above already
+                        // names it — *"a true null, the only deliberate silence in the
+                        // Point"* — and the app honoured it by NOT PLAYING A SOUND. That is
+                        // absence, and `spine-sound.js:164` is explicit that it is not:
+                        // *"Not a fade — the voice summed against itself, which is exact.
+                        // The stone tail already in the air keeps decaying, so the hall dies
+                        // away and then there is nothing."*
+                        //
+                        // Skipping a call leaves the bed running underneath. The null takes
+                        // the bed itself to zero while the room's tail keeps going, which is
+                        // audibly a different event and is the one the register is about.
+                        soundEngine.nul()
                     }
                     PointJourney.openedStars.append(s.t)
                     withAnimation(.easeInOut(duration: 0.8)) { openStar = s }
-                }
+                }, onLaw: apply)
                 .ignoresSafeArea()
 
                 VStack(spacing: 6) {
@@ -212,6 +255,23 @@ struct PointWorldView: View {
                 }
             }
         }
+        // I · `narrow(f)`. *"as a star admits him, the two tones converge toward unison. The
+        // beat narrowing IS the reading arriving — by the fourth section the world is very
+        // nearly one note."* `revealed` runs 0…4 (`PointReadings.swift:116` divides by 4) and
+        // the design's own sentence names the fourth section, so the quantity needs no
+        // scaling of my invention: it is `revealed / 4`.
+        //
+        // Sent for EVERY register, not only I. A reading is being admitted wherever he is,
+        // and `narrow` is the law of the register he is in — I's is the one the design
+        // describes, and the others hold their own beat unless their law moves it.
+        .onChange(of: revealed) { _, r in
+            if dimensionN == 1 { apply(.admitted(Double(r) / 4)) }
+        }
+        // EVERY REGISTER LEAVES AS IT ARRIVED — see `SoundEngine.releaseRegisterLaws`.
+        // Entering must not inherit the previous register's physics, and leaving must not
+        // bequeath its own. Both ends, because only one of them is the polite path.
+        .onAppear { soundEngine.releaseRegisterLaws() }
+        .onDisappear { soundEngine.releaseRegisterLaws() }
         // Lock the axis whenever a world body (selectedUniverse) or a star reading (openStar)
         // is open, so their own drag/scroll wins over the axis travel gesture.
         .onChange(of: openStar != nil) { _, _ in syncAxisLock() }

@@ -84,6 +84,37 @@ private struct StarMark: View {
 }
 
 // The dispatcher — one world per dimension.
+/// C1 · WHAT A REGISTER HANDS ITS LAW.
+///
+/// One quantity per register, and it is the quantity that register is ABOUT — not a value
+/// invented to have something to send. Every case below reads a `@State` the world already
+/// owns and already draws with, so the sound and the image are the same number:
+///
+/// | I   | `revealed / 4` | `PointWorldView` — *"by the fourth section the world is very nearly one note"* |
+/// | II  | the draw       | `WorldTurn.drawingId` — the star being drawn inward |
+/// | III | `part`         | `WorldVeil.part`, 0 closed … 1 fully parted, with `partedOnce` as the floor |
+/// | IV  | `panX`         | `WorldChamber` — the pan, which IS the load |
+/// | V   | the pane angle | `WorldMirrors` — `rotation3DEffect` 42° edge-ward → 0° face on |
+/// | VI  | `settle`       | `WorldReturn.settle` — how far down through the strata he is |
+///
+/// **VII IS NOT HERE.** `WorldDance` has `offeredOnce` and nothing else: no chain, no lock,
+/// no bodies. `join`/`ensemble`/`leaveAll` and `DancerVoice` are built and measured and have
+/// nothing to drive them. That is `8-ACTION-PLAN.md` **E1**, not C1.
+enum PointLawSignal: Equatable {
+    /// I · `narrow(f)` — how much of the reading has been given.
+    case admitted(Double)
+    /// II · `widen(f)` — how far out he has drawn.
+    case drawn(Double)
+    /// III · `unveil(f, floor:)` — how far the veil is parted, and what he has handed back.
+    case parted(Double, floor: Double)
+    /// IV · `bear(f)` — the chamber under load.
+    case load(Double)
+    /// V · `reflect(c)` — the pane's angle as `cos`, which is the sign of the second tone.
+    case facing(Double)
+    /// VI · `distance(f)` — how much of him is away.
+    case away(Double)
+}
+
 struct PointWorld: View {
     let dimensionN: Int
     let stars: [PlacedStar]
@@ -100,15 +131,20 @@ struct PointWorld: View {
     /// `StarMark` already had `compact`, which drops the label and keeps the marker. This is
     /// that flag, raised for the whole world.
     var quiet: Bool = false
+    /// C1 · the register's own quantity, on its way to its law. Default is a no-op, so a
+    /// world used anywhere without sound behaves exactly as before.
+    var onLaw: (PointLawSignal) -> Void = { _ in }
 
     var body: some View {
         switch dimensionN {
         case 1: WorldPoint(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
-        case 2: WorldTurn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
-        case 3: WorldVeil(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
-        case 4: WorldChamber(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
-        case 5: WorldMirrors(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
-        case 6: WorldReturn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
+        case 2: WorldTurn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
+        case 3: WorldVeil(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
+        case 4: WorldChamber(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
+        case 5: WorldMirrors(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
+        case 6: WorldReturn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
+        // I's quantity is the READING's, not the world's — `PointWorldView` owns `revealed`
+        // and sends `.admitted` directly. VII has no chain to send: see `PointLawSignal`.
         default: WorldDance(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
         }
     }
@@ -275,9 +311,16 @@ private struct WorldPoint: View {
 private struct WorldTurn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
+    var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var drawingId: String? = nil     // the star being drawn inward
     @State private var drawStart: Double = 0
     private let drawDur: Double = 0.9
+
+    /// II · `widen(f)`. *"The further out he travels, the further the second tone departs
+    /// from the first."* Emitted on the DRAW starting and ending, not per frame: `widen`'s
+    /// own 0.5s time constant is what carries it between, which is the design's idiom —
+    /// `setTargetAtTime` is given an endpoint, never a curve.
+    private func drawLaw(_ id: String?) { onLaw(.drawn(id == nil ? 0 : 1)) }
 
     // precompute each star's ring + slot once (was a per-frame filter/firstIndex per star)
     private var placement: [String: (ring: Int, idx: Int, count: Int)] {
@@ -331,6 +374,8 @@ private struct WorldTurn: View {
                 }
             }
         }
+        .onChange(of: drawingId) { _, id in drawLaw(id) }
+        .onDisappear { onLaw(.drawn(0)) }
     }
 }
 
@@ -338,10 +383,21 @@ private struct WorldTurn: View {
 private struct WorldVeil: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
+    var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var part: CGFloat = 0     // 0 closed … 1 fully parted
     /// `world-three.js:235` reads `this.back.length` — has a parting been made at all yet.
     /// The app's veil is one scalar, so what persists is the fact of it, not the zone list.
     @State private var partedOnce = false
+
+    /// III · `unveil(f, floor)`. `part` is the app's veil, 0 closed … 1 fully parted.
+    ///
+    /// THE FLOOR IS `partedOnce`. `world-three.js:104,111-112` keeps `back[]`, a permanent
+    /// list of handed-back zones each holding `r = max(r, 0.06 + n*0.026)` — *"that zone
+    /// stays thin."* The app's veil is one scalar rather than a zone list, so what persists
+    /// is the FACT of a parting, and the floor is the design's own base `0.06`. Nothing
+    /// invented: a veil once parted never closes all the way again.
+    private var veilFloor: Double { partedOnce ? 0.06 : 0 }
+
     var body: some View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
@@ -386,6 +442,8 @@ private struct WorldVeil: View {
                 })
             }
         }
+        .onChange(of: part) { _, p in onLaw(.parted(Double(p), floor: veilFloor)) }
+        .onAppear { onLaw(.parted(Double(part), floor: veilFloor)) }
     }
 }
 
@@ -395,6 +453,7 @@ private struct WorldVeil: View {
 private struct WorldChamber: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
+    var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var panX: CGFloat = 0
     @State private var panBase: CGFloat = 0
     var body: some View {
@@ -455,7 +514,17 @@ private struct WorldChamber: View {
             .simultaneousGesture(DragGesture().onChanged { v in panX = max(-spread + W * 0.5, min(0, panBase + v.translation.width)) }
                 .onEnded { _ in panBase = panX })
         }
+        // IV · `bear(f)`. The pan IS the load — `world-four.js` puts the pressure on the
+        // wall he is leaning into, and `spread` is the chamber's own full travel, so the
+        // fraction of it he has taken is the fraction of the load he is bearing.
+        .onChange(of: panX) { _, x in
+            onLaw(.load(min(1, abs(Double(x)) / max(1, Double(chamberSpread)))))
+        }
+        .onDisappear { onLaw(.load(0)) }
     }
+
+    /// The chamber's full travel, from `let spread = W * 1.7` — half of it either side.
+    @State private var chamberSpread: CGFloat = 393 * 1.7 / 2
 }
 
 // ── V · THE MIRRORS — perspectives PAIRED AND FACING their echo across the seam, a thread
@@ -464,7 +533,23 @@ private struct WorldChamber: View {
 private struct WorldMirrors: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
+    var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var turned: Set<String> = []
+
+    /// V · `reflect(c)` — `world-five.js:124`, `facing(){return this.held?Math.cos(this.angleOf(this.held)):1;}`.
+    /// **`facing()` IS `c`**, and the app has the angle: `mirrorStar` draws a pane at
+    /// `rotation3DEffect(.degrees(turned ? 0 : ±42))`, so `cos(42°) = 0.743` edge-ward and
+    /// `cos(0°) = 1` face on. Read off the app's own drawing constant, not invented.
+    ///
+    /// **THE NEGATIVE HALF IS UNREACHABLE, and that is the register's whole claim.**
+    /// `reflect(−1)` is *"the same note at the same pitch, arriving inverted… it goes
+    /// HOLLOW"* — and it needs a pane past 90°. These turn 42° → 0° and never further, so
+    /// world V as built can only ever ask for `c ∈ [0.743, 1]`. The sound is complete; the
+    /// world cannot yet reach the half that matters. An E-stage item, recorded here.
+    private static let paneEdgeDegrees = 42.0
+    private func facing() -> Double {
+        turned.isEmpty ? cos(Self.paneEdgeDegrees * .pi / 180) : 1
+    }
 
     // pair the stars two-by-two; each pair faces across the seam (an odd one out sits solo)
     private var pairs: [(PlacedStar, PlacedStar?)] {
@@ -515,7 +600,10 @@ private struct WorldMirrors: View {
             .position(x: x, y: y)
             .onTapGesture {
                 if turned.contains(p.id) { onOpen(p.star) }
-                else { withAnimation(.easeInOut(duration: 0.7)) { _ = turned.insert(p.id) } }
+                else {
+                    withAnimation(.easeInOut(duration: 0.7)) { _ = turned.insert(p.id) }
+                    onLaw(.facing(facing()))       // the face comes round; cos 42° → cos 0°
+                }
             }
     }
 }
@@ -526,6 +614,7 @@ private struct WorldMirrors: View {
 private struct WorldReturn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
+    var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var settle: CGFloat = 0     // 0 at the surface … grows as he settles downward
     @State private var settleBase: CGFloat = 0
     var body: some View {
@@ -572,7 +661,17 @@ private struct WorldReturn: View {
                 .onChanged { v in settle = max(0, min(maxSettle, settleBase + v.translation.height)) }
                 .onEnded { _ in settleBase = settle })
         }
+        // VI · `distance(f)`. *"While something of his is away, the register's own voice
+        // leans into the delay line and the delay lengthens."* Settling down through the
+        // strata IS the distance: `maxSettle` is `H * 0.7`, the world's own floor.
+        .onChange(of: settle) { _, v in
+            onLaw(.away(min(1, Double(v) / max(1, Double(returnMaxSettle)))))
+        }
+        .onDisappear { onLaw(.away(0)) }
     }
+
+    /// `let maxSettle = H * 0.7`, held so the law can read the same denominator the drag does.
+    @State private var returnMaxSettle: CGFloat = 852 * 0.7
 }
 
 // ── VII · THE DANCE — motion everything; CATCH a star in flight (the only fast world). Even
