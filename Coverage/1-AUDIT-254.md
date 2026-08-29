@@ -31,6 +31,38 @@ never read `comps/`, a quarter of the mechanism sweep's scope. The headline numb
 > `InstrumentView.swift:290` as the one line that would change; `spineThreshold` is now at
 > `:307`, and `:290` is `setStillness`. Corrected there.
 
+### THE MAJOR-BAND SWEEP · 2026-08-29 — a real number, and what a sweep cannot do
+
+Run before continuing the band, because four of nine BLOCKERs had been stale and the MAJOR
+band is nine times larger and older.
+
+**Mechanical, over all 84:**
+
+| check | result |
+|---|---|
+| rows whose evidence is a **zero-hit claim** | 18 — **4 now false**, closed: `E3.8` `towardGold`, `E3.9` `sealedLine`, `E4.5` + `G3.2` `agedBed` |
+| rows citing a **`File.swift:NN`** | 43 — **all resolve**; none points past end of file, so no gross drift |
+| rows citing **no line at all** | 37 |
+| rows where **every cited symbol now exists** | 12 — the re-read-first list |
+
+**Plus `A1.5`, `A1.6` and `B3.6` closed by fixing them.** Open now: **BLOCKER 4 · MAJOR 79 ·
+MINOR 43 · COSMETIC 4 = 130**, from 143.
+
+**AND THE LIMIT, WHICH MATTERS MORE THAN THE NUMBER.** Symbol presence decides nothing, and
+it is wrong in both directions:
+
+- **Present but still absent in substance** — `B0.5`'s `uDwell` and `B7.1`'s `uSweep` exist
+  as `.float(0)` and `.float2(0,0)`: hard-zeroed uniforms, which is exactly what those rows
+  say. `B7.2`'s `dwell` exists in `Instrument/` and the row's claim is scoped to `Universe/`,
+  where it is still nothing. `C3.7`'s `streak` matches a comment about *"fast gold streaks"*.
+- **Absent but possibly closed** — a mechanism can be built under a different name, which is
+  the whole reason `check_rendered` keys on strings rather than symbols.
+
+So the 12 are a **reading order, not a verdict**, and the 65 are *likely* open rather than
+known so. **A row is judged by reading it against the tree, and the sweep's job is to say
+which rows to read first, not to answer for them.** The per-row check at work time stays the
+second gate; this pass only makes the count and the order honest.
+
 **NOT-YET-EXAMINED is zero** — every one of the 254 was checked in this pass. That was the number you asked for; the answer is that none is now unexamined, and 143 are open.
 
 Open findings by severity:
@@ -53,7 +85,7 @@ Open findings by severity:
 | A1.3 | MAJOR | DATA | register back-filled uniformly, Koan under-represented | NEEDS-JUDGMENT | 12/12 split claimed in CLAUDE.md §8 but is a base fact. |
 | A1.4 | MINOR | DATA | one design reflection paraphrased, not stored | NEEDS-JUDGMENT | Base fact; app carries no copy either way. |
 | A1.5 | MAJOR | DATA | `Card Register` optional; nil silently renders as Vow | **CLOSED 2026-08-29** | A card with no register is filtered from the pool rather than guessed — §6's blank-`Status` lesson in a second discriminator field. **Both** readers filter: the day-pick and the Bindu Draw. Original evidence: | `Models.swift:333` optional; `MirrorView.swift:265-266` nil falls to "A VOW · ARRIVED". |
-| A1.6 | MAJOR | DATA | day-hash and draw index a mutable, growing pool | OPEN | `MirrorView.swift:181,208-209` modulus is still the live record count. |
+| A1.6 | MAJOR | DATA | day-hash and draw index a mutable, growing pool | **CLOSED 2026-08-29** | `MirrorDay.pick` scores every card by `hash(day·cardID)` and takes the highest — rendezvous, so the count appears nowhere and adding or archiving a card changes only the days that card wins. The draw is second place by the same scoring and cannot collide with the base. Original:  `MirrorView.swift:181,208-209` modulus is still the live record count. |
 | A2.1 | MAJOR | DATA | display-lines replaced by runtime sentence-splitter | CLOSED | `SignalView.swift:285-290` now splits on `\n` only. |
 | A2.2 | MAJOR | DATA | Signal pool carries 12 Codex/business rows | NEEDS-JUDGMENT | Pool composition is a base fact. |
 | A2.3 | MAJOR | DATA | same cohort leaks into the launch threshold | CLOSED | `FeedStore.swift:439-441` gaiaSeeds has its own pool. |
@@ -243,8 +275,8 @@ Open findings by severity:
 | E3.5 | MAJOR | VISUAL | the fall is a different ceremony's animation | OPEN | `ReturnView.swift:161-273` still the uni-fall port with the Universe captions; `whispers` → 0 hits. |
 | E3.6 | MAJOR | VISUAL | two incompatible ring representations at once | OPEN | No active/_in/_true/grown/pass terms; `ReturnRings` widget drawn over `ReturnStrata`. |
 | E3.7 | MAJOR | VISUAL | craquelure, whispers, pulses, grain absent | OPEN | Craquelure ported (`ReturnStrata.swift:102-113`); whispers/pulses/grain → 0 hits. 3 of 4 still absent. |
-| E3.8 | MAJOR | VISUAL | `towardGold` is not applied | OPEN | grep `towardGold`/`foxed` → 0 hits. |
-| E3.9 | MAJOR | DATA | sealed line not debossed, not modelled | OPEN | grep `sealedLine` → 0 hits; every paragraph renders identically. |
+| E3.8 | MAJOR | VISUAL | `towardGold` is not applied | **CLOSED 2026-08-29** | `towardGold` is built at `ReturnPatina.swift:8,31` (F3). Row's evidence was a zero-hit grep. Original:  grep `towardGold`/`foxed` → 0 hits. |
+| E3.9 | MAJOR | DATA | sealed line not debossed, not modelled | **CLOSED 2026-08-29** | The sealed line's deboss is built at `ReturnPatina.swift:54` (F3). Original:  grep `sealedLine` → 0 hits; every paragraph renders identically. |
 | E3.10 | MAJOR | DATA | Field Settled cumulative not one-at-a-time | OPEN | `ReturnView.swift:344` accumulates; no avatar/role/exhale gate; `useExhale` → 0 hits. |
 | E3.11 | MAJOR | VISUAL | the Sealing never shows him what he kept | OPEN | `ReturnView.swift:437-446` `replyText` never rendered back. |
 | E3.12 | none | — | smaller Return deltas | OPEN | `camY` never overridden; motes fixed 24; ring N=120. |
@@ -253,7 +285,7 @@ Open findings by severity:
 | E4.2 | BLOCKER | DATA | the stillness gate makes no sound at all | **CLOSED 2026-08-29** | `LightView`'s gate timer now calls `setStillness(fill: still, touching:)` every tick and outside the idle branch, so the drone follows the fill in both directions. Verified OPEN by re-reading before fixing — the one BLOCKER of the five whose row was still true. |
 | E4.3 | MAJOR | DATA | Rite Hz table diverges; timbres collapse | CLOSED | `RiteGatheringView.swift:204-205` + `RoomVoices.swift:35-42` exact. Residual: bed does not step back to 0.018. |
 | E4.4 | none | — | the Rite's thresholds are exact | CLOSED | `RiteView.swift:106,110,114,334`. |
-| E4.5 | MAJOR | DATA | Return crossings exact; two signature voices missing | OPEN | `agedBed` → 0 hits; ring is an immediate bowl, no growth, no 3400ms delay. |
+| E4.5 | MAJOR | DATA | Return crossings exact; two signature voices missing | **CLOSED 2026-08-29** | `agedBed` is built and called at `ReturnView.swift:174` (F2). Original:  `agedBed` → 0 hits; ring is an immediate bowl, no growth, no 3400ms delay. |
 | E4.6 | MINOR | DATA | seven canon travel calls never reach these surfaces | OPEN | `axisCarry` 0 call sites; `carryTone` only in the Point. |
 | E4.7 | MINOR | DATA | `ungrip` called where canon does not sanction it | OPEN | `LightView.swift:522` on every carve-lock. |
 | F0.1 | MAJOR | VISUAL | `em`->`pt` tracking not converted, systemically | CLOSED | `Theme.swift:127` helper + 45 call sites; all three exemplars fixed. Residual raw sites: `SettingsView.swift:234,264`, `GameView.swift:186`. |
@@ -300,5 +332,5 @@ Open findings by severity:
 | G1.2 | MAJOR | VISUAL | no room: both convolution layers absent | CLOSED | `SoundEngine.swift:358-361,371,578-586`. |
 | G1.3 | MINOR | VISUAL | `CEIL` and the master ramp | OPEN | grep `CEIL` → 0 hits; no master ceiling; per-voice peaks absolute. |
 | G3.1 | BLOCKER | DATA | Light's five-movement sound architecture absent | **CLOSED 2026-08-29** | The removal half is built: `lightOff`/`closeTheRoom` fade the room tone from a retained voice, `darkReturns` restores the bed. |
-| G3.2 | MAJOR | DATA | the Return's two signature voices absent | OPEN | `agedBed` → 0 hits; ring strikes immediately. |
+| G3.2 | MAJOR | DATA | the Return's two signature voices absent | **CLOSED 2026-08-29** | `agedBed` is built and called at `ReturnView.swift:174` (F2). Original:  `agedBed` → 0 hits; ring strikes immediately. |
 | G3.3 | MAJOR | VISUAL | `bowl` 4x too loud with the wrong spectrum | OPEN | `SoundEngine.swift:646` peak 0.32 vs 0.075; `RiteTones.swift:119` partials `[1,2.756,5.404]` vs `[1,2.004,2.98,4.02]`; no bed duck. |

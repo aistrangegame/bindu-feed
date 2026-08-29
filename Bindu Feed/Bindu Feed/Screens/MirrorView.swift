@@ -191,7 +191,12 @@ struct MirrorView: View {
         }
 
         let key = Self.dayKey
-        let baseIdx = Int(Self.fnv1a(key) % UInt32(cards.count))
+        // A1.6 · rendezvous, not modulus — see `MirrorDay`. The count appears nowhere, so a
+        // card added or archived no longer re-decides every other day.
+        guard let baseIdx = MirrorDay.pick(cards.map(\.id), key: key) else {
+            loaded = true
+            return
+        }
         let savedDrawn = UserDefaults.standard.bool(forKey: drawnKey(for: key))
         let savedIdx = UserDefaults.standard.object(forKey: idxKey(for: key)) as? Int
 
@@ -222,8 +227,15 @@ struct MirrorView: View {
         }
 
         let key = Self.dayKey
-        let base = Int(Self.fnv1a(key) % UInt32(cards.count))
-        let altIdx = (base + 3 + Int(Self.fnv1a(key + "·draw") % UInt32(cards.count - 3))) % cards.count
+        // A1.6 · the alternate is second place by the same scoring, which is stable for the
+        // same reason first place is — and cannot collide with the base, where the old
+        // `(base + 3 + hash % (count − 3)) % count` could land back on it as the pool changed
+        // size. The "+3 gap" it was protecting was an index trick guarding an index problem.
+        guard let altIdx = MirrorDay.alternate(cards.map(\.id), key: key) else {
+            drawn = true
+            persist(idx: nil, drawn: true)
+            return
+        }
 
         // Two-stage (comp The Mirror): the current reflection fades out and lifts, THEN the
         // alternate rises in — the old face departs before the new surfaces.

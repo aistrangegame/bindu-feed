@@ -303,6 +303,32 @@ struct InstrumentView: View {
                 if reg.key == "gate" {
                     soundEngine.axisGate(hz: reg.hz)
                     PointJourney.reachedGate = true
+                } else if reg.key == "centre" {
+                    // `resolve` — `spine-sound.js`. **APP-OWN CALLER, AND LABELLED SO.**
+                    //
+                    // The fourth specified-never-invoked mechanism, after `nul`, `distance`
+                    // and `send`: built and MEASURED, defined in the design, and fired from
+                    // nowhere in it. `Coverage/10-OWED.md` §7 enumerates all eight sound
+                    // calls in `The Point v9.html` — `resolve` is not among them — so **there
+                    // is no upstream call site to compare this against, and a future session
+                    // must not look for one.**
+                    //
+                    // WHY HERE. `resolve` performs nine just intervals on 852 collapsing to a
+                    // unison and then 852 → 963: the axis arriving at the centre. The app
+                    // already holds that moment exactly — `AxisModel.swift:94`, `z: 9`,
+                    // `key: "centre"`, `hz: 963`, `sub: "the point, at last"`. Same z, same
+                    // name, same pitch. The design *describes* this crossing precisely and
+                    // plays a generic `B.threshold` at it, as it does at every register.
+                    //
+                    // The alternative was to leave the crossing that means *the point, at
+                    // last* sounding identical to every other one — and sameness costs most
+                    // exactly where the instrument's whole climb ends. Same reasoning as the
+                    // other three: specified by the design, never invoked by it, completed
+                    // here.
+                    //
+                    // **REVERT, one line:** `soundEngine.spineThreshold(hz: reg.hz)` in place
+                    // of `resolve()`, and this branch deleted.
+                    soundEngine.resolve()
                 } else {
                     soundEngine.spineThreshold(hz: reg.hz)   // `B.threshold(S.at(Z).hz)` — Instrument v3:5354
                 }
