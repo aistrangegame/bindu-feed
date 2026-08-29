@@ -30,6 +30,32 @@ final class BreathVoice {
     let crossfadeLevel: CrossfadeLevelHolder
     let sourceNode: AVAudioSourceNode
 
+    // A1 · `spine-sound.js:63-101` — the three nodes every register voice is built with and
+    // this one was not. They are built here and left at the design's defaults; the seven
+    // register laws that move them are STAGE C1 and are not wired yet.
+
+    /// `pk` — `pk.frequency = f*2; pk.Q = 1.2; pk.gain = 0`. *"a resonance, flat by
+    /// default — the chamber is the only register that asks the room to ring."* `bear(f)`
+    /// opens it to `f*13` dB with `Q = 1.2 + f*7`.
+    let peak: PeakHolder
+
+    /// `nul` — `nul.gain = 0`. *"the SAME signal, summed at exactly minus one. Not a fade
+    /// and not a duck — a copy of the voice cancelling the voice."* At −1 the output is
+    /// exactly zero, and the stone tail already in the air keeps decaying.
+    let null: ScalarHolder
+
+    /// `ech` — `ech.gain = 0`. The send into the delay line, *"shut for every register but
+    /// VI, where what is away is heard as the room getting longer."* The gain is applied
+    /// here; the engine routes this node's output to the delay (A2).
+    ///
+    /// DIVERGENCE, recorded: the design taps the send from `pk`, BEFORE the null
+    /// (`spine-sound.js:96-97` — `pk.connect(nul)` and `pk.connect(ech)` are siblings), so
+    /// a voice with `nul` open would still feed the echo. Here the send is taken from this
+    /// node's output, which is post-null, because an `AVAudioSourceNode` has one output and
+    /// a second tap would need a second render state. `spine-sound.js` never opens both:
+    /// `nul` is the Point's one deliberate silence and `ech` belongs to world VI alone.
+    let echoSend: ScalarHolder
+
     init(
         snapshot: VoiceSnapshot,
         initialCrossfadeLevel: Double = 0,
@@ -40,6 +66,15 @@ final class BreathVoice {
         self.snapshot = snapshot
         let level = CrossfadeLevelHolder(initialCrossfadeLevel)
         self.crossfadeLevel = level
+
+        // A1 · the three, at the design's defaults. Flat, closed, silent — so a voice that
+        // never touches them sounds exactly as it did before they existed.
+        let peakHolder = PeakHolder(.flat(at: snapshot.rootHz * 2))
+        let nullHolder = ScalarHolder(0)
+        let echoHolder = ScalarHolder(0)
+        self.peak = peakHolder
+        self.null = nullHolder
+        self.echoSend = echoHolder     // read by the engine, not by the render block
 
         // Per-voice render state — captured by the closure, persists
         // across calls. The audio thread serializes calls for a single
@@ -70,6 +105,14 @@ final class BreathVoice {
         var phaseFifth: Double = 0
         var phaseOctave: Double = 0
 
+        // A1 · one biquad per channel, and the settings they were last built from. The
+        // coefficients are recomputed only when the settings actually change, so a flat
+        // filter costs one comparison per buffer and nothing else.
+        var peakL = PeakBiquad(), peakR = PeakBiquad()
+        var peakCurrent = PeakSettings.flat(at: snapshot.rootHz * 2)
+        peakL.setCoefficients(peakCurrent, sampleRate: sampleRate)
+        peakR.setCoefficients(peakCurrent, sampleRate: sampleRate)
+
         // One-breath alignment. When given the app's launch-anchored origin, the
         // LFO re-anchors its phase to that single clock at the start of every
         // buffer — deriving "now" from the render block's own `mHostTime`, in the
@@ -97,6 +140,19 @@ final class BreathVoice {
             let buffers = UnsafeMutableAudioBufferListPointer(audioBufferList)
             let currentLevel = level.read()
             let useBinaural = routeState.read()
+
+            // A1 · read the three once per buffer, at the same cadence as the crossfade
+            // level. `nul` sums the voice against itself, so the direct path is scaled by
+            // (1 + nul): at 0 that is unity and at −1 it is exactly zero.
+            let peakSettings = peakHolder.read()
+            let nullGain = nullHolder.read()
+            let directGain = 1.0 + nullGain
+            if peakSettings != peakCurrent {
+                peakCurrent = peakSettings
+                peakL.setCoefficients(peakSettings, sampleRate: sampleRate)
+                peakR.setCoefficients(peakSettings, sampleRate: sampleRate)
+            }
+            let peakIsFlat = peakSettings.isFlat
 
             // Re-anchor the LFO to the one shared breath at the top of each buffer.
             // Only when we have both an origin and a valid host time; otherwise the
@@ -182,10 +238,24 @@ final class BreathVoice {
                 filterStateL += filterAlpha * (rawL - filterStateL)
                 filterStateR += filterAlpha * (rawR - filterStateR)
 
-                // Final gain chain: voice level × LFO × crossfade
-                let gain = snap.level * lfoAmp * currentLevel
-                bufL?[frame] = Float(filterStateL * gain)
-                bufR?[frame] = Float(filterStateR * gain)
+                // A1 · `gn -> lp -> pk`. At 0 dB the biquad is unity and is skipped
+                // outright, so the default path is the one that shipped, sample for sample.
+                var sigL = filterStateL, sigR = filterStateR
+                if !peakIsFlat {
+                    sigL = peakL.process(sigL)
+                    sigR = peakR.process(sigR)
+                }
+
+                // Final gain chain: voice level × LFO × crossfade × (1 + nul).
+                //
+                // `ech` is NOT here. It is a parallel SEND, not a trim on the direct path —
+                // `spine-sound.js:96-97` hangs `nul` and `ech` off `pk` as siblings — so it
+                // is realised as a real second connection in the engine's graph, a send
+                // mixer feeding the delay line. `echoSend` above is the value of record;
+                // `SoundEngine.setEchoSend(_:)` moves the mixer with it.
+                let gain = snap.level * lfoAmp * currentLevel * directGain
+                bufL?[frame] = Float(sigL * gain)
+                bufR?[frame] = Float(sigR * gain)
             }
 
             return noErr
