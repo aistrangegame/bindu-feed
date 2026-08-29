@@ -37,6 +37,9 @@ final class BreathVoice {
     /// `pk` — `pk.frequency = f*2; pk.Q = 1.2; pk.gain = 0`. *"a resonance, flat by
     /// default — the chamber is the only register that asks the room to ring."* `bear(f)`
     /// opens it to `f*13` dB with `Q = 1.2 + f*7`.
+    /// C1 · the five register laws that have a design caller. Defaults are no-ops.
+    let laws = LawHolder()
+
     let peak: PeakHolder
 
     /// `nul` — `nul.gain = 0`. *"the SAME signal, summed at exactly minus one. Not a fade
@@ -55,16 +58,21 @@ final class BreathVoice {
     /// VI, where what is away is heard as the room getting longer."* The gain is applied
     /// here; the engine routes this node's output to the delay (A2).
     ///
-    /// The send taps this node's output, which is now the PRE-null signal — the same place
+    /// The send taps this node's output, which is the PRE-null signal — the same place
     /// `spine-sound.js:96-97` taps it, where `pk.connect(nul)` and `pk.connect(ech)` are
     /// siblings hanging off `pk`.
     ///
-    /// This was post-null for one commit, on the argument that the design never opens both.
-    /// That argument could not be made: **nothing in the design corpus calls `nul()` or
-    /// `distance()` at all** — both are defined in `spine-sound.js` and invoked nowhere, so
-    /// there is no call graph to prove exclusivity from, and C1 is the pass that writes the
-    /// callers. An unprovable assumption underneath the layer C1 builds on is not worth the
-    /// one mixer it saves.
+    /// **THE REASON IT IS HERE IS NOT THAT THE DESIGN TAPS HERE.** It was post-null for one
+    /// commit, on the argument that no register opens `nul` and `ech` together — and that
+    /// argument could not be made, because **nothing in the design corpus calls either one**.
+    /// Both are defined in `spine-sound.js` and invoked nowhere, so there is no call graph to
+    /// prove exclusivity from.
+    ///
+    /// So the tap moved to the side that is correct whether the assumption holds or not. A
+    /// pre-null tap behaves identically to a post-null one in every case where the two are
+    /// never open together, and correctly in the case where they are. **This survives someone
+    /// later finding a call site** — including C1, which writes them — where "the design taps
+    /// here" would only have been an appeal to a file that never exercised it.
     let echoSend: ScalarHolder
 
     init(
@@ -121,6 +129,15 @@ final class BreathVoice {
         // A1 · one biquad per channel, and the settings they were last built from. The
         // coefficients are recomputed only when the settings actually change, so a flat
         // filter costs one comparison per buffer and nothing else.
+        // C1 · one current value per law, converging toward its target at the design's own
+        // time constant. `setTargetAtTime` never jumps, and neither does this.
+        let lawHolder = self.laws
+        var curBeat = snapshot.binauralHz
+        var curSag = 1.0
+        var curVeil = 19_720.0
+        var curReflect = 1.0
+        var veilStateL = 0.0, veilStateR = 0.0
+
         var peakL = PeakBiquad(), peakR = PeakBiquad()
         var peakCurrent = PeakSettings.flat(at: snapshot.rootHz * 2)
         peakL.setCoefficients(peakCurrent, sampleRate: sampleRate)
@@ -158,6 +175,12 @@ final class BreathVoice {
             // level. `nul` sums the voice against itself, so the direct path is scaled by
             // (1 + nul): at 0 that is unity and at −1 it is exactly zero.
             let peakSettings = peakHolder.read()
+            let law = lawHolder.read()
+            let beatTarget = law.beat?.target ?? snap.binauralHz
+            let beatCoef = (law.beat ?? Smoothed(snap.binauralHz, tau: 1.2)).coefficient(sampleRate: sampleRate)
+            let sagCoef = law.sag.coefficient(sampleRate: sampleRate)
+            let veilCoef = law.veilHz.coefficient(sampleRate: sampleRate)
+            let reflectCoef = law.reflect.coefficient(sampleRate: sampleRate)
             if peakSettings != peakCurrent {
                 peakCurrent = peakSettings
                 peakL.setCoefficients(peakSettings, sampleRate: sampleRate)
@@ -182,6 +205,12 @@ final class BreathVoice {
             let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)
 
             for frame in 0..<Int(frameCount) {
+                // C1 · the laws converge, one pole per sample, at their own time constants.
+                curBeat    += (beatTarget - curBeat) * beatCoef
+                curSag     += (law.sag.target - curSag) * sagCoef
+                curVeil    += (law.veilHz.target - curVeil) * veilCoef
+                curReflect += (law.reflect.target - curReflect) * reflectCoef
+
                 // LFO — the breath in the Breath
                 lfoPhase += lfoIncrement
                 if lfoPhase >= 2.0 * .pi { lfoPhase -= 2.0 * .pi }
@@ -219,20 +248,23 @@ final class BreathVoice {
                         sampleRate: sampleRate,
                         noiseState: &noiseState
                     ) * octaveGain
+                    // `narrow`/`widen` move the second tone's distance from the first;
+                    // `bear` sags BOTH flat under load; `reflect` is the second tone's own
+                    // signed gain — 0 is edge on and gone, −1 is turned away and inverted.
                     rawL = Self.sample(
                         texture: snap.texture,
                         phase: &phaseL,
-                        frequency: leftFreq,
+                        frequency: leftFreq * curSag,
                         sampleRate: sampleRate,
                         noiseState: &noiseState
                     ) + octave
                     rawR = Self.sample(
                         texture: snap.texture,
                         phase: &phaseR,
-                        frequency: rightFreq,
+                        frequency: (snap.rootHz + curBeat) * curSag,
                         sampleRate: sampleRate,
                         noiseState: &noiseState
-                    ) + octave
+                    ) * curReflect + octave
                 } else {
                     let s = Self.sample(
                         texture: snap.texture,
@@ -249,9 +281,19 @@ final class BreathVoice {
                 filterStateL += filterAlpha * (rawL - filterStateL)
                 filterStateR += filterAlpha * (rawR - filterStateR)
 
+                // C1 · `unveil` is `lp`, the design's own per-voice filter — separate from
+                // the app's brightness filter above, which has no counterpart in the design
+                // at all. *"THE VEIL is a filter, not a metaphor. The register arrives
+                // muffled — that is what a veil does to a sound — and parting it opens the
+                // cutoff."* The default 19_720 Hz is the top of `340·58^1` and above hearing,
+                // so an untouched voice is unveiled and this costs one pole.
+                let veilAlpha = 1 - exp(-2.0 * .pi * min(curVeil, sampleRate * 0.49) / sampleRate)
+                veilStateL += veilAlpha * (filterStateL - veilStateL)
+                veilStateR += veilAlpha * (filterStateR - veilStateR)
+
                 // A1 · `gn -> lp -> pk`. At 0 dB the biquad is unity and is skipped
                 // outright, so the default path is the one that shipped, sample for sample.
-                var sigL = filterStateL, sigR = filterStateR
+                var sigL = veilStateL, sigR = veilStateR
                 if !peakIsFlat {
                     sigL = peakL.process(sigL)
                     sigR = peakR.process(sigR)

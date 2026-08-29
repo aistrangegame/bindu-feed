@@ -56,6 +56,15 @@ enum OfflineRender {
             return max(l, r)
         }
 
+        /// WHICH EAR. The binaural pair is not a stereo effect — it is two different tones,
+        /// `rootHz` left and `rootHz + binauralHz` right — so four of the seven register laws
+        /// act on the RIGHT channel and cannot be seen from the left at all. The first
+        /// version of `RegisterLawTests` measured the second tone in the left channel and
+        /// read leakage: 0.0007 where the tone was 0.0115, and four assertions failed against
+        /// a correct app.
+        enum Ear { case left, right }
+        private func channel(_ ear: Ear) -> [Float] { ear == .left ? left : right }
+
         func rms(from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
             let s = slice(left, from, to)
             guard !s.isEmpty else { return 0 }
@@ -68,8 +77,9 @@ enum OfflineRender {
         /// the bowl's partials are inharmonic (`2.004 · 2.98 · 4.02`) and would each land
         /// between bins. Returns the amplitude of that sinusoid, in the same units as the
         /// samples, so `magnitude(at: f)` of a `0.075·sin(2πft)` signal is `0.075`.
-        func magnitude(at hz: Double, from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
-            let s = slice(left, from, to)
+        func magnitude(at hz: Double, ear: Ear = .left,
+                       from: Double = 0, to: Double = .greatestFiniteMagnitude) -> Double {
+            let s = slice(channel(ear), from, to)
             guard s.count > 1 else { return 0 }
             let w = 2.0 * .pi * hz / sampleRate
             var re = 0.0, im = 0.0

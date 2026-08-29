@@ -164,6 +164,60 @@ final class RouteStateHolder: @unchecked Sendable {
 // that line by rendering a voice at defaults and requiring it to match a voice built with
 // the parameters absent.
 
+/// C1 · A REGISTER LAW'S TARGET, AND HOW FAST IT GETS THERE.
+///
+/// Every law in `spine-sound.js` moves its parameter with `setTargetAtTime(v, t, tau)` — a
+/// one-pole approach, never a jump — and each names its own `tau`: `narrow` 1.2s, `widen`
+/// 0.5s, `unveil` 0.30s, `bear` 0.35/0.5s, `reflect` 0.10s, `nul` 0.09s. The time constant is
+/// not decoration: `narrow`'s 1.2s is why the beat closing reads as the reading arriving
+/// rather than as a pitch bend, and `reflect`'s 0.10s is why a pane turning edge-on is felt
+/// as a turn. So the target and its tau travel together and the render block converges.
+struct Smoothed: Equatable, Sendable {
+    var target: Double
+    var tau: Double
+    init(_ target: Double, tau: Double) { self.target = target; self.tau = tau }
+    /// One-pole coefficient for a single sample. `setTargetAtTime`'s own curve.
+    func coefficient(sampleRate: Double) -> Double {
+        tau <= 0 ? 1 : 1 - exp(-1.0 / (tau * sampleRate))
+    }
+}
+
+/// C1 · THE FIVE REGISTER LAWS THAT HAVE A DESIGN CALLER, as parameters on the voice.
+///
+/// `narrow` · `widen` · `unveil` · `bear` · `reflect`. Each default is a NO-OP, so a voice
+/// no law has touched sounds exactly as it did before C1 — the same discipline A1 held for
+/// `pk`, `nul` and `ech`, and `BreathVoiceNodeTests.defaultsAreInaudible` still holds it.
+///
+/// Each value is expressed RELATIVE to what the app already does rather than as the design's
+/// absolute node value, because the two graphs put their gains in different places: the
+/// design's `og.gain = 0.5` per tone with `gn.gain = 0.055`, the app's single `snap.level`.
+/// `reflect(c)` sets `o2g.gain = 0.5*c`, which relative to its own resting 0.5 is exactly
+/// `c` — so `reflect` here IS `c`, and 1 is the untouched voice.
+struct RegisterLaws: Equatable, Sendable {
+    /// `narrow(f)` / `widen(f)` — the second tone's distance from the first, in Hz.
+    /// `nil` means the snapshot's own `binauralHz`, untouched.
+    var beat: Smoothed?
+    /// `bear(f)` — `sag = 1 - f*0.020`. Both tones bend flat under load: *"compression
+    /// lowers pitch, in stone as in anything else."*
+    var sag = Smoothed(1, tau: 0.5)
+    /// `unveil(f, floor)` — `340 * 58^max(f, floor)` Hz. 19_720 is the top of that curve and
+    /// is above hearing, so the default veil is no veil.
+    var veilHz = Smoothed(19_720, tau: 0.30)
+    /// `reflect(c)` — the second tone's own gain, relative to its resting value. **Signed**:
+    /// `+1` face on, `0` edge on and the tone simply gone, `−1` turned away — the same note
+    /// at the same pitch arriving inverted. *"It does not go quiet; it goes HOLLOW."*
+    var reflect = Smoothed(1, tau: 0.10)
+}
+
+/// Lock-free holder for the five laws, read once per buffer.
+final class LawHolder: @unchecked Sendable {
+    private let storage: OSAllocatedUnfairLock<RegisterLaws>
+    init(_ initial: RegisterLaws = RegisterLaws()) { self.storage = OSAllocatedUnfairLock(initialState: initial) }
+    func read() -> RegisterLaws { storage.withLock { $0 } }
+    func write(_ v: RegisterLaws) { storage.withLock { $0 = v } }
+    func mutate(_ body: (inout RegisterLaws) -> Void) { storage.withLock { body(&$0) } }
+}
+
 /// The peaking filter's three parameters, written together so the render block can never
 /// see a half-updated set — frequency from one write and Q from the next would be a filter
 /// the design never describes.

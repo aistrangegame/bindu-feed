@@ -497,6 +497,109 @@ final class SoundEngine: ObservableObject {
         Float(max(0, min(1, 1 + nul)))
     }
 
+    // MARK: - C1 · THE SEVEN REGISTER LAWS
+    //
+    // `spine-sound.js:104-190`. Each law is one register's whole claim expressed as physics,
+    // and `7-STATE-OF-THE-BUILD.md` §3.1 found all thirteen mechanisms absent —
+    // `PointReadings.swift` and `PointWorlds.swift` made no sound calls at all. A1 and A2
+    // built the nodes they move; these are the movements.
+    //
+    // FIVE OF THE SEVEN ARE PORTS. `narrow` · `widen` · `unveil` · `bear` · `reflect` are
+    // each invoked in the design corpus, so each has a caller to port against and a stated
+    // curve to match. **`nul` and `distance` are not** — see below.
+
+    /// I · THE POINT. *"as a star admits him, the two tones converge toward unison. The beat
+    /// narrowing IS the reading arriving — by the fourth section the world is very nearly one
+    /// note."* `spine-sound.js:106-110` — `beat·(1 − f·0.94)`, over 1.2s.
+    func narrow(_ f: Double) {
+        let f = max(0, min(1, f))
+        currentBreath?.laws.mutate { $0.beat = Smoothed(beatHz * (1 - f * 0.94), tau: 1.2) }
+    }
+
+    /// II · THE TURN, the opposite law on the same instrument. *"The further out he travels,
+    /// the further the second tone departs from the first — one note becoming two, then a
+    /// chord. The One becoming the many, heard."* `:113-118` — `beat·(1 + f·11)`, over 0.5s.
+    func widen(_ f: Double) {
+        let f = max(0, min(1, f))
+        currentBreath?.laws.mutate { $0.beat = Smoothed(beatHz * (1 + f * 11), tau: 0.5) }
+    }
+
+    /// III · THE VEIL. *"a filter, not a metaphor. The register arrives muffled — that is
+    /// what a veil does to a sound — and parting it opens the cutoff. What he has handed back
+    /// keeps a floor under it, so the world is never quite as closed as it was the first
+    /// time."* `:124-130` — `340 · 58^max(f, floor)`, over 0.30s.
+    func unveil(_ f: Double, floor: Double = 0) {
+        let base = max(0, min(1, max(f, floor)))
+        currentBreath?.laws.mutate { $0.veilHz = Smoothed(340 * pow(58, base), tau: 0.30) }
+    }
+
+    /// IV · THE CHAMBER. *"Pressure is heard as the room ringing under load: the resonance
+    /// sharpens and swells at the register's own frequency, and the fundamental sags a little
+    /// flat — compression lowers pitch, in stone as in anything else. Nothing is added from
+    /// outside the register."* `:136-149` — `pk.gain → f·13` dB and `pk.Q → 1.2 + f·7` over
+    /// 0.35s; `sag = 1 − f·0.020` on both tones over 0.5s.
+    func bear(_ f: Double) {
+        let f = max(0, min(1, f))
+        guard let voice = currentBreath else { return }
+        let existing = voice.peak.read()
+        voice.peak.write(PeakSettings(frequencyHz: existing.frequencyHz,
+                                      q: 1.2 + f * 7, gainDB: f * 13))
+        voice.laws.mutate { $0.sag = Smoothed(1 - f * 0.020, tau: 0.5) }
+    }
+
+    /// V · THE MIRRORS. *"The pane's angle IS the sign of the second tone. Face on: +. Edge
+    /// on: zero — a mirror seen edge-on is nothing at all, and the second tone is gone at the
+    /// same instant. Turned away: minus, the same note at the same pitch, arriving inverted.
+    /// It does not go quiet; it goes HOLLOW."* `:156-160` — `o2g.gain → 0.5·c` over 0.10s,
+    /// which relative to its resting 0.5 is exactly `c`.
+    func reflect(_ c: Double) {
+        currentBreath?.laws.mutate { $0.reflect = Smoothed(max(-1, min(1, c)), tau: 0.10) }
+    }
+
+    /// The register's own beat, for the two laws that move it. The Point's ladder pairs pitch
+    /// and beat at one index (`PointLadder.drone`), so this can never drift from the drone.
+    private var beatHz: Double { currentBreath?.snapshot.binauralHz ?? 4 }
+
+    // ── the two with no caller in the design ──────────────────────────────
+    //
+    // **`nul()` AND `distance()` ARE DEFINED IN THE DESIGN AND CALLED NOWHERE.**
+    // `spine-sound.js:164` and `:176` are declared, documented, and wired into `_voice`'s
+    // graph — and no file in the design corpus invokes either. Every other register law has a
+    // caller; these two do not, so **C1 wrote the caller** and the callers below are the
+    // app's own idiom, the same standing as the Light's six scenes and `CeremonySynth.drain`:
+    // behaviour the design states, mechanism the app supplies. The NUMBERS are the design's
+    // and are exact. **There is no upstream call site to compare against — a future session
+    // should not go looking for a source that is not there.** `Coverage/9` §5b.
+
+    /// The one deliberate silence in the Point. *"Not a fade — the voice summed against
+    /// itself, which is exact. The stone tail already in the air keeps decaying, so the hall
+    /// dies away and then there is nothing."* `spine-sound.js:164-171` — `nul.gain → −1` over
+    /// 0.09s, back to 0 after `secs` over 1.8s.
+    ///
+    /// **CALLER IS THE APP'S.** The design defines this and never runs it.
+    func nul(secs: Double = 4.4) {
+        guard isRunning, let voice = currentBreath else { return }
+        setNull(-1)
+        let id = ObjectIdentifier(voice)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(secs * 1_000_000_000))
+            guard let self, self.currentBreath === voice, self.nulls[id] != nil else { return }
+            self.setNull(0)
+        }
+    }
+
+    /// VI · THE RETURN. *"The room IS the distance it travelled. While something of his is
+    /// away, the register's own voice leans into the delay line and the delay lengthens; when
+    /// everything is home the world is dry again. Nothing is added — the same note, arriving
+    /// late."* `spine-sound.js:176-186` — `ech.gain → f·0.62` and `delayTime → 0.30 + f·1.35`.
+    ///
+    /// **CALLER IS THE APP'S.** The design defines this and never runs it.
+    func distance(_ f: Double) {
+        let f = max(0, min(1, f))
+        setEchoSend(f * 0.62)
+        setDelayTime(0.30 + f * 1.35)
+    }
+
     /// `nul(secs)` — the Point's one deliberate silence. STAGE C1 drives this; A1/A2 only
     /// need the path to exist and to be open.
     func setNull(_ nul: Double) {
