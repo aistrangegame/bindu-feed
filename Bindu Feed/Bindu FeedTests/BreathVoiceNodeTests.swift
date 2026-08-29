@@ -180,13 +180,32 @@ struct BreathVoiceNodeTests {
         // threshold on that bin measures the DFT rather than the bed — which is what the
         // first version of this test did, and it failed at 1.6e-4 against 1e-4.
         //
-        // The second version guessed 5% and measured 6.35%, so the bound is now the
-        // measurement: at Q = 1.2 + 7 the peak's skirt still reaches the fifth 55 Hz below
-        // it, and `bear` opened fully on a FIELD bed lifts the whole bed by about 6%. Small,
-        // not nil — and it never happens, because `bear` is world IV of the Point and the
-        // Point climbs. Recorded so the number is not rediscovered as a defect.
-        let change = abs(rung.peak() - flat.peak()) / flat.peak()
-        #expect(change < 0.10, "the field bed moved by \(change * 100)%")
+        // THE SECOND VERSION MEASURED THE FILTER'S ONSET TRANSIENT AND CALLED IT THE BED.
+        // It read the peak across the WHOLE render, starting at t = 0 where a 13 dB biquad
+        // switched on at full gain rings, and reported 6.35%. That number was wrong and the
+        // bound built on it was wrong. It surfaced only when the breath LFO was re-phased to
+        // crest at mid-cycle (`Coverage/10-OWED.md` §9): the bed now STARTS at its trough,
+        // 0.88 instead of 1.0, which makes the same transient relatively larger and pushed
+        // the reading to 10.94% — a test failing for a change that had nothing to do with
+        // the thing it measures. **The LFO change did not break this test; it exposed it.**
+        //
+        // Measured across four windows:
+        //
+        //     0.0 → 1.0   10.94%      ← the transient, and it dominates
+        //     0.3 → 1.0    3.17%
+        //     0.5 → 1.0    3.17%
+        //     0.7 → 1.0    3.17%
+        //
+        // The bed's real movement is 3.17% and it is FLAT from 0.3s on, which is what a
+        // settled filter looks like. So the window starts after the ring: at Q = 1.2 + 7 the
+        // peak's skirt reaches the fifth 55 Hz below it and `bear` opened fully on a FIELD
+        // bed lifts it about 3%. Small, not nil — and it never happens, because `bear` is
+        // world IV of the Point and the Point climbs.
+        //
+        // The onset ring is a property of this HARNESS, not of the app: the test writes the
+        // full 13 dB before rendering, where `bear` ramps into it.
+        let change = abs(rung.peak(from: 0.3) - flat.peak(from: 0.3)) / flat.peak(from: 0.3)
+        #expect(change < 0.05, "the field bed moved by \(change * 100)%")
         #expect(change > 0.02, "…but not by nothing: the skirt reaches the fifth")
         // the field bed is the same in both ears — root + fifth, no binaural width
         let (rl, rr) = rung.magnitudes(at: f, from: 0.2, to: 0.9)

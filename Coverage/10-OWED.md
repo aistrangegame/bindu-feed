@@ -433,7 +433,41 @@ per-medium and fixed per medium."* Both media derive phase from one launch-ancho
 | one period, one origin constant | **MEASURED** |
 | the per-buffer re-anchor from `mHostTime` | **STILL OWED** — `mHostTime` is 0 under offline manual rendering and `BreathVoice.swift:194-196` guards on exactly that, so the re-anchor cannot run in this harness. Stated rather than implied. |
 
-### The finding, and why it is not fixed here
+### DECIDED 2026-08-29 — the peaks are aligned
+
+**Ruling: both media crest at mid-cycle.** `BreathVoice`'s LFO becomes
+`1 − cos(φ)·0.12`, replacing `1 + sin(φ)·0.12`.
+
+**The §10 do-not-unify rule is intact, and this is why.** `1 − cos φ` IS `1 + sin(φ − π/2)`
+— the same sinusoid a quarter turn over, with the same ±12% depth and the same
+`[0.88, 1.12]` range. The visual still travels a full 0 → 1 and the audio still moves ±12%
+about unity, so the per-medium scaling the rule protects — equal-brightness is not
+equal-loudness — is untouched. **Only the peak moved.**
+
+> **One correction to the ruling as issued.** It specified
+> `1 + (1 − cos 2πp)/2 · 0.24`. Taken literally that spans `[1.0, 1.24]` — unipolar, mean
+> 1.12 — so the bed would sit **12% louder overall**, a loudness change on top of the timing
+> change. The re-centred form above spans exactly `[0.88, 1.12]`, which is what *preserving
+> the 0.12 amplitude across the same range* asks for. Same intent, one term.
+
+**Why it was a defect rather than a choice.** Three places asserted the two media breathe
+together and all three were true of the phase and false of the swell. No design settles it:
+`field-sound.js:64-68` anchors its sine to bed start, so the shared-origin phase-lock is this
+app's own addition and the offset was a consequence nobody computed.
+
+**And the asymmetry decided it.** Unaligned-and-wrong is an incoherence felt everywhere and
+nameable nowhere. Aligned-and-wrong is a swell that lands too neatly — audible, and
+reportable in one sentence. **Prefer the failure that is legible.**
+
+**THE REVERT, if the walk says the aligned swell lands too neatly.** One line each:
+
+    BreathVoice.swift     let lfoAmp = 1.0 + sin(lfoPhase) * lfoDepth
+    OneBreathTests        theTwoMediaPeakTogether → expect a gap of 0.25, renamed …PeakApart
+
+Calibrated green-on-absent: with the sine restored, `theTwoMediaPeakTogether` and
+`audioLfoShape` both go red.
+
+### The finding as it was measured, before the ruling
 
     visual   (1 − cos 2πp)/2      peaks at p = 0.50
     audio    1 + sin(2πp)·0.12    peaks at p = 0.25, troughs at p = 0.75
@@ -450,13 +484,6 @@ And the re-anchor's comment at `BreathVoice.swift:152` says it *"keeps this voic
 **All three are true of the phase variable and none is true of the swell.** Phase-locking two curves does not align
 what a person perceives unless the curves peak together.
 
-**Left as it is, deliberately.** The *"do NOT unify the two curves"* rule is §10-protected and
-its reasoning is sound — equal-brightness is not equal-loudness. But that rule governs the
-SHAPE and does not settle where each shape's peak falls, and the design does not settle it
-either: `field-sound.js:64-68` is a Web Audio sine anchored to BED START, and the
-shared-origin phase-lock is this app's own addition on top of it. Changing a curve is audible
-on every surface at once, so this is a ruling and not a fix.
-
-**Either answer should land in `OneBreathTests.theTwoMediaPeakApart`** — if the offset is
-intended, that test documents it; if it is not, that test is where the change lands. What must
-not happen again is that it stays unmeasured.
+**This was left unfixed pending a ruling, and the ruling came: align them.** The record of
+the measured offset is kept above the decision rather than replaced by it, so the reasoning
+survives its own conclusion.

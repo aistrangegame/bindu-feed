@@ -211,10 +211,33 @@ final class BreathVoice {
                 curVeil    += (law.veilHz.target - curVeil) * veilCoef
                 curReflect += (law.reflect.target - curReflect) * reflectCoef
 
-                // LFO — the breath in the Breath
+                // LFO — the breath in the Breath.
+                //
+                // `1 − cos(φ)·depth`, NOT `1 + sin(φ)·depth`. RULED 2026-08-29 after the
+                // one-breath coupling was measured end to end for the first time: a sine
+                // peaks a QUARTER TURN early, so the audio crested at phase 0.25 while the
+                // visual raised cosine crested at 0.50 — 2.5 seconds apart on a ten-second
+                // breath, with the audio already falling while the light was still rising.
+                //
+                // Three places in this codebase asserted the two media breathe together and
+                // all three were true of the PHASE and false of the SWELL. Nobody chose the
+                // offset; the design is silent on it (`field-sound.js`'s LFO is anchored to
+                // bed start, and the shared-origin lock is this app's own addition), so it
+                // was a consequence nobody had computed.
+                //
+                // THIS DOES NOT UNIFY THE TWO CURVES, and the §10 rule stands. It is a
+                // quarter-turn phase offset and nothing else — `1 − cos φ` IS
+                // `1 + sin(φ − π/2)`: same sinusoid, same ±12% depth, same [0.88, 1.12]
+                // range. The audio still moves ±12% about unity where the visual travels a
+                // full 0 → 1; the per-medium depth that makes equal-brightness ≠
+                // equal-loudness is untouched. Only the peak moves.
+                //
+                // TO REVERT, if the walk says the aligned swell lands too neatly: restore
+                // `1.0 + sin(lfoPhase) * lfoDepth` here and invert
+                // `OneBreathTests.theTwoMediaPeakTogether`. One line each.
                 lfoPhase += lfoIncrement
                 if lfoPhase >= 2.0 * .pi { lfoPhase -= 2.0 * .pi }
-                let lfoAmp = 1.0 + sin(lfoPhase) * lfoDepth
+                let lfoAmp = 1.0 - cos(lfoPhase) * lfoDepth
 
                 // Raw samples per channel
                 let rawL: Double

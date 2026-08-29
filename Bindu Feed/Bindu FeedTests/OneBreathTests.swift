@@ -82,9 +82,10 @@ import AVFoundation
         else { Issue.record("no envelope"); return }
 
         // Offline, `mHostTime` is 0 and `BreathVoice.swift:194` free-runs from lfoPhase 0,
-        // so `1 + sin(2πt/10)·0.12` peaks a quarter of a period in — at 2.5s.
-        #expect(abs(hi.t - 2.5) < 0.6, "the audio breath peaks at \(hi.t)s, expected ~2.5s")
-        #expect(abs(lo.t - 7.5) < 0.6, "and troughs at \(lo.t)s, expected ~7.5s")
+        // so `1 − cos(2πt/10)·0.12` starts at its TROUGH and crests at mid-breath — 5.0s.
+        // It was `1 + sin(…)` and crested at 2.5s until the peaks were aligned.
+        #expect(abs(hi.t - 5.0) < 0.6, "the audio breath peaks at \(hi.t)s, expected ~5.0s")
+        #expect(lo.t < 0.6 || lo.t > 9.4, "and troughs at the turn, measured \(lo.t)s")
 
         // ±12% about unity — the depth the contract names.
         let depth = (hi.v - lo.v) / (hi.v + lo.v)
@@ -107,35 +108,33 @@ import AVFoundation
                 "two Breaths sharing an origin would be a coincidence worth knowing about")
     }
 
-    @Test("MEASURED: the two curves peak a quarter of a breath apart")
-    func theTwoMediaPeakApart() throws {
-        // THE FINDING THIS SUITE EXISTS FOR, and it is recorded as a measurement rather than
-        // repaired, because the curves are §10-protected: *"Do NOT unify the two curves into
-        // one function… forcing identical math would make them measurably equal but
-        // perceptually mismatched."* That rule is about the SHAPE. It does not settle where
-        // each shape's peak should fall, and nothing in the design does either — the design's
-        // own LFO (`field-sound.js:64-68`) is a Web Audio sine anchored to BED START, and
-        // the shared-origin phase-lock is this app's own addition on top of it.
+    @Test("MEASURED: both media crest together at mid-breath")
+    func theTwoMediaPeakTogether() throws {
+        // THE SUITE'S REASON FOR EXISTING, now asserting the ruling rather than the defect.
         //
-        // So the numbers, from the two real implementations:
+        // Measured first, decided second. The audio LFO was `1 + sin(2πp)·0.12`, cresting at
+        // phase 0.25 against the visual raised cosine's 0.50 — **2.5 seconds apart on a
+        // ten-second breath**, the audio already falling while the light still rose.
         //
-        //   visual   `(1 − cos 2πp)/2`        peaks at p = 0.50
-        //   audio    `1 + sin(2πp)·0.12`      peaks at p = 0.25, troughs at p = 0.75
+        // WHY IT WAS A DEFECT AND NOT A CHOICE. Three places asserted the two media breathe
+        // together and every one of them was true of the PHASE and false of the SWELL. No
+        // design settles it: `field-sound.js:64-68` anchors its sine to BED START, so the
+        // shared-origin phase-lock is this app's own addition and the offset was a
+        // consequence nobody had computed — which is the whole class this audit removes.
         //
-        // A quarter of a 10s breath is 2.5 SECONDS between the felt peaks. When the visual
-        // swell is at its maximum the audio is back at unity and already falling.
+        // AND THE ASYMMETRY DECIDED IT. Unaligned-and-wrong is an incoherence felt
+        // everywhere and nameable nowhere. Aligned-and-wrong is a swell that lands too
+        // neatly — audible, and reportable in one sentence. **Prefer the failure that is
+        // legible.**
         //
-        // The contract's stated purpose is *"one body, everything rising and falling
-        // together"* and the per-medium curve *"serving perceived simultaneity"*, and
-        // `BreathVoice.swift:152` says the re-anchor *"keeps this voice breathing in phase
-        // with the visuals."* All three are true of the PHASE VARIABLE and none of them is
-        // true of the swell. **Phase-locking two curves does not align what a person
-        // perceives unless the curves peak together.**
+        // The §10 do-not-unify rule is intact. `1 − cos φ` IS `1 + sin(φ − π/2)`: the same
+        // sinusoid a quarter turn over, same ±12% depth, same [0.88, 1.12] range. The visual
+        // still travels a full 0 → 1 and the audio still moves ±12% about unity, so the
+        // per-medium scaling that makes equal-brightness ≠ equal-loudness is untouched.
+        // Only the peak moved.
         //
-        // This is left as it is and flagged. Changing it is audible on every surface in the
-        // app at once, so it is a ruling, not a fix — and either outcome should be recorded
-        // here rather than discovered again. If the offset is intended, this test documents
-        // it; if it is not, this test is where the change lands.
+        // REVERT, if the walk says otherwise: `1.0 + sin(lfoPhase) * lfoDepth` in
+        // `BreathVoice`, and this expectation back to a gap of 0.25.
         let visual = Self.visualPeakPhase(Breath())
 
         let voice = BreathVoice(snapshot: .breathDefault, initialCrossfadeLevel: 1,
@@ -150,8 +149,8 @@ import AVFoundation
 
         var gap = abs(visual - audio)
         if gap > 0.5 { gap = 1 - gap }
-        #expect(abs(gap - 0.25) < 0.06,
-                "visual peaks at phase \(visual), audio at \(audio) — a gap of \(gap) of a breath, which is \(gap * Breath.period)s")
+        #expect(gap < 0.06,
+                "visual crests at phase \(visual), audio at \(audio) — \(gap * Breath.period)s apart; they must crest together")
     }
 
 }

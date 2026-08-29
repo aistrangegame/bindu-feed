@@ -32,6 +32,13 @@ final class Breath: ObservableObject {
     // • The AUDIO medium renders that phase through the device-verified ±12% sine
     //   (see `BreathVoice`'s LFO). The Gathering choir's voices all read the same
     //   phase and all use the AUDIO curve — no voice invents a third curve.
+    // • BOTH MEDIA CREST AT MID-CYCLE. Ruled 2026-08-29, when the coupling was first
+    //   measured rather than assumed: the audio sine was `1 + sin φ · 0.12`, which
+    //   peaks at phase 0.25 against the visual's 0.50 — 2.5s apart on a ten-second
+    //   breath. It is now `1 − cos φ · 0.12`, the same sinusoid a quarter turn over,
+    //   with the same depth and the same [0.88, 1.12] range. This is NOT the two
+    //   curves unified: the visual still travels a full 0 → 1 and the audio still
+    //   moves ±12% about unity. Only the peak moved. See `Coverage/10-OWED.md` §9.
     // • Do NOT unify the two curves into one function. They are the same breath
     //   seen through two materials; forcing identical math would make them
     //   measurably equal but perceptually mismatched (equal-brightness ≠ equal-
