@@ -23,6 +23,40 @@ import Foundation
 // breaks the chain, and locked-forever passes every outcome check exactly as world III's
 // four sections did. `lock` decaying to zero after `letGo` is the assertion; `lock` reaching
 // 1 is not.
+/// D5.8 · **THE NINE STARS ARE LAID ON THREE LANES, ONE PER UNIVERSE.**
+///
+/// `The Instrument v3.html:2176-2185`, verbatim in its numbers:
+///
+///     var lane = {r: 0.30 + ui*0.215, sp: (1.42 - ui*0.30)*0.16, …}
+///     lane.stars.push({ph: (i/u.stars.length)*TAU + ui*0.7, …})
+///
+/// The app flew all nine on ONE Lissajous — `cos(bt*0.55 + ph)` against
+/// `sin(bt*0.73 + ph*1.3)` — which is a pretty figure and says nothing. **The lanes are the
+/// world's structure made visible:** a star's universe decides which orbit it is on, so the
+/// three universes are three rings rather than nine points in a shared scribble, and a hand
+/// offered near the inner lane meets a different set of bodies than one offered at the rim.
+///
+/// **THE INNER LANE IS THE FASTEST.** `sp = (1.42 − ui*0.30)*0.16` falls with `ui` while
+/// `r = 0.30 + ui*0.215` rises — so the tight orbit whirls and the wide one drifts, which is
+/// what makes catching from the inside a different act from catching at the edge.
+enum DanceLanes {
+    /// The lane's radius, as a fraction of the smaller half-dimension.
+    static func radius(universe ui: Int) -> Double { 0.30 + Double(ui) * 0.215 }
+    /// The lane's angular speed. Falls as the radius grows.
+    static func speed(universe ui: Int) -> Double { (1.42 - Double(ui) * 0.30) * 0.16 }
+    /// A star's own phase on its lane — spread evenly, with each lane offset by `ui*0.7` so
+    /// the three rings do not line up into spokes.
+    static func phase(index i: Int, of n: Int, universe ui: Int) -> Double {
+        (Double(i) / Double(max(1, n))) * (2 * Double.pi) + Double(ui) * 0.7
+    }
+    /// Where a star is at time `t`, in fractions of the frame's half-width/height.
+    static func point(index i: Int, of n: Int, universe ui: Int, t: Double) -> (x: Double, y: Double) {
+        let a = t * speed(universe: ui) + phase(index: i, of: n, universe: ui)
+        let r = radius(universe: ui)
+        return (cos(a) * r, sin(a) * r)
+    }
+}
+
 enum PointDance {
 
     /// One body on the floor. Nine that dance, and `d-map`, which is `last` — *"it comes when

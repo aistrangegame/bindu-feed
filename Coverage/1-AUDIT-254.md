@@ -225,7 +225,7 @@ Open findings by severity:
 | D5.5 | BLOCKER | — | IV · The Chamber | OPEN | One horizontal strip + pan. No three-surface geography, no vault-on-breath, no bowing/hairlines/load/press-to-inhabit. |
 | D5.6 | MAJOR | — | V · The Mirrors | OPEN | Pairs by flat index; four-universe structure discarded. Still a code invention. |
 | D5.7 | MAJOR | — | VI · The Return | OPEN | Door renders whenever `dimensionN == 6`, unconditioned by settle/depth. Permanently visible, not earned. |
-| D5.8 | BLOCKER | — | VII · The Dance | OPEN | Lissajous + plain tap. No three lanes, no held/sync/spin catch mechanic. |
+| D5.8 | BLOCKER | — | VII · The Dance | **PARTIAL 2026-08-29** | **Three lanes built** (`DanceLanes`, `The Instrument v3.html:2176-2185`) and **the tap replaced by the offered hand** — the star that opens is the one that took it (`world-seven.js:28-31`), so the world no longer opens by picking. The chain, sync (`lock`) and dissolve landed in Stage E. **STILL OPEN:** the four sections *flying in and landing* one at a time, and `scatter` on an early release. Original:  Lissajous + plain tap. No three lanes, no held/sync/spin catch mechanic. |
 | D5.9 | MAJOR | VISUAL | star placement arbitrary where design is semantic | OPEN | Shared FNV-1a hash / index-linear; nothing encodes universe membership. |
 | D5.10 | none | none | ●◐○ star mark faithful | CLOSED | `PointWorlds.swift:76-83`. |
 | D5.11 | MAJOR | VISUAL | "I Love You" moved to a headline | OPEN | `PointWorldView.swift:207-212` Lora italic 21 centred with shadow; not 12px at the particle. |

@@ -835,6 +835,46 @@ private struct WorldDance: View {
     var quiet: Bool = false
     /// `world-seven.js:501` reads `this.danceCount()` — has a hand been offered at all yet.
     @State private var offeredOnce = false
+    /// D5.8 · the hand, while it is out. `nil` when it is not.
+    @State private var hand: CGPoint? = nil
+    @State private var running = false
+
+    /// The universes as `PointDance` wants them — one array of star keys per lane.
+    private var lanes: [[String]] {
+        let byUni = Dictionary(grouping: stars, by: \.uni)
+        return byUni.keys.sorted().map { ui in byUni[ui]!.map(\.star.key) }
+    }
+
+    /// D5.8 · the figure's own loop, and the CATCH.
+    ///
+    /// The world drives `PointDance.update` so bodies actually cross the floor while the hand
+    /// is out; the first one to take it decides which star opens. `world-seven.js:28-31` —
+    /// *"the nearest free body crosses the floor and takes it. It travels to get there; it is
+    /// not summoned."* The travel is the point: a tap is instant and this is not.
+    ///
+    /// The loop ends the moment a hand is taken, because the READING takes ownership of the
+    /// registry from there — `ReadCompany` runs its own loop and `leaveRegister()` is the
+    /// single release. Two loops driving one static registry is the tenth shape, so this one
+    /// stops rather than overlapping.
+    private func seedAndRun() {
+        guard !running else { return }
+        running = true
+        PointDance.resetAll()
+        PointDance.floor(universes: lanes)
+        Task { @MainActor in
+            var last = Date()
+            while running {
+                try? await Task.sleep(nanoseconds: 33_000_000)
+                let now = Date(); let dt = now.timeIntervalSince(last); last = now
+                _ = PointDance.update(dt)
+                if let taken = PointDance.chain.first,
+                   let sp = stars.first(where: { $0.star.key == taken.id }) {
+                    running = false
+                    onOpen(sp.star)                    // the one that took his hand
+                }
+            }
+        }
+    }
     var body: some View {
         GeometryReader { geo in
             let cx = geo.size.width / 2, cy = geo.size.height / 2
@@ -854,18 +894,51 @@ private struct WorldDance: View {
                         }
                     }
                     ForEach(Array(stars.enumerated()), id: \.element.id) { i, sp in
-                        let ph = Double(i) / Double(max(stars.count, 1)) * 6.2831
-                        let x = cx + cos(bt * 0.55 + ph) * geo.size.width * 0.36
-                        let y = cy + sin(bt * 0.73 + ph * 1.3) * geo.size.height * 0.30
+                        // D5.8 · THREE LANES, ONE PER UNIVERSE — `The Instrument v3.html:2176`.
+                        // The star's universe decides its orbit, so the three universes read as
+                        // three rings rather than nine points in one shared scribble. `nth` is
+                        // its place within its OWN lane, not among all nine.
+                        let nth = stars.prefix(i).filter { $0.uni == sp.uni }.count
+                        let inLane = stars.filter { $0.uni == sp.uni }.count
+                        let p = DanceLanes.point(index: nth, of: inLane, universe: sp.uni, t: bt)
+                        let rr = min(geo.size.width, geo.size.height)
                         StarMark(placed: sp, hue: hue, compact: true)
-                            .position(x: x, y: y)
-                            .onTapGesture { offeredOnce = true; onOpen(sp.star) }
+                            .position(x: cx + p.x * rr, y: cy + p.y * rr)
                     }
                     // `world-seven.js:501-502` — TWO-STATE on `danceCount()`. Replaced
                     // "catch one in flight", invented.
                     WorldCue(text: offeredOnce ? "OFFER A HAND AGAIN · THEY ARE STILL DANCING"
                                                : "THEY WERE DANCING BEFORE YOU CAME · OFFER A HAND")
                 }
+                // D5.8 · **THE STAR WHOSE READING HE GETS IS THE ONE THAT TOOK HIS HAND.**
+                //
+                // `world-seven.js:28-31` — *"He does not grab. He puts his hand out and waits,
+                // and the nearest free body crosses the floor and takes it. It travels to get
+                // there; it is not summoned."*
+                //
+                // This was `.onTapGesture { onOpen(sp.star) }` on each mark. `AUDIT D5.8`,
+                // BLOCKER, put it exactly: **the one world whose entire identity is *caught,
+                // not opened* opened on a tap.** The chain itself was built in Stage E and
+                // wired inside the READING — so the mechanism existed one layer in while the
+                // way into it contradicted the world's whole claim. A tap also lets him pick,
+                // and picking is the thing this world does not have: he offers, and whoever
+                // is nearest and free decides.
+                //
+                // `PointDance` is a static registry shared with `ReadCompany`, so this seeds
+                // it once and never tears it down — the reading takes ownership when it
+                // opens, and `leaveRegister()` there is the single release.
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0)
+                    .onChanged { v in
+                        offeredOnce = true
+                        hand = v.location
+                        let nx = (v.location.x - cx) / min(geo.size.width, geo.size.height)
+                        let ny = (v.location.y - cy) / min(geo.size.width, geo.size.height)
+                        if PointDance.hand == nil { _ = PointDance.offer(x: nx, y: ny) }
+                        else { PointDance.moveHand(x: nx, y: ny) }
+                    }
+                    .onEnded { _ in hand = nil; PointDance.letGo() })
+                .onAppear { seedAndRun() }
             }
         }
     }
