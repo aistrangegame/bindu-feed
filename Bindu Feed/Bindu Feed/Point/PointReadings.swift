@@ -756,10 +756,20 @@ private struct ReadPressing: View {
                 try? await Task.sleep(nanoseconds: 16_000_000)
                 let dt = 0.016
                 if holding {
-                    press = min(1, press + dt * 0.42)          // 0.30 + a mid load
-                    if s.revealed < 4 && press >= gates[s.revealed] { s.give() }
+                    // E5 · `press += dt*(0.30 + load(Z)*0.26)`. The load is the count of
+                    // shells standing over this register, so the same hold cuts faster
+                    // deeper down — the shells above doing work in the arithmetic and not
+                    // only in the picture.
+                    press = min(1, press + dt * PointChamber.pressRate(z: 3))
+                    if s.revealed < 4 && press >= gates[s.revealed] {
+                        s.give()
+                        // *"what was struck stays struck."* This is the one thing in the
+                        // Point that outlives the hand that made it — `world-four.js:76`'s
+                        // `reset` clears press, on, given and easing, and NOT this.
+                        PointChamber.strike(s.star.key, to: s.revealed)
+                    }
                 } else {
-                    press = max(0, press - dt * 0.52)
+                    press = max(0, press - dt * PointChamber.relaxRate)
                 }
             }
             running = false

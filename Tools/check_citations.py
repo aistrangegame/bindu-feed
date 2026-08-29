@@ -93,7 +93,15 @@ def main():
                 checked += 1
                 ok = False
                 for f in files:
-                    src = f.read_text(encoding="utf-8", errors="replace").splitlines()
+                    # THE DESIGN FILES STORE NON-ASCII AS LITERAL `\uXXXX` ESCAPES, so a
+                    # verbatim quote spanning an em-dash or a curly apostrophe could never
+                    # match and every such citation was silently UNCHECKABLE — coverage lost
+                    # exactly where the design's own prose is most quotable. Decoded here, the
+                    # same way `extract_rendered.py` decodes Swift literals.
+                    raw = f.read_text(encoding="utf-8", errors="replace")
+                    raw = re.sub(r'\\u([0-9a-fA-F]{4})',
+                                 lambda m: chr(int(m.group(1), 16)), raw)
+                    src = raw.splitlines()
                     lo, hi = max(0, ln - 1 - WINDOW), min(len(src), ln + WINDOW)
                     hay = norm(" ".join(src[lo:hi])).lower()
                     if any(norm(q).lower()[:60] in hay for q in qs): ok = True; break
