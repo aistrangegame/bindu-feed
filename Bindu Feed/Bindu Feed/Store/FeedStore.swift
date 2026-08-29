@@ -23,6 +23,11 @@ final class FeedStore: ObservableObject {
     /// story's age both come from here, and from nothing else.
     @Published var returnRings: [String: [ReturnRing]] = [:]
 
+    /// F1 · every answer, keyed by the RING it answers. *"the field has your return · N
+    /// voices are sitting with it"* → *"the field answered"*. Ash's own words are here too —
+    /// they are the ring's `frag` — and the caller splits them by record id, never by name.
+    @Published var returnAnswers: [String: [ReturnAnswer]] = [:]
+
     // Card surface data (Mirror, Signal, Practice Invitation).
     // Comments dictionaries are keyed by the card's record ID — field
     // comments link to a card via the same `Linked Story` field as Story
@@ -210,8 +215,10 @@ final class FeedStore: ObservableObject {
             async let fieldT = service.fetchAllFieldComments()
             async let ashT = service.fetchAllAshComments()
             async let ringsT: () = loadReturnRings()      // the strata and every story's age
+            async let answersT: () = loadReturnAnswers()  // F1 · and what answered them
             let (field, ash) = try await (fieldT, ashT)
             await ringsT
+            await answersT
 
             // Sort by comment order so the first archetype to speak shows leftmost.
             let combined = (field + ash).sorted { $0.commentOrder < $1.commentOrder }
@@ -870,6 +877,18 @@ final class FeedStore: ObservableObject {
     func clearDeparture() { leftFromZ = nil; leftAt = nil }
 
     // MARK: - THE RETURN
+
+    /// F1 · group every `Return Answer` by the ring it hangs from.
+    ///
+    /// Fire-and-forget on failure, like the rest of the Return's reads: a story with no
+    /// answers and a story whose answers failed to load look the same on screen, and the
+    /// honest state of both is *"no answer"*. It is not worth breaking the ceremony over.
+    func loadReturnAnswers() async {
+        guard let all = try? await service.fetchReturnAnswers() else { return }
+        var byRing: [String: [ReturnAnswer]] = [:]
+        for a in all { byRing[a.ringId, default: []].append(a) }
+        returnAnswers = byRing
+    }
 
     func loadReturnRings() async {
         if stories.isEmpty { await loadStories() }

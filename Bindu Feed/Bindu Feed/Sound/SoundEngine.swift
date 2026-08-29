@@ -1229,6 +1229,57 @@ final class SoundEngine: ObservableObject {
                                    releaseSeconds: 40, synth: .sineOctave), maxWait: 47)
     }
 
+    // MARK: - F2 · THE RETURN'S OWN SOUND
+    //
+    // The Return opened on the ordinary field bed and struck a generic bowl. Both of its own
+    // voices were missing, and they are the two that say what a return IS.
+
+    /// `agedBed(84, 13)` — `field-sound.js:74-87`. *"patina — the same bed, aged. The Return
+    /// opens here."*
+    ///
+    /// Not a different bed: **the same bed, older.** Root 84 instead of 110, breathing at 13s
+    /// instead of 10, the warmth closing in as the filter falls 900 → 430 over 6s, the root
+    /// settling a few cents flat (`×0.996`) and the fifth further (`×0.994`) over 8, and a
+    /// slow tape wobble at 0.07 Hz on the root. Everything that happens to a recording that
+    /// has been kept.
+    ///
+    /// **WHAT THE APP CAN DO OF THAT, AND WHAT IT CANNOT.** `BreathVoice` bakes its cutoff and
+    /// its LFO at init (STAGE A1's own note), so the filter's close and the breath's slowing
+    /// have no scalar here. What it CAN do is the pitch: a snapshot at 84 with the fifth flat
+    /// by 0.6% is the aged bed's actual interval, and it is a crossfade away. So the bed ages
+    /// in pitch and not yet in warmth, and the rest is recorded rather than faked.
+    func agedBed() {
+        guard isRunning else { return }
+        setBaseBreathSnapshot(VoiceSnapshot(rootHz: 84, binauralHz: 4,
+                                            level: 0.12, brightness: 0.22,
+                                            texture: .sine, bed: .field))
+    }
+
+    /// `ring(step)` — `field-sound.js:172-190`. **The audible twin of the eccentric ring
+    /// settling into true.**
+    ///
+    /// `R = [2, 3, 4, 4.5, 6, 8]` on the aged bed's own 84, so each return lands one step
+    /// further up the series — and it **enters 1.5% flat and comes into tune over 4s**:
+    /// `o.frequency.setValueAtTime(hz*0.985, t)` then `linearRampToValueAtTime(hz, t+4)`.
+    ///
+    /// *"it grows outward; never strikes."* The envelope is the opposite of a bowl's: up to
+    /// 0.036 over **3.2s**, down to 0.020 by 6, and to zero at 9. A ring is not struck. It
+    /// forms.
+    ///
+    /// The 0.985 is the same figure the spine threshold enters on, and for the same reason:
+    /// a thing arriving out of true and pulling into it is heard as arriving. `ReturnStrata`
+    /// draws a hand-wobbled ring that is never a true circle; this is that, in pitch.
+    func ring(step: Int) {
+        let R: [Double] = [2, 3, 4, 4.5, 6, 8]
+        let hz = 84 * R[max(0, min(R.count - 1, step))]
+        playCeremony(CeremonyVoice(hz: hz * 0.985, peak: 0.036,
+                                   attackSeconds: 3.2, releaseSeconds: 5.8,
+                                   synth: .sineOctave,
+                                   endHz: hz, glideSeconds: 4.0,
+                                   envelope: .linearToZero),
+                     maxWait: 9.4)
+    }
+
     /// `darkReturns()` — *"walking back out — the dark returns, and with it the
     /// breathing."* `field-sound.js:315-322`. **AUDIT E4.1 / G3.1.**
     ///

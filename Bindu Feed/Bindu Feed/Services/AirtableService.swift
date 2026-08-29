@@ -333,6 +333,22 @@ final class AirtableService {
 
     /// Every ring in the base. Grouped by story on the store side — §6's linked-record caveat
     /// means `Linked Story` cannot be filtered server-side by record id.
+    /// F1 · every `Return Answer` in the base, `Status='Live'`. The store groups them by
+    /// their `Parent Comment`, which is the ring they answer.
+    ///
+    /// **THE FILTER IS ON TYPE, NEVER ON WHO.** §10 — *"a filter's SHAPE is decided by a
+    /// record id or an explicit flag; never by a display value."* Ash's own words are
+    /// `Return Answer` too (they are the ring's `frag`), so the split between *his words* and
+    /// *an answer to him* is made by the caller against `rec9BUbHMuylYiVwH`, not by asking
+    /// Airtable for rows whose Archetype is not "Ash".
+    func fetchReturnAnswers() async throws -> [ReturnAnswer] {
+        let records = try await fetch(
+            filter: "AND({Type}='Return Answer',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.compactMap(ReturnAnswer.init(from:))
+    }
+
     func fetchReturns() async throws -> [ReturnRing] {
         let records = try await fetch(filter: "AND({Type}='Return',{Status}='Live')",
                                       sort: [(field: "Sort Order", direction: "asc")])

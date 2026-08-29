@@ -168,6 +168,10 @@ struct ReturnView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
+            // F2 · `The Return v2.html:1273` — `Sound.agedBed(84,13); Sound.bowl(168);`
+            // The Return opened on the ORDINARY field bed. It opens on the aged one now:
+            // the same bed, older, and the bowl over it rather than instead of it.
+            soundEngine.agedBed()
             soundEngine.riteBowl(hz: 168)                    // the Summons strike
             fallStart = Date().timeIntervalSinceReferenceDate
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.5) {
@@ -419,7 +423,13 @@ struct ReturnView: View {
     /// callback. It writes nothing when the reply is empty: a ring that arrived empty would
     /// be a return he did not make.
     private func addRing() {
-        soundEngine.riteBowl(hz: 210)          // the ring's bowl
+        // F2 · `The Return v2.html:1308-1310` — `Sound.ring(idx)` and then, 3.4s later,
+        // `Sound.bowl(210)`. The RING comes first and the bowl lands inside its long form:
+        // a ring grows over 9s and is not struck, and the bowl is the moment it is sealed.
+        soundEngine.ring(step: storyData.returnCount)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.4) {
+            soundEngine.riteBowl(hz: 210)      // the ring's bowl
+        }
         // The ring is now a RING — `Type='Return'` plus its `Return Answer` — not an Ash
         // comment standing in for one. It persisted before, but into the wrong shape: the
         // strata counted comments, so a story he had commented on twice and never returned
