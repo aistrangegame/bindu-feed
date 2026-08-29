@@ -70,6 +70,8 @@ measured; that a real finger reaches the range is not.
 | O11 | **The guard star's `nul` is heard as cancellation, not as omission.** | This is the §10 EIGHTH SHAPE, and it is the one thing in the layer whose defect and whose fix both render as silence. | The guard star opened in world V and the *hall dying away* — the bed cancelling while the room's tail keeps decaying — not simply nothing happening. **If it sounds like nothing happened, it is still broken.** | C1 |
 | O12 | **The bed-duck under the bowl.** `duckBreath` takes the bed to a fifth and returns it over 9s. | `crossfadeLevel` on a live voice; the ratio is measured, the ramp is not. | A bowl struck with the bed audible underneath, and the bed stepping back and coming home. | B1 |
 | O13 | **The twelve repointed sites sound like four different things.** | The voices are measured apart; that the *right* voice is at the *right* moment is a walk. | The Rite's three movements, the Return's cross, the Universe's three, the axis crossing, the two Door crossings, the Light's blip, and the Point's OM — each identified as its own event. | Coverage/9 |
+| O15 | **`resolve` is heard as nine becoming one, then rising.** | The nine bends and the tenth's rise are MEASURED; that a 12-second event reads as one gesture rather than nine notes is a judgement, and it has no caller yet (see §7). | The close of the Point walked, and the chord collapsing to a unison before the last step lifts out of it. | C2 |
+| O16 | **The descent and the ascent glide, and the aperture shimmers.** | The curves are MEASURED; that the glide is triggered by the right transition, at the right enclosure, is a walk. | Descending onto a star and hearing the enclosure's tone fall an octave; ascending and hearing it climb back; the aperture opening on five tones. | C3 |
 | O14 | **The delay line is inaudible until something is away.** | It is built silent; that nothing leaks into it before `distance` opens is a graph claim on a running engine. | World VI entered with nothing sent, and the room dry. | A2 |
 
 ---
@@ -125,6 +127,21 @@ MEASURED (`RoomFigureExtentTests` pins all eleven); the *stack* is not.
 `RoomFigureExtentTests.neevAndGaiaAgree` asserts 2, 3 and 4 *arithmetically* — on assumed
 stack bounds of 96 and 405. **The walk replaces the assumption with the measurement.** That
 is the entire difference between this row and the rest of the OWED band.
+
+---
+
+## 7 · `resolve` has no caller, and one is not invented here
+
+`resolve()` is built and measured (`CloseOfThePointTests`). It is the **fourth** mechanism
+specified in `spine-sound.js` and invoked nowhere — after `nul`, `distance` and `send` — and
+it is the largest of them: the close of the whole register.
+
+`glide` and `shimmer` both had design callers and are wired at them (`The Point v9.html:1236`,
+`:1263`, `:1286`). **`resolve` did not, and none was invented for it.** The app's nearest
+candidate is the aperture's close, but the aperture is Avarana VIII and `resolve` is the close
+of the ladder — those may be the same moment or may not, and guessing would be the thing this
+whole exercise exists to stop. It stays callable and uncalled, recorded here, until a walk of
+the Point's ending says which moment it belongs to.
 
 ---
 

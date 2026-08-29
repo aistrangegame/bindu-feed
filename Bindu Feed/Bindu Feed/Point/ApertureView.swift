@@ -29,6 +29,7 @@ import SwiftUI
 struct ApertureView: View {
     @Binding var path: [FeedRoute]
     @EnvironmentObject private var store: FeedStore
+    @EnvironmentObject private var soundEngine: SoundEngine
 
     @State private var keyInput = ""
     @State private var hasKey = KeychainService.load("anthropic_api_key") != nil
@@ -312,6 +313,11 @@ struct ApertureView: View {
             arrived = true
         }
         PointJourney.visitors += 1        // a visitor arrived that he did not choose
+        // C3 · `The Point v9.html:1286` — `Journey.visitors++; Snd.shimmer(); YANTRA.flare();`
+        // Five solfeggio tones an octave up, 0.18s apart. The flare below was restored in an
+        // earlier pass for exactly this reason — *"it existed and was never called"* — and the
+        // sound beside it was still missing. The arrival was silent.
+        soundEngine.shimmer()
         // `YANTRA.flare()` — the crossing sends one wave out through the whole figure. It
         // existed and was never called, which is the same fault as a word that is wired and
         // unreachable: the reachability half is the half that matters.

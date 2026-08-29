@@ -132,6 +132,17 @@ final class CeremonyVoice {
         /// When the pitch ramp finishes, if not at the end of the envelope.
         /// `spine-sound.js:357` reaches tune at **2.2s** inside a 6s event.
         glideSeconds: Double? = nil,
+        /// `exponentialRampToValueAtTime` on the FREQUENCY, which is what `resolve` and
+        /// `glide` use and what `spineThreshold` does not. Exponential in pitch is linear in
+        /// what is heard — an octave is an octave wherever it starts — so a glide that halves
+        /// a frequency sounds like one steady fall only on this curve. Linear would start
+        /// fast and end slow.
+        glideExponential: Bool = false,
+        /// Sample-accurate `o.start(t + delay)`. `resolve` schedules nine oscillators 0.09s
+        /// apart and `shimmer` five at 0.18s; scheduling those with nine and five `Task`
+        /// hops would put the design's stagger at the mercy of main-thread timing. The voice
+        /// simply writes silence until its moment.
+        startDelaySeconds: Double = 0,
         envelope: CeremonyEnvelope = .sinExp,
         /// `send` is the one event that MOVES across the head: `pn.pan` ramps 0 → `pan` over
         /// 1.4s (`spine-sound.js:200-202`), because a thing leaving goes somewhere. Equal
@@ -145,7 +156,7 @@ final class CeremonyVoice {
 
         var phase: Double = 0
         var partialPhase: Double = 0
-        var sampleIndex: Int = 0
+        var frameIndex: Int = 0
         var alreadyFlagged = false
 
         // Per-partial phase, allocated ONCE here and only mutated in the render block —
@@ -171,6 +182,7 @@ final class CeremonyVoice {
         let expDecay = log(max(peak, 0.0002) / 0.0001)
         // the pitch ramp's own clock, when it does not run the length of the envelope
         let glideSamples = glideSeconds.map { max(1, Int($0 * sampleRate)) }
+        let startSamples = max(0, Int(startDelaySeconds * sampleRate))
         var drainState: UInt32 = 0x5EED1E55
         var drainLP: Double = 0
         let partialInc = 2.0 * .pi * (hz * 2.001) / sampleRate
@@ -192,6 +204,15 @@ final class CeremonyVoice {
             let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)
 
             for frame in 0..<Int(frameCount) {
+                // not yet its moment — `o.start(t + i*0.09)`
+                if frameIndex < startSamples {
+                    bufL?[frame] = 0; bufR?[frame] = 0
+                    frameIndex += 1
+                    continue
+                }
+                // every clock below is the VOICE's, which begins when the voice does
+                let sampleIndex = frameIndex - startSamples
+                frameIndex += 1
                 let env: Double
                 if sampleIndex < attackSamples {
                     let a = Double(sampleIndex) / Double(attackSamples)
@@ -210,7 +231,6 @@ final class CeremonyVoice {
                 } else {
                     bufL?[frame] = 0; bufR?[frame] = 0
                     if !alreadyFlagged { alreadyFlagged = true; flag.withLock { $0 = true } }
-                    sampleIndex += 1
                     continue
                 }
 
@@ -304,12 +324,14 @@ final class CeremonyVoice {
                 if hzEnd != hzStart {
                     let span = glideSamples ?? totalSamples
                     let prog = min(1.0, Double(sampleIndex) / Double(max(1, span)))
-                    inc = 2.0 * .pi * (hzStart + (hzEnd - hzStart) * prog) / sampleRate
+                    let hz = glideExponential
+                        ? hzStart * pow(hzEnd / hzStart, prog)     // an octave is an octave
+                        : hzStart + (hzEnd - hzStart) * prog
+                    inc = 2.0 * .pi * hz / sampleRate
                 }
                 let s = Float(raw * peak * env)
                 bufL?[frame] = Float(Double(s) * lGain)
                 bufR?[frame] = Float(Double(s) * rGain)
-                sampleIndex += 1
             }
             return noErr
         }

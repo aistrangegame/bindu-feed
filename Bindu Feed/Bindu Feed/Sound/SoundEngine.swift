@@ -584,16 +584,17 @@ final class SoundEngine: ObservableObject {
 
     // ── SPECIFIED BY THE DESIGN, NEVER INVOKED BY IT, COMPLETED HERE ──────
     //
-    // Three mechanisms are declared in `spine-sound.js`, documented there at length, wired
-    // into `_voice`'s graph — and called by nothing in the design corpus: `nul` (`:164`),
-    // `distance` (`:176`) and `send` (`:189`). Every other register law has a caller.
+    // FOUR mechanisms are declared in `spine-sound.js`, documented there at length — and
+    // called by nothing in the design corpus: `nul` (`:164`), `distance` (`:176`),
+    // `send` (`:189`) and `resolve` (`:271`). Every other register law has a caller.
     //
     // **AND THEY ARE NOT AN ARBITRARY THREE.** `nul` is world V's whole claim and
     // `distance`/`send` are world VI's — the two registers whose SOUND IS THE MECHANISM
     // rather than an accompaniment to it. A null that is silence rather than quiet; a room
     // that IS the distance travelled. Every other law colours a voice that would still make
     // sense without it; these two are the thing the register is about. The design specified
-    // exactly the two hardest to fake and stopped at the specification.
+    // exactly the two hardest to fake and stopped at the specification. `resolve` — the close
+    // of the whole register — is the fourth and the largest.
     //
     // So C1 did not *port* them. **It completed them.** The numbers below are the design's
     // and are exact; the invocation is this build's, because there was none. That is a
@@ -692,6 +693,80 @@ final class SoundEngine: ObservableObject {
     /// crossing was made before him, complete."* `spine-sound.js:225-228`.
     func arriveAll(hz: Double) {
         for i in 1...4 { arrive(hz: hz, n: i, after: Double(i - 1) * 0.30) }
+    }
+
+    // ── C2 · THE CLOSE OF THE POINT ───────────────────────────────────────
+
+    /// `resolve()` — `spine-sound.js:271-291`. *"All nine sound at once, pull to one note,
+    /// and the one note rises toward the centre's own."*
+    ///
+    /// Nine tones at `852 × [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2, 3]`, entering 0.09s apart,
+    /// each bending **exponentially to 852** by 5.2s — a just-intoned chord collapsing into
+    /// a unison. Then a tenth from 4.6s, 852 rising to **963**: the ladder's last step, taken
+    /// after the chord has already become one note. The app played a single bowl.
+    ///
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** `resolve` joins `nul`, `distance` and
+    /// `send`: declared in `spine-sound.js` and called by nothing in the design corpus. It is
+    /// the fourth, and the largest — the close of the whole register.
+    func resolve() {
+        guard isRunning else { return }
+        leaveAll()                                   // `this.leaveAll()` — the dance stops first
+        let ratios: [Double] = [1, 9.0 / 8, 5.0 / 4, 4.0 / 3, 3.0 / 2, 5.0 / 3, 15.0 / 8, 2, 3]
+        for (i, r) in ratios.enumerated() {
+            let start = Double(i) * 0.09
+            playCeremony(CeremonyVoice(hz: 852 * r, peak: 0.026,
+                                       attackSeconds: 0.7, releaseSeconds: 8.6 - start - 0.7,
+                                       synth: .sine,
+                                       endHz: 852, glideSeconds: 5.2 - start,
+                                       glideExponential: true,
+                                       startDelaySeconds: start,
+                                       envelope: .linearExp),
+                         maxWait: 9.0)
+        }
+        // *"and the one note rises toward the centre's own."* 852 → 963, the ladder's last
+        // step. It begins at 4.6s, while the nine are still pulling together, so the rise is
+        // heard out of the unison rather than after it.
+        playCeremony(CeremonyVoice(hz: 852, peak: 0.05,
+                                   attackSeconds: 1.8, releaseSeconds: 5.6,
+                                   synth: .sine,
+                                   endHz: 963, glideSeconds: 4.8,
+                                   startDelaySeconds: 4.6,
+                                   envelope: .linearExp),
+                     maxWait: 12.4)
+    }
+
+    // ── C3 · THE DESCENT, THE ASCENT, AND THE ARRIVAL ─────────────────────
+
+    /// `glide(i, down)` — `The Point v9.html:623-632`. The enclosure's own tone falling an
+    /// octave as he descends, or rising one as he comes back up, over 2.2s.
+    ///
+    /// **EXPONENTIAL IN PITCH**, which is linear in what is heard: an octave is an octave
+    /// wherever it starts, so a fall that halves a frequency sounds like one steady descent
+    /// only on this curve. A linear ramp would start fast and end slow.
+    func glide(enclosure i: Int, down: Bool) {
+        let f = PointLadder.drone(i).hz
+        playCeremony(CeremonyVoice(hz: down ? f : f / 2, peak: 0.06,
+                                   attackSeconds: 0.15, releaseSeconds: 2.35,
+                                   synth: .sine,
+                                   endHz: down ? f / 2 : f, glideSeconds: 2.2,
+                                   glideExponential: true,
+                                   envelope: .linearExp),
+                     maxWait: 3.6)
+    }
+
+    /// `shimmer()` — `spine-sound.js:363-373`. Five solfeggio tones an octave up —
+    /// 285 · 396 · 528 · 639 · 852, doubled — entering 0.18s apart and gone in 1.6s each.
+    /// The sound of something arriving that was not asked for: `The Point v9.html:1286`
+    /// fires it as the aperture opens, and the Instrument fires it at every fourth give.
+    func shimmer() {
+        for (i, f) in [285.0, 396.0, 528.0, 639.0, 852.0].enumerated() {
+            playCeremony(CeremonyVoice(hz: f * 2, peak: 0.03,
+                                       attackSeconds: 0.1, releaseSeconds: 1.5,
+                                       synth: .sine,
+                                       startDelaySeconds: Double(i) * 0.18,
+                                       envelope: .linearExp),
+                         maxWait: 2.6)
+        }
     }
 
     // ── VII · THE DANCE — the only polyphonic register ────────────────────

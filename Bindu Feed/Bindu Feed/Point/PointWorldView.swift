@@ -489,6 +489,9 @@ struct PointDescentDoor: View {
         PointYantra.shared.descending = false
         withAnimation(.easeInOut(duration: 1.4)) { PointYantra.shared.shaft = 0 }
         soundEngine.setAxisGlide(hz: 0, level: 0)
+        // C3 · `:1263` — `Snd.glide(PT.cur(), false)`. The comment above already said *"and
+        // the glide runs the other way"*; it had nothing to run.
+        soundEngine.glide(enclosure: Int(PointYantra.shared.focus.rounded()), down: false)
     }
 
     private func descend() async {
@@ -500,6 +503,10 @@ struct PointDescentDoor: View {
         // while he is under it.
         PointYantra.shared.descending = true
         withAnimation(.easeInOut(duration: 1.8)) { PointYantra.shared.shaft = 1 }
+        // C3 · `The Point v9.html:1236` — `Snd.glide(PT.cur(), true)`. The enclosure's own
+        // tone falls an octave over 2.2s as he goes under. The descent was silent.
+        // `PT.cur()` is the enclosure he is in; the app's is `PointYantra.shared.focus`.
+        soundEngine.glide(enclosure: Int(PointYantra.shared.focus.rounded()), down: true)
         // persisted?
         if let data = UserDefaults.standard.data(forKey: cacheKey),
            let cached = try? JSONDecoder().decode(PointDeeper.self, from: data) {

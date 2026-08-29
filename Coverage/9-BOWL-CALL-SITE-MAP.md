@@ -221,9 +221,12 @@ the corpus, not about the app, and it governs how C1 must be written:
 - `spine-sound.js:176` `distance:function(f)` — **no caller in any design-source file.**
 - `spine-sound.js:189` `send:function(f,pan)` — **no caller in any design-source file.**
   *(Found while writing C1; the same fact, one further in.)*
+- `spine-sound.js:271` `resolve:function()` — **no caller in any design-source file.**
+  *(Found while writing C2. The fourth, and the largest: it is the close of the whole
+  register — nine tones pulling to one, then the one rising 852 → 963.)*
 
 Every other register law has one. `narrow` · `widen` · `unveil` · `bear` · `reflect` are
-invoked; these three are declared, documented, wired into `_voice`'s graph — and never run.
+invoked; these four are declared, documented, wired into `_voice`'s graph — and never run.
 
 **AND THEY ARE NOT AN ARBITRARY THREE.** `nul` is world V's whole claim; `distance` and
 `send` are world VI's. Those are the two registers whose **sound is the mechanism** rather
