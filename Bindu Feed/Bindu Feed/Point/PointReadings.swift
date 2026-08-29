@@ -953,11 +953,19 @@ private struct ReadSending: View {
     let hue: Color
     let onClose: () -> Void
     @State private var out: Double = 0        // 0 here · 1 the far point
+    /// The FLIGHT is not here — it is in `PointReturn`, on the wall clock, outside this
+    /// view. This is only whether the probe is drawn above the line.
     @State private var sent = false
+    @State private var polling = false
 
-    /// `world-six.js:423-428`, the three states the app's single arc can be in.
+    /// `world-six.js:423-428`. The design's `arcs.length>1` and `deep` branches now HAVE
+    /// state to hang on — `PointReturn.arcs` is a list and Deep Time is a real arc — so the
+    /// two lines that were REVIEW rows for having nothing to read are readable.
     private var sendWord: String {
-        if sent { return "it will come back. not when you want it to." }
+        let flying = PointReturn.arcs
+        if flying.contains(where: { $0.deep }) { return "something is coming that you did not send" }
+        if flying.count > 1 { return "they will come back in their own order" }
+        if !flying.isEmpty { return "it will come back. not when you want it to." }
         if s.revealed > 0 { return "send another · or send the same one further" }
         return "take one · send it over · wait"
     }
@@ -1009,17 +1017,43 @@ private struct ReadSending: View {
             }
             .scrollIndicators(.hidden)
         }
+        // Everything that landed while he was elsewhere is collected on arrival — the
+        // register does not lose a lap for having been left.
+        .onAppear { PointReturn.tick(); run() }
     }
 
     /// Its own time — and there is no gesture that shortens it.
+    ///
+    /// E2 · THE FLIGHT NO LONGER LIVES HERE. This was two nested `asyncAfter` closures over
+    /// a `@State`, so leaving the register took the arc with the view — and world VI's one
+    /// claim is `world-six.js:101`, *"leaving the register closes the reading. It does not
+    /// cancel a lap: nothing in flight cares whether he is watching."* The arc goes into
+    /// `PointReturn` on a wall clock; this view only draws it and collects what has landed.
     private func send() {
+        // `lift` is a real drawn-up quantity in the design; the app's send is a button, so
+        // it is a full send by construction. Recorded rather than faked with a 0.
+        guard PointReturn.send(id: s.star.key, aim: 0, lift: 1) != nil else { return }
         sent = true
         withAnimation(.easeOut(duration: 2.4)) { out = 1 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
-            withAnimation(.easeIn(duration: 2.4)) { out = 0 }     // it turns, and comes back
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
-                s.give(); sent = false
+        run()
+    }
+
+    /// Polls the registry — it does not own the clock, it reads it. Arrivals that landed
+    /// while he was elsewhere are waiting in `pending` and are handed over one at a time.
+    private func run() {
+        guard !polling else { return }
+        polling = true
+        Task {
+            while !s.done {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+                PointReturn.tick()
+                let flying = !PointReturn.arcs.isEmpty
+                if sent && !flying { withAnimation(.easeIn(duration: 2.4)) { out = 0 } }
+                sent = flying
+                // `take()` — what he is present for, one at a time.
+                while PointReturn.take() != nil, !s.done { s.give() }
             }
+            polling = false
         }
     }
 }
