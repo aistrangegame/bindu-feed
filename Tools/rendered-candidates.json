@@ -412,7 +412,7 @@
 {
 "s": "again \u203a",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/LightView.swift:551"
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:558"
 ]
 },
 {
@@ -539,7 +539,7 @@
 {
 "s": "awake, aware",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:402"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:449"
 ]
 },
 {
@@ -701,13 +701,13 @@
 {
 "s": "Change the token?",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:286"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:289"
 ]
 },
 {
 "s": "CHANGE TOKEN",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:262"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:265"
 ]
 },
 {
@@ -773,7 +773,7 @@
 {
 "s": "connected, synthesis",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:404"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:451"
 ]
 },
 {
@@ -918,7 +918,7 @@
 {
 "s": "draw it in",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/LightView.swift:366"
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:373"
 ]
 },
 {
@@ -1158,7 +1158,7 @@
 {
 "s": "expressive, alive",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:401"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:448"
 ]
 },
 {
@@ -1302,7 +1302,7 @@
 {
 "s": "grounded, present",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:397"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:444"
 ]
 },
 {
@@ -1621,7 +1621,7 @@
 {
 "s": "if Airtable issued you a new one",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:280"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:283"
 ]
 },
 {
@@ -1814,7 +1814,7 @@
 {
 "s": "keep drawing it in",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/LightView.swift:366"
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:373"
 ]
 },
 {
@@ -1875,7 +1875,7 @@
 "s": "let it go",
 "sites": [
 "Bindu Feed/Bindu Feed/Point/PointWorldView.swift:65",
-"Bindu Feed/Bindu Feed/Screens/LightView.swift:408"
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:415"
 ]
 },
 {
@@ -2117,7 +2117,7 @@
 {
 "s": "nothing between them",
 "sites": [
-"Bindu Feed/Bindu Feed/Rooms/RoomFigures.swift:350"
+"Bindu Feed/Bindu Feed/Rooms/RoomFigures.swift:460"
 ]
 },
 {
@@ -2153,7 +2153,7 @@
 {
 "s": "nothing in the record yet",
 "sites": [
-"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:548"
+"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:582"
 ]
 },
 {
@@ -2443,7 +2443,7 @@
 {
 "s": "Personal to this device.",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:80"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:83"
 ]
 },
 {
@@ -2503,7 +2503,7 @@
 {
 "s": "press \u00b7 draw it in",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/LightView.swift:366"
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:373"
 ]
 },
 {
@@ -2641,7 +2641,7 @@
 {
 "s": "rooted, growing",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:400"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:447"
 ]
 },
 {
@@ -2677,7 +2677,7 @@
 {
 "s": "SAVE THE ARRIVAL",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:232"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:235"
 ]
 },
 {
@@ -2773,7 +2773,7 @@
 {
 "s": "solid, warm",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:403"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:450"
 ]
 },
 {
@@ -2997,7 +2997,7 @@
 "s": "the archive waits \u203a",
 "sites": [
 "Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:52",
-"Bindu Feed/Bindu Feed/Screens/LightView.swift:554"
+"Bindu Feed/Bindu Feed/Screens/LightView.swift:561"
 ]
 },
 {
@@ -3908,7 +3908,7 @@
 {
 "s": "the name you arrive with",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:134"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:137"
 ]
 },
 {
@@ -5174,7 +5174,7 @@
 {
 "s": "warm, seeking",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:398"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:445"
 ]
 },
 {
@@ -5491,7 +5491,7 @@
 {
 "s": "witness, open",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:399"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:446"
 ]
 },
 {
@@ -5785,13 +5785,13 @@
 {
 "s": "You'll return to the token entry screen. Your name, glyph, and color stay.",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:292"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:295"
 ]
 },
 {
 "s": "YOUR COLOR TODAY",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:192"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:195"
 ]
 },
 {
@@ -5809,13 +5809,13 @@
 {
 "s": "YOUR MARK",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:164"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:167"
 ]
 },
 {
 "s": "YOUR NAME",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:130"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:133"
 ]
 },
 {
@@ -5851,7 +5851,7 @@
 {
 "s": "Your voice",
 "sites": [
-"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:312"
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:359"
 ]
 },
 {
@@ -5911,7 +5911,7 @@
 {
 "s": "\u2026 in the archive \u00b7 \u2026 in the record",
 "sites": [
-"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:628"
+"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:662"
 ]
 },
 {
@@ -5947,7 +5947,7 @@
 {
 "s": "\u2026 \u00b7 \u2026 of \u2026",
 "sites": [
-"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:635"
+"Bindu Feed/Bindu Feed/Rooms/RoomView.swift:669"
 ]
 },
 {
@@ -5977,9 +5977,21 @@
 ]
 },
 {
+"s": "\u2299 sound",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:309"
+]
+},
+{
 "s": "\u25c9 and then you sealed yours \u00b7 \u2026",
 "sites": [
 "Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:38"
+]
+},
+{
+"s": "\u25c9 sound",
+"sites": [
+"Bindu Feed/Bindu Feed/Screens/SettingsView.swift:309"
 ]
 },
 {

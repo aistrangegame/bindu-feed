@@ -5,6 +5,7 @@ import SwiftUI
 // Live preview at the top updates as the user picks a glyph, color, name.
 struct SettingsView: View {
     @EnvironmentObject private var store: FeedStore
+    @EnvironmentObject private var soundEngine: SoundEngine
     @Binding var path: [FeedRoute]
 
     @State private var name: String = ""
@@ -50,6 +51,8 @@ struct SettingsView: View {
                             .foregroundColor(selectedColor.opacity(0.9))
                             .transition(.opacity)
                     }
+
+                    soundToggle
 
                     voiceLink
 
@@ -290,6 +293,50 @@ struct SettingsView: View {
             }
         } message: {
             Text("You'll return to the token entry screen. Your name, glyph, and color stay.")
+        }
+    }
+
+    // MARK: - Sound · B2
+
+    /// THE ONE PLACE THE FIELD CAN BE ASKED TO STOP.
+    ///
+    /// `field-sound.js:89,327` — `setMuted` / `setOn`. There was no mute anywhere in the
+    /// app: no engine call, no control, nothing in Settings. A continuous bed that starts
+    /// on launch and cannot be turned off is a shipping defect independent of every other
+    /// thing in the sound layer.
+    ///
+    /// The control is the design's own, verbatim: `The Point v9.html:1019` toggles a mono
+    /// button between `⊙ sound` and `◉ sound`. Nothing is invented here — not the glyphs,
+    /// not the word, not the case.
+    private var soundToggle: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Rectangle()
+                .fill(BinduTheme.hairline)
+                .frame(height: 0.5)
+                .padding(.vertical, 4)
+
+            Button {
+                soundEngine.setOn(soundEngine.isMuted)
+            } label: {
+                HStack(spacing: 8) {
+                    Text(soundEngine.isMuted ? "\u{2299} sound" : "\u{25C9} sound")
+                        .font(.spaceMono(11))
+                        .tracking(2.4)
+                        .foregroundColor(soundEngine.isMuted
+                                         ? BinduTheme.inkTertiary : BinduTheme.inkSecondary)
+                    Spacer()
+                }
+                .padding(BinduTheme.space16)
+                .background(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(BinduTheme.bgInset)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(BinduTheme.hairline, lineWidth: 0.5)
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 

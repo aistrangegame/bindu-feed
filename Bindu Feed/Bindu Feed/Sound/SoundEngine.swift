@@ -3,6 +3,10 @@ import AVFoundation
 import UIKit
 import Combine
 
+/// B2 · where the mute is remembered. File-level so the stored-property initializer can
+/// read it — `Self.` is not available there.
+let SoundMuteKey = "sound.muted"
+
 // MARK: - SoundEngine
 //
 // The control plane for the Sound Layer. Owns the AVAudioSession, the
@@ -22,6 +26,13 @@ final class SoundEngine: ObservableObject {
 
     @Published private(set) var isRunning = false
     @Published private(set) var isOnHeadphones = false
+
+    // B2 · THE MUTE. `field-sound.js:31,88-89` — `muted` and `setMuted(m)`, ramping the
+    // master to zero. The app shipped with **no `setMuted`, no `setOn`, and no sound
+    // control anywhere in Settings**: once the Breath started there was no way to stop it
+    // short of leaving the app. Persisted here rather than in the view so a muted launch is
+    // silent from the first buffer, not silent a frame after Settings appears.
+    @Published private(set) var isMuted: Bool = UserDefaults.standard.bool(forKey: SoundMuteKey)
 
     // MARK: - Public holders (shared with audio thread)
 
@@ -99,6 +110,7 @@ final class SoundEngine: ObservableObject {
 
             try engine.start()
             isRunning = true
+            applyMute(fading: false)     // a muted launch is silent from the first buffer
         } catch {
             // Soft-fail: sound is non-essential. The app continues silent
             // if the session or engine refuses, never crashes.
@@ -214,6 +226,46 @@ final class SoundEngine: ObservableObject {
                 voice.crossfadeLevel.write(startLevel + (1.0 - startLevel) * t)
                 if t >= 1.0 { return }
                 try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
+    // MARK: - Mute · B2
+
+    private var muteTask: Task<Void, Never>?
+
+    /// `setMuted:function(m)` — `field-sound.js:89`. The master rides to zero and back; it
+    /// never cuts. The ramp is `field-sound.js:88`'s **1.4s**, not the 0.5s
+    /// `HANDOFF-VERIFICATION.md:86` names — the runnable design source is canon and the
+    /// checklist is not, and the two disagree here. Recorded rather than reconciled.
+    ///
+    /// `mainMixerNode.outputVolume` is this app's master: it has no separate master gain
+    /// node, and the design's `CEIL = 0.55` is folded into the per-voice levels already, so
+    /// unmuted is 1.0 and introducing CEIL here would quieten every level in the app.
+    func setMuted(_ muted: Bool) {
+        guard muted != isMuted else { return }
+        isMuted = muted
+        UserDefaults.standard.set(muted, forKey: SoundMuteKey)
+        applyMute(fading: true)
+    }
+
+    /// `setOn:function(v){this.setMuted(!v);}` — `field-sound.js:327`.
+    func setOn(_ on: Bool) { setMuted(!on) }
+
+    private func applyMute(fading: Bool) {
+        guard isRunning else { return }
+        muteTask?.cancel()
+        let target: Float = isMuted ? 0 : 1
+        guard fading else { engine.mainMixerNode.outputVolume = target; return }
+        let from = engine.mainMixerNode.outputVolume
+        let mixer = engine.mainMixerNode
+        muteTask = Task { @MainActor in
+            let start = Date(), dur = 1.4
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                mixer.outputVolume = from + (target - from) * Float(f)
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 30_000_000)
             }
         }
     }
