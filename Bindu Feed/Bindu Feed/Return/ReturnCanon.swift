@@ -191,6 +191,9 @@ struct ReturnStoryData {
     let storyId: String            // where a new ring (the reply) is written; "" = canon demo, no target
     let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
     var returnCount: Int = 0       // rings already sealed here; ZERO is real and common
+    /// E3.2 · the prior returns, oldest first — each with the words it was sealed with.
+    /// Empty is correct and common: a story returned to zero times has no rows.
+    var ringRows: [ReturnRingRow] = []
     /// Days since this story was sealed — the ONLY source of its age. Computed at read time
     /// by the store from the earliest `Sealed At` it can find, never stored as a number here.
     var days: Int = 0

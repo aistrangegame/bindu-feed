@@ -367,6 +367,46 @@ struct ReturnView: View {
         }
     }
 
+    /// E3.2 · `renderRings` — **each prior return, with the words he left there.**
+    ///
+    /// `The Return.html:123`. The movement drew concentric circles from a count and said
+    /// nothing about any of them; a ring you can see and cannot read is a record of having
+    /// spoken with the speech taken out.
+    ///
+    /// **The oldest row is the strongest.** `ReturnRingRow.fragOpacity` runs `0.34 + 0.5·(1−rel)`
+    /// and `rel` is 0 at the oldest, so a ring carried for months reads louder than one made
+    /// yesterday. That inversion is the surface's argument and the thing to check first if
+    /// this ever looks wrong: a list dimming by recency has it exactly backwards.
+    ///
+    /// Empty renders nothing at all — a story returned to zero times has no rows, and the
+    /// canon body above already says so. No placeholder, no "no returns yet".
+    @ViewBuilder private var ringsList: some View {
+        let rows = storyData.ringRows
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(rows) { row in
+                    let rel = ReturnRingRow.rel(index: row.id, of: rows.count)
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
+                        Text(row.when)
+                            .font(.spaceMono(8)).tracking(1.2)
+                            .foregroundStyle(ReturnDeboss.ink.opacity(ReturnRingRow.whenOpacity(rel: rel)))
+                            .frame(width: 74, alignment: .leading)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(row.frag)
+                                .font(.lora(13)).lineSpacing(4)
+                                .foregroundStyle(BinduTheme.inkPrimary.opacity(ReturnRingRow.fragOpacity(rel: rel)))
+                            Text(row.answerLine)
+                                .font(.spaceMono(8)).tracking(1.1)
+                                .foregroundStyle(BinduTheme.inkTertiary)
+                        }
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 4)
+        }
+    }
+
     // VI · The Rings
     private var rings: some View {
         centered {
@@ -374,6 +414,7 @@ struct ReturnView: View {
             ReturnRings(newRing: false, priorRings: storyData.returnCount).frame(height: 180)
             Text(ReturnCanon.ringsBody).font(.lora(14)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center)
+            ringsList
             hint(ReturnCanon.ringsHint)
         }
         .contentShape(Rectangle())

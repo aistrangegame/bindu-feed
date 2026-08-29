@@ -68,9 +68,11 @@ The true gap is between the two and cannot be closed by grep.
 > which it twice calls an empty stub and which now has a body at `SoundEngine.swift:1506` (B1)
 > · `agedBed` and `ring` (F2) · `renderAnswers` (F1) · `rayPt` (E4).
 >
-> **Still open, spot-checked by symbol:** `renderRings`' body text — a CONTENT gap, not a
-> mechanism one: `ReturnRing` carries no body text at all, so the words a return was left
-> with cannot be shown until the model carries them.
+> **THE COMP LANE IS CLOSED.** `renderRings` was the last row, and the model reading was
+> the fix: his words were already in the base as the ring's own `Return Answer` (§10, and
+> `AirtableService.fetchReturnAnswers`'s own note), so it was a read that had never been
+> built rather than content that had never been written. Closes `AUDIT E3.2` at the same
+> time — the comp lane's model gap and the ID lane's BLOCKER were one row arriving twice.
 > **`swift` · `dur` · `hit` closed 2026-08-29.** The passage now has a middle (two gates at
 > `t 0.34` and `0.68`, drawn), and a surface already opened is a slip-through — `0.85s`
 > against `5.4`, no gates, and `zv ×= 0.45` so he comes out still moving. `AxisTravel`

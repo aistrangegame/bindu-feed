@@ -587,6 +587,17 @@ struct ReturnRing: Identifiable, Equatable {
     /// `yyyy-MM-dd`, local. Stored; never a duration.
     let sealedAt: String
 
+    /// A ring is a value; `init?(from:)` suppresses the memberwise init Swift would give it,
+    /// so it is written out. Used to build rings the base has not yet handed back — and by
+    /// the tests, which must be able to state a ring without a network.
+    init(id: String, linkedIds: [String], ringIndex: Int, sealedAt: String, storyId: String = "") {
+        self.id = id
+        self.linkedIds = linkedIds
+        self.ringIndex = ringIndex
+        self.sealedAt = sealedAt
+        self.storyId = storyId
+    }
+
     init?(from record: AirtableRecord) {
         let ids = record.fields.linkedStory ?? []
         guard !ids.isEmpty else { return nil }

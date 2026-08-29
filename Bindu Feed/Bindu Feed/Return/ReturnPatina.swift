@@ -86,6 +86,43 @@ struct ReturnRingRow: Identifiable, Equatable {
     /// *"no answer"*.
     let answers: Int
 
+    /// E3.2 · **THE ROW IS BUILT FROM WHAT HE ACTUALLY LEFT THERE.**
+    ///
+    /// `The Return.html:123 renderRings` lists each prior return with the words it was sealed
+    /// with. The app drew concentric circles from a COUNT and said nothing — *"a ring you can
+    /// see and cannot read is a record of having spoken with the speech taken out"*, which is
+    /// the one thing this surface exists to do.
+    ///
+    /// **Nothing was missing from the base.** §10: his return words live in a `Return Answer`
+    /// with `Archetype = Ash`, parented to the ring — the Pass 6 write is proven, and
+    /// `AirtableService.fetchReturnAnswers`'s own note says outright that *"Ash's own words
+    /// are `Return Answer` too (they are the ring's `frag`)"*. This was a READ that was never
+    /// built, not content that was never written.
+    ///
+    /// The fragment is the opening of what he wrote, and an em-dash when a ring carries no
+    /// words at all — a ring can be sealed with silence, and that is a state to show rather
+    /// than a gap to fill.
+    static func frag(from words: String, limit: Int = 64) -> String {
+        let t = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return "—" }
+        let flat = t.replacingOccurrences(of: "\n", with: " ")
+        guard flat.count > limit else { return flat }
+        // Cut on a word, not mid-word: a fragment that ends inside a word reads as damage.
+        let head = flat.prefix(limit)
+        if let sp = head.lastIndex(of: " ") { return String(head[..<sp]) + "…" }
+        return String(head) + "…"
+    }
+
+    /// `92 DAYS AGO` — the mono column. Zero is *TODAY*, because "0 DAYS AGO" is a sentence
+    /// no one says, and one is *YESTERDAY*.
+    static func when(days: Int) -> String {
+        switch days {
+        case ..<1: return "TODAY"
+        case 1:    return "YESTERDAY"
+        default:   return "\(days) DAYS AGO"
+        }
+    }
+
     /// `rel = n<=1 ? 1 : i/(n-1)` — the oldest row is 0 and the newest is 1.
     static func rel(index i: Int, of n: Int) -> Double {
         n <= 1 ? 1 : Double(i) / Double(n - 1)

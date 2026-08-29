@@ -785,11 +785,40 @@ final class FeedStore: ObservableObject {
             anew: anew.isEmpty ? ReturnCanon.anew : anew,
             storyId: story.id, record: record,
             returnCount: ringCount,
+            ringRows: Self.ringRows(rings, answers: returnAnswers, ash: ashArchetype?.name ?? "Ash"),
             days: ReturnRing.days(since: firstMetDay),
             ringDays: rings.map(\.days),          // oldest first — each ring's own age
             firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay),
             audioReference: sealed.audioReference,
             roomRGB: UniGeo.hx(room?.hexColor ?? "#9B6BD6"))
+    }
+
+    /// E3.2 · the rings list — each prior return with the words he left there.
+    ///
+    /// **THE WORDS COME FROM THE RING'S OWN `Return Answer`**, not from the ring. §10 records
+    /// why: the app writes the ring as pure record — `Ring Index` and `Sealed At`, no words —
+    /// and puts every utterance in the thread, his included, in a `Return Answer` told apart
+    /// by `Archetype`. So the ring's fragment is the answer whose archetype is Ash, and the
+    /// *"N voices answered"* count is every answer that is not.
+    ///
+    /// `ash` is resolved from `rec9BUbHMuylYiVwH` by the caller and passed in — the name is
+    /// used to READ a value, never to choose a query's shape (§10). If the record is renamed
+    /// in the base the split follows the rename, which is the point of resolving it.
+    ///
+    /// Oldest first, matching `ringDays`, so `ReturnRingRow.rel` makes the oldest row the
+    /// strongest — the surface's whole argument.
+    nonisolated static func ringRows(_ rings: [ReturnRing],
+                         answers: [String: [ReturnAnswer]],
+                         ash: String) -> [ReturnRingRow] {
+        rings.enumerated().map { i, ring in
+            let mine = answers[ring.id] ?? []
+            let his = mine.first { $0.archetype == ash }
+            return ReturnRingRow(
+                id: i,
+                when: ReturnRingRow.when(days: ring.days),
+                frag: ReturnRingRow.frag(from: his?.body ?? ""),
+                answers: mine.filter { $0.archetype != ash }.count)
+        }
     }
 
     /// THE DAY'S WEATHER, lifted out of `DoorView`'s private `@State`.
