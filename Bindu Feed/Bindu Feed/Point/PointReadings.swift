@@ -1064,6 +1064,7 @@ private struct ReadSending: View {
 // his to hold.
 
 private struct ReadCompany: View {
+    @EnvironmentObject private var soundEngine: SoundEngine
     @ObservedObject var s: PointReadingState
     let hue: Color
     let onClose: () -> Void
@@ -1076,13 +1077,22 @@ private struct ReadCompany: View {
         s.done ? ("THE MAP BECAME ARCHITECTURE", "THE DOOR OUT IS THE DOOR IN · PULL UP") : nil
     }
 
-    /// `world-seven.js:503-505`, verbatim, with `chain.length` read as `s.revealed`.
+    /// `world-seven.js:503-505`, verbatim — and now reading `chain.length`, which is what
+    /// the design reads.
+    ///
+    /// **THIS CAPTION WAS THE TELL FOR `AUDIT D5.8`.** It printed `"\(s.revealed) hands"`
+    /// with `s.revealed` counting SECTIONS READ, so it announced a number of hands held in a
+    /// world that had no hands to hold: the number right and the thing absent, which is §10's
+    /// NINTH SHAPE — complete-looking output over nothing. It rendered, so every outcome
+    /// check passed it.
     private var danceWord: String {
-        if s.revealed == 0 { return "someone is coming across the floor" }
-        if s.revealed == 1 { return "you are dancing · it goes quicker in company" }
-        return "\(s.revealed) hands · the dance is carrying you"
+        let held = PointDance.chain.count
+        if held == 0 { return "someone is coming across the floor" }
+        if held == 1 { return "you are dancing · it goes quicker in company" }
+        return "\(held) hands · the dance is carrying you"
     }
     @State private var lastMove = Date()
+    @State private var dancing = false
 
     var body: some View {
         ZStack {
@@ -1139,26 +1149,61 @@ private struct ReadCompany: View {
             .scrollIndicators(.hidden)
         }
         .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 1)
+        // E1 · `offer` / `moveHand` / `letGo`. A HAND, not a pace meter: the register's whole
+        // claim is that the dance exists while a hand is held and stops when it is not, and
+        // that cannot be said by a scalar that decays on inactivity.
+        .gesture(DragGesture(minimumDistance: 0)
             .onChanged { v in
                 guard !s.done else { return }
-                let now = Date()
-                let dt = max(0.008, now.timeIntervalSince(lastMove))
-                lastMove = now
-                let speed = min(1.0, abs(Double(v.translation.width)) / dt / 900)
-                pace = min(1, pace * 0.86 + speed * 0.22)
-                if pace >= 1 { pace = 0.2; s.give() }
+                let rim = 393.0
+                let hx = (Double(v.location.x) - rim / 2) / rim
+                let hy = (Double(v.location.y) - 426) / rim
+                if PointDance.hand == nil { PointDance.offer(x: hx, y: hy) }
+                else { PointDance.moveHand(x: hx, y: hy) }
+                lastMove = Date()
+            }
+            .onEnded { _ in
+                // `letGo()` — the chain empties, and `lock` has nothing left to hold it up.
+                PointDance.letGo()
+                soundEngine.leaveAll()          // C1's dancers go the way they came: a fade
             })
-        .onAppear { scatter() }
+        .onAppear {
+            let seven = PointContent.dimensions.first(where: { $0.n == 7 })
+            PointDance.floor(universes: seven?.universes.map(\.stars) ?? [])
+            run()
+        }
+        .onDisappear { PointDance.leaveRegister(); soundEngine.leaveAll() }
     }
 
-    /// It scatters the moment he stops keeping pace. Nothing else in the Point decays.
-    private func scatter() {
+    /// The figure's own loop. It drives `PointDance.update`, hands each new body its VOICE,
+    /// and closes the ensemble's detune by the chain's `lock`.
+    ///
+    /// **C1'S DANCERS ARE WIRED HERE, IN THE SAME PASS AS THE CHAIN.** `join`, `ensemble`,
+    /// `leaveAll` and `DancerVoice` were built and measured and left undriven — and an
+    /// undriven voice waiting on a mechanic that has just landed is exactly how the design's
+    /// own four uncalled mechanisms happened. It is not filed behind the chain; it lands with
+    /// it.
+    private func run() {
+        guard !dancing else { return }
+        dancing = true
         Task {
+            var last = Date()
             while !s.done {
-                try? await Task.sleep(nanoseconds: 60_000_000)
-                if Date().timeIntervalSince(lastMove) > 0.16 { pace = max(0, pace - 0.05) }
+                try? await Task.sleep(nanoseconds: 33_000_000)
+                let now = Date()
+                let dt = now.timeIntervalSince(last); last = now
+                let lock = PointDance.update(dt)
+                // every body that took a hand this frame gets its own voice at its own
+                // harmonic of 852 — `joinedQ`, so none is lost when several join at once
+                while let body = PointDance.takeJoined() {
+                    soundEngine.join(min(4, max(0, body.chain)))
+                }
+                // `ensemble(lock)` — the detune closes as they come into time
+                soundEngine.ensemble(lock: lock)
+                pace = lock                       // the bar IS the lock now, not a pace meter
+                if let g = PointDance.gaveNow, g > s.revealed { s.give() }
             }
+            dancing = false
         }
     }
 }

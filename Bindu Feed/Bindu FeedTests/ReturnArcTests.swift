@@ -16,8 +16,14 @@ import Testing
 // Boundary (`VerificationBoundary.swift`): the registry is ARITHMETIC — it is a pure
 // function of `t0`, `dur` and the moment it is asked, which is exactly what lets it be
 // tested without a clock. That a real departure from the register leaves the app running is
-// OWED.
-@Suite("E2 · world VI · nothing in flight cares whether he is watching")
+// OWED.//
+// **SERIALISED, AND NOT AS A FORMALITY.** `PointReturn` is a static registry — that is the
+// whole point of it, since a flight must outlive every view — so two tests mutating it at
+// once are two hands on the same floor. Swift Testing runs in parallel by default, and this
+// suite passed until unrelated tests were added and the scheduling changed: a race, surfacing
+// as a send that returned nil because another test had already sent that star. Caught as
+// FLAKY rather than re-run (§10), and the fix is the exclusivity the suite was assuming.
+@Suite("E2 · world VI · nothing in flight cares whether he is watching", .serialized)
 struct ReturnArcTests {
 
     private func fresh() { PointReturn.resetAll() }
