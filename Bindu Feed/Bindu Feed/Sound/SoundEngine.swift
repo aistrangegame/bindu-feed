@@ -407,6 +407,20 @@ final class SoundEngine: ObservableObject {
     // space — while `point-sound.js:35-37` is `_stone(7.5, 0.6)` at wet 0.42, a tail twice as
     // long. The design calls the second one the cathedral, and it should not be audible
     // anywhere the walk is not climbing.
+    /// `this.bus = ctx.createGain()` — `field-sound.js:39`, `spine-sound.js:45`. Everything
+    /// that sounds arrives here and the room is raised on it.
+    ///
+    /// Added for A2, and needed rather than merely tidy: `AVAudioUnitReverb` is an
+    /// `AVAudioUnitEffect` with a SINGLE input bus, so it cannot take fan-in. Two voices
+    /// during a crossfade and the delay's return are three sources for one room. The mixer
+    /// is unity in and out, so the path it replaces is unchanged.
+    private lazy var bus: AVAudioMixerNode = {
+        let m = AVAudioMixerNode()
+        engine.attach(m)
+        engine.connect(m, to: room, format: nil)
+        return m
+    }()
+
     private lazy var room: AVAudioUnitReverb = {
         let r = AVAudioUnitReverb()
         r.loadFactoryPreset(.mediumRoom)
@@ -424,16 +438,94 @@ final class SoundEngine: ObservableObject {
         }
     }
 
+    // MARK: - A2 · THE DELAY LINE
+    //
+    // `spine-sound.js:52-57`. *"THE DELAY LINE — VI's whole physics. A thing sent out comes
+    // back later, quieter, and each return of it comes back later still. It is built once
+    // and sits silent until something is actually away."*
+    //
+    // The app had exactly one audio unit, a reverb. World VI's premise — *"the room IS the
+    // distance it travelled"* — had nothing to stand on, and `distance`/`send`/`arrive`/
+    // `arriveAll` all route through this. Built here, silent, so STAGE C1 has somewhere to
+    // send to.
+    //
+    // `createDelay(3.0)` is a maximum, not a setting; `distance(f)` drives the time to
+    // `0.30 + f*1.35`, so the app's ceiling of 2.0s is above anything the design asks for.
+    private lazy var delay: AVAudioUnitDelay = {
+        let d = AVAudioUnitDelay()
+        d.delayTime = 0.42                 // `this.dly.delayTime.value = 0.42`
+        d.feedback = 44                    // `fb.gain.value = 0.44`, as a percentage
+        d.lowPassCutoff = 2400             // `dtone.frequency.value = 2400`
+        d.wetDryMix = 100                  // a send bus carries no dry signal
+        engine.attach(d)
+        // `dtone.connect(this.dlyOut); this.dlyOut.connect(this.master); dlyOut.connect(cv)`
+        // — the returns land BOTH dry-of-the-room and back into it, which is what makes a
+        // late arrival sound like it came from further inside the same space.
+        engine.connect(d, to: [AVAudioConnectionPoint(node: delayReturn, bus: 0)],
+                       fromBus: 0, format: nil)
+        return d
+    }()
+
+    /// `dlyOut` — `dlyOut.gain.value = 0.55`, the delay's return level.
+    private lazy var delayReturn: AVAudioMixerNode = {
+        let m = AVAudioMixerNode()
+        m.outputVolume = 0.55
+        engine.attach(m)
+        // `dtone.connect(dlyOut); dlyOut.connect(master); dlyOut.connect(cv)` — the design
+        // returns the delay both dry and into the room. Here it returns onto the bus, which
+        // is the room's own input, so a late arrival is heard inside the same space. The
+        // dry half of that split is folded into the reverb's `wetDryMix`; recorded as a
+        // divergence rather than modelled with a second path.
+        engine.connect(m, to: bus, format: nil)
+        return m
+    }()
+
+    /// One send mixer per live voice. `ech` is a parallel connection in the design's graph,
+    /// not a trim on the direct path, so it is one here too: the voice reaches the room and
+    /// the delay independently, and this mixer's volume IS `ech.gain`.
+    private var sends: [ObjectIdentifier: AVAudioMixerNode] = [:]
+
+    /// `distance(f)` will drive this in STAGE C1. A1/A2 only need it to exist and to be
+    /// shut, so the delay line is inaudible until something is actually away.
+    func setEchoSend(_ level: Double) {
+        guard let voice = currentBreath else { return }
+        let clamped = max(0, min(1, level))
+        voice.echoSend.write(clamped)
+        sends[ObjectIdentifier(voice)]?.outputVolume = Float(clamped)
+    }
+
+    /// `dly.delayTime.setTargetAtTime(0.30 + f*1.35, …)` — the room lengthening. Also C1.
+    func setDelayTime(_ seconds: Double) {
+        delay.delayTime = max(0, min(2.0, seconds))
+    }
+
     private func attach(_ voice: BreathVoice) {
         engine.attach(voice.sourceNode)
         let format = voice.sourceNode.outputFormat(forBus: 0)
         setRoom(for: voice.snapshot.bed)
-        engine.connect(voice.sourceNode, to: room, format: format)
+
+        // A2 · the voice reaches the room AND the delay, independently — `pk.connect(bus)`
+        // and `pk.connect(ech); ech.connect(echoIn)`. The send mixer starts at zero, so
+        // this changes nothing anyone can hear until `setEchoSend` opens it.
+        let send = AVAudioMixerNode()
+        send.outputVolume = Float(voice.echoSend.read())
+        engine.attach(send)
+        engine.connect(send, to: delay, format: format)
+        sends[ObjectIdentifier(voice)] = send
+
+        engine.connect(voice.sourceNode,
+                       to: [AVAudioConnectionPoint(node: bus, bus: bus.nextAvailableInputBus),
+                            AVAudioConnectionPoint(node: send, bus: 0)],
+                       fromBus: 0, format: format)
     }
 
     private func detach(_ voice: BreathVoice) {
         engine.disconnectNodeInput(voice.sourceNode)
         engine.detach(voice.sourceNode)
+        if let send = sends.removeValue(forKey: ObjectIdentifier(voice)) {
+            engine.disconnectNodeInput(send)
+            engine.detach(send)
+        }
     }
 
     private func attachThreshold(_ voice: ThresholdTone) {
