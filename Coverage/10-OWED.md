@@ -209,6 +209,27 @@ nothing changing.
 
 ---
 
+## 3b · NOT OWED, NOT BROKEN — **MECHANISM WHOLE, CONTENT A SEPARATE ACT**
+
+A third thing that is neither MEASURED nor OWED nor E-BLOCKED, and it has now been mistaken
+for incompleteness **twice** — both times it was the design being honest.
+
+**The app can be complete and show nothing**, because the content is an authoring act that has
+not happened. A walk that meets one of these reads a working surface as a broken one, and
+"fixes" it by inventing what the design deliberately left for a person to write.
+
+| # | The mechanism | Why an empty surface is CORRECT |
+|---|---|---|
+| **M1** | **`renderAnswers` · a sealed return is answered** | `The Return.html:264` marks every answer *"authored · for approval"*. They are written by a person and held in the base as `Return Answer` rows. **The app renders what the base holds and invents nothing.** A story with no authored answers correctly reads *"no voice has spoken twice here yet"* — which is also, exactly, what a broken Return would show. **On the walk that is a PASS.** The mechanism is proven by `ReturnAnswerTests`, not by the screen. |
+| **M2** | **The Light's six scenes** | `canon/spine-light.js:97` — *"Six scenes, one family."* Six is the canon's NUMBER, not a shortfall; `7-STATE-OF-THE-BUILD.md` §4 already records this after it was read as a gap once. A seventh would be invented content. |
+
+**THE TELL THEY SHARE:** the design says, in its own words, that the content is someone's to
+write — *"authored · for approval"*, *"one family"*. **Where the design names the content as an
+act, an empty surface is the mechanism working.** Before filing an empty surface as a defect,
+look for that sentence.
+
+---
+
 ## 4 · NOT OWED — E-BLOCKED
 
 Built, measured, and with nothing to drive them. **These are not waiting on a walk. They are

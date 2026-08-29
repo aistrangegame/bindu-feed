@@ -156,7 +156,22 @@ statements in a row, three questions below and apart, two laboratories at the ed
 
 **F1 · `renderAnswers`.** A sealed return is never answered by a voice. `sealReturn` writes
 the ring and your words and stops. This is what makes returning generate new material rather
-than a second copy of the same page. *Audit E3.2, BLOCKER.*
+than a second copy of the same page. ~~*Audit E3.2, BLOCKER.*~~
+
+> **CORRECTION, 2026-08-29 — and it has no audit ID at all.** E3.2 is *"the Rings movement has
+> no rings list"*, a different mechanism; it was cited because it is the nearest Return-shaped
+> BLOCKER, not because it is this. **No finding in `AUDIT.md` covers `renderAnswers`**, and the
+> reason is structural: `renderAnswers` lives at `Claude Design Round 2/comps/The Return.html:139`
+> and **the audit did not read the comps.**
+>
+> The mechanism sweep did — `Tools/mech-inscope.json` carries it, one of the 485. So this is
+> exactly the gap `7-STATE-OF-THE-BUILD.md` §1 describes: *a mechanic with no string attached
+> was invisible to all four checkers*, and the sweep is the one that keys on declarations.
+> **The plan then cited the audit, which is the register that could not see it.**
+>
+> `Tools/check_audit_ids.py` exists as of this correction, and puts every `Audit X.Y` beside
+> the finding it names so the next one is visible rather than plausible. Built 2026-08-29;
+> resolved 21 of 21 references, and `--list` shows this one as the mismatch it was.
 
 **F2 · `agedBed` and the `ring` tone.** The Return opens on the ordinary field bed; its ring
 is a generic bowl instead of `R = [2,3,4,4.5,6,8]` entering 1.5% flat and coming into tune
