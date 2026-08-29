@@ -97,6 +97,9 @@ enum Axis {
     /// The room he is actually in, as a hex. `spine-field.js:211-216 setRoom()` overwrites
     /// the region/world/fall slots with it on every room change — "so the Universe side is
     /// never generic". nil until a room is known.
+    /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+    /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+    /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
     static var roomHue: String?
 
     static let minZ: Double = -5

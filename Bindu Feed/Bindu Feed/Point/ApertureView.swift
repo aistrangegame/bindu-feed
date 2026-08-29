@@ -55,6 +55,9 @@ struct ApertureView: View {
 
     // The 37 unwalked registers — `The Instrument v3.html:931-951` / `canon/point-content.js`,
     // verbatim, and already byte-identical here before this pass. Untouched.
+    /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+    /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+    /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
     private static var drawn = Set<String>()
     /// The last six lines the model returned, for the live prompt's own avoid-list. BOTH
     /// guards are needed and they guard different axes: the pool guard is the only one that

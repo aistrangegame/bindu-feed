@@ -6,6 +6,9 @@ import SwiftUI
 // scoped; reset when a walk completes. Pulse only — nothing here is persisted or ranked.
 @MainActor
 enum PointJourney {
+    /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+    /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+    /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
     static var reachedGate = false
     static var enteredDims: [String] = []
     static var universes: [String] = []       // the named universes he entered (middle tier)

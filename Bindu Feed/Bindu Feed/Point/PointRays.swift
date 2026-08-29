@@ -101,9 +101,23 @@ enum PointRays {
     static func spanda(phase: Double) -> Double { phase.truncatingRemainder(dividingBy: 1) }
 
     /// *"attention as physics. The arm he is following brightens and slows; the other eight
-    /// dim and hurry on without him."* `dim = following ? (mine ? 1 : 0.26) : 1` — and note
-    /// that with nothing followed, ALL nine are at 1. Attention does not brighten one; it
-    /// dims the rest.
+    /// dim and hurry on without him."*
+    ///
+    /// **ATTENTION DOES NOT BRIGHTEN ONE. IT DIMS THE REST — and do not "correct" this.**
+    ///
+    /// `dim = following ? (mine ? 1 : 0.26) : 1`. The followed arm is at **1**, which is
+    /// exactly what it was at before he looked at it: with nothing followed, ALL NINE are at
+    /// 1. Nothing is ever raised. The whole change is subtractive.
+    ///
+    /// It reads backwards from every intuition — the design's own sentence says *"brightens"*
+    /// — and it is one refactor from being tidied into `mine ? 1.3 : 1`, which would be the
+    /// same picture and the opposite claim. **The reason it must stay subtractive:** this is
+    /// the register of one light becoming many, and the light is FIXED. There is no more of
+    /// it to give an arm he happens to be watching; attention can only take it from the
+    /// others. An additive version says the world produces more light when looked at, which
+    /// is the one thing world II is arguing against.
+    ///
+    /// `RayTests.attentionDimsTheRest` asserts the followed arm is UNCHANGED, not brighter.
     static func dim(following: String?, ray: Ray) -> Double {
         guard let following else { return 1 }
         return following == ray.id ? 1 : 0.26

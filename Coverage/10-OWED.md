@@ -61,21 +61,44 @@ about the OBSERVATION being ambiguous — a defect and its fix look the same. VO
 SETUP being unverifiable — the observation is clear, and it is an observation of the wrong
 run. A row can carry both, one, or neither. Rows carrying VOID are marked **⊘**.
 
-### ⊘⊘ THE GLOBAL PRECONDITION, and it voids most of this file at once
+---
 
-**`prefers-reduced-motion` suppresses EVERY one-shot in the sound layer.**
-`SoundEngine.swift:1285` — `eventsSuppressed` reads `UIAccessibility.isReduceMotionEnabled`,
-and `playCeremony`, `playAxis`, `carryTone` and `duckBreath` all guard on it. That is the
-bowl, all three thresholds, the blip, `om`, `glide`, `shimmer`, `arrive`, `send`, the Light's
-events and the bed-duck. The BED stays, by design — *"what goes is the one-shot… what stays
-is the continuous ground."*
+# ⊘⊘ THE WALK GATE — evidence these BEFORE row one is judged
 
-So with Reduce Motion ON, **the correct app is silent for almost every row in §1–§3**, and a
-walk would record a dozen failures against a build with nothing wrong with it.
+**Nothing below is a valid observation until this gate is passed.** It is not a property of
+any row and does not belong distributed among them: if the walk simply begins, a dozen rows
+fail correctly-but-falsely, and by the time anyone notices the pattern **the walk is spent.**
+Ashrey gets one.
 
-**BEFORE ANY SOUND ROW IS JUDGED: confirm Reduce Motion is OFF, and confirm the sound toggle
-reads `◉ sound` and not `⊙ sound`.** Neither is visible from the observation itself. A run
-that cannot evidence both is **VOID for every sound row**, not failed.
+| # | Must be true | Evidence | What a correct app does if it is not |
+|---|---|---|---|
+| **G1** | **Reduce Motion is OFF** | Settings → Accessibility → Motion, seen off | `SoundEngine.swift:1285` `eventsSuppressed` gates `playCeremony`, `playAxis`, `carryTone` and `duckBreath`. **Every one-shot in the app is silent** — the bowl, all three thresholds, the blip, `om`, `glide`, `shimmer`, `arrive`, `send`, the Light's eight, the bed-duck. Only the bed remains, by design. |
+| **G2** | **The sound is ON** | the Settings control reads `◉ sound`, not `⊙ sound` | `mainMixerNode.outputVolume` is 0. Total silence, correctly, and it persists across launches. |
+| **G3** | **The silent switch is OFF** | the ring/silent switch seen unmuted | `configureSession` sets `.ambient` deliberately — *"silent-switch honored; the field never imposes."* A silenced phone silences the whole layer, correctly. |
+| **G4** | **No other audio is playing** | nothing else sounding | the session is `.mixWithOthers`, also deliberate. Another app's audio masks a 0.032 threshold entirely. |
+| **G5** | **Headphones, if used, are DETECTED** | `isOnHeadphones` observed true — the binaural pair audibly wide | the pair collapses to a centred tone, correctly. A pair that connects without being recognised looks exactly like a broken binaural pair. |
+| **G6** | **Display Zoom is STANDARD** | Settings → Display → View, seen as Standard | the logical point size changes, so **B5's eleven-row Karishma table is measured against different numbers** and reads as wrong while being right. §5's table is specified at W 393 · H 852. |
+| **G7** | **Low Power Mode is OFF** | the battery indicator not yellow | timers and animation throttle. Every gate in this build is time-based — world III's 0.42/s, IV's press, VI's `DUR`, VII's `GATE` — so a throttled run reaches fewer gates in the same wall-clock hold and looks like a build that gives too slowly. |
+| **G8** | **The app was NOT cold-launched mid-walk** | one continuous session, and it is stated | every static registry starts empty: `PointReturn`, `PointDance`, `PointChamber.struck`, `PointGoodnight.shown`, `MirrorHall.backAt`. A relaunch legitimately voids O9, O19 and O22 at once. |
+
+**If any of G1–G8 cannot be evidenced, the affected rows are VOID, not FAILED.**
+
+---
+
+## 0b · The category this gate belongs to: **a defect in the ABILITY TO OBSERVE**
+
+Everything the audit has found so far — all ten shapes in `CLAUDE.md` §10 — is a defect **in
+the code**. This is a different kind: a defect **in the walk**. The build is correct, the
+observation is clear, and the observation is of a run that could never have shown the thing.
+
+It has its own tell, and it is the one that makes it dangerous: **it produces a PATTERN of
+failures rather than one.** A dozen sound rows failing together is not a dozen bugs; it is one
+switch. So the standing rule is: **when several unrelated rows fail the same way, suspect the
+gate before the code** — and audit for anything global that changes what a correct app does
+before the walk is designed, not after it is spent.
+
+Audited 2026-08-29; G1–G8 above are the result. Anything added to this build that reads an
+accessibility setting, a session category, a power state or a display scale earns a row here.
 
 ### The two rules that decide whether a row belongs here at all
 
@@ -112,9 +135,9 @@ Everything else about the sound is a number and is measured.
 
 | # | What must be true | Why offline cannot reach it | What the walk must show | Stage |
 |---|---|---|---|---|
-| O1 | **Mix balance.** Every event sits under the bed without disappearing into it. | A rendered peak is a number; whether 0.032 is audible under a 0.12 bed at listening volume is a judgement. | Each of the four strike voices identified by ear on its own surface — bowl, field threshold, spine threshold, blip — and none of them either startling or inaudible. **⊘ VOID unless** Reduce Motion is off, the toggle reads `◉ sound`, and the device is not on silent — all three make a correct app inaudible. | A/B1 |
+| O1 | **Mix balance.** Every event sits under the bed without disappearing into it. | A rendered peak is a number; whether 0.032 is audible under a 0.12 bed at listening volume is a judgement. | Each of the four strike voices identified by ear on its own surface — bowl, field threshold, spine threshold, blip — and none of them either startling or inaudible. **⊘ VOID** on the walk gate — G1, G2, G3, G4. | A/B1 |
 | O2 | **Reverb character.** The field's 3.6s room and the Point's 7.5s cathedral read as two different spaces. | `AVAudioUnitReverb` presets cannot be compared to a WebAudio convolver by rendering; the tail is the thing and it is subjective. | Crossing from a Room into the Point and back, and hearing the room change. | A2 |
-| O3 ⊘ | **Headphone routing.** The binaural pair reads as width on headphones and collapses honestly on speakers. | The simulator reports no headphones, so `routeState` is false by construction and the pair never renders. | Both routes walked, and the Point's beat heard narrowing on headphones only. **⊘ VOID unless** the route is confirmed DETECTED — `isOnHeadphones` must actually flip. A pair that connects but is not recognised collapses the binaural pair correctly, which is the same observation as the pair being broken. | A1 |
+| O3 ⊘ | **Headphone routing.** The binaural pair reads as width on headphones and collapses honestly on speakers. | The simulator reports no headphones, so `routeState` is false by construction and the pair never renders. | Both routes walked, and the Point's beat heard narrowing on headphones only. **⊘ VOID** on gate G5 — a pair that connects without being recognised collapses the binaural pair correctly, which is the same observation as the pair being broken. | A1 |
 
 ---
 
@@ -141,12 +164,13 @@ measured; that a real finger reaches the range is not.
 | O10 | **The mute is a 1.4s fade, and a muted launch is silent from the first buffer.** | `mainMixerNode.outputVolume` on a live graph. The state and its persistence are measured; the fade is not. | `⊙ sound` toggled and the field riding down rather than cutting; the app relaunched muted and silent before anything appears. | B2 |
 | O11 ⚠ | **The guard star's `nul` is heard as cancellation, not as omission.** | `spine-sound.js:167` — *"the voice summed against itself, which is exact"*. The §10 EIGHTH SHAPE in its purest form: defect and fix both render as silence. | **NULL-SHAPED, and the archetype.** Positive condition: the guard star opened in world V and **the bed heard STOPPING** — a drop into nothing while the room's reverb tail keeps decaying over it — and then **the bed heard COMING BACK** after ~4.4s. Two transitions, both audible. **"Nothing happened" is the failure report, not the pass.** | C1 |
 | O12 ⚠⊘ | **The bed-duck under the bowl.** `duckBreath` takes the bed to a fifth and returns it over 9s. | `crossfadeLevel` on a live voice; the ratio is MEASURED, the ramp is not. | **NULL-SHAPED:** a duck that never fires and a duck that works both leave "a bowl over a bed." Positive condition: with the bed clearly audible first, strike a bowl and hear the bed **step back within 1.2s** and **come home by 9s** — the return is the half that proves it fired, since a missing duck also has no return. **⊘ VOID unless the bed is audible BEFORE the strike** — over an inaudible bed there is nothing to duck and nothing to hear return. | B1 |
-| O13 ⊘ | **The twelve repointed sites sound like four different things.** | The voices are measured apart; that the *right* voice is at the *right* moment is a walk. | The Rite's three movements, the Return's cross, the Universe's three, the axis crossing, the two Door crossings, the Light's blip, and the Point's OM — each identified as its own event. **⊘ VOID** on the global precondition above: with Reduce Motion on, all twelve are correctly silent and this row would record twelve failures against a correct build. | Coverage/9 |
+| O13 ⊘ | **The twelve repointed sites sound like four different things.** | The voices are measured apart; that the *right* voice is at the *right* moment is a walk. | The Rite's three movements, the Return's cross, the Universe's three, the axis crossing, the two Door crossings, the Light's blip, and the Point's OM — each identified as its own event. **⊘ VOID** on the walk gate — G1 alone would record twelve failures here against a correct build, which is the pattern the gate exists to prevent. | Coverage/9 |
 | ~~O15~~ | ~~`resolve` is heard as nine becoming one~~ | **WITHDRAWN — it has no caller, so no walk can reach it.** Rule 1: if the blocker is code, it is not OWED. `resolve` is built and MEASURED and fires from nowhere; §7 refiles it as an axis row awaiting a decision. It returns to this band the day something calls it. | Stage G |
 | O17 ⊘ | **World III gives while the hand is held.** | `world-three.js:95` — *"he is holding it open. Sections arrive while he holds, and only while."* The gate arithmetic is ARITHMETIC and the timings are asserted; that a real finger holds past 1.43s, and that `onChanged` fires continuously under a stationary finger rather than only on movement, is a walk. | The veil parted and **held without moving**, and all four sections arriving in one contact — at roughly 0s, 0.43s, 0.95s and 1.43s. A single give under a long hold means `onChanged` is not firing while still, and the reversal is back by another route. **⊘ VOID unless the hand stayed down for at least 1.5s** — releasing early correctly gives fewer than four, which is the design, not the bug. | E3 |
 | O20 | **World VII's hand reaches the floor.** | `world-seven.js:262` — *"The nearest free body takes his offered hand."* The figure, the join radii and the dissolve are ARITHMETIC; that a real touch lands inside 0.19 of a body in the app's own coordinates, and that a drag reads as one continuous hold rather than a series, is a walk. | A hand offered and **held still** while a body crosses to it; then **four more joining** over about eight seconds; then letting go and **hearing the chord come apart** — the dancers fading, not cutting. | E1 |
 | O21 | **World II's spanda travels down all nine arms at once, and the split is visible.** | `world-two.js:26` — *"every pulse travels visibly down all nine arms at once."* The shared clock and the split's curve are ARITHMETIC; that nine arms are drawn, that a pulse is seen moving out along all of them together, and that white-at-the-centre reads as white are a walk. | Watch one breath: **the pulse leaves the centre on every arm simultaneously**, and the light is white where they meet and each arm's own colour at the rim. If a pulse runs down one arm ahead of another, the one clock has become nine. | E4 |
 | O22 | **World IV's impression is visible on the wall after leaving.** | `world-four.js:72` — *"what has already been struck into the wall — it stays"* That `struck` survives is ARITHMETIC; that the wall DRAWS what it carries, and that the drawing survives a leave, is a walk. | Press a niche to its second gate, **leave the register entirely**, come back, and find the impression still cut at the same depth while the reading has restarted from nothing. | E5 |
+| O23 ⚠⊘ | **The room lengthens while something is away, and dries when it is home.** | `spine-sound.js:179` — *"the same note, arriving late"*. `distance`'s range and the delay's parameters are MEASURED; that the room is heard changing is a judgement, and it is the only audible proof the delay line A2 built is in the signal path at all. | **NULL-SHAPED:** a delay that never opens and one that is not wired both sound dry. Positive condition: send a lap and hear **the room get longer**, then hear it **dry again** as the lap comes home — both transitions, not the end state. **⊘ VOID** on gate G1: `send` and `arrive` are one-shots and Reduce Motion silences them. | E2 |
 | O19 ⚠ | **A lap really does survive leaving the register on a device.** | `world-six.js:101` — *"leaving the register closes the reading. It does not cancel a lap"*. The registry is ARITHMETIC and proves the arithmetic cannot lose a lap; that the APP was **alive across the interval** — not relaunched, not purged, not jetsammed — is a walk. | **NULL-SHAPED, AND IN A NEW PLACE: a correct cold-launch empty and a broken registry produce the SAME observation — an arc that did not come home.** So the walk must establish liveness FIRST, or the row can be failed by correct behaviour, which is worse than being unclosable. Close condition, in this order: **(1)** send a lap and note the time; **(2)** leave the Point but **stay inside the app** — the Feed, a Room, anywhere with a visible surface — and **do something that proves the process lived**, e.g. scroll a feed that was not loaded before, so the evidence is a state change only a running app could make; **(3)** return after the duration and find it home. **If step 2 cannot be evidenced, the run is VOID, not failed.** A relaunch, a backgrounded eviction or an OS kill all legitimately empty the registry and none of them says anything about E2. | E2 |
 | O18 | **World V's pane turns under a real drag, and carries through edge-on.** | `world-five.js:142` — *"far enough that carrying a face through edge-on is a real act of the hand"*. The angle arithmetic is ARITHMETIC; that a drag across three quarters of the shell reaches π, and that `onChanged` tracks a continuous carry rather than jumping, is a walk. | A pane **held and carried a half turn**, and the second tone heard going to nothing at edge-on and coming back inverted on the other side — three states in one gesture, not two. | E |
 | O16 ⚠⊘ | **The descent and the ascent glide, and the aperture shimmers.** | The curves are MEASURED; that each fires at the right transition, at the right enclosure, is a walk. | **NULL-SHAPED in one direction:** the ascent's glide ends where the descent began, so a glide that never fires and one that fires twice both leave you "back where you started." Positive condition: **descend and ascend from two DIFFERENT enclosures** and hear two different pitches fall and rise — one pair alone cannot show the enclosure is being read. **⊘ VOID unless the two enclosures are confirmed DIFFERENT** — `PointYantra.shared.focus` decides the pitch, and two descents at the same focus correctly sound identical. | C3 |
@@ -176,7 +200,7 @@ until the build that unblocks it lands — at which point it becomes an ordinary
 |---|---|---|---|
 | ~~E-V~~ | ~~`reflect(−1)` and world V's `settling` close~~ | **CLOSED 2026-08-29.** World V holds its panes: `ga[grp]`, `angleOf`, `facing()`, `spin`, `release`. One change, both consequences, as recorded. **AND THE REASON RECORDED HERE WAS WRONG** — `reflect(−1)` never needed a pane past 90°. `angleOf` runs the partner at **π − a**, so `cos(π − a) = −cos(a)` and the two panes of a pair are ALWAYS opposite; at rest one of them is already at ≈ −1. The negative half was a consequence of the pairing, not of the rotation range, and the only thing missing was `held`. See `MirrorPaneTests`. | ~~E~~ |
 | ~~E1~~ | ~~`join` · `ensemble` · `leaveAll` · `DancerVoice`~~ | **CLOSED 2026-08-29.** `world-seven.js:117` — *"bodies dancing with him, in the order they joined"*. `PointDance` holds the floor, the hand, the chain and the Kuramoto lock; `ReadCompany` offers, moves and lets go. **C1's four voices were wired in the SAME pass, not filed behind it** — an undriven voice waiting on a mechanic that has just landed is exactly how the design's own four uncalled mechanisms happened. `join` per body at its own harmonic, `ensemble(lock:)` closing the detune as they come into time, `leaveAll` on letting go. | ~~E1~~ |
-| ~~E2~~ | ~~`send` · `arrive` · `arriveAll`~~ | **REGISTRY CLOSED 2026-08-29.** `PointReturn` holds `arcs`/`trails`/`got`/`pending` on a wall clock outside every view: an arc launched and abandoned still arrives, and an hour away lands everything that was due, in order. `world-six.js:101` — *"leaving the register closes the reading. It does not cancel a lap"*. **The three SOUNDS remain unwired** — `send`/`arrive`/`arriveAll` now have state to fire from, and the call sites are the next pass. | E2 |
+| ~~E2~~ | ~~`send` · `arrive` · `arriveAll`~~ | **CLOSED 2026-08-29, registry AND sounds.** `PointReturn` holds `arcs`/`trails`/`got`/`pending` on a wall clock outside every view: an arc launched and abandoned still arrives, and an hour away lands everything that was due, in order. `world-six.js:101` — *"leaving the register closes the reading. It does not cancel a lap"*. The three sounds are wired at the same call sites: `send` on the departure with the arc's own pan, `arrive(n:)` per lap and `arriveAll` for Deep Time's four at once, and `distance(f)` following what is actually away — *"when everything is home the world is dry again."* | ~~E2~~ |
 
 ---
 

@@ -330,6 +330,9 @@ struct PointWorldView: View {
 }
 
 // The goodnights are said once per dimension per session, then gone.
+/// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+/// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+/// learn it. Nothing tests this yet; the first suite that does inherits the trap.
 private enum PointGoodnight { static var shown = Set<Int>() }
 
 // A deeper reading, generated live in the Arch register and kept (point-levels.js generate()).

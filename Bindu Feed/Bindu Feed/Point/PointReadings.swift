@@ -78,6 +78,9 @@ import Combine
 /// Read at fire time, not render time — exactly as the design reads a DOM class at fire time —
 /// so it is a plain static and needs no publishing.
 enum PressClaim {
+    /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+    /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+    /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
     private(set) static var owner: String?
     static var isClaimed: Bool { owner != nil }
     static func claim(_ who: String) { owner = who }
@@ -827,6 +830,9 @@ private struct ReadPressing: View {
 /// the ease-down from 3.6→5.4s never ran. The design names that failure in its own comment.
 /// So the clock is static and the hall is drawn by the enclosure, which outlives the reading.
 enum MirrorHall {
+    /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+    /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+    /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
     static var backAt: Date?
 
     /// rise `sm(e/2.4)` · hold 1 to 3.6s · ease `sm(1−(e−3.6)/1.8)` to 5.4s · then gone.
@@ -959,6 +965,7 @@ private struct ReadTurning: View {
 //  its own time carrying one section. He cannot pull it. He cannot hurry it."
 
 private struct ReadSending: View {
+    @EnvironmentObject private var soundEngine: SoundEngine
     @ObservedObject var s: PointReadingState
     let hue: Color
     let onClose: () -> Void
@@ -1042,7 +1049,16 @@ private struct ReadSending: View {
     private func send() {
         // `lift` is a real drawn-up quantity in the design; the app's send is a button, so
         // it is a full send by construction. Recorded rather than faked with a 0.
-        guard PointReturn.send(id: s.star.key, aim: 0, lift: 1) != nil else { return }
+        guard let arc = PointReturn.send(id: s.star.key, aim: 0, lift: 1) else { return }
+        // C1 · `send(f, pan)` — *"it bends down and away as it goes, the way a thing leaving
+        // does, and it goes straight into the delay — which is to say it is already on its
+        // way back the moment he lets go."* The voice was built and measured in C1 and had
+        // no caller; the registry is what gave it one. **Wired the moment the state existed**,
+        // not filed behind it (§10, and the design's own four uncalled mechanisms).
+        soundEngine.send(hz: PointLadder.drone(5).hz, pan: arc.aim)
+        // `distance(f)` — while something of his is away, the room lengthens. One arc is a
+        // quarter of the way to fully away; five would be the whole of it.
+        soundEngine.distance(min(1, Double(PointReturn.arcs.count) / 4))
         sent = true
         withAnimation(.easeOut(duration: 2.4)) { out = 1 }
         run()
@@ -1060,8 +1076,19 @@ private struct ReadSending: View {
                 let flying = !PointReturn.arcs.isEmpty
                 if sent && !flying { withAnimation(.easeIn(duration: 2.4)) { out = 0 } }
                 sent = flying
-                // `take()` — what he is present for, one at a time.
-                while PointReturn.take() != nil, !s.done { s.give() }
+                // `distance(f)` follows what is actually away — when everything is home the
+                // world is dry again, which is the register's whole physics.
+                soundEngine.distance(min(1, Double(PointReturn.arcs.count) / 4))
+                // `take()` — what he is present for, one at a time. Each arrival SOUNDS:
+                // `arrive(f, n)` is the same note he sent, later, quieter and one interval
+                // up, swelling in backwards. Deep Time hands over all four at once, which is
+                // `arriveAll` — *"the crossing was made before him, complete."*
+                while let landed = PointReturn.take(), !s.done {
+                    let hz = PointLadder.drone(5).hz
+                    if landed.deep && landed.all { soundEngine.arriveAll(hz: hz) }
+                    else if !landed.deep { soundEngine.arrive(hz: hz, n: landed.n) }
+                    s.give()
+                }
             }
             polling = false
         }
