@@ -212,6 +212,32 @@ threshold's `f×0.985 → tune over 2.2s` are both built and measured.
 
 ---
 
+## 5b · `nul` and `distance` are defined in the design and called nowhere
+
+Found while checking whether the echo send could be tapped after the null. It is a fact about
+the corpus, not about the app, and it governs how C1 must be written:
+
+- `spine-sound.js:164` `nul:function(secs)` — **no caller in any design-source file.**
+- `spine-sound.js:176` `distance:function(f)` — **no caller in any design-source file.**
+
+Every other register law has one. `narrow` · `widen` · `unveil` · `bear` · `reflect` are
+invoked; these two are declared, documented, wired into `_voice`'s graph — and never run.
+
+**Two consequences.**
+
+1. **C1 writes the caller, so `nul` and `distance` are the app's own idiom** — the same
+   standing as the Light's six scenes and `CeremonySynth.drain`, both of which are behaviour
+   the design states and mechanism the app supplies. The code says so at the call sites. A
+   future session must not go looking for a source that is not there.
+
+2. **The echo send's tap was moved to pre-null for the stronger reason.** Not *"the design
+   taps there"* — an appeal to a graph the design never exercised — but *exclusivity could
+   not be proven, so it went to the side that is correct either way.* A pre-null tap is
+   identical to a post-null one whenever the two are never open together, and right when they
+   are. That justification survives someone later finding a call site.
+
+---
+
 ## 6 · Queue — recorded, not fixed
 
 Carried from the B-stage session so they do not drift out.
