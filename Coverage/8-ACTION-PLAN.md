@@ -47,6 +47,13 @@ correctness is provable.
 `1/(i*2.2+1)`; add the bed-duck to 0.006 (`duckBreath()` is an empty stub at
 `SoundEngine.swift:812`). 19 call sites inherit the fix. *Audit G3.3.*
 
+> **CORRECTION, 2026-08-29 — `Coverage/9-BOWL-CALL-SITE-MAP.md`.** The ceiling fix was right
+> and necessary, and is applied. The IDENTITY was wrong for **10 of the 19**:
+> `riteThreshold(hz:dur:)` carries the FIELD threshold's signature, and those ten wanted three
+> *different* voices at 0.032, 0.06 and 0.07 — not one at 0.075. *"19 call sites inherit the
+> fix"* is the sentence that hid it: they inherited the ceiling and the wrong identity
+> together. Mapped and repointed; **C4 closed with it**.
+
 **B2 · Add a mute.** No `setMuted`, no `setOn`, no sound control anywhere. This is a
 shipping defect independent of everything else.
 
@@ -92,14 +99,29 @@ f×0.985 and rise into tune over 2.2s, so a crossing is *heard* as a crossing.
 
 ---
 
-## STAGE D · The leaving decay — one mechanic, seven instances, eight cues
+## STAGE D · The leaving decay — one mechanic, ~~seven instances, eight cues~~ **five and four**
+
+> **CORRECTION, 2026-08-29 — `Coverage/10-OWED.md` §6.** *"Seven instances, eight cues"* was
+> taken from the cue list rather than from the world files. The design declares **five** decay
+> scalars (I `leaving` 0.9 · II `reeling` 0.7 · III `closing` 0.8 · IV `easing` 0.8 ·
+> V `settling` 0.55) and **four** closing lines — II decays and says nothing, deliberately,
+> because *"far out, and still leaving"* is a world that never closes. VI's `home` and VII's
+> `resolved` are different mechanics. Built to five and four; building the missing two would
+> have been inventing the mechanic to fit the plan.
 
 `ReadTurning` already has the shape: `withdrawing`, on its own wall clock, finishing whether
-he is there or not. Generalise it into a shared closing state, then attach the seven
-authored closing lines. **One build closes eight cue rows and seven mechanism rows.**
+he is there or not. Generalise it into a shared closing state, then attach the ~~seven~~
+**four** authored closing lines.
 
-Note: world V's needs a rename first — the app already uses `settling` for which face is
-toward you — and its `given` reset is missing.
+**BUILT 2026-08-29** as `LeavingDecay` + `PointLeaving`, wall-clocked so it finishes whether
+he is there or not. Wired in I, II, III and IV. **World V is E-BLOCKED**, and for the same
+missing state as `reflect(−1)`: `world-five.js:182` is `release(){if(this.held)this.settling=1}`
+and the app's panes are TAPPED, not held. One Stage E item, two consequences —
+`Coverage/10-OWED.md` §4 row **E-V**.
+
+Note: the plan's *"world V needs a rename first — the app already uses `settling` for which
+face is toward you"* is correct and is why V's decay is named from `PointLeaving` rather than
+from a `@State` on the world.
 
 ---
 
@@ -161,7 +183,10 @@ been checked, and four already point past the end of their files.
 
 **H2 · Hand-judge the 465 REVIEW rows**, or explicitly rule the band as accepted backlog.
 
-**H3 · Re-walk the acceptance gate** — only 12 of 44 lines were ever walked or measured.
+**H3 · Re-walk the acceptance gate**, together with **every row of `Coverage/10-OWED.md`** —
+Ashrey walks only the final version, so the whole OWED band is one batch here and nowhere
+earlier. `10-OWED.md` §5 (B5/Karishma) needs a measured eleven-row table, not a look.
+Original text: — only 12 of 44 lines were ever walked or measured.
 
 **H4 · Deploy.** Merge to `main` (53 commits ahead), **add a tracked shared scheme** — there
 is no `.xcscheme` in git at all, which blocks any CI — confirm `Info.plist` for submission

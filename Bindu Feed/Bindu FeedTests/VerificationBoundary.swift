@@ -31,22 +31,21 @@ import Foundation
 // so in a comment and does not assert a weaker proxy in its place — a proxy that passes is
 // how an OWED claim becomes a MEASURED one without anyone deciding it should.
 //
-// Currently OWED across the sound layer:
-//   · every gesture in `PointLawWiringTests` — `part` reaching 1, `panX` spanning its
-//     spread, `settle` bottoming out at `H*0.7`
-//   · `darkReturns`' 7s ramp (B3) — engine state, no assertion, needs a walk
-//   · `RoomSaysTop` reporting y≈96 on device (B5) — a live SwiftUI preference
-//   · the whole layer's mix balance, and whether any of it is audible under the bed
+// **THE OWED LIST LIVES IN `Coverage/10-OWED.md`, NOT HERE.** It grows through every stage
+// and is read as ONE BATCH at the very end, so it cannot live in comments scattered across
+// the suite — that is precisely how the category went invisible for two weeks under
+// *"flagged, not fixed"* (`7-STATE-OF-THE-BUILD.md` §1).
 //
-// And STAGE-E-BLOCKED, which is neither: built, measured, and with nothing to drive it.
-// These are not C1 residue and must not be carried as C-open — the sound is finished and
-// the WORLD is what is missing:
-//   · `reflect(−1)` · world V's inverted tone. The panes turn 42° → 0°; the negative half
-//     needs past 90°. `PointLawWiringTests.theHollowIsUnreachable`.
-//   · `join`/`ensemble`/`leaveAll` · world VII's chain. `WorldDance` has `offeredOnce` and
-//     no bodies. `AUDIT D5.8`, BLOCKER, plan **E1**.
-//   · `send`/`arrive`/`arriveAll` · world VI's arc registry lives in a `DispatchQueue` chain
-//     inside the view, so leaving the register kills the flight. Plan **E2**.
+// **Ashrey walks only the final version.** Nothing is held for him mid-build and no pass
+// ends by asking him to look at something. A claim that needs a device is OWED, is written
+// into `Coverage/10-OWED.md` **in the same commit that produces it**, and stays open.
+// A pass that produces an OWED claim and does not record it there has not finished.
+//
+// STAGE-E-BLOCKED is neither MEASURED nor OWED: built, measured, and with nothing to drive
+// it. It is waiting on a BUILD, not on a walk, so it must never sit in the OWED band — a
+// final walk cannot close it. `Coverage/10-OWED.md` §4 carries the three, of which world V
+// is **one item with two consequences**: the same missing `held` state gates both
+// `reflect(−1)` past 90° and `release()` into `settling`.
 enum VerificationBoundary {
     /// Rendered and asserted against the design's own numbers.
     static let measured = "MEASURED"
@@ -54,6 +53,7 @@ enum VerificationBoundary {
     static let arithmetic = "ARITHMETIC"
     /// Needs a walk. Open, not done, however green the suite is.
     static let owed = "OWED"
-    /// Built and measured; the world cannot yet drive it. Stage E, not C.
+    /// Built and measured; the world cannot yet drive it. Stage E, not C — and never OWED,
+    /// because no walk can close it.
     static let blockedOnStageE = "E-BLOCKED"
 }

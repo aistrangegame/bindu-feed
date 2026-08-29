@@ -35,3 +35,16 @@ python3 Tools/check_citations.py --gaps
 ```
 
 Verdicts in files 1 and 2 were assigned by reading current code, not the audit's own line numbers — those have drifted heavily since the Universe and axis were rebuilt.
+
+---
+
+## 9 · `9-BOWL-CALL-SITE-MAP.md`
+The design's four strike voices against the app's one, all nineteen sites mapped and applied.
+Read before touching any strike voice.
+
+## 10 · `10-OWED.md` — **READ THIS BEFORE THE FINAL WALK**
+Every claim that cannot be asserted offline, with what the walk must show. **Ashrey walks
+only the final version**, so this accumulates through every stage and is read as one batch at
+the end. A pass that produces an OWED claim and does not record it there has not finished.
+§5 is B5/Karishma, which needs a measured eleven-row table rather than a look. §6 carries
+corrections to `8-ACTION-PLAN.md`'s own rows.

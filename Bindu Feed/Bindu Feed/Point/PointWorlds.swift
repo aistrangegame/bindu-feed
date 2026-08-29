@@ -591,9 +591,11 @@ private struct WorldMirrors: View {
     /// held: there is no `held`, so there is no release moment to raise the scalar from.
     /// `PointLeaving` carries V's rate and line and nothing here can call them.
     ///
-    /// One missing piece, two consequences — the same `held` state that would let a pane turn
-    /// past 90° is the one that would let it be let go. Both are Stage E on world V, not
-    /// Stage D or C residue.
+    /// **ONE STAGE E ITEM, NOT TWO.** The same missing `held` state gates both: a pane that
+    /// can be held is a pane that can be turned past 90° into `reflect(−1)`, and a pane that
+    /// can be held is a pane that can be LET GO into `settling`. Giving world V a held pane
+    /// closes the inverted tone and the closing word together. `Coverage/10-OWED.md` §4,
+    /// row **E-V** — and it is E-BLOCKED, never OWED: no walk can close it.
     ///
     /// V · `reflect(c)` — `world-five.js:124`, `facing(){return this.held?Math.cos(this.angleOf(this.held)):1;}`.
     /// **`facing()` IS `c`**, and the app has the angle: `mirrorStar` draws a pane at
