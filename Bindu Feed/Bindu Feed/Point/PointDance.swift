@@ -57,6 +57,95 @@ enum DanceLanes {
     }
 }
 
+/// D5.8 · **THE READING IS CAUGHT, NOT OPENED.** `The Instrument v3.html:2231-2262`.
+///
+/// The four sections do not arrive on a timer and they are not handed over on contact. They
+/// land as the PACE HOLDS — `sync` climbs while his reach stays inside the star's lane, the
+/// frame turns to match that lane, and each gate crossed hands over one section. Let the pace
+/// go before the fourth and everything **scatters**: `caught` returns to zero.
+///
+///     sync += (keep ? 0.42 : -0.85) * dt        // holding, and inside the lane
+///     sync -= 1.35 * dt                          // not holding at all
+///     if sync <= 0.001 && held && caught < 4 { scatter = 1; caught = 0 }
+///     gate = [0.34, 0.55, 0.74, 0.90][caught]
+///
+/// **THE THREE RATES ARE THE TEACHING, AND THEY ARE DELIBERATELY UNEQUAL.** Gaining is slow
+/// (0.42); drifting out of the lane while still holding loses twice as fast (0.85); letting go
+/// altogether loses fastest (1.35). Keeping pace is harder than losing it, which is what makes
+/// the fourth section mean anything.
+///
+/// **AND THE SCATTER IS NOT A PUNISHMENT.** `:2165` — *"let go early, the rest scatters — and
+/// it is not a punishment, it is the tenth ox-herding picture: the marketplace does not pause
+/// for you."* The figure keeps moving, the ones who danced stay lit; only what he had not yet
+/// finished catching is gone.
+struct DanceCatch {
+    /// How well the pace is kept, 0…1.
+    private(set) var sync: Double = 0
+    /// How many sections have landed, 0…4.
+    private(set) var caught: Int = 0
+    /// The frame's own rotation, matching the lane it is keeping pace with.
+    private(set) var spin: Double = 0
+    /// 1 at the moment of a scatter, decaying at 0.55/s. Nothing else reads `caught == 0`.
+    private(set) var scatter: Double = 0
+
+    /// **THE SCATTER RELEASES THE STAR.** `:2247` is `this.scatter=1; this.held=null;` — and
+    /// the release is not incidental. Without it the scatter condition (`sync <= 0.001 &&
+    /// held && caught < 4`) is true on the very next frame too, so `scatter` is re-set to 1
+    /// forever and never decays: the figure stays permanently mid-scatter and the caller can
+    /// never tell one scatter from a hundred.
+    ///
+    /// The first port dropped it, because `held` arrives here as a PARAMETER and a parameter
+    /// cannot be set to null. Caught by `scatterDecays`, which is exactly the assertion that
+    /// distinguishes a fading state from a latched one — the reason it was worth writing a
+    /// test for a decay that "obviously" decays.
+    ///
+    /// The caller reads this and drops the star.
+    private(set) var releasedByScatter = false
+
+    /// `:2253` — the four gates on `sync`, in the order they can be caught.
+    static let gates = [0.34, 0.55, 0.74, 0.90]
+
+    /// `:2236` — `keep = d < max(34, R*4.5)`. The reach has to stay in the star's own lane;
+    /// the floor of 34 keeps a small star catchable.
+    static func keeping(distance d: Double, starRadius R: Double) -> Bool {
+        d < max(34, R * 4.5)
+    }
+
+    /// One frame. `holding` is whether a hand is out at all; `keep` whether it is in the lane.
+    /// `laneSpeed` turns the frame with the lane. Returns the sections that landed this frame.
+    mutating func update(dt: Double, holding: Bool, held: Bool,
+                         keep: Bool, laneSpeed: Double) -> [Int] {
+        if holding && held {
+            sync += (keep ? 0.42 : -0.85) * dt
+        } else {
+            sync -= 1.35 * dt
+        }
+        sync = max(0, min(1, sync))
+        if held { spin += laneSpeed * sync * dt * (2 * Double.pi) / 6 * 0.80 }
+
+        // THE SCATTER. Only while something is still uncaught — losing the pace after the
+        // fourth has landed takes nothing away, because by then he has it.
+        if sync <= 0.001 && held && caught < 4 && !releasedByScatter {
+            scatter = 1
+            caught = 0
+            releasedByScatter = true          // `this.held = null` — the star is let go
+        }
+        if holding && held && sync > 0.001 { releasedByScatter = false }   // a fresh reach
+        if scatter > 0 { scatter = max(0, scatter - dt * 0.55) }
+
+        // `tick` — a section lands when the pace crosses the next gate. One per frame at
+        // most, so four cannot arrive in a single step no matter how large `dt` is: they
+        // land ONE AT A TIME, which is the thing being felt.
+        guard held, !releasedByScatter, caught < 4, sync >= Self.gates[caught] else { return [] }
+        caught += 1
+        return [caught - 1]
+    }
+
+    /// `:2204 reset()` — the spin is zeroed too, *"so a spin left behind would offset their
+    /// geometry"*.
+    mutating func reset() { sync = 0; caught = 0; spin = 0; scatter = 0; releasedByScatter = false }
+}
+
 enum PointDance {
 
     /// One body on the floor. Nine that dance, and `d-map`, which is `last` — *"it comes when
