@@ -692,8 +692,32 @@ struct UniverseView: View {
             ctx.fill(UniGeo.ringPath(c.x, c.y, rr),
                      with: .radialGradient(.init(colors: [color.opacity((0.07 + 0.03 * b) * (1 - lens * 0.5)), .clear]),
                                            center: c, startRadius: 0, endRadius: rr))
+            // B0.6 + B3.3 · **THE SKY IS LIT FROM ONE SOURCE, AND EACH ROOM CARRIES ITS OWN
+            // WEIGHT.** `The Instrument v3.html:1252-1258` draws each region at
+            // `p * (0.30 + den*0.52) * lit`, and the app passed a flat `armA` for all thirteen.
+            //
+            // The two rows are two TERMS OF ONE EXPRESSION, filed separately because they are
+            // observed separately: B0.6 is *"the particle is not the sky's light source"* and
+            // B3.3 is *"nebula brightness not derived from region contents"*. Neither can be
+            // fixed alone without writing the other's term as a constant.
+            //
+            //   lit = 0.44 + 0.56/(1 + dc*1.7)   `:1256` — dc is distance from the CENTRE,
+            //                                    normalised by the rim. `:1140-1146`: *"the
+            //                                    point was what had been holding the whole
+            //                                    sky together"* — the source IS the particle,
+            //                                    so the falloff is measured from where it is.
+            //   den = DENS[i]                    `uni-deep.js:60-66`, *"how much of him each
+            //                                    room holds — from the record, not from a
+            //                                    guess."* Already computed for the shader's
+            //                                    `uRm` and never read on this side.
+            //
+            // The floor matters: `0.30 + den*0.52` never reaches zero, so an empty room is
+            // dim and present rather than absent. A room he has not been to is still a room.
+            let dc = hypot(c.x - W * 0.5, c.y - H * 0.5) / max(1, min(W, H) * 0.5)
+            let den = ri * 3 + 2 < store.uniSky.count ? Double(store.uniSky[ri * 3 + 2]) : 0.6
+            let regionA = armA * UniWeather.weight(den: den) * UniWeather.lit(dc: dc)
             // the region's OWN form, drawn alive (uni-rooms.js arm) — the whole point of the pass
-            RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: armA,
+            RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: regionA,
                            c: UniGeo.mix(rm.rgb, UniGeo.BONE, lens * 0.5))
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
             let nameShow = max(0, min(1, (0.60 - zoom) / 0.24))          // uni-sky.js:320-330

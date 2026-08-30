@@ -568,6 +568,25 @@ enum UniWeather {
         return d.map { $0 / maxD }
     }
 
+    /// B0.6 · `lit = 0.44 + 0.56/(1 + dc*1.7)` — `The Instrument v3.html:1256`.
+    ///
+    /// **ONE SOURCE, AT THE CENTRE, AND IT IS THE PARTICLE.** `:1140-1146` — *"the point was
+    /// what had been holding the whole sky together"* — so the falloff is measured from where
+    /// the particle is, and the maximum is AT it rather than merely near it. `dc` is the
+    /// distance from that centre, normalised by the rim.
+    ///
+    /// The floor is the care: it bottoms at `0.44`, never zero. The far rooms are cooler, not
+    /// absent.
+    static func lit(dc: Double) -> Double { 0.44 + 0.56 / (1 + dc * 1.7) }
+
+    /// B3.3 · `0.30 + den*0.52` — the region's share of the pass alpha, `:1258`.
+    ///
+    /// `den` is `DENS`, *"how much of him each room holds — from the record, not from a
+    /// guess"*. **The floor matters as much as the slope:** an unvisited room draws at 0.30,
+    /// dim and present. A formula bottoming at zero would delete it from the sky, which is the
+    /// difference between *"nothing here yet"* and *"nothing here"*.
+    static func weight(den: Double) -> Double { 0.30 + den * 0.52 }
+
     /// `SKY` — 39 floats, `[x/EXT*0.88, y/EXT*0.88, dens]` per room (`uni-deep.js:68-74`).
     static func sky(density: [Double], ext: Double) -> [Float] {
         var out = [Float](); out.reserveCapacity(39)
