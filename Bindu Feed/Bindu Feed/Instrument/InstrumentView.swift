@@ -680,11 +680,11 @@ struct InstrumentView: View {
 
     private var particle: some View {
         let inward = max(0, min(1, z / 9))                    // 0 at feed, 1 at centre
-        let grow = max(0, min(1, (z - 8.4) / 1.1))            // begins to swell near the centre
         let fill = max(0, min(1, (z - 8.6) / 0.95))           // paints the whole frame red at the centre
         let cy = 0.5 - 0.368 * inward                         // H/2 → H*0.132
-        let base = 5.0 + 4.0 * breath.value                   // the only fixed thing — small, constant
-        let r = base * (1 + grow * grow * 9)                  // then it balloons
+        // C5.7 · `3.4 + br*0.9`, not `5.0 + 4.0*br`. The app's resting particle was twice the
+        // design's diameter and breathed 4.4× as hard — see `BinduParticleRadius`.
+        let r = BinduParticleRadius.radius(z: z, breath: breath.value)
         return GeometryReader { geo in
             ZStack {
                 if fill > 0.001 {                             // it becomes the world

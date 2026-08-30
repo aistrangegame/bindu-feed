@@ -161,3 +161,27 @@ enum InstrumentNames {
     /// `:5646` — `onGround(|Z| < 0.42)`. The app had `0.4`.
     static func onGround(z: Double) -> Bool { abs(z) < 0.42 }
 }
+
+/// C5.7 · the particle's screen radius — `The Instrument v3.html:1062-1066`.
+///
+///     base = 3.4 + br*0.9
+///     grow = max(0, (Z - 8.4)/1.1)
+///     r    = base * (1 + grow*grow*9)
+///
+/// **THE SMALLNESS IS THE ARGUMENT.** `:1056-1058` — *"Its screen radius is fixed across the
+/// whole axis — that is what makes it the only fixed thing — except at the centre, where it
+/// stops being a dot in a world and becomes the world."* The app had `5.0 + 4.0*br`: **twice
+/// the resting diameter and 4.4× the breath depth.** A particle that breathes visibly is not
+/// a fixed thing; it is another moving element in an instrument where everything else moves,
+/// and the one point that was supposed to hold still stops holding.
+///
+/// The `grow` term was already right. What was wrong is the base — the part that never
+/// changes and therefore never draws attention to itself unless it is too big.
+enum BinduParticleRadius {
+    static func base(breath: Double) -> Double { 3.4 + breath * 0.9 }
+    static func grow(z: Double) -> Double { max(0, (z - 8.4) / 1.1) }
+    static func radius(z: Double, breath: Double) -> Double {
+        let g = grow(z: z)
+        return base(breath: breath) * (1 + g * g * 9)
+    }
+}
