@@ -664,8 +664,20 @@ this row, the passage's `swift`/`hit` behaviour in situ, the stillness gate's ac
 membrane's give. `AxisPassage` and `DanceCatch` were extracted precisely because their
 mechanisms could be made time-independent; `AxisTravel`'s cannot, because it *is* the time.
 
-**An internal `advance(dt:)` that `step()` calls, with the display link only supplying `dt`,
-would convert a band of OWED rows to MEASURED in one change.** It is not done here — mid-row,
-inside the file at the top of the churn order, is the wrong moment for it — but it is the
-single highest-leverage refactor left in the verification story, and it should be taken
-deliberately rather than discovered again.
+**DONE 2026-08-29, and taken deliberately rather than mid-row.** `AxisTravel.advance(dt:)` is
+the whole step; the display link now supplies `dt` and nothing else. The clamp stays inside
+`advance`, so a test handing over a huge step is governed by the same rule a dropped frame is
+— otherwise the suite exercises physics the app can never reach and reports it as passing.
+
+**This row is therefore CLOSED rather than owed.** `AxisTravelClockTests.driftingPastDoesNotLand`
+drives the axis for three simulated seconds with no passage and asserts `onLand` never fires;
+restoring the defect (`onLand?(r)` inside `detectCross`) reds it. The same suite pins
+determinism — two identical runs must agree exactly, which is what proves no wall clock is
+still being read — and that non-positive steps do nothing.
+
+**The band this opens.** Every remaining axis claim is now assertable without a simulator, a
+frame, or a wall clock: the passage's `swift`/`hit` behaviour in situ, the stillness gate's
+accumulation, the membrane's give, the `mem` slip-through under real drift. Those were OWED
+*by construction* an hour ago. The order matters and it is the A3 order — **the harness before
+the work it proves** — so the ten remaining `InstrumentView` rows can be asserted as they
+close instead of being added to the walk and re-reached later.

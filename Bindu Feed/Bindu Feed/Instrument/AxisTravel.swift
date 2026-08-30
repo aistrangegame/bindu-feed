@@ -74,7 +74,7 @@ final class AxisTravel: ObservableObject {
     var openedSurfaces: [Bool] { mem }
 
     // THE STILLNESS GATE (surface 0, sky→Light) — one accumulator, not a countdown.
-    // `dwell` is 0…1; see the block in step() for the law and the numbers.
+    // `dwell` is 0…1; see the block in `advance(dt:)` for the law and the numbers.
     private var dwell = 0.0
     private let GATE = 0
 
@@ -143,7 +143,16 @@ final class AxisTravel: ObservableObject {
     func start() {
         guard link == nil else { return }
         lastTime = CACurrentMediaTime()
-        let p = Proxy { [weak self] in MainActor.assumeIsolated { self?.step() } }
+        // The link's ONLY job is to say how much time passed. Everything else is `advance`.
+        let p = Proxy { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                let now = CACurrentMediaTime()
+                let dt = now - self.lastTime
+                self.lastTime = now
+                self.advance(dt: dt)
+            }
+        }
         proxy = p
         let l = CADisplayLink(target: p, selector: #selector(Proxy.tick))
         l.add(to: .main, forMode: .common)
@@ -212,10 +221,24 @@ final class AxisTravel: ObservableObject {
 
     // MARK: - The frame
 
-    private func step() {
-        let now = CACurrentMediaTime()
-        var dt = now - lastTime
-        lastTime = now
+    /// THE DISPLAY LINK SUPPLIES `dt` AND NOTHING ELSE.
+    ///
+    /// `step()` used to read `CACurrentMediaTime()` itself, so **every claim about this file
+    /// was OWED by construction** — the landing-versus-drift-past distinction (C7.11), the
+    /// passage's `swift`/`hit` behaviour in situ, the stillness gate's accumulation, the
+    /// membrane's give. None of them can be lifted into a pure function the way `AxisPassage`
+    /// and `DanceCatch` were, **because in each case the mechanism IS the sequencing.**
+    ///
+    /// So the clock is injected instead of the mechanism extracted. A test drives
+    /// `advance(dt:)` directly and the whole axis becomes assertable without a simulator, a
+    /// frame, or a wall clock — the same bargain `OfflineRender` made for sound, where the
+    /// harness came before the work it proves (A3 before A1/A2).
+    ///
+    /// `dt` is still clamped here rather than at the caller: a test that hands over a huge
+    /// step must be governed by the same rule a dropped frame is, or it would be exercising
+    /// a machine the app never runs.
+    func advance(dt rawDt: CFTimeInterval) {
+        var dt = rawDt
         guard dt > 0 else { return }
         dt = Swift.min(dt, 1.0 / 30.0)
         let f = dt * 60.0
