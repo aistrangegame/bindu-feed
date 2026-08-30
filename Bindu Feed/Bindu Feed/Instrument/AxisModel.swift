@@ -185,3 +185,103 @@ enum BinduParticleRadius {
         return base(breath: breath) * (1 + g * g * 9)
     }
 }
+
+/// C3.5 + C3.6 · the membrane's body and the gate's rim — `The Instrument v3.html:3505-3535`.
+///
+/// **ONE `draw` SERVES BOTH, and the branch is the whole point.** `:3511-3512`: *"the gate
+/// does not tighten as he nears it — it THINS as he stops. Its radius opens with his stillness
+/// instead of closing with his force."* Two opposite gestures rendered by one ring, which is
+/// why they were filed as two audit rows (C3.5 MAJOR, C3.6 MINOR) and are one mechanism.
+///
+/// The app drew both as plain stroked ellipses: no wobble, no beads, no radial fill. A ring
+/// that does not wobble has no surface — it reads as a drawn circle rather than a membrane
+/// being leaned into, which is the entire sensation the register boundary exists to give.
+enum MembraneRing {
+    /// `:3516` — the radius. Membrane closes with tension; gate OPENS with stillness.
+    static func radius(R0: Double, tension: Double, gate: Bool, still: Double) -> Double {
+        gate ? R0 * (1.10 + still * 1.30) : R0 * (1.62 - 0.92 * tension)
+    }
+
+    /// `:3517` — wobble depth. The gate's wobble DIES as he stills (`0.030*(1−st)`); the
+    /// membrane's GROWS as he pushes (`0.014 + push*0.055`). Opposite again, and the reason
+    /// one constant could not serve both.
+    static func wobble(gate: Bool, still: Double, push: Double) -> Double {
+        gate ? 0.030 * (1 - still) : 0.014 + push * 0.055
+    }
+
+    /// `:3519-3521` — the ring's own outline, 132 segments.
+    /// `rr = r·(1 + wob·sin(7a + 1.9t)·sin(3a − 1.1t))` — two incommensurate frequencies, so
+    /// the surface never repeats within a turn.
+    static func segments(r: Double, wobble w: Double, t: Double, count: Int = 132) -> [Double] {
+        (0...count).map { k in
+            let a = Double(k) / Double(count) * 2 * Double.pi
+            return r * (1 + w * sin(a * 7 + t * 1.9) * sin(a * 3 - t * 1.1))
+        }
+    }
+
+    /// `:3524` — stroke alpha. The membrane carries a `push` term the app dropped entirely.
+    static func strokeAlpha(gate: Bool, tension: Double, still: Double, push: Double) -> Double {
+        gate ? 0.06 + still * 0.40 : 0.10 + tension * 0.44 + push * 0.30
+    }
+    /// `:3525` — `0.7 + push*1.5`. The app used `tension`, so leaning changed nothing.
+    static func lineWidth(push: Double) -> Double { 0.7 + push * 1.5 }
+
+    /// `:3530-3532` — nine beads riding the wobble at `t*0.5 + b/9·TAU`.
+    static func beadAngles(t: Double, count: Int = 9) -> [Double] {
+        (0..<count).map { t * 0.5 + Double($0) / Double(count) * 2 * Double.pi }
+    }
+    static func beadRadius(r: Double, wobble w: Double, angle: Double, t: Double) -> Double {
+        r * (1 + w * 0.6 * sin(angle * 7 + t * 1.9))
+    }
+    static func beadSize(push: Double) -> Double { 0.9 + push * 1.9 }
+    static func beadAlpha(gate: Bool, still: Double, push: Double) -> Double {
+        gate ? 0.10 + still * 0.55 : 0.15 + push * 0.6
+    }
+
+    /// The whole ring, in one place, so the membrane and the gate cannot drift apart.
+    @MainActor
+    static func draw(_ ctx: GraphicsContext, cx: Double, cy: Double, R0: Double, t: Double,
+                     color: Color, tension: Double, push: Double, gate: Bool, still: Double) {
+        let r = radius(R0: R0, tension: tension, gate: gate, still: still)
+        let w = wobble(gate: gate, still: still, push: push)
+        let rs = segments(r: r, wobble: w, t: t)
+
+        var ring = Path()
+        for (k, rr) in rs.enumerated() {
+            let a = Double(k) / Double(rs.count - 1) * 2 * Double.pi
+            let p = CGPoint(x: cx + cos(a) * rr, y: cy + sin(a) * rr)
+            k == 0 ? ring.move(to: p) : ring.addLine(to: p)
+        }
+        ring.closeSubpath()
+        ctx.stroke(ring,
+                   with: .color(color.opacity(strokeAlpha(gate: gate, tension: tension,
+                                                          still: still, push: push))),
+                   lineWidth: lineWidth(push: push))
+
+        // `:3527-3529` — zero at the centre, so it is a RIM GLOW and the inside stays empty.
+        ctx.fill(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
+                 with: .radialGradient(
+                    Gradient(stops: [
+                        .init(color: color.opacity(0), location: 0.35),
+                        .init(color: color.opacity(tension * 0.05), location: 0.86),
+                        .init(color: color.opacity(fillOuterAlpha(gate: gate, tension: tension,
+                                                                  still: still)), location: 1)]),
+                    center: CGPoint(x: cx, y: cy), startRadius: r * 0.35, endRadius: r))
+
+        // `:3530-3532` — nine beads riding the same wobble, one turn every 4π seconds.
+        let bs = beadSize(push: push)
+        let ba = beadAlpha(gate: gate, still: still, push: push)
+        for angle in beadAngles(t: t) {
+            let rb = beadRadius(r: r, wobble: w, angle: angle, t: t)
+            let x = cx + cos(angle) * rb, y = cy + sin(angle) * rb
+            ctx.fill(Path(ellipseIn: CGRect(x: x - bs, y: y - bs, width: bs * 2, height: bs * 2)),
+                     with: .color(color.opacity(ba)))
+        }
+    }
+
+    /// `:3527-3529` — the fill's outer stop. Zero at the centre, so it is a rim glow rather
+    /// than a disc: the ring has an inside that stays empty.
+    static func fillOuterAlpha(gate: Bool, tension: Double, still: Double) -> Double {
+        gate ? still * 0.13 : tension * 0.16
+    }
+}

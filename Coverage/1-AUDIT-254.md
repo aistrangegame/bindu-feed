@@ -189,8 +189,8 @@ Open findings by severity:
 | C3.2 | none | none | stillness-gate accumulator: MATCH on numbers | NEEDS-JUDGMENT | Mechanism REPLACED by the `DP.dwell` law; divergence argued at `:216-235` but never entered in §10. Needs a ruling. |
 | C3.3 | MAJOR | DATA | the gate's line is not "once, ever", wrong medium | OPEN | `InstrumentView.swift:589-593` shown every time; `gateSaid` → 0 hits. |
 | C3.4 | MAJOR | DATA | the other once-ever line is missing entirely | OPEN | Only a comment at `LightCanon.swift:26`; no `sayOnce` trigger. |
-| C3.5 | MAJOR | VISUAL | membrane's body not drawn | OPEN | `InstrumentView.swift:567-571` one stroke ellipse. No wobble, beads, radial fill or push term. |
-| C3.6 | MINOR | VISUAL | gate thins, does not tighten | OPEN | `InstrumentView.swift:583-587` rim correct but plain stroke; no wobble/beads/gradient. |
+| C3.5 | MAJOR | VISUAL | membrane's body not drawn | **CLOSED 2026-08-29** | `MembraneRing.draw` — the 132-segment wobbling ring, the radial rim glow (empty at the centre), the nine beads riding the same wobble, and the `push` terms the app had substituted `tension` for. Original:  `InstrumentView.swift:567-571` one stroke ellipse. No wobble, beads, radial fill or push term. |
+| C3.6 | MINOR | VISUAL | gate thins, does not tighten | **CLOSED 2026-08-29** | The same ring, the opposite gesture — `:3511-3512`, *"the gate does not tighten as he nears it, it THINS as he stops."* Its wobble dies into stillness where the membrane's grows with the push. **Closed with C3.5: one `draw`, one branch.** Original:  `InstrumentView.swift:583-587` rim correct but plain stroke; no wobble/beads/gradient. |
 | C3.7 | MAJOR | VISUAL | the drift (speed on the axis) missing | OPEN | grep `streak` → 0; `travel.speed` used once (`:259`). No streaks, no vignette. |
 | C3.8 | MINOR | VISUAL | travel blur on the field missing | OPEN | `InstrumentView.swift:520-557` no `.blur`; speed never read there. |
 | C4.1 | none | none | shader shell loop identical | CLOSED | `InstrumentField.metal:195-203` all terms match. |

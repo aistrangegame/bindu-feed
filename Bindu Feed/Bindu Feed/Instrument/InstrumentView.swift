@@ -640,16 +640,24 @@ struct InstrumentView: View {
     // MARK: - Shells (the interaction meniscus only — the shader owns the atmosphere)
 
     private var shells: some View {
+        // C3.5 · the wobble is a function of TIME, so this canvas needs a clock it did not
+        // have. A still ring is the defect being fixed, not a cheaper version of the fix.
+        TimelineView(.animation) { tl in
+        let t = tl.date.timeIntervalSinceReferenceDate
         Canvas { ctx, size in
             let R0 = min(size.width, size.height) * 0.5
             let cx = size.width / 2, cy = size.height / 2
             // The near membrane, felt as a meniscus that tightens as he leans into it.
             let ten = travel.tension
             if ten > 0.02 {
-                let rim = R0 * (1.62 - 0.92 * ten)
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - rim, y: cy - rim, width: rim * 2, height: rim * 2)),
-                           with: .color(here.color.opacity(0.10 + 0.34 * ten)), lineWidth: 0.7 + 1.5 * ten)
+                // C3.5 · the membrane's BODY — `The Instrument v3.html:3519-3532`. It was a
+                // plain stroked ellipse: no wobble, no beads, no fill. A ring that does not
+                // wobble has no surface; it reads as a drawn circle rather than something
+                // being leaned into, which is the whole sensation a register boundary gives.
+                MembraneRing.draw(ctx, cx: cx, cy: cy, R0: R0, t: t, color: here.color,
+                                  tension: ten, push: travel.push, gate: false, still: 0)
             }
+        }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
@@ -663,10 +671,19 @@ struct InstrumentView: View {
             let still = travel.thin
             let rim = R0 * (1.10 + still * 1.30)
             ZStack {
-                Circle()
-                    .stroke(Color(hex: "#EDE3CE").opacity(0.12 + 0.55 * still), lineWidth: 0.8 + still)
-                    .frame(width: rim * 2, height: rim * 2)
-                    .position(x: geo.size.width / 2, y: geo.size.height / 2)
+                // C3.6 · the same ring, the opposite gesture. `:3511-3512` — *"the gate does
+                // not tighten as he nears it — it THINS as he stops."* Its wobble DIES into
+                // stillness (`0.030*(1−st)`) where the membrane's grows with the push.
+                TimelineView(.animation) { tl in
+                    let t = tl.date.timeIntervalSinceReferenceDate
+                    Canvas { ctx, size in
+                        MembraneRing.draw(ctx, cx: size.width / 2, cy: size.height / 2,
+                                          R0: min(size.width, size.height) * 0.5, t: t,
+                                          color: Color(hex: "#EDE3CE"),
+                                          tension: 1, push: 0, gate: true, still: still)
+                    }
+                    .allowsHitTesting(false)
+                }
                 Text("it holds until you stop meaning it")
                     .font(.loraItalic(12)).foregroundStyle(Color(hex: "#EDE3CE").opacity(0.25 + 0.5 * still))
                     .position(x: geo.size.width / 2, y: geo.size.height * 0.30)

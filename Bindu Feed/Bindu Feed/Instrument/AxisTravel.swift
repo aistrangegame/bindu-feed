@@ -67,7 +67,13 @@ final class AxisTravel: ObservableObject {
     private var glideSwift = false
     private var gateHit = [false, false]
     private var lastPassageT = 0.0
-    private var push = 0.0, curS = -1, dir = 1.0, gave = -1
+    /// C3.5 · **PUBLISHED, because the membrane's BODY is drawn from it.** `TR.draw` uses
+    /// `push` for the wobble depth (`0.014 + push*0.055`), the stroke's third term, the line
+    /// width (`0.7 + push*1.5`), the beads' size and the push-glow. The app drew a plain
+    /// ellipse and substituted `tension` where the design uses `push`, so the membrane had no
+    /// way to look *leaned into* as opposed to merely near.
+    @Published private(set) var push = 0.0
+    private var curS = -1, dir = 1.0, gave = -1
 
     /// The fourteen surfaces' opened state (surface s sits between register s and s+1), read by
     /// the ladder rail. Mutated on the display-link tick; the rail reads it from a per-frame body.
