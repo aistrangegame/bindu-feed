@@ -153,6 +153,14 @@ def main():
                     src = raw.splitlines()
                     lo, hi = max(0, ln - 1 - WINDOW), min(len(src), ln + WINDOW)
                     hay = norm(" ".join(src[lo:hi])).lower()
+                    # **A KNOWN AND DELIBERATE LIMIT, STATED BECAUSE IT IS A SEARCH ON A
+                    # SHORTENED COPY.** Only a quote's first 60 characters are matched, so a
+                    # citation whose opening 60 chars are right and which then DRIFTS is
+                    # verified. That is not the display truncation `check_audit_ids` had — it
+                    # is a chosen tolerance, because a long quote wraps in the source and
+                    # `norm` cannot always rejoin it the same way. The trade is real: short
+                    # quotes are checked whole, long ones are checked by their opening.
+                    # **Quote short and exactly, and the check is total.**
                     if any(norm(q).lower()[:60] in hay for q in qs): ok = True; break
                 if not ok:
                     print(f"  DRIFTED     {doc.name}:{i}  {name}:{ln}")
