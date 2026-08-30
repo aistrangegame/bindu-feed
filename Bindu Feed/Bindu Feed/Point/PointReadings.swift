@@ -908,8 +908,17 @@ private struct ReadTurning: View {
         // `world-five.js:439` — `st=|cos(angleOf(held))|`, and below 0.12 the pane is
         // edge-on and there is nothing to read off it. `turn` counts half-turns, so the
         // pane's angle is `turn * pi`.
-        if abs(cos(turn * .pi)) < 0.12 { return "edge-on · nothing" }
-        return settling ? "the other face" : "facing you"
+        let c = cos(turn * .pi)
+        if abs(c) < 0.12 { return "edge-on · nothing" }
+        // **THE WORD IS CHOSEN BY WHICH FACE IS TOWARD HIM, NOT BY WHETHER IT IS SETTLING.**
+        // `world-five.js:441` — `cos(angleOf(held)) > 0 ? 'facing you' : 'the other face'`.
+        // This read `settling ? "the other face" : "facing you"`, which is a different fact
+        // altogether: a pane coming to rest while its NEAR side is toward him was called *the
+        // other face*, and one still turning with its FAR side toward him was called *facing
+        // you*. Right words, wrong quantity — the ninth shape at the scale of a single
+        // ternary, and the cosine it needed was already being computed on the line above for
+        // the edge-on test.
+        return c > 0 ? "facing you" : "the other face"
     }
 
     var body: some View {

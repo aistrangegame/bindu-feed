@@ -459,6 +459,33 @@ enum PointVeil {
 
     static func hold(x: Double, y: Double, open: Double) { hand = (x, y, open) }
 
+    /// D5.4 · **THE HAND CHOOSES, NOT A TAP.** `world-three.js:76-95` — `place(qx,qy)` and
+    /// `move(qx,qy)` both do one thing: set the hand, then take the nearest star **within
+    /// `0.19`**, and reset that star's progress if it is a different one.
+    ///
+    /// *"His hand opens the veil only while it is there. Distance decides nothing; presence
+    /// does."* (`:73-75`) The app opened a star with `.onTapGesture` on its mark — **choosing
+    /// by hitting a target, which is the one thing this world says decides nothing.** A tap
+    /// has no duration and no position-over-time; parting and choosing are one act here, and
+    /// the design does them in one call because they are one act.
+    ///
+    /// **The radius is a REACH, not a hit test.** `0.19` of the register is generous — being
+    /// near something is the whole mechanism, so a hand that is merely close has chosen.
+    static let reach = 0.19
+
+    /// The star the hand is over, or `nil` when it is over nothing. Positions are the same
+    /// normalised `0…1` the world draws with.
+    static func chosen(handX: Double, handY: Double,
+                       stars: [(id: String, x: Double, y: Double)]) -> String? {
+        var best: String? = nil, bd = Double.infinity
+        for s in stars {
+            let dx = s.x - handX, dy = s.y - handY
+            let d = (dx * dx + dy * dy).squareRoot()
+            if d < reach && d < bd { bd = d; best = s.id }
+        }
+        return best
+    }
+
     /// `:2967`'s `else` branch is `[0,0,0]` — a released veil hands the shader nothing, and
     /// the parting closes. Called by every exit, not only the polite one (§10).
     static func release() { hand = nil }
@@ -492,6 +519,17 @@ private struct WorldVeil: View {
     /// at 0.8. *"IT CLOSED BEHIND YOU. IT ALWAYS DOES."*
     @State private var closing = PointLeaving.decay(dimension: 3)!
 
+        /// D5.4 · the star the hand is over, watched through the parting rather than tapped.
+    @State private var reaching: String? = nil
+
+    /// Each star's normalised spot — the SAME expression the marks are positioned with, so
+    /// the hand and the drawing agree about where a star is.
+    private var veilSpots: [(id: String, x: Double, y: Double)] {
+        stars.map { (id: $0.id,
+                     x: 0.16 + PointWorlds.hash($0.id) * 0.68,
+                     y: 0.16 + PointWorlds.hash($0.id + "y") * 0.68) }
+    }
+
     var body: some View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
@@ -516,8 +554,7 @@ private struct WorldVeil: View {
                             .blur(radius: (1 - Double(part)) * 7)          // behind the gauze, out of focus; sharpens as it parts
                             .position(x: geo.size.width * (0.16 + seed * 0.68),
                                       y: geo.size.height * (0.16 + PointWorlds.hash(p.id + "y") * 0.68))
-                            .allowsHitTesting(part > 0.4)
-                            .onTapGesture { onOpen(p.star) }
+                            .allowsHitTesting(false)   // D5.4 · the HAND chooses; see below
                     }
                     // `world-three.js:235` — TWO-STATE on `this.back.length`, the zones already
                     // parted: the world stops asking for the first parting once one has been
@@ -553,6 +590,16 @@ private struct WorldVeil: View {
                     // parted, never closes all the way again*, and the end-reading turned it
                     // into *parted AND STILL PARTED when you let go*.
                     if part > 0.5 { partedOnce = true }
+                    // D5.4 · **THE PARTING CHOOSES.** `world-three.js:76-95` — `place`/`move`
+                    // set the hand and take the nearest star within `0.19` in the same call,
+                    // because parting and choosing are one act. Watched on every change, not
+                    // sampled at the end, for the same reason `partedOnce` is: the hand moves
+                    // over one star and on to another, and a single end reading would give
+                    // whichever it happened to stop near.
+                    let hx = Double(v.location.x / max(1, geo.size.width))
+                    let hy = Double(v.location.y / max(1, geo.size.height))
+                    let under = PointVeil.chosen(handX: hx, handY: hy, stars: veilSpots)
+                    if under != reaching { reaching = under }
                     // C4.5 · hand the parting to the shader. Normalised across the register so
                     // the field reads a position, not a pixel.
                     PointVeil.hold(x: Double(v.location.x / max(1, geo.size.width)) * 2 - 1,
@@ -560,6 +607,13 @@ private struct WorldVeil: View {
                                    open: Double(part))
                     closing.hold()                       // a veil being held is not closing
                 }.onEnded { _ in
+                    // D5.4 · the reading is his where his hand WAS, and only if the veil was
+                    // actually open — a brush across a closed veil parts nothing and chooses
+                    // nothing. `hold(dt)` gives while he holds; this hands over the star the
+                    // holding was about.
+                    if part > 0.4, let id = reaching,
+                       let sp = stars.first(where: { $0.id == id }) { onOpen(sp.star) }
+                    reaching = nil
                     PointVeil.release()
                     let held = part > 0.02
                     withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 }
