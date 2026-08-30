@@ -72,6 +72,11 @@ final class AxisTravel: ObservableObject {
     /// width (`0.7 + push*1.5`), the beads' size and the push-glow. The app drew a plain
     /// ellipse and substituted `tension` where the design uses `push`, so the membrane had no
     /// way to look *leaned into* as opposed to merely near.
+    /// C3.4 · `TR.crossed` — how many membranes he has been given through. The resting line
+    /// fires only `if(TR.crossed === 0)` (`:5475`): it is what the axis says to someone who
+    /// has **not yet crossed anything**, so counting is the whole guard. Nothing counted them.
+    @Published private(set) var crossed = 0
+
     @Published private(set) var push = 0.0
     private var curS = -1, dir = 1.0, gave = -1
 
@@ -313,6 +318,7 @@ final class AxisTravel: ObservableObject {
         speed = abs(zv)
 
         if gave >= 0 {
+            crossed += 1                       // `:191` — `TR.mem[s]=true; TR.crossed++`
             beginPassage(surface: gave, dir: dir, swift: false); gave = -1; zv = 0
         } else {
             // `swift` — `The Chrome.html:250-256`. **A SURFACE ALREADY OPENED IS A

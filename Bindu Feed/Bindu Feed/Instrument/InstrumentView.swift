@@ -288,6 +288,26 @@ struct InstrumentView: View {
             // E4.2 — continuous, following the accumulator rather than firing once at 0.1.
             // `travel.down` is the hand arriving: the drone goes in ~0.2s, not on a decay.
             soundEngine.setStillness(fill: thin, touching: travel.down)
+            // C3.3 · `:5484` fires `sayGate()` at `gateAcc > 700` — 700ms into a 4600ms gate,
+            // **15.2% of the way**, early rather than on arrival. The app's gate is the
+            // velocity-based `dwell` rather than a flat countdown, so the proportion is what
+            // ports, not the millisecond: the line comes when he has only just begun to be
+            // still, which is the point of saying it at all.
+            if travel.dwell > 0.152, TravOnce.sayGate() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + TravOnce.holdSeconds) {
+                    withAnimation(.easeInOut(duration: 2.4)) { TravOnce.endHold() }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + TravOnce.revertSeconds) {
+                        TravOnce.revert()
+                    }
+                }
+            }
+            // C3.4 · `:5475` — the resting line, on the first hard lean before anything has
+            // been crossed. `sayOnce` carries its own guards; this only supplies the state.
+            if TravOnce.sayOnce(crossed: travel.crossed, tension: travel.tension) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + TravOnce.holdSeconds) {
+                    withAnimation(.easeInOut(duration: 2.4)) { TravOnce.endHold() }
+                }
+            }
         }
         .onAppear {
             // The camera must be set BEFORE the first frame, not only when z next changes.
@@ -684,10 +704,18 @@ struct InstrumentView: View {
                     }
                     .allowsHitTesting(false)
                 }
-                Text("it holds until you stop meaning it")
-                    .font(.loraItalic(12)).foregroundStyle(Color(hex: "#EDE3CE").opacity(0.25 + 0.5 * still))
-                    .position(x: geo.size.width / 2, y: geo.size.height * 0.30)
-                    .opacity(still > 0.12 ? 1 : 0)
+                // C3.3 · **ONCE, EVER — and in the design's own medium.** This was shown on
+                // every visit, lowercase, at 12pt: a caption that reappears is a caption, and
+                // the design's is *"the one thing the surface is ever allowed to say, once,
+                // ever"*. Lora italic 13.5, `rgba(237,232,227,.46)`, 2.4s in and out.
+                if let line = TravOnce.showing {
+                    Text(line)
+                        .font(.loraItalic(13.5))
+                        .foregroundStyle(Color(.sRGB, red: 237/255, green: 232/255,
+                                               blue: 227/255, opacity: 0.46))
+                        .position(x: geo.size.width / 2, y: 178)
+                        .transition(.opacity)
+                }
             }
         }
         .allowsHitTesting(false)
