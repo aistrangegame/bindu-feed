@@ -205,7 +205,7 @@ Open findings by severity:
 | C5.3 | MAJOR | DATA | "THE UNIVERSE" is invented | CLOSED | Only comment hits; name comes from `AxisModel.swift:81-84`. |
 | C5.4 | MAJOR | VISUAL | `#trav` — "the between, named" — missing | OPEN | grep `paintTravel`/`#trav`/`fromName` → 0 hits. |
 | C5.5 | MAJOR | DATA | invented bottom instruction line | CLOSED | Both invented strings → 0 hits; slot is now the stillnessGate. |
-| C5.6 | MAJOR | DATA | `#pname` hide conditions | OPEN | `InstrumentView.swift:501-502` `inUniverse` still suppresses the four Universe names; opacity 1.0 not `0.9*(1-hush)*(1-immA)`. |
+| C5.6 | MAJOR | DATA | `#pname` hide conditions | **CLOSED 2026-08-29** | `inUniverse` removed from the hide condition — it fenced off the band where **four of the nine canon names live**, so they were built, correct, and reachable by no state. Ground band corrected `0.4 → 0.42`, opacity `1.0 → 0.9` (the design's base; the app has no `hush`/`immA`). `crossing` and `pointHolds` kept and RECORDED as app-own. Names extracted to `InstrumentNames` so the domain can be walked — `allNineAreReachable` steps z across the axis. Original:  `InstrumentView.swift:501-502` `inUniverse` still suppresses the four Universe names; opacity 1.0 not `0.9*(1-hush)*(1-immA)`. |
 | C5.7 | MAJOR | VISUAL | particle radius wrong at the base | OPEN | `InstrumentView.swift:605` `5.0 + 4.0*breath` vs design `3.4 + br*0.9`. |
 | C5.8 | MAJOR | VISUAL | particle travels to the crown with Z | OPEN | `:601,604` keyed on depth, not an immersion value. |
 | C5.9 | MAJOR | VISUAL | halo and white-hot core missing | OPEN | `:612-619` one gradient + shadow. No `max(r*8,26)` halo, no four stops, no solid core disc. |

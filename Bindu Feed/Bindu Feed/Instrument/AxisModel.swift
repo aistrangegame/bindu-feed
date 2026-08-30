@@ -134,3 +134,30 @@ enum InstrumentField {
     /// it: the design does not put the maximum on the register, it puts it beyond.
     static func reveal(z: Double) -> Double { max(0, (z - 8.6) / 0.9) }
 }
+
+/// C5.6 · the particle's own name at a point on the axis, and the ground band.
+///
+/// Lifted out of `InstrumentView` so the DOMAIN can be walked. `check_authored` proves the
+/// nine literals exist; nothing could ask **which z reaches one** — and four of them were
+/// reachable by no state at all, fenced behind a Universe-wide guard. A string that exists
+/// and cannot be reached passes every checker in this build.
+enum InstrumentNames {
+    /// `The Instrument v3.html:1070-1080` — nine names, thresholds
+    /// `−4.4, −3.4, −2.4, −1.4, −0.4, 0.6, 1.6, 8.6`.
+    static func particle(_ z: Double) -> String {
+        switch z {
+        case ..<(-4.4): return "a light that has not yet risen"
+        case ..<(-3.4): return "a dot in the sky"
+        case ..<(-2.4): return "a light in the room"
+        case ..<(-1.4): return "the story, close"
+        case ..<(-0.4): return "the seed of the well"
+        case ..<0.6:    return "the dot in the post"
+        case ..<1.6:    return "the dot at the gate"
+        case ..<8.6:    return "the point at the centre of the enclosure"
+        default:        return "the point"
+        }
+    }
+
+    /// `:5646` — `onGround(|Z| < 0.42)`. The app had `0.4`.
+    static func onGround(z: Double) -> Bool { abs(z) < 0.42 }
+}

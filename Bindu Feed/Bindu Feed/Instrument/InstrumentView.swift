@@ -456,7 +456,10 @@ struct InstrumentView: View {
         // was IMPLEMENTED, not that it was POSITIONED, and there is nothing beside it for the
         // error to show against. See the frame-mismatch note in `RoomView`.
         .ignoresSafeArea()
-        .opacity(hidden ? 0 : 1)
+        // `:5646` shows it at `0.9*(1−hush)*(1−immA)`. The app has neither `hush` nor
+        // `immA`, so the base 0.9 is what survives the port — 1.0 was the app's, not the
+        // design's.
+        .opacity(hidden ? 0 : 0.9)
         .animation(.easeInOut(duration: 1.1), value: here.key)
         .animation(.easeInOut(duration: 1.1), value: hidden)
         .allowsHitTesting(false)
@@ -515,19 +518,8 @@ struct InstrumentView: View {
 
     // The particle's self-name at the current scale (v3 Spine.bindu.name — 9 strings by Z, not
     // one per register: the whole interior reads "the point at the centre of the enclosure").
-    private func particleName(_ z: Double) -> String {
-        switch z {
-        case ..<(-4.4): return "a light that has not yet risen"
-        case ..<(-3.4): return "a dot in the sky"
-        case ..<(-2.4): return "a light in the room"
-        case ..<(-1.4): return "the story, close"
-        case ..<(-0.4): return "the seed of the well"
-        case ..<0.6:    return "the dot in the post"
-        case ..<1.6:    return "the dot at the gate"
-        case ..<8.6:    return "the point at the centre of the enclosure"
-        default:        return "the point"
-        }
-    }
+    /// C5.6 · the nine names live in `InstrumentNames` so the domain can be walked.
+    private func particleName(_ z: Double) -> String { InstrumentNames.particle(z) }
 
     // #pname — the name floats just under the particle in red mono; hidden on the Feed ground
     // and once the particle begins to become the centre (Z > 7.9).
@@ -545,8 +537,29 @@ struct InstrumentView: View {
     // damage. The figure recedes because it is behind the words; a caption ON the words has
     // no receded state that is honest.
     private var particleNameLabel: some View {
-        let hidden = travel.crossing || z > 7.9 || inUniverse || pointHolds
-            || (here.key == "feed" && abs(z) < 0.4)
+        // C5.6 · **`inUniverse` MADE FOUR AUTHORED NAMES UNREACHABLE.**
+        //
+        // `The Instrument v3.html:5646` hides `#pname` iff `onGround(|Z| < 0.42) || Z > 7.9`.
+        // The app added `inUniverse`, which is the whole `sky · region · world · fall` band —
+        // and **four of the particle's nine canon names live there**: *a dot in the sky*, *a
+        // light in the room*, *the story, close*, *the seed of the well* (`:1070-1080`, and
+        // `particleName` below carries all nine verbatim). They could never appear. Four
+        // authored strings, present in the app, addressable by no reachable state.
+        //
+        // This is Rule 4's backwards half (§10) in its quietest form: not a string deleted and
+        // not one invented, but one **built and then fenced off** — and no string checker can
+        // see it, because `check_authored` proves the literal is THERE. Only asking *which z
+        // reaches it* finds this, and nothing asks that mechanically.
+        //
+        // `crossing` and `pointHolds` are the app's own and stay, RECORDED rather than
+        // silently kept: inside a passage the camera owns the vertical and a caption tracking
+        // a name the hand cannot change is noise; when the Point holds, the register owns the
+        // vertical for the same reason. Neither is in the design because the design has
+        // neither state.
+        //
+        // `0.42`, not `0.4` — the design's own number.
+        let hidden = travel.crossing || z > 7.9 || pointHolds
+            || (here.key == "feed" && InstrumentNames.onGround(z: z))
         return GeometryReader { geo in
             Text(particleName(z).uppercased())
                 .font(.spaceMono(7.5)).tracking(1.5)
