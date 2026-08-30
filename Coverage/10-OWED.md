@@ -642,8 +642,20 @@ passes. Nothing can be lifted out, because the distinction *is* the sequencing.
 
 **THE WALK CONDITION.** Drift slowly past a register boundary without a passage: the register
 name changes, a trail sounds, and **no bell is struck**. Then cross with a real passage and
-hear the arrival tone land at the end of it. The failure it replaces was a bell on every
-drift-past — *"exactly the struck at the crossings behaviour `Claude Design Round 2/design-source/spine-sound.js:12-13` says was replaced."*
+hear the arrival tone land at the end of it. The failure it replaces was a bell on every drift-past.
+
+> **A NOTE ON THE PHRASE THIS ROW WAS FIRST WRITTEN WITH.** `AUDIT C7.11` describes a bell on
+> every drift-past as the struck-at-the-crossings behaviour the design replaced, and attributes
+> that to two lines of the Point's sound body. **The wording is the AUDITOR'S, not the
+> design's.** What those lines actually say is
+> *"the moment a surface owns its own silence, the instrument becomes a set of places again"*
+> — `Claude Design Round 2/design-source/spine-sound.js:11`. The reading is fair; the quotation
+> marks were not. **Quoting an audit's characterisation as though it were the design is the
+> bare-filename fault in another form:** it survives every reader who does not open the file.
+>
+> Caught by `check_citations`, which went RED on the commit that introduced it — **and I
+> committed anyway.** That breaches the standing rule that all five are green before anything
+> is called done, and it is recorded here rather than quietly amended away.
 
 ### AND THE REFACTOR THIS ROW ARGUES FOR
 
