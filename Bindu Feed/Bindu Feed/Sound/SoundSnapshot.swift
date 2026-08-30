@@ -148,7 +148,7 @@ final class RouteStateHolder: @unchecked Sendable {
 
 // MARK: - A1 · the three nodes every register voice is built with
 //
-// `spine-sound.js:63-101` `_voice(f, beat)` builds each voice with a peaking filter
+// `Claude Design Round 2/design-source/spine-sound.js:63-101` `_voice(f, beat)` builds each voice with a peaking filter
 // (`pk`), a null gain (`nul`) and an echo send (`ech`). `BreathVoice` had the L/R pair,
 // the LFO, the octave and the lowpass — and none of these three, so FOUR of the Point's
 // seven register laws had nothing to move and could not be written at all:

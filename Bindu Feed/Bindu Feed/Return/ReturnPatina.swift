@@ -82,13 +82,13 @@ struct ReturnRingRow: Identifiable, Equatable {
     let when: String
     /// The first words of what he wrote, or the em-dashed absence.
     let frag: String
-    /// How many voices answered this ring. `The Return.html:242` — *"N voices answered"* or
+    /// How many voices answered this ring. `Claude Design Round 2/comps/The Return.html:242` — *"N voices answered"* or
     /// *"no answer"*.
     let answers: Int
 
     /// E3.2 · **THE ROW IS BUILT FROM WHAT HE ACTUALLY LEFT THERE.**
     ///
-    /// `The Return.html:123 renderRings` lists each prior return with the words it was sealed
+    /// `Claude Design Round 2/comps/The Return.html:123 renderRings` lists each prior return with the words it was sealed
     /// with. The app drew concentric circles from a COUNT and said nothing — *"a ring you can
     /// see and cannot read is a record of having spoken with the speech taken out"*, which is
     /// the one thing this surface exists to do.
@@ -136,7 +136,7 @@ struct ReturnRingRow: Identifiable, Equatable {
     /// louder and greyer at once, which is what a kept thing looks like.
     static func saturation(rel: Double) -> Double { 1 - 0.35 * (1 - rel) }
 
-    /// `The Return.html:242` — the answer count, in the design's own grammar.
+    /// `Claude Design Round 2/comps/The Return.html:242` — the answer count, in the design's own grammar.
     var answerLine: String {
         answers == 0 ? "no answer"
                      : String(answers) + " voice" + (answers > 1 ? "s" : "") + " answered"

@@ -21,7 +21,7 @@ import os
 /// The struck bowl is the most-heard sound in the app: `SoundEngine.riteThreshold` and
 /// `riteBowl` are called from 19 sites across Door, Rite, Rooms, Universe, Return, Light,
 /// Point and Instrument. It shipped at `peak 0.30`/`0.32` against a stated master ceiling
-/// of `0.075` (`README.md:192`, *"no event exceeds 0.075"*), with partials
+/// of `0.075` (`Claude Design Round 2/README.md:192`, *"no event exceeds 0.075"*), with partials
 /// `[1, 2.756, 5.404]` where the design has four, and with no bed-duck at all.
 ///
 /// Named constants rather than literals at the call sites so `SoundLayerTests` can render
@@ -67,7 +67,7 @@ enum CeremonyEnvelope {
     /// constant is `ln(peak/0.0001)/release`, so the tone reaches inaudibility exactly when
     /// the design says it does instead of at a constant borrowed from another voice.
     case linearExp
-    /// **It swells IN, backwards.** `spine-sound.js:214-216` — `arrive` ramps
+    /// **It swells IN, backwards.** `Claude Design Round 2/design-source/spine-sound.js:214-216` — `arrive` ramps
     /// *exponentially* from 0.0001 UP to its peak over 1.15s and then exponentially back
     /// down. Every other event in the app strikes and decays; this one is *"the shape of a
     /// thing approaching"*, and a linear attack would make it a note that started rather
@@ -79,7 +79,7 @@ enum CeremonyEnvelope {
 enum CeremonySynth {
     case sine        // pure tone
     case sineOctave  // sine + a near-octave partial (the choir voice)
-    /// VI's arrival — `spine-sound.js:212-217`, `o` at `f·r` with `o2` an octave BELOW at
+    /// VI's arrival — `Claude Design Round 2/design-source/spine-sound.js:212-217`, `o` at `f·r` with `o2` an octave BELOW at
     /// `f·r·0.5` through `g2.gain = 0.34`. Below, not above: the lap coming home sounds
     /// larger than it left, not brighter. Not normalised, as the design is not.
     case sineOctaveBelow
@@ -92,12 +92,12 @@ enum CeremonySynth {
     /// envelope that goes back to ZERO at its own duration. `Coverage/9` §2 maps seven call
     /// sites to it.
     case fieldThreshold
-    /// THE SPINE'S THRESHOLD — `spine-sound.js:353-361`. One sine, and the whole mechanism
+    /// THE SPINE'S THRESHOLD — `Claude Design Round 2/design-source/spine-sound.js:353-361`. One sine, and the whole mechanism
     /// is that it arrives FLAT: `o.frequency.setValueAtTime(f*0.985)` then
     /// `linearRampToValueAtTime(f, t+2.2)`. *"struck, and slightly flat, so the crossing is
     /// heard as a crossing."* Played in tune, a crossing is not heard as one.
     case spineThreshold
-    /// THE BLIP — `spine-sound.js:343-350`. One sine at `f*2`, 0.02s up and 0.7s down. The
+    /// THE BLIP — `Claude Design Round 2/design-source/spine-sound.js:343-350`. One sine at `f*2`, 0.02s up and 0.7s down. The
     /// shortest event in the app, and the app was playing an 11-second bowl for it.
     case blip
     /// THE SOUND OF SUBTRACTION — `The Light v2.html:327-331` describes it; **this synth is
@@ -155,7 +155,7 @@ final class CeremonyVoice {
         /// The 110 → 165 slide it produces IS canon; the mechanism is ours.
         endHz: Double? = nil,
         /// When the pitch ramp finishes, if not at the end of the envelope.
-        /// `spine-sound.js:357` reaches tune at **2.2s** inside a 6s event.
+        /// `Claude Design Round 2/design-source/spine-sound.js:357` reaches tune at **2.2s** inside a 6s event.
         glideSeconds: Double? = nil,
         /// `exponentialRampToValueAtTime` on the FREQUENCY, which is what `resolve` and
         /// `glide` use and what `spineThreshold` does not. Exponential in pitch is linear in
@@ -170,7 +170,7 @@ final class CeremonyVoice {
         startDelaySeconds: Double = 0,
         envelope: CeremonyEnvelope = .sinExp,
         /// `send` is the one event that MOVES across the head: `pn.pan` ramps 0 → `pan` over
-        /// 1.4s (`spine-sound.js:200-202`), because a thing leaving goes somewhere. Equal
+        /// 1.4s (`Claude Design Round 2/design-source/spine-sound.js:200-202`), because a thing leaving goes somewhere. Equal
         /// power, which is what `StereoPannerNode` does.
         panTo: Double? = nil,
         panSeconds: Double = 1.4,
@@ -278,7 +278,7 @@ final class CeremonyVoice {
                     // `hz*m` through its own `1/(i*2.2+1)` gain, summed into the one
                     // envelope. It is NOT normalised in the design and is not here: the
                     // envelope's 0.075 is the fundamental's amplitude, which is what
-                    // `README.md:192` means by an event's ceiling.
+                    // `Claude Design Round 2/README.md:192` means by an event's ceiling.
                     raw = 0
                     for k in bowlRatios.indices {
                         bowlPhases[k] += 2.0 * .pi * (hz * bowlRatios[k]) / sampleRate
@@ -474,7 +474,7 @@ final class InkVoice {
     }
 }
 
-/// VII · A DANCER. `spine-sound.js:236-252` — the only polyphonic register in the instrument.
+/// VII · A DANCER. `Claude Design Round 2/design-source/spine-sound.js:236-252` — the only polyphonic register in the instrument.
 ///
 /// *"Every world before this was ONE voice being acted on — narrowed, widened, filtered,
 /// rung, inverted, delayed. Here each body that joins the chain is a real voice of its own at

@@ -46,7 +46,7 @@ struct PointLawWiringTests {
     }
 
     /// III · the floor is `partedOnce`, and the value is the design's own base.
-    /// `world-three.js:112` — `r = Math.max(r, 0.06 + n*0.026)`, *"that zone stays thin."*
+    /// `world-three.js:104` — *"that zone stays thin"*, over `r = Math.max(r, 0.06 + n*0.026)` at `:112`.
     @Test("III · a veil once parted never closes all the way again")
     func veilFloorHolds() {
         func cutoff(_ f: Double, _ floor: Double) -> Double {

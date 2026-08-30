@@ -136,8 +136,8 @@ was built and no evidence it was built correctly. **10 of 37.**
 | | `The Chrome.html:279,312,321,332,341` | `paintRail` · `paintGauge` · `paintGlide` · `paintInvented` · `setAB` |
 | app | `The Reading.html:201` | `floorY` |
 | | `The Reading.html:85,179,187,206,210,333,477` | `rayPt` · `starMark` · `placeStar` · `stackFrom` · `hideSections` · `wIII` · `wVII` |
-| app | `The Return.html:139,344` | `renderAnswers` *(built F1)* · `paint` |
-| | `The Return.html:123` | `renderRings` |
+| app | `Claude Design Round 2/comps/The Return.html:139,344` | `renderAnswers` *(built F1)* · `paint` |
+| | `Claude Design Round 2/comps/The Return.html:123` | `renderRings` |
 | app | `The Rooms v4.html:18,661,775,886` | `qbez` · `archiveOf` · `drawMap` · `paint` |
 | | `The Rooms v4.html:752,758,829,877` | `renderWords` · `setLegend` · `figFail` · `doorField` |
 | app | `The Seam.html:215` | `proj` |

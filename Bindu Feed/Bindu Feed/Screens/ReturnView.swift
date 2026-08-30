@@ -369,7 +369,7 @@ struct ReturnView: View {
 
     /// E3.2 · `renderRings` — **each prior return, with the words he left there.**
     ///
-    /// `The Return.html:123`. The movement drew concentric circles from a count and said
+    /// `Claude Design Round 2/comps/The Return.html:123`. The movement drew concentric circles from a count and said
     /// nothing about any of them; a ring you can see and cannot read is a record of having
     /// spoken with the speech taken out.
     ///

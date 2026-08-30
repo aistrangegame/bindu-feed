@@ -137,7 +137,7 @@ struct CloseOfThePointTests {
         }
     }
 
-    /// Every event in C2/C3 stays under the ceiling `README.md:192` states.
+    /// Every event in C2/C3 stays under the ceiling `Claude Design Round 2/README.md:192` states.
     @Test("nothing here exceeds the 0.075 event ceiling")
     func allUnderTheCeiling() {
         #expect(0.026 <= 0.075)      // each of resolve's nine

@@ -176,7 +176,7 @@ struct PointWorldView: View {
                         // C1 · **THE CALLER `nul` NEVER HAD.** The comment above already
                         // names it — *"a true null, the only deliberate silence in the
                         // Point"* — and the app honoured it by NOT PLAYING A SOUND. That is
-                        // absence, and `spine-sound.js:164` is explicit that it is not:
+                        // absence, and `Claude Design Round 2/design-source/spine-sound.js:164` is explicit that it is not:
                         // *"Not a fade — the voice summed against itself, which is exact.
                         // The stone tail already in the air keeps decaying, so the hall dies
                         // away and then there is nothing."*

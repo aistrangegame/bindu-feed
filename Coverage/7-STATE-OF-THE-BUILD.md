@@ -84,7 +84,7 @@ reverb. Nothing can be wired until those exist.
 lines ships.** A scalar raised to 1 on release, decaying per frame, keeping `given` alive
 and giving the world its one closing word. One mechanic pattern, seven instances.
 
-**3 · The most-heard sound in the app is 4× its own ceiling.** `README.md:192` states *"no
+**3 · The most-heard sound in the app is 4× its own ceiling.** `Claude Design Round 2/README.md:192` states *"no
 event exceeds 0.075"*. `riteThreshold` uses `peak: 0.30` and `riteBowl` `0.32`, with the
 wrong partials and no bed-duck, fired from **19 call sites** across Door, Rite, Rooms,
 Universe, Return, Light, Point and Instrument. Documented as `AUDIT.md:944` G3.3 and never

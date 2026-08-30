@@ -9,7 +9,7 @@ import Testing
 // the bed ducking to `0.006` at `t+1.2` and returning to `0.030` at `t+9`.
 //
 // SHIPPED BEFORE: `peak 0.30` (`riteThreshold`) and `0.32` (`riteBowl`), partials
-// `[1, 2.756, 5.404]`, no duck. `README.md:192` states *"no event exceeds 0.075"*, so the
+// `[1, 2.756, 5.404]`, no duck. `Claude Design Round 2/README.md:192` states *"Master ceiling: no event exceeds"*, so the
 // most-heard sound in the app — 19 call sites — ran at four times its own ceiling for the
 // whole build while every string-keyed checker reported green.
 //
@@ -18,7 +18,7 @@ import Testing
 @Suite("B1 · the bowl · AUDIT G3.3")
 struct BowlTests {
 
-    /// The event ceiling. `README.md:192` — *"Master ceiling: no event exceeds 0.075."*
+    /// The event ceiling. `Claude Design Round 2/README.md:192` — *"Master ceiling: no event exceeds"*.
     ///
     /// Measured as the FUNDAMENTAL's amplitude, which is the quantity the design's gain
     /// node carries: partial 0's weight is `1/(0*2.2+1) = 1`, so the envelope's crest and

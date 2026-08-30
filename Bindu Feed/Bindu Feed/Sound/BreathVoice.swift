@@ -30,7 +30,7 @@ final class BreathVoice {
     let crossfadeLevel: CrossfadeLevelHolder
     let sourceNode: AVAudioSourceNode
 
-    // A1 · `spine-sound.js:63-101` — the three nodes every register voice is built with and
+    // A1 · `Claude Design Round 2/design-source/spine-sound.js:63-101` — the three nodes every register voice is built with and
     // this one was not. They are built here and left at the design's defaults; the seven
     // register laws that move them are STAGE C1 and are not wired yet.
 
@@ -46,7 +46,7 @@ final class BreathVoice {
     /// and not a duck — a copy of the voice cancelling the voice."* At −1 the output is
     /// exactly zero, and the stone tail already in the air keeps decaying.
     ///
-    /// Applied by the ENGINE, on a mixer in the direct path, not here. `spine-sound.js:95`
+    /// Applied by the ENGINE, on a mixer in the direct path, not here. `Claude Design Round 2/design-source/spine-sound.js:95`
     /// is `pk.connect(bus)` **and** `pk.connect(nul); nul.connect(bus)` — the dry signal and
     /// an inverted copy of it, summed. That sum is `1 + nul`, which for `nul ∈ [−1, 0]` is
     /// `[0, 1]` — exactly the range of `AVAudioMixerNode.outputVolume`, and 0 there is
@@ -59,7 +59,7 @@ final class BreathVoice {
     /// here; the engine routes this node's output to the delay (A2).
     ///
     /// The send taps this node's output, which is the PRE-null signal — the same place
-    /// `spine-sound.js:96-97` taps it, where `pk.connect(nul)` and `pk.connect(ech)` are
+    /// `Claude Design Round 2/design-source/spine-sound.js:96-97` taps it, where `pk.connect(nul)` and `pk.connect(ech)` are
     /// siblings hanging off `pk`.
     ///
     /// **THE REASON IT IS HERE IS NOT THAT THE DESIGN TAPS HERE.** It was post-null for one
@@ -324,7 +324,7 @@ final class BreathVoice {
 
                 // Final gain chain: voice level × LFO × crossfade. This node's output IS
                 // `pk` — post-filter, PRE-null — and both `nul` and `ech` hang off it in the
-                // engine's graph exactly as they hang off `pk` in `spine-sound.js:95-97`.
+                // engine's graph exactly as they hang off `pk` in `Claude Design Round 2/design-source/spine-sound.js:95-97`.
                 // Neither is applied here, so a null can never silence the echo.
                 let gain = snap.level * lfoAmp * currentLevel
                 bufL?[frame] = Float(sigL * gain)

@@ -5,7 +5,7 @@ import Testing
 
 // C1 · THE SEVEN REGISTER LAWS
 //
-// `spine-sound.js:104-190`. Each law is one register's whole claim expressed as physics, and
+// `Claude Design Round 2/design-source/spine-sound.js:104-190`. Each law is one register's whole claim expressed as physics, and
 // `7-STATE-OF-THE-BUILD.md` §3.1 found all thirteen mechanisms absent — `PointReadings.swift`
 // and `PointWorlds.swift` made no `soundEngine` calls at all. A1 built `pk`/`nul`/`ech` and
 // A2 the delay line; these measure the movements.
@@ -68,7 +68,7 @@ struct RegisterLawTests {
                 > r.magnitude(at: f + beat, ear: .right, from: settle, to: 5.8) * 2)
     }
 
-    /// The two laws are one instrument read in both directions — `spine-sound.js:111-113`,
+    /// The two laws are one instrument read in both directions — `Claude Design Round 2/design-source/spine-sound.js:111-113`,
     /// *"Same instrument, same register, opposite direction."*
     @Test("narrow and widen move the same parameter opposite ways")
     func narrowAndWidenAreOpposites() {
@@ -186,7 +186,7 @@ struct RegisterLawTests {
 
 // ── the two the design defines and never calls ────────────────────────
 //
-// `spine-sound.js:164` `nul` and `:176` `distance` have NO caller anywhere in the design
+// `Claude Design Round 2/design-source/spine-sound.js:164` `nul` and `:176` `distance` have NO caller anywhere in the design
 // corpus. Every other register law has one. So C1 wrote the callers, and they are the app's
 // own idiom — the numbers are the design's and exact, the invocation is ours.
 // `Coverage/9` §5b.
@@ -263,7 +263,7 @@ struct AppOwnLawTests {
 
 // ── VI · what is sent, and what comes back ────────────────────────────
 //
-// `spine-sound.js:189-228`. The register whose whole physics is the delay line A2 built:
+// `Claude Design Round 2/design-source/spine-sound.js:189-228`. The register whose whole physics is the delay line A2 built:
 // *"the room IS the distance it travelled."* `send` is called nowhere in the design either —
 // like `nul` and `distance`, the caller is the app's; the numbers are the design's.
 @Suite("C1 · VI · send, arrive, arriveAll")

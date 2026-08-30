@@ -106,7 +106,7 @@ struct ReturnSurfaceTests {
         #expect(ReturnRingRow.rel(index: 0, of: 0) == 1)
     }
 
-    /// `The Return.html:242` — the answer count in the design's own grammar, including the
+    /// `Claude Design Round 2/comps/The Return.html:242` — the answer count in the design's own grammar, including the
     /// state that a return with no answers is a real and correct one (§3b · M1).
     @Test("a row says how many answered, or that none did")
     func answerLine() {

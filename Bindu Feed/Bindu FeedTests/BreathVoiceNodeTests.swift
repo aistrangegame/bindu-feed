@@ -5,7 +5,7 @@ import Testing
 
 // A1 · THE THREE NODES EVERY REGISTER VOICE IS BUILT WITH
 //
-// `spine-sound.js:63-101` `_voice(f, beat)` gives every voice a peaking filter (pk), a null
+// `Claude Design Round 2/design-source/spine-sound.js:63-101` `_voice(f, beat)` gives every voice a peaking filter (pk), a null
 // gain (nul) and an echo send (ech). `BreathVoice` had none of them, so four of the Point's
 // seven register laws — bear, reflect, nul, distance — had nothing to move and could not be
 // written at all. `7-STATE-OF-THE-BUILD.md` §3.1: structural, not a to-do list.
@@ -64,7 +64,7 @@ struct BreathVoiceNodeTests {
     /// zero, a null IS zero.
     ///
     /// The null lives on a mixer in the ENGINE's direct path, not in the render block, so
-    /// that the echo send can tap `pk` before it — `spine-sound.js:95-97`. So it is measured
+    /// that the echo send can tap `pk` before it — `Claude Design Round 2/design-source/spine-sound.js:95-97`. So it is measured
     /// through a graph, with the same volume the engine would set.
     @Test("nul at −1 is exactly zero, not merely quiet")
     func nullCancels() throws {
@@ -248,7 +248,7 @@ struct BreathVoiceNodeTests {
 
 // A2 · THE DELAY LINE
 //
-// `spine-sound.js:52-57`. The app had exactly one audio unit, a reverb, so world VI's whole
+// `Claude Design Round 2/design-source/spine-sound.js:52-57`. The app had exactly one audio unit, a reverb, so world VI's whole
 // premise — *"the room IS the distance it travelled"* — had nothing to stand on, and
 // distance/send/arrive/arriveAll had nowhere to route. Built silent; C1 opens it.
 @Suite("A2 · the delay line")

@@ -152,7 +152,7 @@ enum OfflineRender {
     /// judge).
     /// `through` inserts nodes in series between the source and the main mixer — for the
     /// parts of a voice that live in the ENGINE's graph rather than in its render block.
-    /// `nul` is one of those: `spine-sound.js:95` sums the signal with an inverted copy of
+    /// `nul` is one of those: `Claude Design Round 2/design-source/spine-sound.js:95` sums the signal with an inverted copy of
     /// itself, which is a mixer at `1 + nul`, so measuring a null means rendering a graph.
     /// `afterStart` runs once the engine is running, before any frame is pulled. Mixer
     /// parameters set before `start()` do not survive it — the first version of the null

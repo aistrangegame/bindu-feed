@@ -106,7 +106,7 @@ struct PointRevealView: View {
         // settle where `resolve` belongs; the reveal is one of the two moments that ARE
         // marked, and it was marked incompletely.
         soundEngine.shimmer()                           // five solfeggio tones, an octave up
-        soundEngine.om()                                // `spine-sound.js:374` — three tones, not one
+        soundEngine.om()                                // `Claude Design Round 2/design-source/spine-sound.js:374` — three tones, not one
         withAnimation(.easeInOut(duration: 2.0)) { split = 1 }        // fan apart
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
             withAnimation(.easeInOut(duration: 2.0)) { split = 0; collapsed = true }   // collapse to one

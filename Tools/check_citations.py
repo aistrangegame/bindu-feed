@@ -16,7 +16,7 @@ Recognised form, anywhere in a Markdown file:
     `<source>:<line>` ... *"quoted text"*   (or "quoted text", or `quoted text`)
 The quote may appear up to WINDOW lines either side, since prose cites a block, not a byte.
 """
-import re, sys, pathlib
+import hashlib, re, sys, pathlib, hashlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from authored_lib import ROOT, norm
 
@@ -36,7 +36,12 @@ WINDOW = 12
 DOCS = [ROOT/"Bindu Feed"/"CLAUDE.md", ROOT/"HANDOFF-NOTE.md", ROOT/"OPEN-ITEMS.md",
         ROOT/"Coverage"/"10-OWED.md", ROOT/"Coverage"/"9-BOWL-CALL-SITE-MAP.md",
         ROOT/"Coverage"/"8-ACTION-PLAN.md", ROOT/"Coverage"/"7-STATE-OF-THE-BUILD.md",
-        ROOT/"Coverage"/"0-INDEX.md"]
+        ROOT/"Coverage"/"0-INDEX.md"] + sorted((ROOT/"Bindu Feed"/"Bindu FeedTests").glob("*.swift"))
+# THE TEST SUITE IS IN SCOPE, ADDED 2026-08-29. A test that cites a design line is making the
+# same kind of claim a ledger row makes, and nothing checked it — `theRootIs1361` pinned a
+# constant read out of the file under test, dressed it in a reason, and defended the defect
+# `AUDIT C7.9` names for a whole stage. A citation the checker can resolve is a citation
+# someone traced; run it on first inclusion and expect finds.
 # The ledgers cite the AUDIT and the design's own checklist, so both are reachable now. They
 # were not, and three citations in `Coverage/9` resolved to nothing the moment the ledgers
 # came into scope — which is the checker doing its job on its first run against them.
@@ -56,11 +61,36 @@ CITE = re.compile(r'`([A-Za-z0-9 _./-]+\.(?:html|js|swift|md)):(\d+)(?:-\d+)?`')
 QUOTE = re.compile(r'\*"([^"]{8,240})"\*')
 
 def resolve(name):
+    """Every file the citation could mean. A BARE name that means more than one is an error.
+
+    **AMBIGUITY IS NOT SOMETHING TO RESOLVE.** This used to return every file with a matching
+    basename and the caller passed if ANY of them contained the quote — so a citation could
+    verify against a file its author had never opened. `README.md:192` is
+    `Claude Design Round 2/README.md`, and there is another `README.md` in scope; the quote
+    was checked against both, and the only reason it failed was an unrelated backtick.
+
+    That is the false-drift mechanism arriving through a new door, and it is worse here: the
+    natural repair to a citation that "does not resolve" is to CHANGE THE CITATION, so a true
+    reference gets edited into a false one to make a checker quiet. A path is cheap; guessing
+    is not. If a bare name is ambiguous the checker says so and demands a qualified path.
+    """
+    want = pathlib.Path(name)
     hits = []
     for base in SEARCH:
         if not base.exists(): continue
-        hits += [p for p in base.rglob("*") if p.is_file() and p.name == pathlib.Path(name).name]
-    return hits
+        for p in base.rglob("*"):
+            if not p.is_file() or p.name != want.name: continue
+            # A citation carrying any directory part must match that tail exactly, so
+            # `Claude Design Round 2/README.md` and a bare `README.md` are different claims.
+            if len(want.parts) > 1 and not str(p).endswith(str(want)): continue
+            hits.append(p)
+    # rglob over overlapping SEARCH roots returns the same file more than once.
+    seen, uniq = set(), []
+    for h in hits:
+        r = h.resolve()
+        if r in seen: continue
+        seen.add(r); uniq.append(h)
+    return uniq
 
 def main():
     checked = unverified = missing = uncheckable = 0
@@ -77,6 +107,24 @@ def main():
                 files = resolve(name)
                 if not files:
                     print(f"  UNRESOLVED  {doc.name}:{i}  no file named {name!r}")
+                    missing += 1
+                    continue
+                # AMBIGUITY ONLY MATTERS WHEN THE COPIES DIFFER. Most duplicate names in
+                # this repo are the same bytes in two design rounds, and a line-based
+                # citation against identical text cannot land anywhere unintended — failing
+                # those would demand 86 edits that change nothing and would train the reader
+                # to qualify paths by rote. Measured: of 18 duplicated names, 15 are
+                # byte-identical and 3 are not. The three are where a citation can silently
+                # verify against a file its author never opened, so those are the errors.
+                if len(files) > 1 and len({hashlib.md5(f.read_bytes()).hexdigest()
+                                           for f in files}) == 1:
+                    files = files[:1]
+                if len(files) > 1:
+                    print(f"  AMBIGUOUS   {doc.name}:{i}  {name!r} matches {len(files)} DIFFERING files:")
+                    for f in files[:4]:
+                        print(f"                {f.relative_to(ROOT)}")
+                    print(f"              qualify it — a bare filename is not a citation when")
+                    print(f"              more than one file has that name.")
                     missing += 1
                     continue
                 # a quote on the same line or the next one belongs to this citation

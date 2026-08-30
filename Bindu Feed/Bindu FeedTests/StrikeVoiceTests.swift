@@ -154,7 +154,7 @@ struct StrikeVoiceTests {
             SoundEngine.spineThresholdVoice(hz: 220).sourceNode, seconds: 3.0)
         let blip  = try OfflineRender.render(SoundEngine.blipVoice(hz: 220).sourceNode, seconds: 1.0)
 
-        // each under the 0.075 ceiling `README.md:192` states …
+        // each under the 0.075 ceiling `Claude Design Round 2/README.md:192` states …
         for (name, r) in [("bowl", bowl), ("field", field), ("spine", spine), ("blip", blip)] {
             #expect(r.peak() <= 0.13, "\(name) peak \(r.peak())")
         }

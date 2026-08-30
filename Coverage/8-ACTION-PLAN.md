@@ -18,13 +18,13 @@ even though neither is glamorous.
 
 ## STAGE A · Structural prerequisites — nothing else in the sound layer can start without these
 
-**A1 · Give `BreathVoice` its three missing nodes.** `spine-sound.js:63` `_voice` builds
+**A1 · Give `BreathVoice` its three missing nodes.** `Claude Design Round 2/design-source/spine-sound.js:63` `_voice` builds
 every register voice with a peaking filter (`pk`), a null gain (`nul`) and an echo send
 (`ech`). `Sound/BreathVoice.swift:95-193` has the L/R pair, the LFO, the octave and the
 lowpass — and none of those three. **Four of the seven register laws move exactly these
 nodes**, so no call site can be written until they exist.
 
-**A2 · Add the delay line.** `spine-sound.js:52-57` — `AVAudioUnitDelay`, 3.0s max, 0.42s
+**A2 · Add the delay line.** `Claude Design Round 2/design-source/spine-sound.js:52-57` — `AVAudioUnitDelay`, 3.0s max, 0.42s
 time, feedback 0.44, 2400 Hz lowpass, returning into both master and reverb. The app has
 exactly one audio unit. World VI's entire premise — *"the room IS the distance it
 travelled"* — has nothing to stand on, and `distance`/`send`/`arrive`/`arriveAll` all route

@@ -1,6 +1,6 @@
 import Foundation
 
-// F1 · A SEALED RETURN IS ANSWERED — `The Return.html:249-282`, `renderAnswers`
+// F1 · A SEALED RETURN IS ANSWERED — `Claude Design Round 2/comps/The Return.html:249-282`, `renderAnswers`
 //
 // `sealReturn` wrote the ring and his words and stopped. **So returning produced a second
 // copy of the same page**: the same story, the same gathering, the same eleven voices that
@@ -12,7 +12,7 @@ import Foundation
 // looks exactly like a voice answering. The design says which it is, in the one place it
 // counts things:
 //
-//     `The Return.html:277-279` — *"N comments on this story — one on the story, N−1
+//     `Claude Design Round 2/comps/The Return.html:277-279` — *"N comments on this story — one on the story, N−1
 //     answering returns"*
 //
 // An answer is a response to **THIS RING**. A voice that has only ever spoken on the story
@@ -20,7 +20,7 @@ import Foundation
 // answered has a tally above one, and the extra rows are attributable to rings. **The
 // duplicate passes the outcome check and fails the tally.**
 //
-// AND NOTHING HERE IS AUTHORED BY THE APP. `The Return.html:264` marks every answer
+// AND NOTHING HERE IS AUTHORED BY THE APP. `Claude Design Round 2/comps/The Return.html:264` marks every answer
 // `authored · for approval` — they are written by a person and held in the base as
 // `Return Answer` rows carrying an `Archetype`. The app renders what the base holds and
 // invents nothing; a story with no answers says so.
@@ -53,7 +53,7 @@ struct ReturnAnswer: Identifiable, Equatable {
     }
 }
 
-/// `The Return.html:266-282` — *"where it lands · the register-2 answer, stated in counts of
+/// `Claude Design Round 2/comps/The Return.html:266-282` — *"where it lands · the register-2 answer, stated in counts of
 /// material."* The Return's own proof that it generated something.
 enum ReturnTally {
 
@@ -100,7 +100,7 @@ enum ReturnTally {
     /// the story, 2 answering returns"*. Reproduced so the grammar is in one place: `a
     /// return` for one, `returns` for more.
     /// The authored spans are their own literals, with the numbers concatenated AROUND them
-    /// — which is exactly what `The Return.html:277` does (`'</i>'+tally[k]+' comments on
+    /// — which is exactly what `Claude Design Round 2/comps/The Return.html:277` does (`'</i>'+tally[k]+' comments on
     /// this story — one on the story, '+(tally[k]-1)+' answering '+…`). Written with the
     /// count interpolated INSIDE the sentence, the literal becomes `"… comments on this
     /// story — one on the story, "` and no longer matches the design at all: `check_rendered`

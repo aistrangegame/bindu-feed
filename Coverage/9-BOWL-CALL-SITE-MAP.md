@@ -17,12 +17,12 @@ are not close to each other:
 |---|---|---|---|
 | `bowl(hz)` | `field-sound.js:154-170` | **0.075** | four inharmonic partials `[1, 2.004, 2.98, 4.02]` at `1/(i*2.2+1)`, 0.09s up, 11s exponential decay, bed ducks to 0.006 |
 | `threshold(hz, dur)` — the FIELD's | `field-sound.js:139-151` | **0.032** | sine + `hz×2.002` at 0.22; up over `dur×0.42`, down to **zero** at `dur`. Takes a duration. |
-| `threshold(f)` — the SPINE's | `spine-sound.js:353-361` | **0.06** | one sine starting at **`f×0.985`** and rising into tune over **2.2s**; up at 0.5s, exponential to 0.0001 at 6s. Takes **no** duration. *"struck, and slightly flat, so the crossing is heard as a crossing."* |
-| `blip(f)` | `spine-sound.js:343-350` | **0.07** | one sine at **`f×2`**, 0.02s up, 0.7s exponential decay |
+| `threshold(f)` — the SPINE's | `Claude Design Round 2/design-source/spine-sound.js:353-361` | **0.06** | one sine starting at **`f×0.985`** and rising into tune over **2.2s**; up at 0.5s, exponential to 0.0001 at 6s. Takes **no** duration. *"struck, and slightly flat, so the crossing is heard as a crossing."* |
+| `blip(f)` | `Claude Design Round 2/design-source/spine-sound.js:343-350` | **0.07** | one sine at **`f×2`**, 0.02s up, 0.7s exponential decay |
 
 Plus one more the app also renders as a bowl:
 
-| `om()` | `spine-sound.js:374-384` | **`0.06/(i+1)`** | **three** oscillators at 136.1 · 272.2 · 408.3, 0.9s up, exponential to 0.0001 at 9s |
+| `om()` | `Claude Design Round 2/design-source/spine-sound.js:374-384` | **`0.06/(i+1)`** | **three** oscillators at 136.1 · 272.2 · 408.3, 0.9s up, exponential to 0.0001 at 9s |
 
 `riteThreshold(hz:dur:)` takes a duration, which is the field threshold's signature and
 not the spine's — so the function was written against `field-sound.js:139` and given a
@@ -45,7 +45,7 @@ is what makes the mapping evidence rather than inference.
 | 5 | `RiteView.swift:110` | `riteThreshold(146, 7)` | `Sound.threshold(146,7)` | `The Rite v3.html:1542` | **field threshold** 0.032 | 0.075 |
 | 6 | `RiteView.swift:114` | `riteThreshold(261, 7)` | `Sound.threshold(261,7)` | `The Rite v3.html:1436` | **field threshold** 0.032 | 0.075 |
 | 7 | `RiteView.swift:336` | `riteBowl(220)` | `Sound.bowl(220)` | `The Rite v3.html:1508` | **bowl** ✅ | 0.075 |
-| 8 | `PointRevealView.swift:103` | `riteBowl(136.1)` | `om()` | `spine-sound.js:374` | **om — three tones** | 0.075, one tone |
+| 8 | `PointRevealView.swift:103` | `riteBowl(136.1)` | `om()` | `Claude Design Round 2/design-source/spine-sound.js:374` | **om — three tones** | 0.075, one tone |
 | 9 | `DoorView.swift:184` | `riteThreshold(146, 4)` | `openTurn(){B.threshold(146)}` | `The Instrument v3.html:5082` | **spine threshold** 0.06 | 0.075 |
 | 10 | `DoorView.swift:193` | `riteThreshold(220, 5)` | `crossDoor(){B.threshold(unmet?220:261)}` | `The Instrument v3.html:5022` | **spine threshold** 0.06 | 0.075 |
 | 11 | `DoorView.swift:214` | `riteThreshold(285, 4)` | — **unresolved** | — | see §4 | 0.075 |
@@ -67,7 +67,7 @@ design counterpart at all.
 
 ## 3 · What this means for B1
 
-**B1's ceiling fix stands.** Nothing here should be at 0.30. `README.md:192` is right and
+**B1's ceiling fix stands.** Nothing here should be at 0.30. `Claude Design Round 2/README.md:192` is right and
 the audit finding is right: `riteBowl` at `0.32` was four times its own stated limit, from
 19 sites, and the four bowls that really are bowls are now correct in peak, spectrum and
 duck.
@@ -82,7 +82,7 @@ And three distinct behaviours are collapsed into one:
 
 - a **field threshold** ends. It has a duration and it closes.
 - a **spine threshold** arrives *flat* and pulls into tune across 2.2s. That detune IS the
-  mechanism — `spine-sound.js:355`, *"struck, and slightly flat, so the crossing is heard
+  mechanism — `Claude Design Round 2/design-source/spine-sound.js:355`, *"struck, and slightly flat, so the crossing is heard
   as a crossing."* The app plays it in tune, so the crossing is not heard as one.
 - a **blip** is 0.7s and gone.
 
@@ -140,7 +140,7 @@ both.
 |---|---|---|
 | pitch | **136** — `RoomKey.bindu.hz` (`RoomVoices.swift:37`) | **136.1** |
 | built by | `presence(_ key:)` → `CeremonyVoice(hz: key.hz, synth: .presence(…))` | its own ceremony voice, from the design's `[136.1, 272.2, 408.3]` |
-| timbre from | `VoiceCharacter.CHAR["bindu"]` — partials `[1,2,3]`, gain 0.055, flicker 6.2 | `spine-sound.js:374`, three oscillators at `0.06/(i+1)` |
+| timbre from | `VoiceCharacter.CHAR["bindu"]` — partials `[1,2,3]`, gain 0.055, flicker 6.2 | `Claude Design Round 2/design-source/spine-sound.js:374`, three oscillators at `0.06/(i+1)` |
 | called from | `RoomView.swift:239`, `RiteGatheringView.swift:205` | `PointRevealView.swift:103` |
 
 The three consumers of 136.1 are all elsewhere and all separate from `presence`:
@@ -217,11 +217,11 @@ threshold's `f×0.985 → tune over 2.2s` are both built and measured.
 Found while checking whether the echo send could be tapped after the null. It is a fact about
 the corpus, not about the app, and it governs how C1 must be written:
 
-- `spine-sound.js:164` `nul:function(secs)` — **no caller in any design-source file.**
-- `spine-sound.js:176` `distance:function(f)` — **no caller in any design-source file.**
-- `spine-sound.js:189` `send:function(f,pan)` — **no caller in any design-source file.**
+- `Claude Design Round 2/design-source/spine-sound.js:164` `nul:function(secs)` — **no caller in any design-source file.**
+- `Claude Design Round 2/design-source/spine-sound.js:176` `distance:function(f)` — **no caller in any design-source file.**
+- `Claude Design Round 2/design-source/spine-sound.js:189` `send:function(f,pan)` — **no caller in any design-source file.**
   *(Found while writing C1; the same fact, one further in.)*
-- `spine-sound.js:271` `resolve:function()` — **no caller in any design-source file.**
+- `Claude Design Round 2/design-source/spine-sound.js:271` `resolve:function()` — **no caller in any design-source file.**
   *(Found while writing C2. The fourth, and the largest: it is the close of the whole
   register — nine tones pulling to one, then the one rising 852 → 963.)*
 

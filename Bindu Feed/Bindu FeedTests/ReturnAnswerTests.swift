@@ -14,7 +14,7 @@ import Testing
 // exactly like a voice answering. Only the tally can tell them apart, and the design counts
 // it in the one place it counts anything:
 //
-//     `The Return.html:277` — *"one on the story, N−1 answering returns"*
+//     `Claude Design Round 2/comps/The Return.html:275` — *"comments on this story"*, the tally line
 //
 // So the assertion is not that an answer exists. It is that a voice's standing **grows past
 // the one comment everybody in the gathering already has**. A duplicate leaves it at one.

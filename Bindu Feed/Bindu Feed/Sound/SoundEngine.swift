@@ -410,7 +410,7 @@ final class SoundEngine: ObservableObject {
     // space — while `point-sound.js:35-37` is `_stone(7.5, 0.6)` at wet 0.42, a tail twice as
     // long. The design calls the second one the cathedral, and it should not be audible
     // anywhere the walk is not climbing.
-    /// `this.bus = ctx.createGain()` — `field-sound.js:39`, `spine-sound.js:45`. Everything
+    /// `this.bus = ctx.createGain()` — `field-sound.js:39`, `Claude Design Round 2/design-source/spine-sound.js:45`. Everything
     /// that sounds arrives here and the room is raised on it.
     ///
     /// Added for A2, and needed rather than merely tidy: `AVAudioUnitReverb` is an
@@ -443,7 +443,7 @@ final class SoundEngine: ObservableObject {
 
     // MARK: - A2 · THE DELAY LINE
     //
-    // `spine-sound.js:52-57`. *"THE DELAY LINE — VI's whole physics. A thing sent out comes
+    // `Claude Design Round 2/design-source/spine-sound.js:52-57`. *"THE DELAY LINE — VI's whole physics. A thing sent out comes
     // back later, quieter, and each return of it comes back later still. It is built once
     // and sits silent until something is actually away."*
     //
@@ -488,7 +488,7 @@ final class SoundEngine: ObservableObject {
     /// the delay independently, and this mixer's volume IS `ech.gain`.
     private var sends: [ObjectIdentifier: AVAudioMixerNode] = [:]
 
-    /// One null mixer per live voice, in the DIRECT path only. `spine-sound.js:95` is
+    /// One null mixer per live voice, in the DIRECT path only. `Claude Design Round 2/design-source/spine-sound.js:95` is
     /// `pk.connect(bus)` **and** `pk.connect(nul); nul.connect(bus)` — the signal plus an
     /// inverted copy of it, summed, which is `1 + nul`. One mixer at that volume is the same
     /// arithmetic in one node, and it puts the null AFTER the point the send taps.
@@ -502,7 +502,7 @@ final class SoundEngine: ObservableObject {
 
     // MARK: - C1 · THE SEVEN REGISTER LAWS
     //
-    // `spine-sound.js:104-190`. Each law is one register's whole claim expressed as physics,
+    // `Claude Design Round 2/design-source/spine-sound.js:104-190`. Each law is one register's whole claim expressed as physics,
     // and `7-STATE-OF-THE-BUILD.md` §3.1 found all thirteen mechanisms absent —
     // `PointReadings.swift` and `PointWorlds.swift` made no sound calls at all. A1 and A2
     // built the nodes they move; these are the movements.
@@ -513,7 +513,7 @@ final class SoundEngine: ObservableObject {
 
     /// I · THE POINT. *"as a star admits him, the two tones converge toward unison. The beat
     /// narrowing IS the reading arriving — by the fourth section the world is very nearly one
-    /// note."* `spine-sound.js:106-110` — `beat·(1 − f·0.94)`, over 1.2s.
+    /// note."* `Claude Design Round 2/design-source/spine-sound.js:106-110` — `beat·(1 − f·0.94)`, over 1.2s.
     func narrow(_ f: Double) {
         let f = max(0, min(1, f))
         currentBreath?.laws.mutate { $0.beat = Smoothed(beatHz * (1 - f * 0.94), tau: 1.2) }
@@ -609,7 +609,7 @@ final class SoundEngine: ObservableObject {
 
     /// The one deliberate silence in the Point. *"Not a fade — the voice summed against
     /// itself, which is exact. The stone tail already in the air keeps decaying, so the hall
-    /// dies away and then there is nothing."* `spine-sound.js:164-171` — `nul.gain → −1` over
+    /// dies away and then there is nothing."* `Claude Design Round 2/design-source/spine-sound.js:164-171` — `nul.gain → −1` over
     /// 0.09s, back to 0 after `secs` over 1.8s.
     ///
     /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** This is world V's entire claim as
@@ -628,7 +628,7 @@ final class SoundEngine: ObservableObject {
     /// VI · THE RETURN. *"The room IS the distance it travelled. While something of his is
     /// away, the register's own voice leans into the delay line and the delay lengthens; when
     /// everything is home the world is dry again. Nothing is added — the same note, arriving
-    /// late."* `spine-sound.js:176-186` — `ech.gain → f·0.62` and `delayTime → 0.30 + f·1.35`.
+    /// late."* `Claude Design Round 2/design-source/spine-sound.js:176-186` — `ech.gain → f·0.62` and `delayTime → 0.30 + f·1.35`.
     ///
     /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** World VI's whole physics, and the
     /// design wrote the mechanism and no caller.
@@ -644,7 +644,7 @@ final class SoundEngine: ObservableObject {
     /// *"the departure. It bends down and away
     /// as it goes, the way a thing leaving does, and it goes straight into the delay — which
     /// is to say it is already on its way back the moment he lets go."*
-    /// `spine-sound.js:189-203`: `f*2` bending to `f*1.12` over 1.5s, 0 → 0.075 at 0.05s,
+    /// `Claude Design Round 2/design-source/spine-sound.js:189-203`: `f*2` bending to `f*1.12` over 1.5s, 0 → 0.075 at 0.05s,
     /// exponential to 0.0001 at 1.7s, panning 0 → `pan` over 1.4s, into the bus AND the delay.
     ///
     /// DIVERGENCE: the design bends the pitch with `exponentialRampToValueAtTime`; this is
@@ -660,7 +660,7 @@ final class SoundEngine: ObservableObject {
     /// *"the arrival. The same note he sent, later, quieter, and one interval up — a fifth, a
     /// sixth, a seventh, and on the fourth return the octave: the lap that finally arrives
     /// home. It swells IN, backwards, because that is the shape of a thing approaching."*
-    /// `spine-sound.js:208-221`.
+    /// `Claude Design Round 2/design-source/spine-sound.js:208-221`.
     ///
     /// **TWO THINGS HERE ARE THE REGISTER'S SENTENCE, NOT PARAMETERS. DO NOT NORMALISE THEM.**
     ///
@@ -693,14 +693,14 @@ final class SoundEngine: ObservableObject {
     }
 
     /// *"Deep Time hands over all four at once, so all four intervals sound together: the
-    /// crossing was made before him, complete."* `spine-sound.js:225-228`.
+    /// crossing was made before him, complete."* `Claude Design Round 2/design-source/spine-sound.js:225-228`.
     func arriveAll(hz: Double) {
         for i in 1...4 { arrive(hz: hz, n: i, after: Double(i - 1) * 0.30) }
     }
 
     // ── C2 · THE CLOSE OF THE POINT ───────────────────────────────────────
 
-    /// `resolve()` — `spine-sound.js:271-291`. *"All nine sound at once, pull to one note,
+    /// `resolve()` — `Claude Design Round 2/design-source/spine-sound.js:271-291`. *"All nine sound at once, pull to one note,
     /// and the one note rises toward the centre's own."*
     ///
     /// Nine tones at `852 × [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2, 3]`, entering 0.09s apart,
@@ -757,7 +757,7 @@ final class SoundEngine: ObservableObject {
                      maxWait: 3.6)
     }
 
-    /// `shimmer()` — `spine-sound.js:363-373`. Five solfeggio tones an octave up —
+    /// `shimmer()` — `Claude Design Round 2/design-source/spine-sound.js:363-373`. Five solfeggio tones an octave up —
     /// 285 · 396 · 528 · 639 · 852, doubled — entering 0.18s apart and gone in 1.6s each.
     /// The sound of something arriving that was not asked for: `The Point v9.html:1286`
     /// fires it as the aperture opens, and the Instrument fires it at every fourth give.
@@ -778,7 +778,7 @@ final class SoundEngine: ObservableObject {
 
     /// `join(k)` — a body enters the chain at `852 × [1, 1.5, 2, 2.5, 3][k]`, out of tune by
     /// `(k odd ? + : −)(11 + k·5)` cents, and a blip at a quarter of its own pitch marks the
-    /// moment. `spine-sound.js:236-252`.
+    /// moment. `Claude Design Round 2/design-source/spine-sound.js:236-252`.
     func join(_ k: Int) {
         guard isRunning, dancers.count < 5 else { return }
         let d = DancerVoice(k: k)
@@ -846,7 +846,7 @@ final class SoundEngine: ObservableObject {
         setRoom(for: voice.snapshot.bed)
 
         // A1/A2 · the voice's node IS `pk`, and two things hang off it, as they do in
-        // `spine-sound.js:95-97`: the direct path through the null, and the send into the
+        // `Claude Design Round 2/design-source/spine-sound.js:95-97`: the direct path through the null, and the send into the
         // delay. Both mixers start where the design starts them — the null wide open, the
         // send shut — so this changes nothing anyone can hear until C1 moves them.
         let null = AVAudioMixerNode()
@@ -1013,7 +1013,7 @@ final class SoundEngine: ObservableObject {
         playCeremony(Self.blipVoice(hz: hz), maxWait: 1.2)
     }
 
-    /// `om()` — `spine-sound.js:374-384`. **Three** oscillators at 136.1 · 272.2 · 408.3,
+    /// `om()` — `Claude Design Round 2/design-source/spine-sound.js:374-384`. **Three** oscillators at 136.1 · 272.2 · 408.3,
     /// each at `0.06/(i+1)`, 0.9s up and exponential to 0.0001 at 9s.
     ///
     /// `PointRevealView`'s own comment says *"one tone fanning into three, then collapsing to
@@ -1043,7 +1043,7 @@ final class SoundEngine: ObservableObject {
     /// `field-sound.js:154-170` is the bowl: `0 → 0.075` over 0.09s, an exponential decay
     /// across 11s, four inharmonic partials `[1, 2.004, 2.98, 4.02]` each at `1/(i*2.2+1)`,
     /// and the bed ducking to 0.006 while it rings. It shipped at `peak 0.30`/`0.32` with
-    /// partials `[1, 2.756, 5.404]` and no duck — four times the ceiling `README.md:192`
+    /// partials `[1, 2.756, 5.404]` and no duck — four times the ceiling `Claude Design Round 2/README.md:192`
     /// states, from **19 call sites** across Door, Rite, Rooms, Universe, Return, Light,
     /// Point and Instrument.
     ///
@@ -1070,7 +1070,7 @@ final class SoundEngine: ObservableObject {
                       synth: .fieldThreshold, envelope: .linearToZero)
     }
 
-    /// `threshold(f)` — `spine-sound.js:353-361`. Peak **0.06**, one sine, entering at
+    /// `threshold(f)` — `Claude Design Round 2/design-source/spine-sound.js:353-361`. Peak **0.06**, one sine, entering at
     /// `f*0.985` and reaching tune at **2.2s**; up at 0.5s, exponential to 0.0001 at 6s.
     ///
     /// *"struck, and slightly flat, so the crossing is heard as a crossing."* The detune IS
@@ -1083,7 +1083,7 @@ final class SoundEngine: ObservableObject {
                       endHz: hz, glideSeconds: 2.2, envelope: .linearExp)
     }
 
-    /// `blip(f)` — `spine-sound.js:343-350`. One sine at `f*2`, 0.02s up, 0.7s and gone.
+    /// `blip(f)` — `Claude Design Round 2/design-source/spine-sound.js:343-350`. One sine at `f*2`, 0.02s up, 0.7s and gone.
     /// The shortest event in the app; it was playing an 11-second bowl.
     nonisolated static func blipVoice(hz: Double) -> CeremonyVoice {
         CeremonyVoice(hz: hz * 2, peak: 0.07,
@@ -1313,7 +1313,7 @@ final class SoundEngine: ObservableObject {
     /// and its gain to 0.030. Only the third has an equivalent here, and this is why:
     /// `BreathVoice` bakes its cutoff (from `snapshot.brightness`) and its 0.1 Hz LFO at
     /// init and exposes neither, so the app's `lightBreathIn` never performed the other two
-    /// halves of the breath IN either — `spine-sound.js:63`'s per-voice filter nodes are
+    /// halves of the breath IN either — `Claude Design Round 2/design-source/spine-sound.js:63`'s per-voice filter nodes are
     /// STAGE A1 and do not exist yet. Restoring what was never moved would be theatre. So
     /// this restores the level, and the room, and the other two stay open.
     func darkReturns(dur: Double = 7) {
