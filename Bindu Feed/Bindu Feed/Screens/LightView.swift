@@ -548,7 +548,12 @@ struct LightView: View {
     private func lockCarveLine() {
         carveTimer?.invalidate(); carveTimer = nil
         soundEngine.inkOff()
-        soundEngine.axisUngrip()                       // the line locks — a small confirming rise
+        // C7.8 · `The Instrument v3.html:5374` — `if(held0>=900&&LT.carve()){ …; B.carry(174); }`.
+        // **CARRY IS THE VOICE FOR A LINE HE MEANT**, and this played `ungrip` — which is the
+        // design's answer to an OPENED hand at `:5368`, the opposite gesture. Three rising
+        // steps at 174 · 261 · 348 that stay in the room for 6.5s, against a 1.2s rise that
+        // goes away: *"a perspective taken up… no list, no collection, nothing counted."*
+        soundEngine.carryTone(hz: 174)
         withAnimation(.easeInOut(duration: 0.6)) {
             beatLine += 1
             drawing = 0

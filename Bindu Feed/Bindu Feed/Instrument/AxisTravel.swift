@@ -219,6 +219,13 @@ final class AxisTravel: ObservableObject {
 
     /// Leave the Universe: release universe mode and glide the axis back to the Feed (Z=0) via
     /// the passage throat — an explicit exit, replacing the old auto-eject.
+    /// B7.5 · one step further out on the Universe's ladder — a real passage, not a jump, so
+    /// the way back out is the way in reversed rather than a teleport.
+    func stepOut(to target: Double) {
+        guard !crossing else { return }
+        beginPassage(toZ: target, dir: target > z ? 1 : -1)
+    }
+
     func exitToFeed() {
         beginPassage(toZ: 0, dir: 1)
     }

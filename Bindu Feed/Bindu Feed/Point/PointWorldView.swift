@@ -352,7 +352,7 @@ struct PointDescentDoor: View {
     @State private var reached = false
     @State private var shown = 0                 // stages revealed so far
     @EnvironmentObject private var soundEngine: SoundEngine
-    private var cacheKey: String { "point.descent.\(star.t)" }
+    private var cacheKey: String { PointDescentCache.key(for: star) }   // D4.5 · the id, not the title
 
     /// `[label, text, minor]`, then FILTERED on non-empty (`point-levels.js:1249`). Five is
     /// the ceiling, not the count — and offline it is always FOUR, because the fallback's

@@ -53,6 +53,8 @@ final class SoundEngine: ObservableObject {
     private var breathFadeTask: Task<Void, Never>?
     private var naveTask: Task<Void, Never>?
     private var stillVoice: StillnessVoice?
+    private var strainVoice: SurfaceNoiseVoice?
+    private var rushVoice: SurfaceNoiseVoice?
 
     // Current sonic context — set by surfaces via `setContext(_:)`.
     // Default is .base until a surface reports otherwise.
@@ -1116,17 +1118,20 @@ final class SoundEngine: ObservableObject {
     /// UNHEARD. Like the rest of Pass 7 this is verified by reading only.
     func carryTone(hz: Double) {
         guard isRunning, !eventsSuppressed else { return }
-        for (i, m) in [1.0, 1.5, 2.0].enumerated() {
-            let peak = 0.034 / (Double(i) * 0.6 + 1)
-            let start = Double(i) * 0.30
+        for (i, m) in CarryVoicing.ratios.enumerated() {
+            let peak = CarryVoicing.peak(step: i)
+            let start = CarryVoicing.delay(step: i)
             // the design staggers by scheduling each oscillator at `t + i*0.30`; the engine
             // has no scheduled start, so the stagger is a delayed play of the same envelope
             Task { @MainActor [weak self] in
                 if start > 0 { try? await Task.sleep(nanoseconds: UInt64(start * 1_000_000_000)) }
                 guard let self, self.isRunning, !self.eventsSuppressed else { return }
                 self.playCeremony(
+                    // `o.type='sine'` — a plain tone. `.bowl` adds struck partials the
+                    // design does not have here, and this is not a strike: three steps that
+                    // stay in the room.
                     CeremonyVoice(hz: hz * m, peak: peak,
-                                  attackSeconds: 0.25, releaseSeconds: 6.5, synth: .bowl),
+                                  attackSeconds: 0.25, releaseSeconds: 6.5, synth: .sine),
                     maxWait: 7.2
                 )
             }
@@ -1433,9 +1438,29 @@ final class SoundEngine: ObservableObject {
         engine.attach(sv.sourceNode)
         engine.connect(sv.sourceNode, to: engine.mainMixerNode, format: sv.sourceNode.outputFormat(forBus: 0))
         stillVoice = sv
+        // C7.4 / C7.6 · the surface and the throat. Both are SET every frame and never
+        // struck, so like the stillness drone they are made once and held.
+        let st = SurfaceNoiseVoice(q: 7, gainTau: 0.12, freqTau: 0.14, startCentre: 300)
+        engine.attach(st.sourceNode)
+        engine.connect(st.sourceNode, to: engine.mainMixerNode, format: st.sourceNode.outputFormat(forBus: 0))
+        strainVoice = st
+        let ru = SurfaceNoiseVoice(q: 0.9, gainTau: 0.08, freqTau: 0.10, startCentre: 260)
+        engine.attach(ru.sourceNode)
+        engine.connect(ru.sourceNode, to: engine.mainMixerNode, format: ru.sourceNode.outputFormat(forBus: 0))
+        rushVoice = ru
     }
     func setAxisGlide(hz: Double, level: Double) { glideVoice?.set(hz: hz, level: min(0.03, level)) }
     func stopAxisGlide() {
+        for v in [strainVoice, rushVoice].compactMap({ $0 }) {
+            v.set(gain: 0, centre: 300)
+            let n = v.sourceNode
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard let self else { return }
+                self.engine.disconnectNodeInput(n); self.engine.detach(n)
+            }
+        }
+        strainVoice = nil; rushVoice = nil
         if let sv = stillVoice {
             stillVoice = nil
             sv.set(fill: 0, cut: true)
@@ -1473,36 +1498,40 @@ final class SoundEngine: ObservableObject {
         playAxis(AxisVoice(hzStart: hz, hzEnd: hz * 0.985, glideSeconds: 3.5, twinRatio: 2.0,
                            peak: 0.026, attackSeconds: 0.4, releaseSeconds: 7.5, mode: .twin), maxWait: 8)
     }
-    func axisStrain(_ f: Double) {                     // the surface under load
-        guard f > 0.04 else { return }
-        playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
-                           peak: f * f * 0.030, attackSeconds: 0.2, releaseSeconds: 0.5,
-                           mode: .noise, noiseCentre: 300 + f * 1500), maxWait: 1)
+    /// C7.4 · **THE SURFACE UNDER LOAD.** `canon/spine-sound.js:70-85` — one bandpass noise
+    /// source made once, then only `setTargetAtTime(f*f*0.030)` and `(300 + f*1500)`.
+    ///
+    /// Called EVERY FRAME from `The Instrument v3.html:5474`, with the argument
+    /// `IMM.on ? 0 : TR.tension*(1 - TR.push*0.35)` — so the strain is silent inside a
+    /// reading, and **eases as he pushes through**: a surface complains while it is holding
+    /// and stops complaining as it begins to give. The app had this as a one-shot with no
+    /// call sites at all, so the whole relationship was unavailable.
+    func setStrain(_ f: Double) {
+        let v = AxisSurface.strain(f)
+        strainVoice?.set(gain: v.gain, centre: v.centre)
     }
     func axisGive(hz: Double) {                        // it breaks — noise + the destination threshold
         playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
                            peak: 0.03, attackSeconds: 0.02, releaseSeconds: 0.5,
                            mode: .noise, noiseCentre: 1600), maxWait: 1)
     }
-    func axisRush(dir: Double) {                       // the passage — noise sweeping through the throat
-        let from = dir > 0 ? 260.0 : 2600.0, to = dir > 0 ? 2860.0 : 400.0
-        playAxis(AxisVoice(hzStart: from, hzEnd: to, glideSeconds: 2.9,
-                           peak: 0.042, attackSeconds: 0.6, releaseSeconds: 2.4,
-                           mode: .noise, noiseCentre: from), maxWait: 3.5)
+    /// C7.6 · **THE PASSAGE, SOUNDED.** `canon/spine-sound.js:110-127` — *"falling through a
+    /// throat is not a threshold; it is a rush that builds, opens, and is swallowed by the
+    /// arrival."*
+    ///
+    /// The envelope is `sin(min(1,t)·π)` — an ARCH: nothing at the mouth, full at the middle,
+    /// nothing at the far side. The app played a fixed 2.9s sweep at the passage's start, so
+    /// it neither swelled nor was swallowed, and above all **it did not follow `passageT`** —
+    /// leaning into a crossing makes the fall faster (`:5447`) and the sound stayed the same
+    /// length. Driven every frame from `:5450`, and zeroed at `:5472` whenever no passage is
+    /// running, which is what stops a continuous voice.
+    func setRush(t: Double, dir: Double) {
+        let v = AxisSurface.rush(t: t, dir: dir)
+        rushVoice?.set(gain: v.gain, centre: v.centre)
     }
     func axisGate(hz: Double) {                        // a gate passing — hz×3 → hz×1.5
         playAxis(AxisVoice(hzStart: hz * 3, hzEnd: hz * 1.5, glideSeconds: 0.9,
                            peak: 0.03, attackSeconds: 0.1, releaseSeconds: 1.6, mode: .tone), maxWait: 2)
-    }
-    func axisCarry(hz: Double) {                       // a perspective taken up — three rising steps
-        for (i, r) in [1.0, 1.5, 2.0].enumerated() {
-            let delay = Double(i) * 0.30
-            Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1e9))
-                self?.playAxis(AxisVoice(hzStart: hz * r, hzEnd: hz * r, glideSeconds: 0.1,
-                                         peak: 0.03, attackSeconds: 0.05, releaseSeconds: 6.5, mode: .tone), maxWait: 7)
-            }
-        }
     }
     /// E4.2 · the stillness drone. Continuous, riding the axis's own accumulator.
     ///

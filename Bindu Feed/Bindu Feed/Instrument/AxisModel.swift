@@ -285,3 +285,104 @@ enum MembraneRing {
         gate ? still * 0.13 : tension * 0.16
     }
 }
+
+/// B7.5 · **LEAVING, ONE SCALE AT A TIME** — `The Universe v3.html:1701-1710`.
+///
+///     if (mode !== 'sky') { back to the sky }
+///     if (cam.z > 3.2)    { cam.z = 1.3 }
+///     if (cam.z > 0.55)   { cam.z = 0.30 }
+///     else                  leave
+///
+/// Four presses walk him all the way out. **One press dumped him to the Feed from anywhere**,
+/// so the Universe's whole depth — sky, region, world, fall — collapsed to a single exit and
+/// the way back out did not retrace the way in.
+///
+/// **THE PORT IS BY REGISTER, NOT BY `cam.z`, AND THAT IS NOT A COMPROMISE.** In the standalone
+/// page `cam.z` is free state and the ladder steps it directly. Here the Universe's zoom is
+/// DERIVED from the axis (`UniverseCamera:132-137` log-interpolates ZMIN…ZMAX across the four
+/// registers), so stepping the axis back one register IS stepping the scale out one — the same
+/// four stops, expressed in the quantity this app actually owns. Porting `cam.z = 1.3` literally
+/// would set a value nothing reads.
+///
+/// The audit cites `The Instrument v3.html:1702-1710` for this; the ladder is in **The Universe
+/// v3.html** at those lines, and `:1702` of the Instrument is an audio `_voice`. Recorded so
+/// the next reader does not go looking in the wrong file.
+enum UniverseBack {
+    /// The four Universe registers, outermost first.
+    static let ladder: [Double] = [-4, -3, -2, -1]      // sky · region · world · fall
+
+    /// Where one press takes him from `z`, or `nil` when the next press should leave.
+    ///
+    /// **The sky does not step to itself.** At the outermost register there is nothing further
+    /// out, and the press leaves — which is the design's final `window.location.href`.
+    static func step(from z: Double) -> Double? {
+        // Anywhere deeper than the fall is not the Universe's business.
+        guard z <= -0.5 else { return nil }
+        // The next register OUT is the largest ladder value strictly less than where he is,
+        // with a tolerance so sitting just past a register still steps to the one beyond it.
+        let out = ladder.filter { $0 < z - 0.15 }.max()
+        return out
+    }
+}
+
+/// C3.8 · **THE WORLD HE IS LEAVING GOES SOFT BEFORE IT GOES AWAY.**
+/// `The Instrument v3.html:3480` — `blur(zv) = min(8, |zv|·300)`, applied to the field at
+/// `:5612`.
+///
+/// The `300` is the whole character. Axis speeds are small — a firm drag is around `0.02` —
+/// so the multiplier turns a number that looks like nothing into 6px of softening, and the
+/// cap at 8 keeps the fastest travel from erasing the field entirely. Without it the
+/// atmosphere is equally sharp standing still and at full speed, and nothing in the frame
+/// says he is moving except the numbers.
+enum FieldBlur {
+    static func radius(zv: Double) -> Double { min(8, abs(zv) * 300) }
+}
+
+/// C7.4 + C7.6 · **THE SURFACE AND THE THROAT.** The two continuous travel voices, as
+/// arithmetic — so the relationships can be asserted without a running audio engine.
+///
+/// `canon/spine-sound.js:70-85` and `:110-127`, driven from `The Instrument v3.html:5450`,
+/// `:5472` and `:5474`.
+enum AxisSurface {
+
+    /// What the design hands to `B.strain` every frame — `:5474`.
+    ///
+    /// Two things live in this one line. `reading` (the design's `IMM.on`) silences it
+    /// outright: inside a piece the axis is locked and the surface has nothing to say. And
+    /// **the push term runs the other way from the intuition** — the surface complains while
+    /// it is HOLDING and eases as it begins to give, so leaning through quietens it.
+    static func load(tension: Double, push: Double, reading: Bool) -> Double {
+        reading ? 0 : tension * (1 - push * 0.35)
+    }
+
+    /// `:80-83` — `gain = f²·0.030`, `centre = 300 + f·1500`, both clamped through `f∈[0,1]`.
+    /// Squared, so a light touch is nearly silent and the band only opens under real load.
+    static func strain(_ f: Double) -> (gain: Double, centre: Double) {
+        let c = max(0, min(1, f))
+        return (c * c * 0.030, 300 + c * 1500)
+    }
+
+    /// `:122-125` — `env = f<=0 ? 0 : sin(min(1,f)·π)`, `gain = env·0.042`, and the centre
+    /// sweeping `260 → 2860` inward or `2600 → 400` outward.
+    ///
+    /// **THE ENVELOPE IS AN ARCH, AND THAT IS THE WHOLE MECHANISM:** *"a rush that builds,
+    /// opens, and is swallowed by the arrival."* Nothing at the mouth, most at the middle,
+    /// nothing at the far side — so the passage ends in the arrival's own sound rather than
+    /// in a tail running underneath it.
+    static func rush(t: Double, dir: Double) -> (gain: Double, centre: Double) {
+        let f = max(0, t)
+        let env = f <= 0 ? 0 : sin(min(1, f) * .pi)
+        return (env * 0.042, dir > 0 ? 260 + f * 2600 : 2600 - f * 2200)
+    }
+}
+
+/// C7.8 · **A PERSPECTIVE TAKEN UP.** `canon/spine-sound.js:97-109` — three sines at
+/// `hz × [1, 1.5, 2]`, entering 0.30s apart, each quieter than the last and each holding for
+/// 6.5s: *"three steps, and they stay in the room."*
+enum CarryVoicing {
+    static let ratios: [Double] = [1, 1.5, 2]
+    /// `0.034/(i·0.6 + 1)` — a DECAYING ladder. Flat peaks make three equal tones, which is a
+    /// chord; the taper is what makes it a sequence of steps with the first one meant.
+    static func peak(step i: Int) -> Double { 0.034 / (Double(i) * 0.6 + 1) }
+    static func delay(step i: Int) -> Double { Double(i) * 0.30 }
+}

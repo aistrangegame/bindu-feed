@@ -228,3 +228,80 @@ final class StillnessVoice {
         }
     }
 }
+
+// C7.4 + C7.6 · **THE SURFACE AND THE THROAT ARE SET, NOT STRUCK.**
+//
+// `canon/spine-sound.js:70-85` (`strain`) and `:112-127` (`rush`) both build their noise
+// source ONCE — `if(!this._sf)`, `if(!this._rs)` — and thereafter only `setTargetAtTime` a
+// gain and a bandpass centre. Neither is an event. The app had both as one-shots that
+// created a fresh voice per call, which is a different mechanism that happens to make a
+// similar noise, and it is the same fault `axisThin` had before E4.2: **a continuous
+// quantity expressed as a discrete event**, so the sound cannot follow the thing it is
+// made of. A surface under load that sounds once has stopped being a surface under load.
+//
+// One class serves both because the design builds them identically and differs only in its
+// constants — Q 7 against 0.9, and slightly different smoothing. Writing two classes would
+// assert a distinction the source does not make.
+final class SurfaceNoiseVoice {
+    let sourceNode: AVAudioSourceNode
+    private let target: OSAllocatedUnfairLock<(gain: Double, centre: Double)>
+
+    /// Where the voice is heading. Called every frame; it never restarts anything.
+    func set(gain: Double, centre: Double) { target.withLock { $0 = (gain, centre) } }
+
+    /// - Parameters:
+    ///   - q: the bandpass Q. `strain` is 7 — a narrow, whistling band that reads as material
+    ///     under load. `rush` is 0.9 — wide open, which is air rather than a surface.
+    ///   - gainTau: `setTargetAtTime`'s time constant for the level.
+    ///   - freqTau: the same for the centre frequency.
+    init(q: Double, gainTau: Double, freqTau: Double, startCentre: Double, sampleRate: Double = 48000) {
+        let t = OSAllocatedUnfairLock<(gain: Double, centre: Double)>(initialState: (0, startCentre))
+        self.target = t
+
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)
+        else { fatalError("SurfaceNoiseVoice: format") }
+
+        // `setTargetAtTime(v, t, tau)` is an exponential approach with time constant `tau`,
+        // so the per-sample coefficient is `1 − e^(−1/(fs·tau))`. Ported as the design's own
+        // curve rather than a linear ramp: a linear approach to a level is a fade, and this
+        // is a surface answering a hand.
+        let gK = 1 - exp(-1 / (sampleRate * gainTau))
+        let fK = 1 - exp(-1 / (sampleRate * freqTau))
+
+        var level = 0.0, centre = startCentre
+        var x1 = 0.0, x2 = 0.0, y1 = 0.0, y2 = 0.0
+        var seed: UInt32 = 0x9E3779B9
+
+        self.sourceNode = AVAudioSourceNode(format: format) { _, _, frameCount, abl in
+            let buffers = UnsafeMutableAudioBufferListPointer(abl)
+            let bufL = buffers[0].mData?.assumingMemoryBound(to: Float.self)
+            let bufR = buffers[1].mData?.assumingMemoryBound(to: Float.self)
+            let goal = t.withLock { $0 }
+
+            for frame in 0..<Int(frameCount) {
+                level += (goal.gain - level) * gK
+                centre += (goal.centre - centre) * fK
+
+                // RBJ constant-0dB-peak bandpass — what WebAudio's `'bandpass'` is. Recomputed
+                // per sample because the centre is swept continuously through the passage;
+                // holding coefficients across a buffer would step the sweep at buffer edges.
+                let w0 = 2 * Double.pi * min(centre, sampleRate * 0.45) / sampleRate
+                let alpha = sin(w0) / (2 * q)
+                let a0 = 1 + alpha
+                let b0 = alpha / a0, b2 = -alpha / a0
+                let a1 = -2 * cos(w0) / a0, a2 = (1 - alpha) / a0
+
+                seed = seed &* 1_664_525 &+ 1_013_904_223
+                let white = Double(Int32(bitPattern: seed)) / Double(Int32.max)
+
+                let y = b0 * white + b2 * x2 - a1 * y1 - a2 * y2
+                x2 = x1; x1 = white; y2 = y1; y1 = y
+
+                let s = Float(y * level)
+                bufL?[frame] = s
+                bufR?[frame] = s
+            }
+            return noErr
+        }
+    }
+}

@@ -28,6 +28,19 @@ struct InstrumentView: View {
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
     @State private var pointHolds = false      // a Point universe or star reading is open
+
+    /// C7.4 · `The Instrument v3.html:5474` — `IMM.on ? 0 : TR.tension*(1 - TR.push*0.35)`.
+    /// `pointHolds` is this app's `IMM.on`: inside a reading the axis is locked and the
+    /// surface has nothing to say. The `push` term is the relationship worth having — a
+    /// surface complains while it HOLDS and eases as it begins to give, so leaning through
+    /// quietens it rather than straining it further.
+    private var strainDrive: Double {
+        AxisSurface.load(tension: travel.tension, push: travel.push, reading: pointHolds)
+    }
+
+    /// C7.6 · the passage's own progress, and 0 whenever no passage is running — which is
+    /// `:5472`'s `B.rush(0, PS.dir)`. A continuous voice has to be told to stop.
+    private var rushDrive: Double { travel.crossing ? travel.passageT : 0 }
     // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
     // so the axis drag stands down and the card's own scroll/pan works. Without this, the
     // outer `.highPriorityGesture` steals every drag from the presented card.
@@ -202,7 +215,14 @@ struct InstrumentView: View {
             if !pointHolds {
             HStack {
                 Button {
-                    if inUniverse { travel.exitToFeed() }
+                    // B7.5 · one scale at a time. `The Universe v3.html:1701-1710` walks him
+                    // out in four presses; this dumped him to the Feed from anywhere, so the
+                    // Universe's whole depth collapsed to one exit and the way out did not
+                    // retrace the way in.
+                    if inUniverse {
+                        if let out = UniverseBack.step(from: z) { travel.stepOut(to: out) }
+                        else { travel.exitToFeed() }
+                    }
                     else if !path.isEmpty { $path.popToRootDissolve() }
                 } label: {
                     Text("‹").font(.system(size: 22)).foregroundStyle(BinduTheme.inkTertiary)
@@ -279,11 +299,16 @@ struct InstrumentView: View {
             PointYantra.shared.setEnclosure(PointYantra.focus(forAxisZ: travel.z))
         }
         .onChange(of: travel.crossing) { _, crossing in
-            if crossing {                                       // a give / the passage fires
-                soundEngine.axisRush(dir: travel.passageDir)
-                soundEngine.axisGive(hz: here.hz)
-            }
+            if crossing { soundEngine.axisGive(hz: here.hz) }   // it breaks — the strain snaps
         }
+        // C7.6 · `:5450` — `B.rush(PS.t, PS.dir)`, every frame of the crossing.
+        .onChange(of: rushDrive) { _, t in soundEngine.setRush(t: t, dir: travel.passageDir) }
+        // C7.4 · `:5474` — `B.strain(IMM.on ? 0 : TR.tension*(1 - TR.push*0.35))`.
+        //
+        // **OBSERVED AS THE WHOLE EXPRESSION, NOT AS ITS TERMS.** Watching `tension` alone
+        // would miss a frame where only `push` moved, and one `.onChange` per term is three
+        // chances to forget the fourth. The design passes one number; so does this.
+        .onChange(of: strainDrive) { _, f in soundEngine.setStrain(f) }
         .onChange(of: travel.thin) { _, thin in
             // E4.2 — continuous, following the accumulator rather than firing once at 0.1.
             // `travel.down` is the hand arriving: the drone goes in ~0.2s, not on a decay.
@@ -651,6 +676,14 @@ struct InstrumentView: View {
                         // failed: instrumentField", which is a link error, not a maths one.
                         .floatArray(skyArray)
                     ))
+                    // C3.8 · **THE WORLD HE IS LEAVING GOES SOFT BEFORE IT GOES AWAY.**
+                    // `:3480` `blur(zv) = min(8, |zv|·300)`, applied to the field at `:5612`.
+                    // The `300` is the character: axis speeds are tiny — a firm drag is about
+                    // `0.02` — so it turns a number that looks like nothing into 6px of
+                    // softening, and the cap at 8 keeps the fastest travel from erasing the
+                    // atmosphere. Without it the field is equally sharp standing still and at
+                    // full speed, and nothing in the frame says he is moving.
+                    .blur(radius: FieldBlur.radius(zv: travel.speed))
             }
         }
         .ignoresSafeArea()

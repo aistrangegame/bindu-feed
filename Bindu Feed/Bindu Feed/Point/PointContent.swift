@@ -16,6 +16,30 @@ struct PointStar: Identifiable {
     var id: String { key }
 }
 
+/// D4.5 · **THE DESCENT CACHE IS KEYED ON THE STAR'S ID, NOT ITS TITLE.**
+///
+/// It was `"point.descent.\(star.t)"` — a DISPLAY STRING.
+///
+/// MEASURED(2026-08-30): the fault is latent rather than live — all 66 stars carry 66
+/// distinct titles, so nothing collides today. And that is exactly the condition under which
+/// this class of bug has twice been shipped here: `logStoryMet` keyed on `codexId` while 15
+/// stories carried a blank one, and `WORDS` keyed on the codex while two pairs of stories
+/// shared theirs. **A soft key is not wrong when it happens to be unique; it is wrong because
+/// nothing keeps it unique** — and `t` is the one field on a star that exists to be edited.
+///
+/// Two consequences, both silent: rename a star and every reader's cached descent for it is
+/// orphaned and quietly regenerated; give two stars one title and they share one descent, so
+/// a generated reading appears under a star it was not written for — which reads as content,
+/// not as an absence, and is therefore the worse half.
+///
+/// (The measurement is dated because it is a claim about live CONTENT, not about the build.
+/// `check_status` scopes to implementation-absence claims and does not reach this class, and
+/// widening it would be a relaxation-shaped change made without calibration. A number
+/// about data goes stale the moment a star is added or renamed.)
+enum PointDescentCache {
+    static func key(for star: PointStar) -> String { "point.descent.\(star.key)" }
+}
+
 struct PointUniverse: Identifiable { let id: String; let name: String; let sub: String; let stars: [String] }
 struct PointDimension: Identifiable { let n: Int; let hue: String; let name: String; let roman: String; let voice: String; let universes: [PointUniverse]; var id: Int { n } }
 
