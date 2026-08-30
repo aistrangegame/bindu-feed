@@ -99,6 +99,40 @@ enum PointReturn {
         return a
     }
 
+    /// D5.7 · `aimTo(px,py,cx,cy,rim)` — `world-six.js:120-125`. Where the hand has taken it,
+    /// and how far it has been drawn up out of its post.
+    ///
+    /// `aim` is horizontal displacement over `rim*0.46`, clamped to ±1. `lift` is how far ABOVE
+    /// the star's own spot the hand has gone, over `rim*0.34`, clamped to 0…1 — **drawing it
+    /// DOWN is not negative lift, it is no lift**, which is why the clamp floors at 0 and why a
+    /// downward drag can never send.
+    static func aim(handX: Double, spotX: Double, rim: Double) -> Double {
+        max(-1, min(1, (handX - spotX) / (rim * 0.46)))
+    }
+    static func lift(handY: Double, spotY: Double, rim: Double) -> Double {
+        max(0, min(1, (spotY - handY) / (rim * 0.34)))
+    }
+
+    /// D5.7 · **WHAT THE WORLD ASKS, IN WORDS** — `world-six.js:417-426`, all five states.
+    ///
+    /// The app had only the un-sent one. The two `holding` states were absent **because the
+    /// gesture was absent**: world VI opened on a tap, so there was no holding to describe.
+    /// Porting the strings onto a tap would have put authored words on the wrong gesture —
+    /// which passes every checker and reads as fixed.
+    ///
+    /// **THE CUE TRACKS THE SEND THRESHOLD.** `DRAW IT UP` while `lift < 0.14`, `LET GO` once
+    /// past it — the same 0.14 that `send` uses to tell a send from a touch (`:131`, *"not a
+    /// send. Just a touch."*). So the words are not a label on the gesture, they are the
+    /// gesture's own state read aloud: he is told the instant he has drawn it up far enough
+    /// for letting go to mean something.
+    static func cue(holding: Bool, lift: Double, arcs: [Arc]) -> String {
+        if holding { return lift < 0.14 ? "DRAW IT UP · AIM · LET GO" : "LET GO" }
+        if arcs.isEmpty { return "TAKE ONE · SEND IT OVER · WAIT" }
+        if arcs.contains(where: { $0.deep }) { return "SOMETHING IS COMING THAT YOU DID NOT SEND" }
+        if arcs.count > 1 { return "THEY WILL COME BACK IN THEIR OWN ORDER" }
+        return "IT WILL COME BACK. NOT WHEN YOU WANT IT TO."
+    }
+
     static func isFlying(_ id: String) -> Bool { arcs.contains { $0.id == id } }
 
     // ── the wall clock ────────────────────────────────────────────────

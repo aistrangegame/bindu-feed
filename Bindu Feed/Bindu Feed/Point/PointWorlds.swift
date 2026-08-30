@@ -930,6 +930,32 @@ private struct WorldReturn: View {
     var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var settle: CGFloat = 0     // 0 at the surface … grows as he settles downward
     @State private var settleBase: CGFloat = 0
+    /// Where a star sits on screen — the same expression its `.position` uses, so the hand
+    /// and the mark agree about where the thing is.
+    private func spot(of id: String, in size: CGSize) -> CGPoint? {
+        guard let i = stars.firstIndex(where: { $0.id == id }) else { return nil }
+        let strat = Double(i) / Double(max(stars.count - 1, 1))
+        return CGPoint(x: size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22)),
+                       y: size.height * (0.14 + strat * 1.1) - settle)
+    }
+
+    /// `take(px,py)` — `world-six.js:105-117`. The nearest star to the hand, **skipping the
+    /// DEEP ones**: *"the hand passes through"*. What is already coming back on its own is
+    /// not his to send.
+    private func nearestTakeable(to p: CGPoint, in size: CGSize) -> String? {
+        var best: String? = nil, bd = 44.0
+        for sp in stars where !PointReturn.isFlying(sp.id) {
+            guard let s = spot(of: sp.id, in: size) else { continue }
+            let d = ((s.x - p.x) * (s.x - p.x) + (s.y - p.y) * (s.y - p.y)).squareRoot()
+            if d < bd { bd = d; best = sp.id }
+        }
+        return best
+    }
+
+    /// D5.7 · the star under his hand, not yet let go — `world-six.js:88-90`.
+    @State private var holding: String? = nil
+    @State private var aimX: CGFloat = 0
+    @State private var liftY: CGFloat = 0
     var body: some View {
         GeometryReader { geo in
             let H = geo.size.height, W = geo.size.width
@@ -960,19 +986,58 @@ private struct WorldReturn: View {
                     let y = geo.size.height * (0.14 + strat * 1.1) - settle      // deeper stars, revealed by settling
                     StarMark(placed: p, hue: hue, compact: quiet)
                         .saturation(1 - strat * 0.5).opacity(1 - strat * 0.35)   // deeper = aged
-                        .position(x: geo.size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22)), y: y)
+                        .position(x: geo.size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22))
+                                     + (holding == p.id ? aimX : 0),
+                                  y: y - (holding == p.id ? liftY : 0))
                         .allowsHitTesting(y > 40 && y < H - 40)
-                        .onTapGesture { onOpen(p.star) }
                 }
-                // `world-six.js:428` — the un-sent state. The field is where he takes one;
-                // the send and the wait are the reading's. Replaced "settle down through the
-                // layers", invented.
-                if settle < 20 { WorldCue(text: "TAKE ONE · SEND IT OVER · WAIT") }
+                // D5.7 · all five of `world-six.js:417-426`, not just the un-sent one. The
+                // two `holding` states were absent because the GESTURE was absent.
+                WorldCue(text: PointReturn.cue(
+                    holding: holding != nil,
+                    lift: PointReturn.lift(handY: 0, spotY: Double(liftY),
+                                           rim: Double(min(W, H))),
+                    arcs: PointReturn.arcs))
             }
             .contentShape(Rectangle())
-            .simultaneousGesture(DragGesture()
-                .onChanged { v in settle = max(0, min(maxSettle, settleBase + v.translation.height)) }
-                .onEnded { _ in settleBase = settle })
+            // D5.7 · **HE TAKES A STAR, AIMS, AND LETS GO. THAT IS THE ENTIRE ACT.**
+            // `world-six.js:15`. This world opened on `.onTapGesture` — the one register whose
+            // whole subject is letting go, entered by a tap, which cannot be let go of.
+            //
+            // `take` skips DEEP stars: *"the hand passes through"* (`:110`) — what is coming
+            // back on its own is not his to send.
+            .simultaneousGesture(DragGesture(minimumDistance: 0)
+                .onChanged { v in
+                    if holding == nil {
+                        holding = nearestTakeable(to: v.startLocation, in: geo.size)
+                        aimX = 0; liftY = 0
+                    }
+                    if let id = holding, let sp = spot(of: id, in: geo.size) {
+                        aimX = v.location.x - sp.x
+                        liftY = max(0, sp.y - v.location.y)
+                        _ = id
+                    } else {
+                        settle = max(0, min(maxSettle, settleBase + v.translation.height))
+                    }
+                }
+                .onEnded { _ in
+                    if let id = holding {
+                        // `release()` — `:128-134`. Below the threshold this is NOT a send;
+                        // `PointReturn.send` returns nil and the star drops back into its post.
+                        let sent = PointReturn.send(
+                            id: id,
+                            aim: PointReturn.aim(handX: Double(aimX), spotX: 0,
+                                                 rim: Double(min(W, H))),
+                            lift: PointReturn.lift(handY: 0, spotY: Double(liftY),
+                                                   rim: Double(min(W, H))))
+                        if sent == nil, let sp = stars.first(where: { $0.id == id }) {
+                            onOpen(sp.star)      // a touch that was not a send opens it
+                        }
+                        holding = nil; aimX = 0; liftY = 0
+                    } else {
+                        settleBase = settle
+                    }
+                })
         }
         // VI · `distance(f)`. *"While something of his is away, the register's own voice
         // leans into the delay line and the delay lengthens."* Settling down through the

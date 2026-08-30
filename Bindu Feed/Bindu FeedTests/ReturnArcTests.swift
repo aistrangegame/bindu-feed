@@ -182,4 +182,59 @@ struct ReturnArcTests {
         #expect(PointReturn.homeFlash(at: t.addingTimeInterval(0.33)) < 0.6)
         #expect(PointReturn.homeFlash(at: t.addingTimeInterval(0.7)) == 0, "and it is gone")
     }
+
+    // MARK: - D5.7 · take, aim, let go — the gesture and its words together
+
+    @Test("the cue tracks the SEND THRESHOLD, not the act of holding")
+    func theWordsAreTheGesturesOwnState() {
+        // **THE CLAIM.** `world-six.js:419` — `DRAW IT UP · AIM · LET GO` while `lift < 0.14`,
+        // `LET GO` past it — and 0.14 is the same number `send` uses to tell a send from a
+        // touch (`:131`, *"not a send. Just a touch."*). So the words are not a label on the
+        // gesture; they are its state read aloud. He is told the instant letting go starts to
+        // mean something.
+        #expect(PointReturn.cue(holding: true, lift: 0.10, arcs: []) == "DRAW IT UP · AIM · LET GO")
+        #expect(PointReturn.cue(holding: true, lift: 0.20, arcs: []) == "LET GO")
+        // the boundary is the send's own, exactly
+        #expect(PointReturn.cue(holding: true, lift: 0.139, arcs: []) == "DRAW IT UP · AIM · LET GO")
+        #expect(PointReturn.cue(holding: true, lift: 0.14, arcs: []) == "LET GO")
+    }
+
+    @Test("all five states, and the un-held three read the sky rather than the hand")
+    func theFiveStates() {
+        // The app had ONE of these — the un-sent line — because the other four describe a
+        // gesture and a flight it did not have. `:417-426`.
+        PointReturn.resetAll()
+        #expect(PointReturn.cue(holding: false, lift: 0, arcs: []) == "TAKE ONE · SEND IT OVER · WAIT")
+        let one = PointReturn.Arc(id: "a", n: 1, aim: 0, t0: Date(), dur: 4, deep: false)
+        let two = PointReturn.Arc(id: "b", n: 1, aim: 0, t0: Date(), dur: 4, deep: false)
+        let deep = PointReturn.Arc(id: "c", n: 1, aim: 0, t0: Date(), dur: 4, deep: true)
+        #expect(PointReturn.cue(holding: false, lift: 0, arcs: [one])
+                == "IT WILL COME BACK. NOT WHEN YOU WANT IT TO.")
+        #expect(PointReturn.cue(holding: false, lift: 0, arcs: [one, two])
+                == "THEY WILL COME BACK IN THEIR OWN ORDER")
+        // **DEEP OUTRANKS COUNT**, because something arriving unbidden is the larger fact.
+        #expect(PointReturn.cue(holding: false, lift: 0, arcs: [one, two, deep])
+                == "SOMETHING IS COMING THAT YOU DID NOT SEND")
+    }
+
+    @Test("drawing DOWN is not negative lift — it is no lift, and cannot send")
+    func liftFloorsAtZero() {
+        // `:124` clamps `lift` to 0…1. A downward drag is not a reverse throw; it is a hand
+        // that never drew anything up, so `send` refuses it at the same 0.14. Without the
+        // floor a hard downward pull would produce a large negative that some later
+        // `abs()` could turn into a send.
+        #expect(PointReturn.lift(handY: 500, spotY: 100, rim: 393) == 0, "a downward drag lifted")
+        #expect(PointReturn.lift(handY: 0, spotY: 100, rim: 393) > 0)
+        PointReturn.resetAll()
+        #expect(PointReturn.send(id: "z", aim: 0, lift: 0) == nil, "no lift sent it anyway")
+        PointReturn.resetAll()
+    }
+
+    @Test("aim is signed and clamped, so a wild throw is still a throw")
+    func aimIsClamped() {
+        #expect(PointReturn.aim(handX: 0, spotX: 100, rim: 393) < 0, "left of the post is not negative")
+        #expect(PointReturn.aim(handX: 200, spotX: 100, rim: 393) > 0)
+        #expect(PointReturn.aim(handX: 9999, spotX: 0, rim: 393) == 1, "aim ran past the clamp")
+        #expect(PointReturn.aim(handX: -9999, spotX: 0, rim: 393) == -1)
+    }
 }

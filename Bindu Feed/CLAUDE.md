@@ -575,6 +575,9 @@ Every "is this still today?" check uses **local time**, not UTC. Mirror's day-ke
   **The general form: a cue's absence is only readable from what occupies its position.** A list of authored strings can say a cue is missing from the app; it can never say whether the design meant the surface to be quiet there. That needs the drawing, and it is the same limit as every other string check — *the words are checkable, the surface they sit on is not.*
 
 
+- **A STALE `REVIEW` ROW IS A FUTURE FALSE POSITIVE IN THE SWEEP THAT READS IT.** `authored-strings.tsv`'s `REVIEW` means *authored, and NOT in the app* — the backlog where a never-built mechanic surfaces. Building D5.7 rendered three of them (`DRAW IT UP · AIM · LET GO`, `THEY WILL COME BACK IN THEIR OWN ORDER`, `SOMETHING IS COMING THAT YOU DID NOT SEND`) and **no checker noticed**, because `check_authored` enforces `REQUIRED` and `check_rendered` auto-grants anything it finds in the design. Nothing is broken by the staleness — and the next cue-versus-gesture sweep would have re-reported all three as *authored cues the app does not say*, sending someone to chase work already done. **A backlog that is not drained as it is worked stops being a backlog and becomes noise with a verdict on it.** So: building an authored string moves its row `REVIEW → REQUIRED` in the same pass, and that is now part of closing any row that ports one.
+
+
 ## 11. Known-deferred (the polish list)
 
 Surfaced during the Phase 9 audit, intentionally postponed. None block anything; they're refinements waiting for the right moment.
