@@ -483,6 +483,39 @@ struct ReturnView: View {
         withAnimation(.easeInOut(duration: 1.0)) { stage = .sealed }
     }
 
+    /// E3.11 · **THE SEALING SHOWS HIM WHAT HE KEPT.**
+    ///
+    /// `AUDIT E3.11` — *"the Sealing never shows him what he kept."* He writes into the reply,
+    /// presses *add the ring*, and the closing movement showed him canon prose and a widget:
+    /// the one thing absent from the surface was **the thing he had just written**. `replyText`
+    /// was read once, to decide whether the button was enabled and what to send, and never
+    /// rendered.
+    ///
+    /// It is the same fault as the rings list one movement earlier (E3.2), at the other end of
+    /// the act: **a return you can complete and cannot re-read.** The words go to the base and
+    /// the screen moves on without them, so the moment of sealing shows everything except the
+    /// seal.
+    ///
+    /// Drawn with the DEBOSS, because that is what this surface does to a sealed line
+    /// (`ReturnPatina` F3): cut into the material rather than laid on it — light on the upper
+    /// edge, shadow below. His words are now part of the thing, which is what sealing means.
+    @ViewBuilder private var keptWords: some View {
+        let kept = replyText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !kept.isEmpty {
+            Text(kept)
+                .font(.lora(ReturnDeboss.size))
+                .italic()
+                .lineSpacing(6)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(ReturnDeboss.ink)
+                .shadow(color: ReturnDeboss.shadowDown.color, radius: 0, y: ReturnDeboss.shadowDown.y)
+                .shadow(color: ReturnDeboss.shadowUp.color, radius: 0, y: ReturnDeboss.shadowUp.y)
+                .padding(.horizontal, 10)
+                .padding(.top, 4)
+                .transition(.opacity)
+        }
+    }
+
     // VIII · The Sealing
     private var sealing: some View {
         centered {
@@ -493,6 +526,7 @@ struct ReturnView: View {
             }
             if sealPhase >= 1 {
                 Text(ReturnCanon.sealAdded).font(.lora(17, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary).transition(.opacity)
+                keptWords
             }
             if sealPhase >= 2 {
                 VStack(spacing: 14) {

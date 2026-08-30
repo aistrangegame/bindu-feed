@@ -571,3 +571,31 @@ and tested nothing — both of its renders were single touches, so it compared t
 things and passed on determinism. It was caught by asking the green-on-absent question of the
 name: *what would have to break for this to fail?* Nothing would. Renamed to
 `oneTouchSettlesInsideItsRamp`, which is what it proves.
+
+---
+
+## 12 · E3.11 · THE SEALING SHOWS HIM WHAT HE KEPT — OWED, and the count said so
+
+**The standing check caught this one.** The suite was 246 before the change and 246 after, so
+by §10's rule — *a behaviour change that leaves the test count unchanged is a behaviour change
+nothing asserts* — E3.11 has no assertion, and this row exists rather than a claim that it does.
+
+**Why it has none, and why that is not laziness.** The change renders `replyText` back at the
+Sealing, debossed. It is a `@ViewBuilder` inside `ReturnView`, and there is nothing to lift
+out: no arithmetic, no threshold, no state machine. `RingsListTests` could exist because
+`FeedStore.ringRows` is a function over data; *"draw this string, cut into the surface"* is not.
+Extracting a wrapper purely so a test could name it would assert that a wrapper exists, which
+is the tautology `theRootIs1361` was made of.
+
+**THE WALK CONDITION.** Write a reply, seal it, and read **the words you just wrote** in the
+closing movement — italic, gold, cut into the surface with light on the upper edge and shadow
+below, not laid on top of it. The failure it replaces is specific and easy to confirm: before
+this, the Sealing showed the ring widget and two canon lines and **nothing you had written**.
+
+**NULL-SHAPED IN ONE DIRECTION**, so the positive condition matters: sealing with an empty
+reply correctly shows nothing, and the button will not fire on empty text — *"a ring that
+arrived empty would be a return he did not make."* So *"I saw no words"* is only evidence if
+words were actually written.
+
+**Paired with E3.2 by the same sentence.** They are the same omission at the two ends of one
+act, and only both together make it true that the ceremony returns the speech it records.

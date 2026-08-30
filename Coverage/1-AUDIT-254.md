@@ -278,7 +278,7 @@ Open findings by severity:
 | E3.8 | MAJOR | VISUAL | `towardGold` is not applied | **CLOSED 2026-08-29** | `towardGold` is built at `ReturnPatina.swift:8,31` (F3). Row's evidence was a zero-hit grep. Original:  grep `towardGold`/`foxed` → 0 hits. |
 | E3.9 | MAJOR | DATA | sealed line not debossed, not modelled | **CLOSED 2026-08-29** | The sealed line's deboss is built at `ReturnPatina.swift:54` (F3). Original:  grep `sealedLine` → 0 hits; every paragraph renders identically. |
 | E3.10 | MAJOR | DATA | Field Settled cumulative not one-at-a-time | OPEN | `ReturnView.swift:344` accumulates; no avatar/role/exhale gate; `useExhale` → 0 hits. |
-| E3.11 | MAJOR | VISUAL | the Sealing never shows him what he kept | OPEN | `ReturnView.swift:437-446` `replyText` never rendered back. |
+| E3.11 | MAJOR | VISUAL | the Sealing never shows him what he kept | **CLOSED 2026-08-29** | The Sealing renders `replyText` back, debossed — cut into the material rather than laid on it, which is what this surface does to a sealed line (F3). `replyText` had been read only to enable the button and to send. Same fault as E3.2 at the other end of the act: **a return you can complete and cannot re-read.** Original:  `ReturnView.swift:437-446` `replyText` never rendered back. |
 | E3.12 | none | — | smaller Return deltas | OPEN | `camY` never overridden; motes fixed 24; ring N=120. |
 | E3.13 | none | — | what the Return gets right | CLOSED | Stage order, wording, forward detector intact. |
 | E4.1 | BLOCKER | DATA | Light functionally silent, 7 of 8 events missing | **CLOSED 2026-08-29** | All eight built and wired. `darkReturns` closed as B3; `lightOff`/`closeTheRoom(6)` closed in the comp lane and both now fire from `backOut`. |
