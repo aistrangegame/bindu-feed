@@ -577,9 +577,21 @@ struct InstrumentView: View {
                         .float(Float(t)),                  // uT
                         .float(Float(z)),                  // uZ  — the live axis coordinate
                         .float(Float(breath.value)),       // uBr
-                        .float(0),                         // uSync   (dance sync — Phase 2)
-                        .float(0),                         // uSpin
-                        .float(0),                         // uReveal (light bloom — Phase 2)
+                        // C4.5 · uSync / uSpin — VII's pace and the frame turning with its
+                        // lane. `The Instrument v3.html:5588` feeds `DANCE.sync` and
+                        // `DANCE.spin * 0.55`. `PointDance.lock` is the app's chain coming
+                        // into time — the same quantity by a different construction — and it
+                        // is static, so the axis can read it without the Point being mounted.
+                        // A world he is not in reads 0, which is what `leaveRegister()` leaves.
+                        .float(Float(PointDance.lock)),    // uSync
+                        .float(Float(PointDance.lock * 0.55)),  // uSpin
+                        // C4.5 · uReveal — **THE CENTRE BLOOM.** `:5589` is
+                        // `Math.max(0, (Z - 8.6) / 0.9)`: nothing until the last 0.4 of the
+                        // axis, then a ramp to 1 exactly at the centre (z 9). The shader's
+                        // `col += HUES[14] * uReveal * (0.05 + 0.05*uBr)` has been multiplying
+                        // by a hard zero, so the arrival at *the point, at last* has had no
+                        // light of its own — the one place on the axis where that matters.
+                        .float(Float(InstrumentField.reveal(z: z))),  // uReveal
                         // B0.5 · THE SKY ANSWERS STILLNESS. `The Instrument v3.html:1242-1248`
                         // bends every room's light toward the centre as `dwell` fills, and
                         // `mSky` has computed that term all along against a hard `0`.
@@ -592,7 +604,12 @@ struct InstrumentView: View {
                         // their own turbulence, drift or grain. The Forge churns at 0.92; the
                         // Watcher is nearly still at 0.12; the Forgetting is 0.86 grain.
                         .float3(Float(wx[0]), Float(wx[1]), Float(wx[2])),
-                        .float3(0, 0, 0),                  // uHand   (veil parting — Phase 2)
+                        // C4.5 · uHand — the veil's parting, carved out of its own density in
+                        // the shader. `The Instrument v3.html:2967` `[hand.x, hand.y, open*0.62]`,
+                        // fed at `:5592`. `PointVeil` is the bridge; both sides existed and had
+                        // no wire between them.
+                        .float3(Float(PointVeil.uHand.0), Float(PointVeil.uHand.1),
+                                Float(PointVeil.uHand.2)),  // uHand
                         // uRm — 39 floats, the rooms' light-wells with a DERIVED density.
                         // `ROOMS_FALLBACK` in the shader pins every one at a flat 0.6.
                         // `.floatArray` supplies BOTH the pointer and its length — the Metal

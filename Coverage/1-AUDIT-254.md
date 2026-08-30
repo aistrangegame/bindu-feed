@@ -161,7 +161,7 @@ Open findings by severity:
 | B5.7 | MINOR | VISUAL | the pre-settle orbit is synchronised | OPEN | `UniverseView.swift:1269` evenly spaced, phase-locked. |
 | B5.8 | MAJOR | VISUAL | `enter` derived from the wrong quantity | OPEN | `UniverseView.swift:1193` off the descent, not a camera flight. |
 | B6.1 | BLOCKER | DATA | the world scale is a dead end: there is no door | CLOSED | `UniverseView.swift:516-565` doorway + TOUCH TO READ + route. |
-| B7.1 | MAJOR | VISUAL | THE SWEEP (the sky's own gesture) | OPEN | `InstrumentView.swift:537` `uSweep` hard-zeroed; no implementation. |
+| B7.1 | MAJOR | VISUAL | THE SWEEP (the sky's own gesture) | **OPEN — evidence corrected** | The row reads *"no implementation"*; **`mSky` already computes the sweep term** (`v += sweep.y * smoothstep(0.030, 0, |dot(q,nn)|) * 0.34`). The shader half is built and starved. What is missing is the app computing the drag-line and `gather()`. Original:  `InstrumentView.swift:537` `uSweep` hard-zeroed; no implementation. |
 | B7.2 | MAJOR | VISUAL | THE DWELL (the region's gesture) | OPEN | grep `dwell` in `Universe/` → 0 hits. |
 | B7.3 | MAJOR | DATA | THE TURN (the world's gesture) | CLOSED | `UniverseCamera.swift:45-53` + `UniverseView.swift:944-1004` three faces + TURN IT. |
 | B7.4 | MINOR | VISUAL | the lens is a text button, not the rail | OPEN | `UniverseView.swift:139-148` a Button; no 30px rail, no knob, no toggle voice. |
@@ -197,7 +197,7 @@ Open findings by severity:
 | C4.2 | MAJOR | DATA | the Veil's `uBack[9]` dropped | OPEN | grep `uBack` repo-wide → 0 hits. `mVeil(q,t,hand)` takes `hand` only. |
 | C4.3 | MAJOR | DATA | sky's thirteen rooms frozen constants | CLOSED | `FeedStore.swift:828-840` live via `UniWeather.sky`; `InstrumentField.metal:56-59` reads `rm[]`. |
 | C4.4 | MAJOR | VISUAL | `setRoom()`: Universe never wears the room's colour | OPEN | `InstrumentField.metal:15-17` HUES[2..4] three identical hardcoded triples; kernel takes no room-hue uniform. |
-| C4.5 | MAJOR | VISUAL | six of eight driven uniforms pinned to 0 | OPEN | `InstrumentView.swift:534-544` uSync/uSpin/uReveal/uDwell/uSweep/uHand all 0, "Phase 2". |
+| C4.5 | MAJOR | VISUAL | six of eight driven uniforms pinned to 0 | **CLOSED 2026-08-29** | All six now driven. `uWx` was already live; `uDwell` fed from `AxisTravel.dwell` (B0.5); `uSync`/`uSpin` from `PointDance.lock` at the design's `×0.55`; `uReveal` from `InstrumentField.reveal(z:)`; `uHand` through a new `PointVeil` bridge — world III's `part` was `@State` inside a view and the axis could not read it. **The shader computed with every one of them and was multiplying by zero**, so *"Phase 2"* named a wire, not a feature. **`uSweep` remains** — see B7.1, still open. Original:  `InstrumentView.swift:534-544` uSync/uSpin/uReveal/uDwell/uSweep/uHand all 0, "Phase 2". |
 | C4.6 | COSMETIC | VISUAL | grain scale hashes points not pixels | OPEN | `InstrumentField.metal:213` `pos` never scaled by device density. |
 | C4.7 | MAJOR | VISUAL | presence-weighted CPU layer absent | OPEN | grep `drawLightSide` etc → 0 hits. `shells` is one tension circle. |
 | C5.1 | COSMETIC | DATA | `#rail` largely right | OPEN | pitch 21 vs 22 (`:427`); no `kept` glow; fade binary at `:465`. |

@@ -119,3 +119,18 @@ enum Axis {
 
     static func clampZ(_ z: Double) -> Double { max(minZ, min(maxZ, z)) }
 }
+
+/// The shader's own driven quantities, as functions rather than literals.
+///
+/// C4.5 · six of eight were `.float(0)` with a *"Phase 2"* comment. They are not phase-two
+/// features: the shader computes with every one of them and has been multiplying by zero.
+enum InstrumentField {
+    /// `The Instrument v3.html:5589` — `reveal: Math.max(0, (Z - 8.6) / 0.9)`.
+    ///
+    /// **Nothing until the last 0.4 of the axis, then a ramp to 1 exactly at the centre.**
+    /// `z 9` is *the point, at last*, and `(9 − 8.6)/0.9 = 0.444`… which does NOT reach 1 —
+    /// the ramp is written to keep climbing past the register, to `z 9.5`, and the axis clamps
+    /// at `9.62`. So the bloom is still opening as he arrives and is at its fullest just past
+    /// it: the design does not put the maximum on the register, it puts it beyond.
+    static func reveal(z: Double) -> Double { max(0, (z - 8.6) / 0.9) }
+}

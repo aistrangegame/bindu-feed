@@ -403,6 +403,37 @@ private struct WorldTurn: View {
 }
 
 // ── III · THE VEIL — gauze upon gauze; PART the curtain (horizontal drag) to reach in ──
+/// C4.5 · **THE VEIL'S PARTING, WHERE THE SHADER CAN SEE IT.**
+///
+/// `The Instrument v3.html:2967` — `uHand: [hand[0], hand[1], open*0.62]` — and `:5592` feeds
+/// it into the field every frame. The shader carves the parting out of the veil's own density
+/// from that vector, and the app passed `(0,0,0)`: the mechanism exists on both sides and had
+/// no wire between them.
+///
+/// **THIS BRIDGE DID NOT EXIST AND IS NEW.** World III's `part` is `@State` inside a view, so
+/// the axis could not read it. `PointDance` and `PointChamber` already carry this shape — a
+/// small static the world writes and another surface reads — so it follows them rather than
+/// inventing a third pattern.
+///
+/// **SHARED STATIC · any suite touching it is `.serialized`** (§10 tenth shape, applied at
+/// creation rather than after a flake).
+enum PointVeil {
+    /// x, y in −1…1 across the register, and the parting's own openness. `nil` when no hand.
+    private(set) static var hand: (x: Double, y: Double, open: Double)?
+
+    static func hold(x: Double, y: Double, open: Double) { hand = (x, y, open) }
+
+    /// `:2967`'s `else` branch is `[0,0,0]` — a released veil hands the shader nothing, and
+    /// the parting closes. Called by every exit, not only the polite one (§10).
+    static func release() { hand = nil }
+
+    /// `open * 0.62` — the third component the shader reads. Zero when nothing is held.
+    static var uHand: (Double, Double, Double) {
+        guard let h = hand else { return (0, 0, 0) }
+        return (h.x, h.y, h.open * 0.62)
+    }
+}
+
 private struct WorldVeil: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
@@ -486,8 +517,14 @@ private struct WorldVeil: View {
                     // parted, never closes all the way again*, and the end-reading turned it
                     // into *parted AND STILL PARTED when you let go*.
                     if part > 0.5 { partedOnce = true }
+                    // C4.5 · hand the parting to the shader. Normalised across the register so
+                    // the field reads a position, not a pixel.
+                    PointVeil.hold(x: Double(v.location.x / max(1, geo.size.width)) * 2 - 1,
+                                   y: Double(v.location.y / max(1, geo.size.height)) * 2 - 1,
+                                   open: Double(part))
                     closing.hold()                       // a veil being held is not closing
                 }.onEnded { _ in
+                    PointVeil.release()
                     let held = part > 0.02
                     withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 }
                     closing.release(held: held)          // releasing nothing closes nothing
