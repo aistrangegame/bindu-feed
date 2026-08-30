@@ -31,6 +31,30 @@ never read `comps/`, a quarter of the mechanism sweep's scope. The headline numb
 > `InstrumentView.swift:290` as the one line that would change; `spineThreshold` is now at
 > `:307`, and `:290` is `setStillness`. Corrected there.
 
+### THE ORDER FOR THE REMAINING ROWS — BY CHURN, NOT BY ID
+
+**Drift concentrates in rows worked NEAR, not rows left alone.** Four of nine BLOCKERs were
+stale; the MAJOR re-reads so far have almost all CONFIRMED their rows instead. The difference
+is that the BLOCKERs sat on surfaces Stages A–F rebuilt, and the MAJOR rows re-read so far
+did not. So the useful order is not audit-ID and not severity: it is **how much the file a
+row cites has actually changed on this branch.**
+
+Measured by commits touching each cited file (`git log --name-only main...HEAD`):
+
+| band | rows | expectation |
+|---|---|---|
+| `InstrumentView.swift` — **20 commits** | B0.5 B0.6 B7.1 B7.5 C3.3 C3.5 C3.6 C3.8 C4.5 C5.6 C5.7 C7.11 | **re-read first** — the surface was rebuilt underneath them |
+| `SoundEngine.swift` · `RiteTones.swift` — 19 | C7.4 C7.6 C7.8 G3.3 | re-read second — Stages A–C and F reworked this |
+| `PointWorldView.swift` — 16 | A4.3 D4.5 D5.11 | third |
+| `UniverseView.swift` — 14 | B7.4 … | fourth |
+| **cited file untouched — 0 commits** | **55 rows** | **expect genuinely open**; read them to WORK them, not to re-verify |
+
+**The prediction this makes is falsifiable, which is the point of writing it down.** If the
+20-commit rows turn out no more stale than the 0-commit rows, the drift-concentration model is
+wrong and the order should go back to severity. So far it has held twice: the four stale
+BLOCKERs all cited heavily-reworked files, and B0.5/B7.1/B7.2/C3.7 — re-read and CONFIRMED —
+cite `uDwell`/`uSweep`/`dwell`/`streak`, which no stage touched.
+
 ### THE MAJOR-BAND SWEEP · 2026-08-29 — a real number, and what a sweep cannot do
 
 Run before continuing the band, because four of nine BLOCKERs had been stale and the MAJOR
