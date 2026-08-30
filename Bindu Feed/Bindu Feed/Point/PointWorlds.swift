@@ -326,9 +326,23 @@ private struct WorldTurn: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
     var onLaw: (PointLawSignal) -> Void = { _ in }
-    @State private var drawingId: String? = nil     // the star being drawn inward
-    @State private var drawStart: Double = 0
-    private let drawDur: Double = 0.9
+    /// D5.3 · **THE RAY HE IS FOLLOWING, AND HOW FAR OUT HE HAS COME.**
+    ///
+    /// This world drew four concentric rings and pulled a star INWARD on a tap, while its own
+    /// cue — authored, and already on screen — read *"TAKE A RAY NEAR THE CENTRE · THEN GO
+    /// OUT."* The words instructed a gesture the world could not perform, which is the
+    /// invented-trigger fault inverted: the string was right and the mechanism was absent.
+    /// `PointRays` had been built since Stage E with **no app caller at all** — found by
+    /// `check_wired`, not by eye.
+    @State private var following: String? = nil
+    /// 0 at the centre, 1 at the ray's reach. The journey outward IS the reading.
+    @State private var travel: Double = 0
+
+    /// The three families' star ids, in universe order — what `PointRays.emit` needs.
+    private var universeIds: [[String]] {
+        let byUni = Dictionary(grouping: stars, by: \.uni)
+        return (0..<3).map { (byUni[$0] ?? []).map(\.id) }
+    }
 
     /// II · `widen(f)`. *"The further out he travels, the further the second tone departs
     /// from the first."* Emitted on the DRAW starting and ending, not per frame: `widen`'s
@@ -343,58 +357,80 @@ private struct WorldTurn: View {
     @State private var reeling = PointLeaving.decay(dimension: 2)!
 
     // precompute each star's ring + slot once (was a per-frame filter/firstIndex per star)
-    private var placement: [String: (ring: Int, idx: Int, count: Int)] {
-        var byRing: [Int: [String]] = [:]
-        for p in stars { byRing[p.uni % 4, default: []].append(p.id) }
-        var out: [String: (Int, Int, Int)] = [:]
-        for (ring, ids) in byRing { for (idx, id) in ids.enumerated() { out[id] = (ring, idx, ids.count) } }
-        return out
-    }
-
     var body: some View {
-        let place = placement
+        let rays = PointRays.emit(universes: universeIds)
+        let byId = Dictionary(uniqueKeysWithValues: rays.map { ($0.id, $0) })
         return GeometryReader { geo in
             let cx = geo.size.width / 2, cy = geo.size.height / 2
-            let R0 = min(geo.size.width, geo.size.height) * 0.5
+            let rim = min(geo.size.width, geo.size.height) * 0.5
             TimelineView(.animation) { tl in
                 let t = tl.date.timeIntervalSinceReferenceDate
                 ZStack {
-                    Canvas { ctx, size in                       // the violet orbital arcs
-                        for u in 0..<4 {
-                            let r = R0 * (0.34 + Double(u) * 0.20)
-                            ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
-                                       with: .color(hue.opacity(0.12)), lineWidth: 0.6)
+                    Canvas { ctx, _ in
+                        // NINE ARMS, one per star — `world-two.js:45-58`, *"nothing is placed.
+                        // Everything is emitted."* Three families leaving differently: the
+                        // Longing slow and furthest, the Mechanics in a tight bundle, the
+                        // Choice last and nearly straight.
+                        for r in rays {
+                            let a = PointRays.dim(following: following, ray: r)
+                            var path = Path()
+                            var f = 0.02
+                            while f <= 1.0 {
+                                let q = PointRays.point(r, f: f, cx: cx, cy: cy, rim: rim, t: t)
+                                if f <= 0.02 { path.move(to: CGPoint(x: q.x, y: q.y)) }
+                                else { path.addLine(to: CGPoint(x: q.x, y: q.y)) }
+                                f += 0.04
+                            }
+                            ctx.stroke(path, with: .color(PointRays.split(0.7, hue: hue).opacity(0.34 * a)),
+                                       lineWidth: 1.1)
+                        }
+                        // THE SPANDA — one clock, read once, applied to all nine, so the pulse
+                        // is at the same fraction out on every arm at the same instant.
+                        let pf = PointRays.spanda(phase: t / 10)
+                        for r in rays {
+                            let a = PointRays.dim(following: following, ray: r)
+                            let q = PointRays.point(r, f: pf, cx: cx, cy: cy, rim: rim, t: t)
+                            let d = CGRect(x: q.x - 2.6, y: q.y - 2.6, width: 5.2, height: 5.2)
+                            ctx.fill(Path(ellipseIn: d),
+                                     with: .color(PointRays.split(pf, hue: hue).opacity(0.85 * a)))
                         }
                     }
                     ForEach(stars) { p in
-                        let pl = place[p.id] ?? (0, 0, 1)
-                        let r = R0 * (0.34 + Double(pl.ring) * 0.20)
-                        let dirn = pl.ring % 2 == 0 ? 1.0 : -1.0
-                        let a = Double(pl.idx) / Double(max(pl.count, 1)) * 6.2831 + t * 0.16 * dirn
-                        let ox = cx + cos(a) * r, oy = cy + sin(a) * r
-                        // the pull inward, once touched (eased); it spirals in as it orbits
-                        let pull = drawingId == p.id ? min(1, (t - drawStart) / drawDur) : 0
-                        let e = pull * pull * (3 - 2 * pull)
-                        let px = ox + (cx - ox) * e, py = oy + (cy - oy) * e
-                        StarMark(placed: p, hue: hue, compact: quiet || pull < 0.4)
-                            .scaleEffect(1 + e * 0.9)
-                            .opacity(drawingId == nil || drawingId == p.id ? 1 : 0.28)   // the rest recede
-                            .position(x: px, y: py)
-                            .onTapGesture {
-                                guard drawingId == nil else { return }
-                                drawingId = p.id
-                                drawStart = t
-                                DispatchQueue.main.asyncAfter(deadline: .now() + drawDur) {
-                                    onOpen(p.star); drawingId = nil
-                                }
-                            }
+                        // A star rides its OWN arm, at the fraction he has travelled when it is
+                        // the one he is following, and at its full reach otherwise.
+                        let r = byId[p.id]
+                        let f = (following == p.id) ? max(0.06, travel) : 1.0
+                        let q = r.map { PointRays.point($0, f: f, cx: cx, cy: cy, rim: rim, t: t) }
+                        StarMark(placed: p, hue: hue, compact: quiet)
+                            .opacity(r.map { PointRays.dim(following: following, ray: $0) } ?? 1)
+                            .position(x: q?.x ?? cx, y: q?.y ?? cy)
                     }
-                    // `world-two.js:225`. Replaced "touch a star · it draws inward", invented.
-                    if drawingId == nil { WorldCue(text: "TAKE A RAY NEAR THE CENTRE · THEN GO OUT") }
+                    if following == nil { WorldCue(text: "TAKE A RAY NEAR THE CENTRE · THEN GO OUT") }
                 }
+                .contentShape(Rectangle())
+                // TAKE A RAY NEAR THE CENTRE, THEN GO OUT — the cue's own gesture, at last.
+                .gesture(DragGesture(minimumDistance: 0)
+                    .onChanged { v in
+                        let dx = v.location.x - cx, dy = v.location.y - cy
+                        let dist = (dx * dx + dy * dy).squareRoot() / max(1, rim)
+                        if following == nil {
+                            // taken NEAR THE CENTRE, and only there: the nearest arm by angle.
+                            guard dist < 0.34 else { return }
+                            following = PointRays.taken(rays, atAngle: atan2(dy, dx), cx: cx, cy: cy, rim: rim, t: t)
+                            travel = dist
+                        } else {
+                            travel = min(1, max(0, dist))
+                            if travel >= 0.97, let id = following,
+                               let star = stars.first(where: { $0.id == id }) {
+                                following = nil; travel = 0
+                                onOpen(star.star)
+                            }
+                        }
+                    }
+                    .onEnded { _ in following = nil; travel = 0 })
             }
         }
-        .onChange(of: drawingId) { _, id in
+        .onChange(of: following) { _, id in
             drawLaw(id)
             if id == nil { reeling.release() } else { reeling.hold() }
         }

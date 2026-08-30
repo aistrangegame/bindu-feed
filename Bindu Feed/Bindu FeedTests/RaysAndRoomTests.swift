@@ -88,6 +88,63 @@ struct RayTests {
             #expect(PointRays.dim(following: mine.id, ray: r) == 0.26)
         }
     }
+
+    // MARK: - D5.3 · taking a ray, which is what the world could not do at all
+
+    @Test("the arm is chosen NEAR THE CENTRE, and matching at the rim gives a different one")
+    func takenNearTheCentre() {
+        // **THE DISCRIMINATING ASSERTION, and the reason `taken` matches at `f = 0.22`.**
+        // These are log spirals: the curl is `log(rr)·k`, so arms that leave the centre beside
+        // each other end far apart. Matching at the reach would hand him an arm he was nowhere
+        // near when he took it — and it would still "work", which is why it needs pinning.
+        let rays = PointRays.emit(universes: [["a1","a2","a3"], ["b1","b2","b3"], ["c1","c2","c3"]])
+        #expect(rays.count == 9, "nine arms, one per star: \(rays.count)")
+        let cx = 200.0, cy = 200.0, rim = 200.0, t = 0.0
+
+        // sample the angle of one arm near the centre, and confirm `taken` returns THAT arm
+        let probe = rays[4]
+        let q = PointRays.point(probe, f: 0.22, cx: cx, cy: cy, rim: rim, t: t)
+        let ang = atan2(q.y - cy, q.x - cx)
+        #expect(PointRays.taken(rays, atAngle: ang, cx: cx, cy: cy, rim: rim, t: t) == probe.id,
+                "the arm under his finger was not the one taken")
+
+        // and the same angle read at the REACH picks a different arm for at least one case —
+        // the measurement that says the near/far choice is load-bearing, not cosmetic.
+        var differs = 0
+        for r in rays {
+            let near = PointRays.point(r, f: 0.22, cx: cx, cy: cy, rim: rim, t: t)
+            let a = atan2(near.y - cy, near.x - cx)
+            var bestFar: String? = nil, bd = Double.infinity
+            for o in rays {
+                let f = PointRays.point(o, f: 1.0, cx: cx, cy: cy, rim: rim, t: t)
+                var d = abs(atan2(f.y - cy, f.x - cx) - a)
+                if d > .pi { d = 2 * .pi - d }
+                if d < bd { bd = d; bestFar = o.id }
+            }
+            if bestFar != r.id { differs += 1 }
+        }
+        #expect(differs > 0,
+                "matching at the reach picks the same arm every time — then the near/far choice is untested")
+    }
+
+    @Test("every star has exactly one arm, and the three families leave differently")
+    func nineArmsThreeFamilies() {
+        // `world-two.js:47` — per-universe `twist`/`base`/`spread`. *"The Longing leaves slowly
+        // and reaches furthest… the Mechanics leave in a tight bundle… the Choice leaves last
+        // and nearly straight."* Three families with one shared law would be nine identical
+        // arms, which says the opposite of what this world is about.
+        let rays = PointRays.emit(universes: [["a1","a2","a3"], ["b1","b2","b3"], ["c1","c2","c3"]])
+        #expect(Set(rays.map(\.id)).count == 9, "an id is shared between two arms")
+        let byUni = Dictionary(grouping: rays, by: \.uni)
+        #expect(byUni.count == 3)
+        // curl differs family to family — the Choice is the straightest
+        let k0 = byUni[0]!.map(\.k).reduce(0,+) / 3
+        let k2 = byUni[2]!.map(\.k).reduce(0,+) / 3
+        #expect(k0 > k2, "the Longing does not curl more than the Choice: \(k0) vs \(k2)")
+        // and the Longing reaches furthest
+        #expect(byUni[0]![0].reach > byUni[1]![0].reach, "the Longing does not reach furthest")
+    }
+
 }
 
 // E5 · WORLD IV'S ROOM — what was struck stays struck

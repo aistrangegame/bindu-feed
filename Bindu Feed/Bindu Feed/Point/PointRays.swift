@@ -50,7 +50,6 @@ enum PointRays {
 
     /// `(function emit(){…})()` — `world-two.js:45-58`. *"Nothing is placed. Everything is
     /// emitted."*
-    /// UNWIRED(AUDIT D5.3 — world II still draws four rings and an inward spiral; `PointRays` has NO app caller at all, so the whole world is built and undriven)
     static func emit(universes: [[String]]) -> [Ray] {
         var out: [Ray] = []
         for (ui, stars) in universes.prefix(3).enumerated() {
@@ -103,8 +102,28 @@ enum PointRays {
     /// **ONE CLOCK.** `pulse = BODY.phase()` is the instrument's single breath phase, read
     /// once and applied to all nine — so the pulse is at the same fraction out on every arm
     /// at every instant. Nine emissions would drift apart within a breath.
-    /// UNWIRED(AUDIT D5.3 is OPEN — the one clock has nothing to pulse; the rays are still absent)
     static func spanda(phase: Double) -> Double { phase.truncatingRemainder(dividingBy: 1) }
+
+    /// D5.3 · **WHICH ARM HE TOOK.** The cue is *"take a ray NEAR THE CENTRE, then go out"*,
+    /// and the two halves of that sentence are one mechanism: the arm is chosen by the angle
+    /// of his finger near the middle, then travelled outward.
+    ///
+    /// **MATCHED AT A SMALL FRACTION OUT, NOT AT THE REACH.** These are log spirals — the curl
+    /// is `log(rr)·k` — so two arms that leave the centre beside each other end far apart, and
+    /// two that END beside each other left from opposite sides. Matching at the rim would hand
+    /// him an arm he was nowhere near when he took it. `f = 0.22` is inside the radius the
+    /// gesture accepts, so the comparison is made where his finger actually is.
+    static func taken(_ rays: [Ray], atAngle angle: Double,
+                      cx: Double, cy: Double, rim: Double, t: Double) -> String? {
+        var best: String? = nil, bestD = Double.infinity
+        for r in rays {
+            let q = point(r, f: 0.22, cx: cx, cy: cy, rim: rim, t: t)
+            var d = abs(atan2(q.y - cy, q.x - cx) - angle)
+            if d > .pi { d = 2 * .pi - d }
+            if d < bestD { bestD = d; best = r.id }
+        }
+        return best
+    }
 
     /// *"attention as physics. The arm he is following brightens and slows; the other eight
     /// dim and hurry on without him."*
