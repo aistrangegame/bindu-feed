@@ -115,6 +115,22 @@ import Foundation
         #expect(DanceCatch.word(sync: 0, caught: 0, scatter: 1) == "it went by")
     }
 
+    @Test("the world is SILENT until he reaches — the slot's emptiness is authored")
+    func theSilenceIsDrawn() {
+        // **THE ASSERTION EXISTS BECAUSE THE SILENCE IS A DECISION.** `:2297-2350` draws four
+        // things in world VII and the pace word occupies the cue slot; the surface says
+        // nothing at rest. Having removed the offer model's stale cue from that slot, adding
+        // a replacement would have been an invented string with a design-shaped reason. This
+        // pins the emptiness so nobody fills it later on the grounds that it looks bare.
+        #expect(DanceCatch.cue(reaching: false, sync: 0, caught: 0, scatter: 0) == nil,
+                "the world spoke before he reached for anything")
+        #expect(DanceCatch.cue(reaching: true, sync: 0, caught: 0, scatter: 0) == "REACHING")
+        // and a scatter speaks even after the hand is gone — it is the thing that just
+        // happened, and he needs to be told it went by.
+        #expect(DanceCatch.cue(reaching: false, sync: 0, caught: 0, scatter: 0.6) == "IT WENT BY",
+                "the scatter was silent because the hand had already left")
+    }
+
     @Test("a grab takes the nearest star WITHIN REACH, and empty floor takes nothing")
     func grabIsProximityNotPicking() {
         // `The Instrument v3.html:2264-2270`. `AUDIT D5.8`'s fault was `.onTapGesture` on each

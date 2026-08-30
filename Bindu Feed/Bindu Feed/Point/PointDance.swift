@@ -142,6 +142,21 @@ struct DanceCatch {
         return [caught - 1]
     }
 
+    /// D5.8 · **THE WORLD'S CUE SLOT, INCLUDING ITS SILENCE.** `nil` until he has reached
+    /// for something.
+    ///
+    /// The silence is the authored half and is why this is a function rather than a view
+    /// guard. `The Instrument v3.html:2297-2350` draws exactly four things in world VII —
+    /// lane names, status marks, star titles, and the pace word at `H-150`, which is the
+    /// cue's own position. It says NOTHING at rest. Having removed the offer model's stale
+    /// cue from that slot, writing a new one would have been an invented string with a
+    /// design-shaped justification; the design's answer is that the slot stays empty until
+    /// the pace has something to report.
+    static func cue(reaching: Bool, sync: Double, caught: Int, scatter: Double) -> String? {
+        guard reaching || scatter > 0 else { return nil }
+        return word(sync: sync, caught: caught, scatter: scatter).uppercased()
+    }
+
     /// D5.8 · **THE AXIS READS THE PACE FROM HERE.** `The Instrument v3.html:2132-2133` feeds
     /// the shader `o.sync` and `o.spin` — the DANCE object's own values.
     ///

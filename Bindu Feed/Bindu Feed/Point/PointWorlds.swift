@@ -998,6 +998,13 @@ private struct WorldDance: View {
     @State private var hand: CGPoint? = nil
     @State private var running = false
 
+    /// The pace, in the world's own cue slot — `nil` before he has reached for anything,
+    /// which is the design's authored silence.
+    private var catcherWord: String? {
+        DanceCatch.cue(reaching: hand != nil, sync: DanceCatch.Pace.sync,
+                       caught: 0, scatter: 0)
+    }
+
     /// The universes as `PointDance` wants them — one array of star keys per lane.
     private var lanes: [[String]] {
         let byUni = Dictionary(grouping: stars, by: \.uni)
@@ -1064,10 +1071,21 @@ private struct WorldDance: View {
                         StarMark(placed: sp, hue: hue, compact: true)
                             .position(x: cx + p.x * rr, y: cy + p.y * rr)
                     }
-                    // `world-seven.js:501-502` — TWO-STATE on `danceCount()`. Replaced
-                    // "catch one in flight", invented.
-                    WorldCue(text: offeredOnce ? "OFFER A HAND AGAIN · THEY ARE STILL DANCING"
-                                               : "THEY WERE DANCING BEFORE YOU CAME · OFFER A HAND")
+                    // D5.8 · **THE PACE WORD IS THIS WORLD'S CUE, AND THE REST IS AUTHORED
+                    // SILENCE.** These two were `world-seven.js:501-502` — the OFFER model's
+                    // cues, and correctly authored for it. Replacing the model left them
+                    // naming a gesture the world no longer has: found by the cue-versus-
+                    // gesture sweep an hour after I introduced it, which is the third time
+                    // this shape has been caught and the first time it was caught on purpose.
+                    //
+                    // The Instrument's world VII draws exactly four things (`:2297-2350`):
+                    // lane names, status marks, star titles, and the pace word at `H-150` —
+                    // **the cue's own slot**. It says nothing at rest and `reaching` the
+                    // moment he touches, so the instruction IS the pace. The silence before
+                    // it is drawn and therefore authored.
+                    if catcherWord != nil {
+                        WorldCue(text: catcherWord!)
+                    }
                 }
                 // D5.8 · **THE STAR WHOSE READING HE GETS IS THE ONE THAT TOOK HIS HAND.**
                 //
