@@ -503,11 +503,22 @@ private struct WorldVeil: View {
 // walls, heavy grain, ember from below-left); the stars are DEBOSSED into the walls, met by
 // MOVING ALONG them (pan). Not flat lines with floating dots (§7.3.4). ──
 private struct WorldChamber: View {
+    /// ONE RELEASE, CALLED BY EVERY EXIT (§10). The press ends when it opens the niche, when
+    /// the finger lifts, and when the view goes away — and a claim left behind makes the rope
+    /// dead for the rest of the session, which is the fault this rule was written for.
+    private func endPress() {
+        if let id = pressing { PressClaim.release("chamber." + id) }
+        pressing = nil
+    }
+
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
     var onLaw: (PointLawSignal) -> Void = { _ in }
     @State private var panX: CGFloat = 0
     @State private var panBase: CGFloat = 0
+    /// D5.5 · which niche is under the press, and since when. `nil` when nothing is.
+    @State private var pressing: String? = nil
+    @State private var pressedAt = Date()
     /// D · `world-four.js:135` — `easing`, at 0.8. *"THE WALL EASED. WHAT WAS STRUCK STAYS
     /// STRUCK."* The one closing line that says what the world KEEPS, not what it lets go.
     @State private var easing = PointLeaving.decay(dimension: 4)!
@@ -550,7 +561,45 @@ private struct WorldChamber: View {
                         .shadow(color: hue.opacity(0.25), radius: 0, x: 0, y: -0.7)                  // the lit upper lip
                         .position(x: 40 + col * spread + panX,
                                   y: geo.size.height * (0.24 + Double(p.uni % 4) * 0.17))
-                        .onTapGesture { onOpen(p.star) }
+                        // D5.5 · **THE READING IS PRESSED, NOT TAPPED.**
+                        //
+                        // `AUDIT D5.5` — *"Reading = letterpress: press back, and the harder
+                        // the press the deeper the inscription is struck; release and what was
+                        // struck stays struck."* `AUDIT D5.1` names this and D5.8 as its two
+                        // sharpest instances, and D5.8's was the same shape: **the mechanism
+                        // existed one layer in while the entry contradicted the world.**
+                        // `PointChamber.pressRate`, `gates` and `strike` were built in Stage E
+                        // and used by the READING; the world opened its niche on a tap.
+                        //
+                        // A tap has no duration, so it cannot be *borne* — and bearing is the
+                        // whole of world IV. The niche now opens when the press reaches the
+                        // first gate (`PointChamber.gates[0]` = 0.22), which is the moment the
+                        // inscription is first struck: he does not ask for the reading, he
+                        // presses until it is cut.
+                        //
+                        // `PressClaim` is taken for the duration, because §10 records that
+                        // world IV's gesture IS a sustained press and two surfaces claiming
+                        // one press is how the rope went dead for a session. Released on every
+                        // exit — completion and cancellation both.
+                        .simultaneousGesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { _ in
+                                    guard pressing == nil || pressing == p.id else { return }
+                                    if pressing == nil {
+                                        pressing = p.id
+                                        PressClaim.claim("chamber." + p.id)
+                                        pressedAt = Date()
+                                    }
+                                    let held = Date().timeIntervalSince(pressedAt)
+                                    // `pressRate(z:)` at world IV's own depth — the load of the
+                                    // registers standing over this one sets how fast it cuts.
+                                    if held * PointChamber.pressRate(z: 3) >= PointChamber.gates[0] {
+                                        PointChamber.strike(p.star.key, to: 1)
+                                        endPress()
+                                        onOpen(p.star)
+                                    }
+                                }
+                                .onEnded { _ in endPress() })
                 }
                 // `world-four.js:195` — the shells above, *"named as weight, never as a
                 // number."* It rides high in the chamber, not at H-150 with the cue.
@@ -577,6 +626,9 @@ private struct WorldChamber: View {
                     easing.hold()
                 }
                 .onEnded { _ in panBase = panX; easing.release(held: abs(panX) > 1) })
+            // The third exit: the register changing under a live press. `PressClaim` leaked
+            // exactly this way once, and the rope stayed dead for the session (§10).
+            .onDisappear { endPress() }
         }
         // IV · `bear(f)`. The pan IS the load — `world-four.js` puts the pressure on the
         // wall he is leaning into, and `spread` is the chamber's own full travel, so the
