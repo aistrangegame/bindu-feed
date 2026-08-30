@@ -139,7 +139,11 @@ final class AxisTravel: ObservableObject {
     // in the app yet (no wheel, no pinch-to-travel — C2.7). Recorded here, not declared,
     // so they arrive with the gesture rather than sitting dead.
     private let DRAG = 0.00018, DAMP = 0.956, K = 30.0, RES = 0.58, span = 0.42
-    private let MINZ = -5.0, MAXZ = 9.62                 // +0.62 overshoot so the centre can bloom past +9
+    // C7.8's shape, found by the duplicate sweep: the axis's bounds were written THREE times —
+    // `Axis.minZ`/`Axis.maxZ` with an uncalled `Axis.clampZ` beside them, this private pair,
+    // and bare literals at `beginAt`. The copy that LOOKED canonical (named, documented, citing
+    // `spine-axis.js:87`) was the one nothing used, so correcting the overshoot there would
+    // have moved nothing. One source now: `Axis.clampZ`.
 
     private var lastRegister: Int
     private var lastTime: CFTimeInterval = 0
@@ -154,7 +158,7 @@ final class AxisTravel: ObservableObject {
     private var proxy: Proxy?
 
     init(startZ: Double) {
-        let clamped = Swift.min(Swift.max(startZ, -5), 9.62)
+        let clamped = Axis.clampZ(startZ)
         z = clamped
         lastRegister = Axis.nearest(clamped).i
 
@@ -320,7 +324,7 @@ final class AxisTravel: ObservableObject {
         // The membrane returns the share of speed it lets him keep.
         zv *= update(dt: dt)
         zv += back * f
-        z = Swift.min(Swift.max(z + zv * f, MINZ), MAXZ)
+        z = Axis.clampZ(z + zv * f)
         zv *= pow(DAMP, f)
         speed = abs(zv)
 
@@ -453,7 +457,7 @@ final class AxisTravel: ObservableObject {
 
     private func beginPassage(toZ target: Double, dir d: Double, swift: Bool = false) {
         glideFrom = z
-        glideTo = Swift.min(Swift.max(target, MINZ), MAXZ)
+        glideTo = Axis.clampZ(target)
         // `:203` — `this.dur = swift ? 0.85 : TR.DUR`.
         glideSwift = swift
         gateHit = [false, false]

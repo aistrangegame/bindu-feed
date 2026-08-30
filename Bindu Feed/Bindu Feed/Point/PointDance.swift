@@ -107,6 +107,7 @@ struct DanceCatch {
 
     /// `:2236` — `keep = d < max(34, R*4.5)`. The reach has to stay in the star's own lane;
     /// the floor of 34 keeps a small star catchable.
+    /// UNWIRED(AUDIT D5.8, reopened 2026-08-30 — `DanceCatch` is undriven; the reading gives on carry-seconds, not on sync)
     static func keeping(distance d: Double, starRadius R: Double) -> Bool {
         d < max(34, R * 4.5)
     }

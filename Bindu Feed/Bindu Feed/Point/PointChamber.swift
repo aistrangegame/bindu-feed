@@ -40,8 +40,14 @@ enum PointChamber {
             for (i, id) in stars.enumerated() {
                 switch ui {
                 case 0:  // the Vessel — the left wall, at working height
+                    // `world-four.js:54` — `h: 0.40 + ((i%2) ? 0.12 : -0.06)`. **THE FOUR
+                    // ALTERNATE.** This was written as a flat `0.46` — the average of the two
+                    // — which is a row of equipment hung on a line rather than four things
+                    // put where a hand would reach them. The defect survived because nothing
+                    // drove the function; an unwired mechanism has no way to look wrong.
                     out.append(Niche(id: id, uni: 0, wall: .left,
-                                     d: 0.18 + Double(i) * 0.21, h: 0.46))
+                                     d: 0.18 + Double(i) * 0.21,
+                                     h: 0.40 + (i % 2 != 0 ? 0.12 : -0.06)))
                 case 1:  // the Rules — the floor, underfoot
                     out.append(Niche(id: id, uni: 1, wall: .floor,
                                      d: 0.14 + Double(i / 2) * 0.28,
@@ -52,6 +58,47 @@ enum PointChamber {
             }
         }
         return out
+    }
+
+    /// D5.5 · **THE PROJECTION — `world-four.js:87-99`, ported, not invented.**
+    ///
+    /// *"One-point perspective, vanishing on the particle. Under load the vault descends and
+    /// the walls bow: the room deforms because it is bearing something."*
+    ///
+    /// I had first written my own projection here and it was wrong to: the design has an
+    /// authored one, and it carries two things an invented version has no reason to contain —
+    /// **the room shrinks under press** (`W` and `H` both take a `pr` term, so the vault comes
+    /// down as he leans) and **the walls bow** through `bow`, which was itself one of the
+    /// mechanisms sitting unwired. Porting `proj` correctly is what drives `bow`.
+    ///
+    /// Returns the offset from the room's centre in points, plus the depth scale `sc` — the
+    /// scale is part of the projection, not decoration: a niche further back is smaller, and
+    /// dropping it flattens the room into a painted backdrop.
+    ///
+    /// `rim` is the room's half-extent, `pr` the press 0…1.
+    static func proj(wall: Wall, d: Double, h: Double, rim: Double, press pr: Double)
+        -> (dx: Double, dy: Double, sc: Double) {
+        let sc = 1 / (1 + d * 3.1)
+        let W = rim * (1.04 - pr * 0.05)
+        let H = rim * (1.12 - pr * 0.13)
+        let bw = bow(along: d, press: pr, rim: rim)
+        switch wall {
+        case .left:  return (-(W - bw) * sc, (h - 0.5) * 2 * H * sc, sc)
+        case .floor: return ((h - 0.5) * 2 * W * sc, (H - bw * 0.6) * sc, sc)
+        case .back:
+            // *"d runs across it, h runs up it. Both, or it is not a wall — and the vanishing
+            // point belongs to the particle, never to a niche."* `:94-96`.
+            let k = BACK
+            return ((d - 0.5) * 2 * W * k, (h - 0.5) * 2 * H * k, k)
+        }
+    }
+
+    /// `BACK:0.30` — *"how far off the back wall stands."* `world-four.js:86`.
+    static let BACK = 0.30
+
+    /// Convenience: a niche's projection, so a caller states the room once.
+    static func place(_ n: Niche, rim: Double, press: Double) -> (dx: Double, dy: Double, sc: Double) {
+        proj(wall: n.wall, d: n.d, h: n.h, rim: rim, press: press)
     }
 
     /// `gates=[0.22,0.46,0.70,0.92]` — `world-four.js:121`.
@@ -100,6 +147,7 @@ enum PointChamber {
 
     /// `release(){ if(this.on && this.press>0.1) this.easing=1; }` — a press too light to
     /// have been a press does not ease, because there was nothing to relax from.
+    /// UNWIRED(AUDIT D5.5 is PARTIAL and this remains open — the view eases on `abs(panX) > 1`, the design on `press > 0.1`; named rather than changed under a guess)
     static func easesOnRelease(press: Double) -> Bool { press > 0.1 }
 
     /// `press -= dt*0.52` when not holding, and below 0.02 the niche closes and `given`

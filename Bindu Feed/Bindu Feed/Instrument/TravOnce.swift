@@ -70,6 +70,7 @@ enum TravOnce {
     static func revert() { text = resting }
 
     /// Tests only — the design has no reset, because a session is the lifetime.
+    /// TEST-ONLY(`TravOnce` is static and its latches must be cleared between cases — §10's tenth shape)
     static func resetForTesting() {
         saidOnce = false; saidGate = false; showing = nil; text = resting
     }

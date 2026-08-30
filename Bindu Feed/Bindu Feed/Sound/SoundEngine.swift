@@ -817,7 +817,8 @@ final class SoundEngine: ObservableObject {
     }
 
     /// How many bodies are in the chain. `dancers.length` — the caption in world VII prints
-    /// this, and `AUDIT D5.8` records that it printed a count of hands that did not exist.
+    /// this, and `AUDIT D5.8` (now PARTIAL, scatter still absent) records that it printed a
+    /// count of hands that did not exist.
     var dancerCount: Int { dancers.count }
 
     /// `nul(secs)` — the Point's one deliberate silence. STAGE C1 drives this; A1/A2 only

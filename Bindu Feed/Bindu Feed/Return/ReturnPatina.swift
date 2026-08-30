@@ -34,6 +34,7 @@ enum ReturnPatina {
 
     /// `mixc(a, b, t)` on the raw components, exactly as the design mixes them.
     /// One channel of gold, by index — so a test can state the mix in the same terms.
+    /// WIRED-BY(`gold` — a projection of the same three constants `towardGold` mixes with, not a second copy of them)
     static func goldChannel(_ i: Int) -> Double { [gold.r, gold.g, gold.b][i] }
 
     static func mix(_ rgb: [Double], _ t: Double) -> [Double] {

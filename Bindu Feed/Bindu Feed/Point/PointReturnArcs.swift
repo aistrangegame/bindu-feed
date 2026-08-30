@@ -34,6 +34,7 @@ enum PointReturn {
         /// Deep Time — *"it has been travelling since long before he arrived."*
         let deep: Bool
 
+        /// UNWIRED(AUDIT D5.7 is OPEN — an arc's progress is read only by tests; the flight is still undrawn)
         func progress(at now: Date) -> Double {
             min(1, max(0, now.timeIntervalSince(t0) / dur))
         }
@@ -147,6 +148,7 @@ enum PointReturn {
     static func take() -> Arrival? { pending.isEmpty ? nil : pending.removeFirst() }
 
     /// `home=Math.max(0,this.home-dt*1.5)` — the flash decays over 1/1.5 s.
+    /// UNWIRED(AUDIT D5.7 is OPEN — world VI's door is still unconditioned; the homecoming flash has no surface reading it)
     static func homeFlash(at now: Date = Date()) -> Double {
         guard let homeFlashAt else { return 0 }
         return max(0, 1 - now.timeIntervalSince(homeFlashAt) * 1.5)

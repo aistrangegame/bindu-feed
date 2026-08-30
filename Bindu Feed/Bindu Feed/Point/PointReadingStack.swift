@@ -47,6 +47,7 @@ enum PointReadingStack {
     /// **The verb's reserve only ever raises the floor, never lowers it** — `Math.min`, not an
     /// assignment. A verb line that is short cannot push the stack DOWN into the rail; it can
     /// only decline to lift it. That asymmetry is the whole of the function's care.
+    /// UNWIRED(Coverage/10-OWED.md §10 — mechanism delivered, wiring open, recorded apart)
     static func floorY(H: Double, railHeight: Double,
                        verbVisible: Bool, verbHeight: Double) -> Double {
         var f = H - railHeight - 10
@@ -59,6 +60,7 @@ enum PointReadingStack {
     /// `heights` is every section's height in `ORDER`; `given` is how many have been earned.
     /// Only the given ones take up room, and the gap falls BETWEEN them — `(n ? gap : 0)`,
     /// so one section reserves no gap and four reserve three.
+    /// UNWIRED(Coverage/10-OWED.md §10 — mechanism delivered, wiring open, recorded apart)
     static func stackFrom(originMax: Double, gap: Double,
                           heights: [Double], given: Int, floorY: Double) -> Double {
         var total = 0.0, n = 0

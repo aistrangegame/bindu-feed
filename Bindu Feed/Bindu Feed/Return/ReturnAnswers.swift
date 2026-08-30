@@ -92,6 +92,7 @@ enum ReturnTally {
 
     /// *"multi = Object.keys(tally).filter(k => tally[k] > 1)"* — only voices that have spoken
     /// twice are listed, because one comment is what everyone in the gathering already has.
+    /// UNWIRED(no audit row names this — the Return's standing list is computed and never displayed; recorded 2026-08-30 by `check_wired`)
     static func spokeTwice(spoke: [String], answers: [ReturnAnswer]) -> [Standing] {
         standings(spoke: spoke, answers: answers).filter(\.spokeTwice)
     }

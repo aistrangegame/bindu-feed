@@ -1184,7 +1184,8 @@ private struct ReadCompany: View {
     /// `world-seven.js:503-505`, verbatim — and now reading `chain.length`, which is what
     /// the design reads.
     ///
-    /// **THIS CAPTION WAS THE TELL FOR `AUDIT D5.8`.** It printed `"\(s.revealed) hands"`
+    /// **THIS CAPTION WAS THE TELL FOR `AUDIT D5.8`** (REOPENED PARTIAL 2026-08-30 — its scatter
+    /// half remains unwired). It printed `"\(s.revealed) hands"`
     /// with `s.revealed` counting SECTIONS READ, so it announced a number of hands held in a
     /// world that had no hands to hold: the number right and the thing absent, which is §10's
     /// NINTH SHAPE — complete-looking output over nothing. It rendered, so every outcome

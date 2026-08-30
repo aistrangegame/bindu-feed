@@ -50,6 +50,7 @@ enum PointRays {
 
     /// `(function emit(){…})()` — `world-two.js:45-58`. *"Nothing is placed. Everything is
     /// emitted."*
+    /// UNWIRED(AUDIT D5.3 — world II still draws four rings and an inward spiral; `PointRays` has NO app caller at all, so the whole world is built and undriven)
     static func emit(universes: [[String]]) -> [Ray] {
         var out: [Ray] = []
         for (ui, stars) in universes.prefix(3).enumerated() {
@@ -84,12 +85,16 @@ enum PointRays {
     /// It takes ONLY `f`. Not the ray, not its universe, not its index — so at the same
     /// distance out, every one of the nine is the same colour, because they are one light.
     static func split(_ f: Double, hue: Color) -> Color {
-        let m = min(1, pow(max(0, f), 0.62) * 1.12)
-        return mix(Color(hex: "#FFFDF8"), hue, m)
+        mix(Color(hex: "#FFFDF8"), hue, splitAmount(f))
     }
 
-    /// How far the split has gone at a fraction out — the number `split` mixes by, exposed
-    /// so it can be asserted without unpacking a `Color`.
+    /// How far the split has gone at a fraction out — the number `split` mixes by.
+    ///
+    /// **`split` NOW CALLS THIS; IT USED TO RESTATE IT.** The same expression stood in both,
+    /// so the test asserted the copy and `split` could have been changed without a single
+    /// test going red. That is the reimplementation tautology one level out from the one §10
+    /// already records — the duplicate was not in the test file but in the app, which is
+    /// worse, because it reads as a helper. Found by `check_wired`, not by eye.
     static func splitAmount(_ f: Double) -> Double { min(1, pow(max(0, f), 0.62) * 1.12) }
 
     /// `spanda` — `world-two.js:137-139`. *"the throb. One pulse per breath, travelling out
@@ -98,6 +103,7 @@ enum PointRays {
     /// **ONE CLOCK.** `pulse = BODY.phase()` is the instrument's single breath phase, read
     /// once and applied to all nine — so the pulse is at the same fraction out on every arm
     /// at every instant. Nine emissions would drift apart within a breath.
+    /// UNWIRED(AUDIT D5.3 is OPEN — the one clock has nothing to pulse; the rays are still absent)
     static func spanda(phase: Double) -> Double { phase.truncatingRemainder(dividingBy: 1) }
 
     /// *"attention as physics. The arm he is following brightens and slows; the other eight

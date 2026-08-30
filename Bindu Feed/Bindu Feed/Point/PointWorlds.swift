@@ -101,7 +101,7 @@ private struct StarMark: View {
 /// and nothing else: no chain, no lock, no bodies. `join`/`ensemble`/`leaveAll` and
 /// `DancerVoice` are built and measured; the WORLD is what is missing. Carrying it as C1
 /// residue would name the wrong stage and send the next session to the wrong file.
-/// `8-ACTION-PLAN.md` **E1** · `AUDIT D5.8`, BLOCKER.
+/// `8-ACTION-PLAN.md` **E1** · `AUDIT D5.8`, BLOCKER — PARTIAL, and its scatter remains open.
 enum PointLawSignal: Equatable {
     /// I · `narrow(f)` — how much of the reading has been given.
     case admitted(Double)
@@ -559,6 +559,32 @@ private struct WorldChamber: View {
     /// D · `world-four.js:135` — `easing`, at 0.8. *"THE WALL EASED. WHAT WAS STRUCK STAYS
     /// STRUCK."* The one closing line that says what the world KEEPS, not what it lets go.
     @State private var easing = PointLeaving.decay(dimension: 4)!
+    /// The niches, built once from the stars' own universe membership — the same three-way
+    /// split `PointChamber.niches` expects.
+    private var niches: [String: PointChamber.Niche] {
+        let byUni = Dictionary(grouping: stars, by: \.uni)
+        let universes = (0..<3).map { u in (byUni[u] ?? []).map(\.id) }
+        return Dictionary(uniqueKeysWithValues: PointChamber.niches(universes: universes).map { ($0.id, $0) })
+    }
+
+    /// A star's point in the drawn room. A star with no niche (a fourth universe, if one ever
+    /// appears) falls back to the back wall rather than to a coordinate nobody chose.
+    private func chamberPoint(_ p: PlacedStar, in size: CGSize) -> CGPoint {
+        let n = niches[p.id] ?? PointChamber.Niche(id: p.id, uni: 2, wall: .back, d: 0.27, h: 0.16)
+        // The vanishing point is the particle's — `:95`, *"never a niche."* The Canvas behind
+        // draws its own vanishing line at `height * 0.42`, so the room and its contents agree.
+        let cx = size.width / 2, cy = size.height * 0.42
+        let rim = min(size.width, size.height) * 0.46
+        let v = PointChamber.place(n, rim: rim, press: pressDepth)
+        return CGPoint(x: cx + v.dx, y: cy + v.dy)
+    }
+
+    /// How hard the room is being leaned on, 0…1 — the `pr` the projection deforms by.
+    private var pressDepth: Double {
+        guard pressing != nil else { return 0 }
+        return min(1, Date().timeIntervalSince(pressedAt) * PointChamber.pressRate(z: 3))
+    }
+
     var body: some View {
         GeometryReader { geo in
             let W = geo.size.width, H = geo.size.height
@@ -589,15 +615,22 @@ private struct WorldChamber: View {
                         ctx.fill(Path(ellipseIn: CGRect(x: gx, y: gy, width: 1.1, height: 1.1)), with: .color(hue.opacity(0.045)))
                     }
                 }
-                ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
-                    let col = Double(i) / Double(max(stars.count - 1, 1))
+                ForEach(stars) { p in
                     StarMark(placed: p, hue: hue, compact: quiet)
                         .padding(5)
                         .background(Ellipse().fill(Color.black.opacity(0.28)).blur(radius: 2.5))   // the carved recess
                         .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)                  // deboss — cut INTO the wall
                         .shadow(color: hue.opacity(0.25), radius: 0, x: 0, y: -0.7)                  // the lit upper lip
-                        .position(x: 40 + col * spread + panX,
-                                  y: geo.size.height * (0.24 + Double(p.uni % 4) * 0.17))
+                        // D5.5 · **THE ROOM'S GEOGRAPHY, WIRED.** `world-four.js:52-63` puts
+                        // the Vessel on the LEFT WALL at working height, the Rules on the FLOOR
+                        // underfoot, and the Others on the BACK WALL facing him — *"unavoidable."*
+                        // This was `40 + col * spread` with `uni % 4` for height: one straight
+                        // line of stars with the walls painted behind them, so the three
+                        // universes said nothing about where they were and the room was a
+                        // backdrop. `PointChamber.niches` had computed the real geography since
+                        // Stage E and nothing had ever called it (`check_wired`).
+                        .position(x: chamberPoint(p, in: geo.size).x + panX,
+                                  y: chamberPoint(p, in: geo.size).y)
                         // D5.5 · **THE READING IS PRESSED, NOT TAPPED.**
                         //
                         // `AUDIT D5.5`, **still partial** — its geography is unbuilt, and this
