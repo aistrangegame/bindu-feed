@@ -46,6 +46,13 @@ struct LightView: View {
     // Scene
     @State private var shownAnchors = 0
     @State private var ungrips = 0
+    /// E1.5+E1.6 · the arrival, as real state rather than a reading of how much has been read.
+    @State private var arrive: Double = 0
+    @State private var sceneTick: Timer?
+    @State private var wholeDelivered = false
+    /// E1.3 · the Declaration drawing itself in, unasked — `spine-light.js:149`.
+    @State private var drew: Double = 0
+    @State private var carved = false
     @State private var pendingAnchor = false      // a touch asked; the next exhale answers
 
     // The Declaration — drawn in one line at a time, each over ~4.2s of held breath
@@ -73,9 +80,7 @@ struct LightView: View {
     // the others fill as the anchors surface, then hold at 1 once the Declaration is being drawn.
     private var arrivalProgress: Double {
         guard stage == .scene else { return 0 }
-        if scene.ungripOnly { return min(1, Double(ungrips) / 3) }
-        let a = scene.anchors.isEmpty ? 1 : Double(shownAnchors) / Double(scene.anchors.count)
-        return beatLine >= 0 ? 1 : a
+        return arrive
     }
 
     // In the nave the floor floods to LIT cream stone, so the words are DARK ink cut into it
@@ -115,7 +120,7 @@ struct LightView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear(perform: begin)
-        .onDisappear { gate?.invalidate(); carveTimer?.invalidate() }
+        .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate() }
         .sonicContext(.base)
     }
 
@@ -379,7 +384,15 @@ struct LightView: View {
                     }
                     .transition(.opacity).padding(.top, 12)
                 } else if moreBeat {
-                    Text(drawing > 0 ? "keep drawing it in" : "press · draw it in")
+                    // E1.4 · **THE AUTHORED CUE, AT LAST** — `The Instrument v3.html:5282`
+                    // `if(!LT.carved) h += '<div class="hold">hold to mean it</div>'`, named as
+                    // canon at `REVIEW-AND-WIRING.md:48` and sitting declared-and-unused at
+                    // `LightCanon.beatCue` for the whole build while the app invented
+                    // `"press · draw it in"` / `"keep drawing it in"` to describe six presses.
+                    // **The words could not be ported before the gesture was**: `hold to mean
+                    // it` over a six-press beat is authored copy on the wrong mechanism, which
+                    // passes every checker and reads as fixed.
+                    Text(LightCanon.beatCue)
                         .font(.spaceMono(9)).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary)
                         .modifier(RiteBreathe())
@@ -435,7 +448,12 @@ struct LightView: View {
             .onChanged { _ in
                 guard !pressing else { return }
                 pressing = true
-                if beatActive && moreBeat && !landed { beginCarve() }
+                // E1.3 · **ONE HELD PRESS CARVES, and only once `drew >= 0.9`** (`:178`):
+                // he cannot mean it before it is there to be meant. This called `beginCarve`,
+                // which drew ONE LINE in over `carveMs` per press — six presses for six lines,
+                // in the register whose sentence is *it is not asked for, it is MEANT*.
+                if beatActive && moreBeat && !landed,
+                   LightCanon.LightBeat.mayCarve(drew: drew, carved: carved) { beginCarve() }
                 // A press ASKS for the next anchor (the exhale answers) — but the `release`
                 // scene answers ONLY the hand opening, so it waits for .onEnded below.
                 else if !beatActive && !scene.ungripOnly { advanceAnchor() }
@@ -484,12 +502,42 @@ struct LightView: View {
         }
     }
 
+    /// E1.5+E1.6 · `canon/spine-light.js:136-148`'s `tick`, in the app's idiom. The arrival
+    /// runs on its OWN clock and the reading waits for it — the inversion this pair fixes is
+    /// that the app had the reading drive the arrival instead.
+    private func startSceneTick() {
+        sceneTick?.invalidate()
+        var last = Date()
+        sceneTick = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+            guard case .scene = stage else { return }
+            let now = Date(); let dt = now.timeIntervalSince(last); last = now
+            if arrive < 1 {
+                arrive = scene.ungripOnly
+                    ? LightCanon.LightArrival.fromUngrips(ungrips)
+                    : LightCanon.LightArrival.step(arrive, dt: dt, touching: touching)
+            }
+            // *"the arrival IS the delivery: when the dawn has assembled, the whole is simply
+            // there. He never has to ask for the first thing."* `:147-148`
+            // E1.3 · `:149` — while the beat is up it draws ITSELF in, `dt*0.85`, ≈1.18s,
+            // **with no press**. Nothing is asked of him while the Declaration arrives; the
+            // app required a held press per line to draw each one.
+            if arrive >= 1 && beatActive && moreBeat && !carved {
+                drew = LightCanon.LightBeat.draw(drew, dt: dt)
+            }
+            if arrive >= 1 && !wholeDelivered {
+                wholeDelivered = true
+                withAnimation(.easeInOut(duration: 1.2)) { }
+            }
+        }
+    }
+
     private func openTheLight() {
         // `The Light v2.html:637` — `Sound.openTheRoom(8.5); Sound.breathIn(6);`
         // The room is heard before it is seen, and the breath draws in and HOLDS.
         soundEngine.lightOpenTheRoom(dur: 8.5)
         soundEngine.lightBreathIn(dur: 6)
         gate?.invalidate()
+        startSceneTick()
         Task { await store.logVeilLifted() }
         // Stand in the shaft first (the Hold), then the aperture opens into the scene.
         withAnimation(.easeInOut(duration: 1.0)) { stage = .hold }
@@ -498,11 +546,21 @@ struct LightView: View {
     // A touch ASKS; the next exhale answers (the interior's core law). Except `release`,
     // which answers only the hand leaving the glass — each ungrip advances it directly.
     private func advanceAnchor() {
+        // `advance()` — `:169` — is blocked while `arrive < 1`. Nothing is readable until
+        // the gate completes; the whole arrives by itself and is never asked for.
         guard stage == .scene, shownAnchors < scene.anchors.count else { return }
-        if scene.ungripOnly {
+        guard LightCanon.LightArrival.mayAdvance(arrive: arrive) || (scene.ungripOnly && arrive < 1)
+        else { return }
+        // E1.5 · **THE UNGRIP GATES THE ARRIVAL; IT DOES NOT REVEAL A LINE.**
+        // `:152-155` — `ungripped()` counts only while `arrive < 1`, and once the scene has
+        // assembled, release's anchors advance on touch *like every other scene* (`:139-142`
+        // is explicit that only the ARRIVAL is different). This did both at once, so five
+        // anchors against three counted ungrips saturated the gate at anchor 3, and canon's
+        // *"the dawn does not assemble until the hand has opened three times, then the scene
+        // begins"* became *"each lift reveals a line."*
+        if scene.ungripOnly && arrive < 1 {
             ungrips += 1
             soundEngine.axisUngrip()              // the field answers the opened hand
-            revealAnchor()                        // the dawn brightens each time the hand lifts
         } else {
             pendingAnchor = true                  // wait for the breath to turn
         }
@@ -557,6 +615,7 @@ struct LightView: View {
         withAnimation(.easeInOut(duration: 0.6)) {
             beatLine += 1
             drawing = 0
+            drew = 0; carved = false          // `:174` — the next beat draws itself in afresh
         }
         // The last line locked — crystallize the whole Declaration into the Vow (it returns
         // via the Mirror), then the landing arrives a breath and a half later (comp).
@@ -597,7 +656,8 @@ struct LightView: View {
     private func restart() {
         carveTimer?.invalidate(); carveTimer = nil
         holdWork.forEach { $0.cancel() }
-        stillMs = 0; shownAnchors = 0; ungrips = 0
+        stillMs = 0; shownAnchors = 0; ungrips = 0; arrive = 0; wholeDelivered = false
+        drew = 0; carved = false
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
         pendingAnchor = false; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }

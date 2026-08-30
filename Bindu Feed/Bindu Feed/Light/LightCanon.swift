@@ -31,6 +31,80 @@ enum LightCanon {
     // discovers it by stopping" (:685-686).
     static let touchOnce = "touch once"
     static let approachSubtitle = "Not to be wanted. To be stood inside."
+    /// E1.5 + E1.6 · **THE ARRIVAL IS A GATE BEFORE THE READING, NOT A MEASURE OF IT.**
+    /// `canon/spine-light.js:136-148` — one `tick`, two branches, and the app had inverted
+    /// both in the same way.
+    ///
+    /// ```js
+    /// if (this.arrive < 1) {
+    ///   if (this.scene.id === 'release') this.arrive = Math.min(1, this.ungrips / 3);
+    ///   else this.arrive = Math.min(1, this.arrive + dt * (down ? 0.10 : 0.62));
+    /// }
+    /// if (this.arrive >= 1 && this.stage === 0) { this.stage = 1; … }
+    /// ```
+    ///
+    /// **THE APP MADE `arrive` A CONSEQUENCE OF READING PROGRESS IN BOTH BRANCHES.** For
+    /// `release` each ungrip revealed an anchor AND counted toward the gate, so *"the dawn
+    /// does not assemble until the hand has opened three times, then the scene begins"*
+    /// became *"each lift reveals a line"* — and with five anchors against three counted
+    /// ungrips the arrival saturated at anchor 3. For every other scene it was
+    /// `shownAnchors / anchors.count` — literally how much has been read. **That is why they
+    /// are one row: the same inversion, twice, and fixing either alone leaves the other's
+    /// sentence half-true.**
+    ///
+    /// `advance()` is blocked while `arrive < 1` (`:169`), so nothing is readable until the
+    /// gate completes — and then the whole is delivered BY the arrival itself, not asked for.
+    enum LightArrival {
+        /// `dt * (down ? 0.10 : 0.62)` — the dawn assembles over ≈1.6s of NOT touching, and a
+        /// hand on the glass slows it **6×**. It never stops: *"force is absorbed, not
+        /// blocked"* is the law, and a hand that halted it would be blocking.
+        static func step(_ current: Double, dt: Double, touching: Bool) -> Double {
+            min(1, current + dt * (touching ? 0.10 : 0.62))
+        }
+        /// `release` alone: *"it does not respond to his reaching. Nothing here does."*
+        /// Three opened hands, and the scene begins.
+        static func fromUngrips(_ n: Int) -> Double { min(1, Double(n) / 3) }
+        /// `advance()` — `:169`. Nothing is readable until the arrival is whole.
+        static func mayAdvance(arrive: Double) -> Bool { arrive >= 1 }
+    }
+
+    /// E1.3 + E1.4 · **THE BEAT IS ONE UNIT, AND THE CUE IS WHAT NAMES IT.** One row, because
+    /// the words and the gesture are the same claim — `canon/spine-light.js:149,174,177-180`.
+    ///
+    /// ```js
+    /// if (this.drew < 1 && this.at() === 'beat') this.drew = Math.min(1, this.drew + dt*0.85);
+    /// carve: function () {
+    ///   if (this.at() !== 'beat' || this.carved || this.drew < 0.9) return false;
+    ///   this.carved = true; …
+    /// }
+    /// ```
+    ///
+    /// **THE DECLARATION DRAWS ITSELF IN — `dt*0.85`, ≈1.18s, WITH NO PRESS.** Nothing is
+    /// asked of him while it arrives. Then **ONE** held press carves it, and only once
+    /// `drew >= 0.9`: he cannot mean it before it is there to be meant.
+    ///
+    /// The app made the beat **six presses**, one per line, each drawing its own line in over
+    /// `carveMs`. So the register whose sentence is *it is not asked for, it is MEANT* became
+    /// a thing you press repeatedly — and its authored cue, **`hold to mean it`**
+    /// (`The Instrument v3.html:5282`), sat declared and unused at `LightCanon.beatCue` while
+    /// the app invented `"press · draw it in"` and `"keep drawing it in"` to describe the six.
+    ///
+    /// **PORTING THE STRING ALONE WOULD HAVE BEEN WORSE THAN LEAVING IT.** *Hold to mean it*
+    /// over a six-press gesture is authored words on the wrong mechanism: it passes
+    /// `check_authored`, `check_rendered` and every other checker, and reads as fixed.
+    enum LightBeat {
+        /// `:149` — it draws itself in, unasked.
+        static func draw(_ current: Double, dt: Double) -> Double {
+            min(1, current + dt * 0.85)
+        }
+        /// `:178` — one press, and only once the Declaration is nearly whole.
+        static func mayCarve(drew: Double, carved: Bool) -> Bool {
+            !carved && drew >= 0.9
+        }
+        /// `:174` — advancing past a beat resets the draw for the next one.
+        static let drawnAtSeconds: Double = 1 / 0.85
+    }
+
     static let beatCue = "hold to mean it"          // the beat's one instruction (canonical)
     static let walkBackOut = "walk back out ›"
 
