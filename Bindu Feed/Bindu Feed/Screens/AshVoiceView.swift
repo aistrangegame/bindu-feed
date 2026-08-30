@@ -31,7 +31,7 @@ struct AshVoiceView: View {
     // Name falls back to "Ash" — the canonical Airtable identity.
     // ArrivalSettings's default name is "" by intent (not a display value).
     private var displayName: String {
-        settings.name.isEmpty ? "Ash" : settings.name
+        settings.displayName
     }
 
     var body: some View {
@@ -178,9 +178,7 @@ struct AshVoiceView: View {
     private var firstWordDate: String {
         let dates = comments.map { $0.sourceDate }.filter { !$0.isEmpty }
         guard let earliest = dates.sorted().first else { return "—" }
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: earliest) else { return earliest }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM yyyy"
@@ -317,9 +315,7 @@ private struct AshCommentRow: View {
     }
 
     private func formatted(_ raw: String) -> String {
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: raw) else { return raw }
         let out = DateFormatter()
         out.dateFormat = "MMM d, yyyy"

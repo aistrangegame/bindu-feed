@@ -56,7 +56,7 @@ struct AshComposeView: View {
     // display), and "Ash" is the canonical Airtable identity for the
     // person who replies.
     private var displayName: String {
-        settings.name.isEmpty ? "Ash" : settings.name
+        settings.displayName
     }
 
     private var armed: Bool {

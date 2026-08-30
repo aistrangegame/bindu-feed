@@ -612,9 +612,9 @@ struct ReturnRing: Identifiable, Equatable {
 
     static func days(since day: String) -> Int {
         guard !day.isEmpty else { return 0 }
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = .current                      // §9: the user's day is the day their phone shows
+        // §9: the user's day is the day their phone shows. POSIX/Gregorian-fixed via the
+        // one factory — this used a bare formatter and is §10's age-from-days mechanism.
+        let f = AirtableService.dayFormatter(timeZone: .current)
         guard let then = f.date(from: String(day.prefix(10))) else { return 0 }
         let cal = Calendar.current
         let d = cal.dateComponents([.day], from: cal.startOfDay(for: then),

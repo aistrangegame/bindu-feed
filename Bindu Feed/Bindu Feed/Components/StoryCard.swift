@@ -139,9 +139,7 @@ struct StoryCard: View {
 
     private var isRecent: Bool {
         guard !story.lastActivityDate.isEmpty else { return false }
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")
+        let f = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let date = f.date(from: story.lastActivityDate) else { return false }
         return Date().timeIntervalSince(date) < 7 * 24 * 3600
     }

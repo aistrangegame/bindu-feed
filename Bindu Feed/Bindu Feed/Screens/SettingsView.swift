@@ -114,7 +114,14 @@ struct SettingsView: View {
             }
             .frame(width: 150, height: 150)
 
-            Text(name.isEmpty ? "Unnamed" : name)
+            // F10.3 · **THE FALLBACK IS HIS NAME, NOT A PLACEHOLDER.** §7: *"The display-name
+            // fallback specifically is `\"Ash\"` — the canonical identity, because the struct's
+            // default name is empty by intent."* The design agrees — `Claude Design Round 1/Settings.html:448` is
+            // `{name || 'Ash'}`. This said `"Unnamed"`, and it was the ONE site of four that
+            // did: `AshComposeView:59`, `AshVoiceView:34` and `StoryDetailView:325` all say
+            // "Ash". The odd one out was the screen where he sets the name — so the app told
+            // him he was Unnamed in the only place he would look.
+            Text(ArrivalSettings(name: name).displayName)
                 .font(.lora(20, weight: .medium))
                 .foregroundColor(BinduTheme.inkPrimary)
 
@@ -458,6 +465,20 @@ struct ArrivalSettings: Codable, Equatable {
     var name: String = ""
     var glyph: String = "·"
     var colorHex: String = "#9B6BD6"  // Lalita violet default
+
+    /// **THE ONE PLACE THE DISPLAY-NAME FALLBACK LIVES.** §7: *"The display-name fallback
+    /// specifically is `"Ash"` — the canonical identity, because the struct's default name is
+    /// empty by intent."* The design agrees at `Claude Design Round 1/Settings.html:448` — `{name || 'Ash'}`.
+    ///
+    /// **IT WAS WRITTEN AS A LITERAL IN FOUR PLACES AND ONE OF THEM DRIFTED** to `"Unnamed"`.
+    /// Same shape as the axis bounds (`Axis.clampZ`): a documented contract duplicated until
+    /// one copy disagrees — and no checker sees it, because every copy is valid Swift and the
+    /// odd one out is a plausible word. **The drift landed on `SettingsView`, and that is not
+    /// bad luck:** the other three read a persisted `ArrivalSettings`, and this one reads the
+    /// `@State` field being edited, so it was the only site not already holding the shared
+    /// value — and it is the screen where he types his name, so the app called him *Unnamed*
+    /// in the one place he would look.
+    var displayName: String { name.isEmpty ? "Ash" : name }
 
     static let defaultsKey = "bindu.arrival.settings"
 

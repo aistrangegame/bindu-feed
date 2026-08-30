@@ -54,6 +54,27 @@ final class AirtableService {
     /// device's own timezone (CLAUDE.md §9: the user's day is the day their phone shows
     /// them). Every date the app WRITES and every day-key it COMPARES flows through this,
     /// so writes and reads can never disagree on which day it is.
+    /// **THE PARSER HALF OF THE SAME CONTRACT.** `localDayString` above claims *"every date
+    /// the app WRITES and every day-key it COMPARES flows through this"* — and that was NOT
+    /// true: eight sites built their own `yyyy-MM-dd` `DateFormatter` with **no locale and no
+    /// calendar**, so on a Buddhist or Japanese device calendar `date(from: "2026-08-30")`
+    /// resolves centuries away. `days(since:)` is §10's *age comes from days, never from rank*
+    /// mechanism, and it was one of them.
+    ///
+    /// Fourth instance of a documented contract duplicated until a copy disagrees, after
+    /// `Axis.clampZ`, the four `"Ash"` literals and D5.8's two models — and the first where
+    /// the duplicate was *silently wrong for a subset of users* rather than wrong for everyone.
+    /// The timezone stays a parameter because it genuinely differs by site: a day-KEY is local
+    /// (§9), an Airtable date-only field is read as UTC.
+    static func dayFormatter(timeZone: TimeZone) -> DateFormatter {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = timeZone
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }
+
     static func localDayString(_ date: Date = Date()) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")

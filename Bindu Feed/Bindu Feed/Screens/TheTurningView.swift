@@ -227,9 +227,7 @@ struct TheTurningView: View {
     private var earliestDate: String {
         let dates = comments.map { $0.sourceDate }.filter { !$0.isEmpty }
         guard let earliest = dates.sorted().first else { return "—" }
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: earliest) else { return earliest }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM yyyy"
@@ -567,9 +565,7 @@ private struct WordCard: View {
     }
 
     private func formatted(_ raw: String) -> String {
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: raw) else { return raw }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM d, yyyy"

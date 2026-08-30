@@ -194,9 +194,7 @@ struct StoryDetailView: View {
 
     private func formattedDate(_ raw: String) -> String {
         guard !raw.isEmpty else { return "" }
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let date = inFmt.date(from: raw) else { return raw }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM d, yyyy"
@@ -322,7 +320,7 @@ struct StoryDetailView: View {
     // canonical Airtable identity — when no name has been chosen). Loaded
     // in .onAppear so a name change in Settings surfaces on next return.
     private var arrivalName: String {
-        arrivalSettings.name.isEmpty ? "Ash" : arrivalSettings.name
+        arrivalSettings.displayName
     }
 
     // Tap the quiet voice mark: stop if this one is sounding, else play it (raw, no chrome).
@@ -349,9 +347,7 @@ struct StoryDetailView: View {
 
     private func formattedAshDate(_ raw: String) -> String {
         guard !raw.isEmpty else { return "JUST NOW" }
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: raw) else { return raw }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM d, yyyy"

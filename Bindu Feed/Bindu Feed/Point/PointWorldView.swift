@@ -260,9 +260,12 @@ struct PointWorldView: View {
 
                 // The goodnight — "I Love You" at first arrival in this world, in its hue, then gone.
                 if goodnight {
+                    // D5.11 · beside the particle, at the design's size and alpha, with no
+                    // shadow — a shadow is what makes 12pt readable as a headline.
                     Text("I Love You")
-                        .font(.loraItalic(21)).foregroundStyle(hue)
-                        .shadow(color: hue.opacity(0.4), radius: 10)
+                        .font(.loraItalic(PointGoodnight.pointSize))
+                        .foregroundStyle(hue.opacity(PointGoodnight.opacity))
+                        .offset(x: PointGoodnight.offset.x, y: PointGoodnight.offset.y)
                         .transition(.opacity)
                 }
             }
@@ -310,9 +313,14 @@ struct PointWorldView: View {
             if let dim { PointJourney.enteredDims.append(dim.name) }
             if !PointGoodnight.shown.contains(dimensionN) {
                 PointGoodnight.shown.insert(dimensionN)
-                withAnimation(.easeIn(duration: 1.2)) { goodnight = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.8) {
-                    withAnimation(.easeOut(duration: 1.4)) { goodnight = false }
+                // `:998` — 2400ms AFTER arrival, not on it. Said as he arrives it is a
+                // greeting and the world is announcing itself; said once he is already here
+                // it is an aside.
+                DispatchQueue.main.asyncAfter(deadline: .now() + PointGoodnight.delaySeconds) {
+                    withAnimation(.easeInOut(duration: PointGoodnight.fadeSeconds)) { goodnight = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + PointGoodnight.holdSeconds) {
+                        withAnimation(.easeInOut(duration: PointGoodnight.fadeSeconds)) { goodnight = false }
+                    }
                 }
             }
         }
@@ -345,7 +353,37 @@ struct PointWorldView: View {
 /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
 /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
 /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
-private enum PointGoodnight { static var shown = Set<Int>() }
+/// D5.11 · **THE GOODNIGHT IS A WHISPER AT THE PARTICLE, NOT A HEADLINE IN THE FRAME.**
+///
+/// `comps/The Point v9.html:42-43` — `#ily` is **12px** Lora italic, `opacity 0 → .8` over a
+/// `1.1s` transition, no shadow; `:991-999` places it at the particle's own rect (`left+16`,
+/// `top-5`), tints it with the dimension's hue, waits **2400ms after arrival** and takes it
+/// away **2600ms** later.
+///
+/// The app said it at **21pt centred in the frame with a 10pt hue shadow, immediately on
+/// arrival**. Every one of those is the same edit in a different property: a thing said
+/// beside the particle, quietly, once he is already here — turned into the first thing the
+/// world does and the largest thing on it.
+///
+/// **THE DELAY IS THE PART THAT IS NOT COSMETIC.** Said on arrival it is a greeting, and the
+/// world is announcing itself. Said 2400ms later it is an aside — he has arrived, looked, and
+/// then it is mentioned. The design's own name for the mechanism is `ilyDone`: once per
+/// dimension, ever.
+enum PointGoodnight {
+    static var shown = Set<Int>()
+
+    /// `:998` — `setTimeout(…, 2400)`.
+    static let delaySeconds: Double = 2.4
+    /// `:997` — `setTimeout(() => remove('in'), 2600)`.
+    static let holdSeconds: Double = 2.6
+    /// `transition: opacity 1.1s ease`, the same both ways.
+    static let fadeSeconds: Double = 1.1
+    /// `font-size:12px`, and `#ily.in{opacity:.8}`.
+    static let pointSize: Double = 12
+    static let opacity: Double = 0.8
+    /// `left + 16`, `top - 5` from the particle's own rect — beside it, not over it.
+    static let offset = (x: 16.0, y: -5.0)
+}
 
 // A deeper reading, generated live in the Arch register and kept (point-levels.js generate()).
 // Its five fields ARE the offline fallback at `point-levels.js:210-211` — verbatim-ported,
