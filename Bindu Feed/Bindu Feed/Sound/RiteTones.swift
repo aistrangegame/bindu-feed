@@ -16,7 +16,7 @@ import os
 // Gathering's breath is carried by the bed + the silent presences' visual
 // breathing). Centered (mono) — the choir is a bloom, not the binaural breath.
 
-/// THE BOWL'S VOICING — `field-sound.js:154-170`, in one place. *AUDIT G3.3.*
+/// THE BOWL'S VOICING — `field-sound.js:154-170`, in one place. *AUDIT G3.3, closed.*
 ///
 /// The struck bowl is the most-heard sound in the app: `SoundEngine.riteThreshold` and
 /// `riteBowl` are called from 19 sites across Door, Rite, Rooms, Universe, Return, Light,

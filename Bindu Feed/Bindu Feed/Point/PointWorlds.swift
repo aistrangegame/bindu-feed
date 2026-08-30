@@ -563,7 +563,8 @@ private struct WorldChamber: View {
                                   y: geo.size.height * (0.24 + Double(p.uni % 4) * 0.17))
                         // D5.5 · **THE READING IS PRESSED, NOT TAPPED.**
                         //
-                        // `AUDIT D5.5` — *"Reading = letterpress: press back, and the harder
+                        // `AUDIT D5.5`, **still partial** — its geography is unbuilt, and this
+                        // closes only the entry. *"Reading = letterpress: press back, and the harder
                         // the press the deeper the inscription is struck; release and what was
                         // struck stays struck."* `AUDIT D5.1` names this and D5.8 as its two
                         // sharpest instances, and D5.8's was the same shape: **the mechanism

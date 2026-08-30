@@ -298,8 +298,12 @@ struct InstrumentView: View {
             // figure is actually drawing. Measured: the bhupura came out 145pt half-width at
             // avarana III, which is `s≈99` — `BAND[0]`, not `BAND[3]`'s 217.
             PointYantra.shared.setEnclosure(PointYantra.focus(forAxisZ: travel.z))
+            // C7.11 · a DRIFT-PAST leaves a trail and strikes nothing. The threshold tone
+            // moved to `onLand` below, where the design puts it.
             travel.onCross = { reg in
                 soundEngine.axisTrail(hz: reg.hz)               // the register forming / left behind
+            }
+            travel.onLand = { reg in
                 if reg.key == "gate" {
                     soundEngine.axisGate(hz: reg.hz)
                     PointJourney.reachedGate = true

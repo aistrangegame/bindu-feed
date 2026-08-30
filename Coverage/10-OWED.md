@@ -332,9 +332,31 @@ would have had nothing stopping it.
 `resolve` is not one of them.
 
 **So the ambiguity is gone and the gap has moved.** `resolve` belongs to the axis's crossing
-into z = 9 — and the axis plays `B.threshold(S.at(Z).hz)` at *every* register (`:5354`),
-including that one. The design has a generic crossing where `resolve` describes a specific
-one. **Still not wired**, because "the design describes this moment" and "the design fires
+into z = 9.
+
+> ### 🔴 CORRECTED 2026-08-29 — THIS PARAGRAPH'S PREMISE WAS WRONG, AND A RULING RESTED ON IT
+>
+> It read: *"the axis plays `B.threshold(S.at(Z).hz)` at every register (`:5354`), including
+> that one. The design has a generic crossing where `resolve` describes a specific one."*
+>
+> **`:5354` is inside `function letGo()`** — releasing a held thing, not crossing a register. I
+> read a call at the end of a close routine as a crossing handler. Every `B.threshold` site in
+> the design is a specific event (`:5082` the turn · `:5114` a door · `:5354` letting go ·
+> `:5504` entering IMMENSE · `:5971` the fall) and **not one is a plain register crossing.**
+> The per-register arrival tone comes from `B.give` inside the passage's LANDING (`:5452`,
+> `if(ev==='land')`) and from nowhere else — which is `AUDIT C7.11`, filed and open the whole
+> time this paragraph said otherwise.
+>
+> **WHAT IT CHANGES FOR THE RULING, WHICH WAS MADE ON THIS EVIDENCE.** The argument put to
+> Ashrey was *"the alternative is that the crossing meaning the point, at last sounds identical
+> to every other register."* That was false as stated: plain crossings sound **nothing**. The
+> conclusion survives and is arguably stronger — an arrival at the centre with no voice would
+> be silent, not generic — but **the reason given was wrong, and a decision taken on a wrong
+> reason is worth re-reading even when the answer holds.** `resolve` now fires from `onLand`,
+> where the design puts an arrival tone, rather than from every drift-past.
+>
+> This is §10's own rule turned on my own ledger: *a row's verdict can be right while its
+> reason is wrong, and nothing checks reasons.* **Still not wired**, because "the design describes this moment" and "the design fires
 this here" are different claims and only the second is a caller.
 
 **WHERE IT NOW LIVES.** An axis row, alongside the plan's Stage G axis work — the passage's
@@ -599,3 +621,39 @@ words were actually written.
 
 **Paired with E3.2 by the same sentence.** They are the same omission at the two ends of one
 act, and only both together make it true that the ceremony returns the speech it records.
+
+---
+
+## 13 · C7.11 · A DRIFT-PAST STRIKES NOTHING — OWED, and it names a refactor worth doing
+
+**The count stayed at 246, so this is argued, not assumed.** The change moves the threshold
+tone from `onCross` to a new `onLand`, fired only when a passage completes
+(`The Instrument v3.html:5452`, `if(ev==='land')`).
+
+**Which of the two explanations is it?** Applying §10's decision test — *could this fail while
+the app is correct, and pass while the app is wrong?* — a structural test (both callbacks
+exist, the view wires the threshold to one) **would pass while the app is wrong**: it asserts
+that a wiring exists, not that a drift-past is silent. That is the `theRootIs1361` tautology
+again. So a structural test is not the answer.
+
+**The real claim needs a clock.** `AxisTravel.step()` is private and driven by a
+`CADisplayLink`; the difference between a landing and a drift-past only exists while time
+passes. Nothing can be lifted out, because the distinction *is* the sequencing.
+
+**THE WALK CONDITION.** Drift slowly past a register boundary without a passage: the register
+name changes, a trail sounds, and **no bell is struck**. Then cross with a real passage and
+hear the arrival tone land at the end of it. The failure it replaces was a bell on every
+drift-past — *"exactly the struck at the crossings behaviour `Claude Design Round 2/design-source/spine-sound.js:12-13` says was replaced."*
+
+### AND THE REFACTOR THIS ROW ARGUES FOR
+
+`AxisTravel` has **no injectable clock**, so every claim about it is OWED by construction —
+this row, the passage's `swift`/`hit` behaviour in situ, the stillness gate's accumulation, the
+membrane's give. `AxisPassage` and `DanceCatch` were extracted precisely because their
+mechanisms could be made time-independent; `AxisTravel`'s cannot, because it *is* the time.
+
+**An internal `advance(dt:)` that `step()` calls, with the display link only supplying `dt`,
+would convert a band of OWED rows to MEASURED in one change.** It is not done here — mid-row,
+inside the file at the top of the churn order, is the wrong moment for it — but it is the
+single highest-leverage refactor left in the verification story, and it should be taken
+deliberately rather than discovered again.

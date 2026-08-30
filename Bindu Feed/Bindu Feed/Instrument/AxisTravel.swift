@@ -41,6 +41,19 @@ final class AxisTravel: ObservableObject {
 
     var onCross: ((AxisRegister) -> Void)?
 
+    /// C7.11 · **A LANDING IS NOT A CROSSING, AND ONLY A LANDING SOUNDS.**
+    ///
+    /// `The Instrument v3.html:5452` — `if(ev==='land'){ Z=PS.z1; TR.s=-1; B.give(S.REG[PS.to].hz); }`
+    /// The design's per-register arrival tone fires from **inside the passage's landing** and
+    /// from nowhere else. Every other `B.threshold` call site in the design is a specific
+    /// event — `letGo()` at `:5354`, the IMMENSE entry at `:5504`, the turn at `:5082` — and
+    /// **not one of them is a plain register crossing.**
+    ///
+    /// `onCross` fires from both paths (`detectCross()` runs inside a passage and outside it),
+    /// so the app struck a bell every time he drifted past a boundary. That is the behaviour
+    /// `spine-sound.js:12-13` says was **replaced**. `AUDIT C7.11`.
+    var onLand: ((AxisRegister) -> Void)?
+
     // The hand.
     private var zv = 0.0, force = 0.0, back = 0.0
     /// Readable so the stillness drone can be cut the instant the hand arrives — E4.2's
@@ -231,6 +244,9 @@ final class AxisTravel: ObservableObject {
                 // A slip-through keeps what it was given; an earned crossing ends at rest.
                 // `:249` zeroes `zv`; `:255` multiplies it by 0.45 and lets him carry on.
                 if !glideSwift { zv = 0 }
+                detectCross()
+                onLand?(Axis.nearest(z))       // `ev === 'land'` — the only arrival that sounds
+                return
             }
             detectCross()
             return

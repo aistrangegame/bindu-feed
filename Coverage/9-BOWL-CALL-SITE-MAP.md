@@ -1,6 +1,6 @@
 # 9 · THE BOWL'S 19 CALL SITES, MAPPED — and what B1 got right and wrong
 
-Written 2026-08-29 on `upgrade-pass-a-to-c`, after B1 (`AUDIT G3.3`) took
+Written 2026-08-29 on `upgrade-pass-a-to-c`, after B1 (`AUDIT G3.3`, since closed) took
 `SoundEngine.riteThreshold` from `peak 0.30` and `riteBowl` from `0.32` to the design's
 `0.075`. **Nothing here is applied.** This is the map that has to exist before anything
 else moves, because B1 is correct on the ceiling and may be wrong on the identity — and
