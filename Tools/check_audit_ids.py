@@ -93,11 +93,25 @@ def main():
             p for p in base.rglob("*") if p.suffix in (".swift", ".md"))
         for f in files:
             if not f.exists(): continue
-            for i, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            lines = f.read_text(encoding="utf-8", errors="replace").splitlines()
+            for i, line in enumerate(lines, 1):
                 for m in REF.finditer(line):
                     fid = m.group(1)
                     where = f"{f.relative_to(ROOT)}:{i}"
-                    (refs if fid in known else missing).append((where, fid, line.strip()[:78]))
+                    # ONE LINE, DELIBERATELY. Prose wraps, so a qualifier can land just
+                    # below its ID and produce a false RED — and I widened the window to ±2
+                    # lines to fix exactly that. **It made the check toothless:** removing the
+                    # qualifier entirely still passed, because neighbouring comment prose
+                    # supplies words like "missing" and "built". That is loosening a checker
+                    # so one's own text passes, which is the anti-pattern this whole section
+                    # is about. The strict rule stands and the SENTENCE moves: put the
+                    # acknowledgement beside the ID, where a reader sees it too.
+                    # THE FULL LINE IS STORED AND ONLY THE DISPLAY IS TRUNCATED. Storing
+                    # `line[:110]` meant the qualifier search ran on the TRUNCATED text, so an
+                    # acknowledgement past column 110 was invisible and the row failed while
+                    # reading, on screen, as though the words were not there. The tool was
+                    # measuring a shortened copy of what it was judging.
+                    (refs if fid in known else missing).append((where, fid, line.strip()))
 
     # A PLAN CITES OPEN ROWS BY DEFINITION — that is what a plan is for, and flagging it is
     # noise that would train the reader to ignore this check. First run flagged 8 and 4 were
@@ -118,7 +132,7 @@ def main():
           f"UNKNOWN {len(missing)} · OPEN-cited-as-settled {len(unqualified)}")
     for where, fid, line in unqualified:
         print(f"  UNQUALIFIED {fid} is {state.get(fid)}  {where}")
-        print(f"              claim:   {line}")
+        print(f"              claim:   {line[:110]}")
         print(f"              finding: {known.get(fid, '?')}")
         print(f"              cite an open row AS open, or do not cite it as evidence.")
     for where, fid, line in missing:

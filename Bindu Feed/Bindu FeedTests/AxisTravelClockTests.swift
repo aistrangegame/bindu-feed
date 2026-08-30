@@ -65,6 +65,62 @@ import QuartzCore
         #expect(abs(a.z - b.z) < 1e-9, "a 10s step moved further than the 1/30s clamp allows")
     }
 
+    // MARK: - B0.5 · the sky answers stillness
+
+    @Test("dwell fills only in stillness at the sky, and drains four times faster")
+    func theStillnessGateFillsAndDrains() {
+        // `The Instrument v3.html:5518-5520`:
+        //
+        //     if (still && Z < -2.3) dwell = min(1, dwell + dt*0.30);
+        //     else                   dwell = max(0, dwell - dt*1.30);
+        //
+        // **THE ASYMMETRY IS THE MECHANISM.** Filling takes 3.3s of genuine stillness and
+        // draining takes 0.77s, so the sky rewards someone who has actually stopped and lets
+        // it go the moment they have not. Equal rates would pass "a value rises and falls".
+        //
+        // Only assertable at all because the clock is injected — this was OWED an hour ago.
+        let t = AxisTravel(startZ: -4)          // at the sky
+        Self.run(t, seconds: 2.0)               // still: no input, no drift
+        let filled = t.dwell
+        #expect(filled > 0.4, "the gate did not fill in stillness at the sky: \(filled)")
+
+        t.applyDrag(60)                         // a hand arrives
+        Self.run(t, seconds: 0.4)
+        #expect(t.dwell < filled * 0.6,
+                "movement did not drain it: \(t.dwell) from \(filled)")
+    }
+
+    @Test("the gate stays shut away from the sky, however still he is")
+    func stillnessElsewhereEarnsNothing() {
+        // `Z < -2.3` — the reward is the SKY's, not stillness anywhere. A gate that filled at
+        // every register would make every pause a ceremony.
+        let t = AxisTravel(startZ: 3)
+        Self.run(t, seconds: 3.0)
+        #expect(t.dwell == 0, "the gate filled away from the sky: \(t.dwell)")
+    }
+
+    @Test("the gate spends the dwell it opened on, and it never refills")
+    func theGateSpendsIt() {
+        // **MY FIRST TWO VERSIONS OF THIS ASSERTED THINGS THE CODE DOES NOT DO**, and a trace
+        // settled it in one line: `dwell` went 0.81 → 0.00 in a SINGLE step, which is not the
+        // 1.30/s drain I was predicting. `:353` sets `dwell = 0` the instant the gate fires,
+        // and `:346`'s fill is guarded by `!mem[GATE]`, so it can never come back.
+        //
+        // That is a real property and worth pinning: **the stillness is SPENT.** The gate is
+        // not a meter that stays full behind him — it is paid, once, and the sky does not
+        // offer the same reward twice. Everything I wrote about `dwell` outliving `thin` was
+        // a distinction that does not exist in this build.
+        let t = AxisTravel(startZ: -4)
+        var peak = 0.0
+        for _ in 0..<200 { t.advance(dt: 1.0 / 60); peak = max(peak, t.dwell) }
+        #expect(peak > 0.9, "the gate never filled: peak \(peak)")
+        #expect(t.dwell < 0.05, "the gate did not spend it: \(t.dwell)")
+
+        // And it stays spent, however still he is afterwards.
+        Self.run(t, seconds: 5.0)
+        #expect(t.dwell < 0.05, "the gate refilled after opening: \(t.dwell)")
+    }
+
     @Test("zero and negative time do nothing")
     func nonPositiveStepsAreIgnored() {
         let t = AxisTravel(startZ: 0); t.drawIn(0.9)

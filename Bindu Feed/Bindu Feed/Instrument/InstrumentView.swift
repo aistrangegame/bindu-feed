@@ -580,7 +580,11 @@ struct InstrumentView: View {
                         .float(0),                         // uSync   (dance sync — Phase 2)
                         .float(0),                         // uSpin
                         .float(0),                         // uReveal (light bloom — Phase 2)
-                        .float(0),                         // uDwell  (sky dwell — Phase 2)
+                        // B0.5 · THE SKY ANSWERS STILLNESS. `The Instrument v3.html:1242-1248`
+                        // bends every room's light toward the centre as `dwell` fills, and
+                        // `mSky` has computed that term all along against a hard `0`.
+                        // `travel.dwell`, not `travel.thin` — see the note on the property.
+                        .float(Float(travel.dwell)),       // uDwell
                         .float2(0, 0),                     // uSweep  (memory sweep — Phase 2)
                         // uWx — THE LIVE ROOM'S OWN WEATHER. This was the design's FALLBACK
                         // literal `(0.4, 0.02, 0.2)` (`uni-deep.js:91`'s `|| [...]`) hardcoded

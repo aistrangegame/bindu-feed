@@ -75,7 +75,31 @@ final class AxisTravel: ObservableObject {
 
     // THE STILLNESS GATE (surface 0, sky→Light) — one accumulator, not a countdown.
     // `dwell` is 0…1; see the block in `advance(dt:)` for the law and the numbers.
-    private var dwell = 0.0
+    /// B0.5 · **PUBLISHED, BECAUSE THE SHADER'S HALF WAS ALREADY BUILT AND STARVED.**
+    ///
+    /// `InstrumentField.metal`'s `mSky` computes the light-bend from it —
+    /// `v += dwell * pow(max(0, cos(13·a2)), 7) * smoothstep(1.30, 0.04, |q|) * 0.11` — and
+    /// `InstrumentView` passed `.float(0)`. The gesture was implemented, the accumulator was
+    /// running, and the two were never connected: **a uniform pinned to zero and a uniform
+    /// nobody wrote are indistinguishable from the outside**, which is why `AUDIT B7.1` (still open) reads
+    /// *"no implementation"* for a sweep whose shader half `mSky` already draws. What is missing there is the app computing the value, which is a
+    /// smaller job than the row implies.
+    ///
+    /// **A NOTE I FIRST WROTE WRONG, KEPT BECAUSE THE CORRECTION IS THE USEFUL PART.** It said
+    /// `dwell` and `thin` are different values and that `dwell` *"keeps answering stillness
+    /// after the gate is through"*. **It does not.** `:353` sets `dwell = 0` the instant the
+    /// gate fires, and the fill branch is guarded by `!mem[GATE]`, so it can never refill.
+    /// `thin` is `mem[GATE] ? 0 : dwell`, so the two are equal before the gate and both zero
+    /// after it — **behaviourally identical, and I explained a distinction that is not there.**
+    /// A trace printed it in one line: `dwell` went 0.81 → 0.00 in a single step, which is not
+    /// a 1.30/s drain.
+    ///
+    /// `dwell` is still the right name to publish, for a smaller reason than the one I gave:
+    /// it is the quantity the design itself names (`DP.dwell`,
+    /// `The Instrument v3.html:1242-1248`), so the shader reads the thing the design reads.
+    /// If the gate's reset is ever revisited, the light-bend follows the design's variable
+    /// rather than a derived one that happens to match today.
+    @Published private(set) var dwell = 0.0
     private let GATE = 0
 
     /// The `|turnV| < 0.001` term of the design's `still` — the register's OWN gesture, which

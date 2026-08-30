@@ -125,7 +125,7 @@ Open findings by severity:
 | B0.2 | BLOCKER | VISUAL | lock makes four Universe registers unreachable | CLOSED | Zoom derived from Z at `UniverseCamera.swift:137-140`. |
 | B0.3 | BLOCKER | VISUAL | dead band at the Feed edge is a total deadlock | CLOSED | `InstrumentView.swift:86-91` band is a floor; `:132` hit-testing no longer opacity-gated. |
 | B0.4 | BLOCKER | VISUAL | surface 0 one-way valve; the Light has a refused door | CLOSED | `AxisTravel.swift:111` opens `mem[GATE]` at `z <= -4.5`. |
-| B0.5 | MAJOR | VISUAL | stillness at the sky has no reward, only punishment | OPEN | `InstrumentView.swift:536` `uDwell` hard-zeroed; the light-bend and its line are absent. |
+| B0.5 | MAJOR | VISUAL | stillness at the sky has no reward, only punishment | **PARTIAL 2026-08-29** | **The light-bend is live.** `mSky` had computed `dwell * pow(cos(13·a2),7) * smoothstep(1.30,0.04,|q|) * 0.11` all along against a hard `.float(0)` — the shader's half was built and starved. `AxisTravel.dwell` is published and fed, and the gate's fill/drain/spend is now MEASURED through the injected clock. **STILL OPEN:** the authored line *"This is what you look like from outside."* at `dwell > 0.62`. Original:  `InstrumentView.swift:536` `uDwell` hard-zeroed; the light-bend and its line are absent. |
 | B0.6 | MAJOR | DATA | the particle is not the sky's light source | OPEN | `InstrumentView.swift:501` suppresses the self-name across the whole Universe band. |
 | B1.1 | MAJOR | VISUAL | velocity only sampled at drag END | CLOSED | `UniverseCamera.swift:189-197` samples every move. |
 | B1.2 | MAJOR | VISUAL | friction wrong and frame-rate dependent | CLOSED | `UniverseCamera.swift:242` `pow(0.945, f)`, dt capped. |
