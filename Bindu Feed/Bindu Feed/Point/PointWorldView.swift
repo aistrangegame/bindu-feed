@@ -123,9 +123,19 @@ struct PointWorldView: View {
     /// `:5344` — the reading closes and the world comes back. The claim releases here and
     /// on `onDisappear`, so no exit path leaves `carryDone` armed for the next star.
     private func letGo() {
+        park()
         withAnimation { openStar = nil }
         revealed = 0
         carryDone = false
+    }
+
+    /// D4.6 · `:5318-5320`. **EVERY EXIT PARKS**, which is the claim-release rule applied to
+    /// state rather than to a claim: `letGo`, both `onClose` paths and `onDisappear` all pass
+    /// through here, so no way out of a reading drops what it had given. The polite path is
+    /// the one that always works and therefore the one that proves nothing.
+    private func park() {
+        guard let star = openStar else { return }
+        PointPending.park(dimension: dimensionN, star: star.key, revealed: revealed)
     }
 
     private var hue: Color { Color(hex: PointContent.hues["m\(dimensionN)"] ?? "#C0392B") }
@@ -152,14 +162,14 @@ struct PointWorldView: View {
                     .animation(.easeInOut(duration: 1.1), value: revealed)
 
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
-                             onClose: { withAnimation { openStar = nil }; revealed = 0 },
+                             onClose: { park(); withAnimation { openStar = nil }; revealed = 0 },
                              onReveal: { revealed = $0 })
 
                 carryAffordance(star)
             } else if let star = openStar {
                 // reached without a universe (the debug star hook) — no world to recede
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
-                             onClose: { withAnimation { openStar = nil }; revealed = 0 })
+                             onClose: { park(); withAnimation { openStar = nil }; revealed = 0 })
             } else if let u = selectedUniverse {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).
@@ -187,6 +197,8 @@ struct PointWorldView: View {
                         soundEngine.nul()
                     }
                     PointJourney.openedStars.append(s.t)
+                    // D4.6 · `takeBack` — the same star returns to what it had already given.
+                    revealed = PointPending.takeBack(dimension: dimensionN, star: s.key) ?? 0
                     withAnimation(.easeInOut(duration: 0.8)) { openStar = s }
                 }, onLaw: apply)
                 .ignoresSafeArea()
@@ -292,7 +304,7 @@ struct PointWorldView: View {
         }
         // Released on the way out, like the fall's four scoped paths: a register that is no
         // longer mounted must never still be holding the vertical.
-        .onDisappear { onHold(false); PointYantra.shared.readingOpen = false; carryDone = false }
+        .onDisappear { park(); onHold(false); PointYantra.shared.readingOpen = false; carryDone = false }
         .onAppear {
             syncAxisLock()
             if let dim { PointJourney.enteredDims.append(dim.name) }
