@@ -636,13 +636,17 @@ struct InstrumentView: View {
                         .float(Float(z)),                  // uZ  — the live axis coordinate
                         .float(Float(breath.value)),       // uBr
                         // C4.5 · uSync / uSpin — VII's pace and the frame turning with its
-                        // lane. `The Instrument v3.html:5588` feeds `DANCE.sync` and
-                        // `DANCE.spin * 0.55`. `PointDance.lock` is the app's chain coming
-                        // into time — the same quantity by a different construction — and it
-                        // is static, so the axis can read it without the Point being mounted.
-                        // A world he is not in reads 0, which is what `leaveRegister()` leaves.
-                        .float(Float(PointDance.lock)),    // uSync
-                        .float(Float(PointDance.lock * 0.55)),  // uSpin
+                        // lane. `The Instrument v3.html:2132-2133` feeds `o.sync` and `o.spin`
+                        // — the DANCE object's own values.
+                        //
+                        // **D5.8 · THIS WAS `PointDance.lock`**, recorded honestly at the time
+                        // as *"the same quantity by a different construction"* because the
+                        // grab model was unbuilt and the offer model's lock was the nearest
+                        // static thing. Now `DanceCatch` holds the real `sync` and `spin`, and
+                        // a proxy for a quantity that EXISTS is just a wrong number with a
+                        // citation. A register he is not in reads 0 — `Pace.clear()`.
+                        .float(Float(DanceCatch.Pace.sync)),          // uSync
+                        .float(Float(DanceCatch.Pace.spin * 0.55)),   // uSpin
                         // C4.5 · uReveal — **THE CENTRE BLOOM.** `:5589` is
                         // `Math.max(0, (Z - 8.6) / 0.9)`: nothing until the last 0.4 of the
                         // axis, then a ramp to 1 exactly at the centre (z 9). The shader's

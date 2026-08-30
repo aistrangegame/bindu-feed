@@ -1026,11 +1026,11 @@ private struct WorldDance: View {
                 try? await Task.sleep(nanoseconds: 33_000_000)
                 let now = Date(); let dt = now.timeIntervalSince(last); last = now
                 _ = PointDance.update(dt)
-                if let taken = PointDance.chain.first,
-                   let sp = stars.first(where: { $0.star.key == taken.id }) {
-                    running = false
-                    onOpen(sp.star)                    // the one that took his hand
-                }
+                // D5.8 · **THE OFFER MODEL'S DECISION PATH IS GONE.** This read
+                // `PointDance.chain.first` and opened whichever body had crossed the floor to
+                // take his hand. Under the grab model the star is decided the instant he
+                // reaches (`DanceCatch.grabbed`), so this branch can never fire first — and a
+                // dead decision path beside a live one is C7.8's decoy exactly.
             }
         }
     }
@@ -1091,12 +1091,27 @@ private struct WorldDance: View {
                     .onChanged { v in
                         offeredOnce = true
                         hand = v.location
-                        let nx = (v.location.x - cx) / min(geo.size.width, geo.size.height)
-                        let ny = (v.location.y - cy) / min(geo.size.width, geo.size.height)
-                        if PointDance.hand == nil { _ = PointDance.offer(x: nx, y: ny) }
-                        else { PointDance.moveHand(x: nx, y: ny) }
+                        // D5.8 · `grab(px,py)` — the nearest star WITHIN REACH is held. Not a
+                        // tap on a mark (which is picking, the fault this row named) and no
+                        // longer an offer waited on: `The Instrument v3.html:2264-2270`.
+                        let rr = min(geo.size.width, geo.size.height)
+                        let cands: [(id: String, x: Double, y: Double, R: Double)] = stars.map { sp in
+                            let nth = stars.prefix(while: { $0.id != sp.id }).filter { $0.uni == sp.uni }.count
+                            let inLane = stars.filter { $0.uni == sp.uni }.count
+                            let pt = DanceLanes.point(index: nth, of: inLane, universe: sp.uni, t: bt)
+                            return (sp.id, cx + pt.x * rr, cy + pt.y * rr, 9)
+                        }
+                        if let id = DanceCatch.grabbed(reachX: Double(v.location.x),
+                                                       reachY: Double(v.location.y),
+                                                       candidates: cands),
+                           let sp = stars.first(where: { $0.id == id }) {
+                            running = false
+                            onOpen(sp.star)                  // the one his hand reached
+                        }
                     }
-                    .onEnded { _ in hand = nil; PointDance.letGo() })
+                    // `release(){this.reach=null;}` — and `sync` falls four times faster than
+                    // it built, which is what makes letting go cost something.
+                    .onEnded { _ in hand = nil })
                 .onAppear { seedAndRun() }
             }
         }

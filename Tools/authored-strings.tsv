@@ -14,7 +14,25 @@
 #   CONTENT     authored content that reaches the app from Airtable at runtime.
 #   CSSVALUE    CSS / animation shorthand or a font stack. Implementation, never copy.
 #   FRAGMENT    a template-literal fragment or code scrap the extractor split.
-#   SUPERSEDED  from a generation this build does not follow (The Point v9.html).
+#   SUPERSEDED  authored, and from a source this build does not follow. TWO ROUTES, and they
+#               are different in kind - a reader must be able to tell which applies:
+#                 CHRONOLOGICAL - a later generation replaced an earlier one. This is just
+#                   history; nobody decided anything. `The Point v9.html`'s four rows.
+#                 ADJUDICATED - two LIVE sources are mutually exclusive and one lost a
+#                   ruling. This is a decision, with a date and an author, and it can be
+#                   revisited. First instance 2026-08-30: `AUDIT D5.8` ruled world VII onto
+#                   `The Instrument v3.html`'s grab model over `world-seven.js`'s offer
+#                   model, so the offer model's three caption strings are authored and no
+#                   longer required. See CLAUDE.md's D5.8 divergence note.
+#
+#               WHAT THIS VERDICT PROTECTS AGAINST. Without it, deleting those three strings
+#               goes one of two ways, and both are worse. Either check_authored stays RED and
+#               someone quiets it by widening a denylist - a relaxation to make a true red go
+#               away. Or the strings are restored, and the surface describes a mechanism that
+#               no longer runs, which is the ninth shape with authored copy on it. A named
+#               ruling is the only outcome that is neither. This is the DELETION half of
+#               Rule 4 doing exactly what it exists for: deleting an authored string must be
+#               a decision, and now it is one with a name and a date on it.
 #   DIVERGED    deliberately not used; the reason is recorded in CLAUDE.md section 10.
 #
 # Regenerate: python3 Tools/extract_authored.py && python3 Tools/seed_registry.py
@@ -581,7 +599,7 @@ REQUIRED	Grace is the show he happened to watch, the pause he happened to take, 
 REQUIRED	Grace · the unearned gift	Claude Design Round 2/comps/The Rooms v4.html;Claude Design Round 2/design-source/Player Detail - The Turning.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Universe v3.html;Claude Design Round 2/design-source/uni-field.js [js-literal]
 REQUIRED	Grammar for the whole walk: every other star describes the costume; this one states the wearer. Description, not aspiration.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
 REQUIRED	handed back	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/world-three.js [js-literal]
-REQUIRED	HANDS · THE DANCE IS CARRYING YOU	Claude Design Round 2/design-source/world-seven.js [js-literal]
+SUPERSEDED	HANDS · THE DANCE IS CARRYING YOU	Claude Design Round 2/design-source/world-seven.js [js-literal]
 REQUIRED	He almost threw it away. "It falls flat when I go deeper," he said -- but he kept the recording. Something in him knew the broken place was the doorway.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Return v2.html;Claude Design Round 2/design-source/The Universe v3.html;Claude Design Round 2/design-source/uni-field.js [js-literal]
 REQUIRED	He let the show play on. But he wasn't watching it anymore. He was watching the watcher.	Claude Design Round 2/design-source/The Return v2.html;Claude Design Round 2/design-source/The Rite v3.html [js-literal]
 REQUIRED	He paused the show. Something had gone cold and bright in his chest.	Claude Design Round 2/design-source/The Return v2.html;Claude Design Round 2/design-source/The Rite v3.html [js-literal]
@@ -759,7 +777,7 @@ REQUIRED	Sila -- the Inuit register of weather-breath-consciousness	Claude Desig
 REQUIRED	Sirr -- the secret, in the Sufi Lataif	Claude Design Round 2/comps/The Aperture.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
 REQUIRED	Sleep is filed as downtime -- eight hours of nothing between the days that count.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
 REQUIRED	Solitude looks like the serious spiritual setting -- crowds are for festivals, and festivals are for everyone else.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
-REQUIRED	SOMEONE IS COMING ACROSS THE FLOOR	Claude Design Round 2/design-source/world-seven.js [js-literal]
+SUPERSEDED	SOMEONE IS COMING ACROSS THE FLOOR	Claude Design Round 2/design-source/world-seven.js [js-literal]
 REQUIRED	something arrives that you cannot predict	Claude Design Round 2/comps/The Aperture.html [doc]
 REQUIRED	Something in him knew the broken place was the doorway.	Claude Design Round 2/design-source/The Rite v3.html [js-literal]
 REQUIRED	Sound & Shape	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
@@ -1132,7 +1150,7 @@ REQUIRED	Wuji -- the uncarved, before the taiji	Claude Design Round 2/comps/The 
 REQUIRED	Yemaya -- the Yoruba register of the mothering sea	Claude Design Round 2/comps/The Aperture.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
 REQUIRED	Yesod -- the foundation sephirah	Claude Design Round 2/comps/The Aperture.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
 REQUIRED	You are a being of light, traveling. Inward from this gate: dimensions, universes, stars. Read a star -- or descend onto it. Diving in is how you ascend.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
-REQUIRED	YOU ARE DANCING · IT GOES QUICKER IN COMPANY	Claude Design Round 2/design-source/world-seven.js [js-literal]
+SUPERSEDED	YOU ARE DANCING · IT GOES QUICKER IN COMPANY	Claude Design Round 2/design-source/world-seven.js [js-literal]
 REQUIRED	You are not the one in the stories. You are the field the stories happen in.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Light v2.html;canon/spine-light.js [js-literal]
 REQUIRED	You are the magma layer -- pressured by every shell above. The pressure is the point; the vessel came with equipment; the rules are learnable.	Claude Design Round 2/comps/The Reading.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Point v9.html;Claude Design Round 2/design-source/point-content.js;canon/point-content.js [js-literal]
 REQUIRED	You came down to it yourself.	Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Universe v3.html;Claude Design Round 2/design-source/spine-axis.js [js-literal,markup]

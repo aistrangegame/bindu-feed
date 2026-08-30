@@ -1191,13 +1191,45 @@ private struct ReadCompany: View {
     /// NINTH SHAPE — complete-looking output over nothing. It rendered, so every outcome
     /// check passed it.
     private var danceWord: String {
-        let held = PointDance.chain.count
-        if held == 0 { return "someone is coming across the floor" }
-        if held == 1 { return "you are dancing · it goes quicker in company" }
-        return "\(held) hands · the dance is carrying you"
+        DanceCatch.word(sync: catcher.sync, caught: catcher.caught,
+                        scatter: catcher.scatter).uppercased()
     }
     @State private var lastMove = Date()
     @State private var dancing = false
+
+    // D5.8 · **THE GRAB MODEL, per the precedence ladder and the audit's own citation.**
+    //
+    // `AUDIT D5.8` cites `DESIGN :2152-2186` — `The Instrument v3.html`'s world VII — and asks
+    // for `sync` / `spin` / keep-pace / per-section landing / `scatter` by name. What was built
+    // was `world-seven.js`'s OFFER model: he puts a hand out, bodies cross the floor, and
+    // sections are earned by `carry` (time held) on gates `[1.5, 3.3, 5.5, 8.1]`. The two are
+    // MUTUALLY EXCLUSIVE designs of one world — the Instrument's file contains no `carry`,
+    // `offer` or `chain`, and `world-seven.js` contains no `sync`, `caught` or `tick`.
+    //
+    // **AND `world-seven.js:28` OPENS BY NAMING THIS GESTURE AND REFUSING IT** — *"He does not
+    // grab. He puts his hand out and waits."* So this is not two sources that merely differ:
+    // one explicitly repudiates the other. The Instrument wins on the precedence ladder (it
+    // outranks per-register sources) and it is the model the BLOCKER cites, so it is the one
+    // built — and the offer model is recorded as a divergence that was built, walked and
+    // replaced, so nobody reads that opening line cold and restores it as a regression.
+    //
+    // **The lanes are untouched:** both models share `r = 0.30 + ui·0.215`,
+    // `sp = (1.42 − ui·0.30)·0.16`, phase `(i/n)·TAU + ui·0.7`. Only the gesture and the
+    // giving change.
+    @State private var catcher = DanceCatch()
+    /// Where his reach is, in the reading's own coordinates. `nil` when no hand is out.
+    @State private var reach: CGPoint? = nil
+
+    /// The held star's place in the three lanes — `world VII`'s own armature, shared by both
+    /// models and therefore untouched by this change. Resolved from the canon rather than
+    /// passed in, so the reading does not need the world to tell it where its star was.
+    private var lane: (universe: Int, index: Int, count: Int) {
+        guard let seven = PointContent.dimensions.first(where: { $0.n == 7 }) else { return (0, 0, 1) }
+        for (ui, u) in seven.universes.enumerated() {
+            if let i = u.stars.firstIndex(of: s.star.key) { return (ui, i, u.stars.count) }
+        }
+        return (0, 0, 1)
+    }
 
     var body: some View {
         ZStack {
@@ -1257,27 +1289,26 @@ private struct ReadCompany: View {
         // E1 · `offer` / `moveHand` / `letGo`. A HAND, not a pace meter: the register's whole
         // claim is that the dance exists while a hand is held and stops when it is not, and
         // that cannot be said by a scalar that decays on inactivity.
+        // `grab` / `move` / `release` — `The Instrument v3.html:2264-2273`. The reach is the
+        // hand; keeping it inside the held star's lane is what builds `sync`.
         .gesture(DragGesture(minimumDistance: 0)
             .onChanged { v in
                 guard !s.done else { return }
-                let rim = 393.0
-                let hx = (Double(v.location.x) - rim / 2) / rim
-                let hy = (Double(v.location.y) - 426) / rim
-                if PointDance.hand == nil { PointDance.offer(x: hx, y: hy) }
-                else { PointDance.moveHand(x: hx, y: hy) }
+                reach = v.location
                 lastMove = Date()
             }
-            .onEnded { _ in
-                // `letGo()` — the chain empties, and `lock` has nothing left to hold it up.
-                PointDance.letGo()
-                soundEngine.leaveAll()          // C1's dancers go the way they came: a fade
-            })
+            // `release:function(){this.reach=null;}` — the reach goes and `sync` falls at
+            // 1.35/s, four times faster than it built. Letting go is not neutral.
+            .onEnded { _ in reach = nil })
         .onAppear {
             let seven = PointContent.dimensions.first(where: { $0.n == 7 })
             PointDance.floor(universes: seven?.universes.map(\.stars) ?? [])
             run()
         }
-        .onDisappear { PointDance.leaveRegister(); soundEngine.leaveAll() }
+        .onDisappear {
+            PointDance.leaveRegister(); soundEngine.leaveAll()
+            DanceCatch.Pace.clear()          // a register he is not in reads 0
+        }
     }
 
     /// The figure's own loop. It drives `PointDance.update`, hands each new body its VOICE,
@@ -1297,16 +1328,34 @@ private struct ReadCompany: View {
                 try? await Task.sleep(nanoseconds: 33_000_000)
                 let now = Date()
                 let dt = now.timeIntervalSince(last); last = now
-                let lock = PointDance.update(dt)
-                // every body that took a hand this frame gets its own voice at its own
-                // harmonic of 852 — `joinedQ`, so none is lost when several join at once
-                while let body = PointDance.takeJoined() {
-                    soundEngine.join(min(4, max(0, body.chain)))
+                // D5.8 · the held star rides its lane; `keep` is whether the reach is
+                // still in it. `:2236` — `keep = d < max(34, s.R*4.5)`.
+                let L = lane
+                let at = DanceLanes.point(index: L.index, of: L.count, universe: L.universe,
+                                          t: now.timeIntervalSinceReferenceDate)
+                let keep: Bool = {
+                    guard let r = reach else { return false }
+                    let dx = Double(r.x) - at.x * 393 - 196.5
+                    let dy = Double(r.y) - at.y * 393 - 426
+                    return DanceCatch.keeping(distance: (dx * dx + dy * dy).squareRoot(),
+                                              starRadius: 9)
+                }()
+                let landed = catcher.update(dt: dt, holding: reach != nil, held: true,
+                                            keep: keep,
+                                            laneSpeed: DanceLanes.speed(universe: L.universe))
+                for _ in landed { s.give() }
+                pace = catcher.sync                // the bar IS the pace kept
+                // D5.8 · the axis reads the pace from the static bridge — the shader's
+                // `uSync`/`uSpin` are `DANCE.sync` and `DANCE.spin` in the design.
+                DanceCatch.Pace.set(sync: catcher.sync, spin: catcher.spin)
+                // **THE SCATTER RELEASES THE STAR** — `:2247` `this.held=null`. Losing the
+                // pace before the fourth takes the reading back; after it, nothing is taken,
+                // which is `caught < 4` and is the whole of *what is caught is kept*.
+                if catcher.releasedByScatter && !s.done {
+                    soundEngine.leaveAll()
+                    await MainActor.run { onClose() }
+                    break
                 }
-                // `ensemble(lock)` — the detune closes as they come into time
-                soundEngine.ensemble(lock: lock)
-                pace = lock                       // the bar IS the lock now, not a pace meter
-                if let g = PointDance.gaveNow, g > s.revealed { s.give() }
             }
             dancing = false
         }

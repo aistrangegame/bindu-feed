@@ -85,6 +85,56 @@ import Foundation
         _ = Self.run(&c, seconds: 3.0, holding: false)
         #expect(c.caught == 4, "a finished reading was taken back: \(c.caught)")
         #expect(c.scatter == 0, "a scatter fired after the fourth had landed")
+        // **RE-DERIVED 2026-08-30, WHEN THE MECHANISM WAS FINALLY DRIVEN.** The sentence did
+        // not change; what it has to be true OF did. `scatter == 0` was enough while nothing
+        // read this struct — now `ReadCompany` closes the reading on `releasedByScatter`, so
+        // that is the flag which decides whether a finished reading survives. Asserting the
+        // old field only would have left the app's actual exit path unguarded while the test
+        // still read as covering it.
+        #expect(!c.releasedByScatter,
+                "the star was released after all four had landed — the reading would close on him")
+    }
+
+    @Test("the pace has the design's own six words, and the scatter's is not an apology")
+    func theWordsAreAuthored() {
+        // `The Instrument v3.html:2343-2348`. Six authored strings that sat unbuilt while the
+        // surface spoke the OTHER model's language — `"N hands · the dance is carrying you"`,
+        // read off a chain the grab model does not have. Under grab that caption would have
+        // read *"someone is coming across the floor"* forever: correct-looking output over a
+        // dead mechanism, which is the ninth shape, self-inflicted.
+        #expect(DanceCatch.word(sync: 0.0,  caught: 0, scatter: 0) == "reaching")
+        #expect(DanceCatch.word(sync: 0.40, caught: 0, scatter: 0) == "matching")
+        #expect(DanceCatch.word(sync: 0.60, caught: 1, scatter: 0) == "in step")
+        #expect(DanceCatch.word(sync: 0.90, caught: 2, scatter: 0) == "keeping pace")
+        #expect(DanceCatch.word(sync: 0.95, caught: 4, scatter: 0) == "held")
+        // **THE SCATTER'S WORD OUTRANKS EVERY OTHER STATE**, because a scatter is the thing
+        // that just happened. `:2165` — *"it is not a punishment: the marketplace does not
+        // pause for you."* Not "lost", not "again": it went by.
+        #expect(DanceCatch.word(sync: 0.95, caught: 4, scatter: 0.5) == "it went by",
+                "the scatter did not take precedence over the pace")
+        #expect(DanceCatch.word(sync: 0, caught: 0, scatter: 1) == "it went by")
+    }
+
+    @Test("a grab takes the nearest star WITHIN REACH, and empty floor takes nothing")
+    func grabIsProximityNotPicking() {
+        // `The Instrument v3.html:2264-2270`. `AUDIT D5.8`'s fault was `.onTapGesture` on each
+        // mark — **picking a star by hitting it**. This is proximity: he puts his hand out and
+        // whatever is close enough takes it, and the generous `max(40, R*5)` radius is what
+        // makes that a reach rather than a hit test.
+        let c: [(id: String, x: Double, y: Double, R: Double)] = [
+            ("near", 100, 100, 9), ("far", 400, 400, 9),
+        ]
+        #expect(DanceCatch.grabbed(reachX: 108, reachY: 104, candidates: c) == "near")
+        // **THE HALF THAT SEPARATES A REACH FROM A SNAP:** empty floor takes NOTHING. Without
+        // the radius the nearest star is always taken, however far away — which is picking
+        // again, by another route, and it would pass every "a star opens" check.
+        #expect(DanceCatch.grabbed(reachX: 900, reachY: 900, candidates: c) == nil,
+                "a touch on empty floor snapped to the least-far star")
+        // and between two in reach, the nearer one
+        let two: [(id: String, x: Double, y: Double, R: Double)] = [
+            ("a", 100, 100, 9), ("b", 120, 100, 9),
+        ]
+        #expect(DanceCatch.grabbed(reachX: 118, reachY: 100, candidates: two) == "b")
     }
 
     @Test("the scatter fades rather than latching")

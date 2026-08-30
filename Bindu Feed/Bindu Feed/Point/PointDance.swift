@@ -142,6 +142,64 @@ struct DanceCatch {
         return [caught - 1]
     }
 
+    /// D5.8 · **THE AXIS READS THE PACE FROM HERE.** `The Instrument v3.html:2132-2133` feeds
+    /// the shader `o.sync` and `o.spin` — the DANCE object's own values.
+    ///
+    /// The app fed `uSync`/`uSpin` from `PointDance.lock`, recorded at the time as *"the same
+    /// quantity by a different construction"*, because the offer model's lock was static and
+    /// the axis could read it without the Point being mounted. That stand-in was honest while
+    /// the grab model was unbuilt; now `DanceCatch` holds the real `sync` and `spin`, and a
+    /// proxy for a quantity that exists is just a wrong number with a citation.
+    ///
+    /// Static for the same reason `PointVeil` is: a `@State` struct inside a view is invisible
+    /// to the axis, which is C4.5's whole finding. Zeroed on leaving, so a register he is not
+    /// in reads 0.
+    enum Pace {
+        private(set) static var sync: Double = 0
+        private(set) static var spin: Double = 0
+        static func set(sync s: Double, spin sp: Double) { sync = s; spin = sp }
+        static func clear() { sync = 0; spin = 0 }
+    }
+
+    /// **THE PACE, IN WORDS** — `The Instrument v3.html:2343-2348`, verbatim and in order.
+    ///
+    /// Six authored strings for the six states this mechanism can be in, and they were sitting
+    /// unbuilt while the surface spoke the OTHER model's language: `"someone is coming across
+    /// the floor"`, `"N hands · the dance is carrying you"`, read off `PointDance.chain.count`.
+    /// Under the grab model there is no chain, so that caption would have read *"someone is
+    /// coming across the floor"* forever — correct-looking output over a mechanism that no
+    /// longer runs, which is the NINTH SHAPE, and I would have introduced it myself.
+    ///
+    /// **`it went by` is the scatter's word and it is not an apology** — `:2165`, *"let go
+    /// early, the rest scatters, and it is not a punishment: the marketplace does not pause
+    /// for you."*
+    static func word(sync: Double, caught: Int, scatter: Double) -> String {
+        if scatter > 0 { return "it went by" }
+        if sync < 0.30 { return "reaching" }
+        if sync < 0.55 { return "matching" }
+        if sync < 0.80 { return "in step" }
+        return caught >= 4 ? "held" : "keeping pace"
+    }
+
+    /// `grab(px,py)` — `The Instrument v3.html:2264-2270`. The nearest star **within reach**
+    /// is the one held; nothing outside the radius is taken, so a touch on empty floor takes
+    /// nothing rather than snapping to whatever is least far away.
+    ///
+    /// **THIS IS NOT PICKING FROM A LIST, WHICH IS WHAT `AUDIT D5.8` CALLED THE FAULT.** The
+    /// original was `.onTapGesture` on each mark — selecting a specific star by hitting it.
+    /// This is proximity: he puts his hand somewhere and whatever is close enough takes it.
+    /// The radius `max(40, R*5)` is generous for exactly that reason.
+    static func grabbed(reachX: Double, reachY: Double,
+                        candidates: [(id: String, x: Double, y: Double, R: Double)]) -> String? {
+        var best: String? = nil, bd = Double.infinity
+        for c in candidates {
+            let dx = c.x - reachX, dy = c.y - reachY
+            let d = (dx * dx + dy * dy).squareRoot()
+            if d < max(40, c.R * 5) && d < bd { bd = d; best = c.id }
+        }
+        return best
+    }
+
     /// `:2204 reset()` — the spin is zeroed too, *"so a spin left behind would offset their
     /// geometry"*.
     mutating func reset() { sync = 0; caught = 0; spin = 0; scatter = 0; releasedByScatter = false }
@@ -232,6 +290,11 @@ enum PointDance {
 
     // ── offering a hand, and taking it back ────────────────────────────
 
+    /// UNWIRED(AUDIT D5.8 closed on the GRAB model 2026-08-30 — this is the offer model's
+    /// entry point and is superseded; see the §10 divergence. **Kept rather than deleted**,
+    /// because `world-seven.js` is a real design source and this is a faithful port of it —
+    /// a future ruling could reinstate it, and deleting it would throw away walked work.)
+    ///
     /// `offer(px,py,…)` — the hand comes down.
     @discardableResult
     static func offer(x: Double, y: Double) -> Bool {

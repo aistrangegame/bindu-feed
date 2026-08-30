@@ -190,8 +190,14 @@ struct PointLawWiringTests {
     /// passed for the same reason V's did: the body asserted a fact that stayed true
     /// (`PointLawSignal` has six cases and none is VII's) while the NAME asserted a
     /// blockage that Stage E had lifted. `PointDance` gave VII its bodies, and
-    /// `PointReadings.swift:1236-1239` drives `soundEngine.join(...)` and
-    /// `ensemble(lock:)` from them, with `leaveAll()` on the way out at `:1205,1212`.
+    /// `PointReadings.swift` drove `soundEngine.join(...)` and `ensemble(lock:)` from them.
+    ///
+    /// **AND THAT SENTENCE WENT STALE ON 2026-08-30**, when `AUDIT D5.8` was ruled onto the
+    /// Instrument's GRAB model: one held star, no chain, so nothing joins and there is no
+    /// ensemble to tune. The assertions below were unaffected — they are about `DancerVoice`'s
+    /// pitches and `PointLawSignal`'s cases, both still true — which is exactly how a stale
+    /// explanation survives beside sound assertions. Corrected here rather than left to be
+    /// read as current.
     ///
     /// **Both stale claims were found by reading names against bodies, and by nothing
     /// else.** Every assertion was true, the suite was green three runs deep, and four

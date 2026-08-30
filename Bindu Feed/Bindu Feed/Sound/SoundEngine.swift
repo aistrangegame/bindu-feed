@@ -781,6 +781,10 @@ final class SoundEngine: ObservableObject {
     /// `join(k)` — a body enters the chain at `852 × [1, 1.5, 2, 2.5, 3][k]`, out of tune by
     /// `(k odd ? + : −)(11 + k·5)` cents, and a blip at a quarter of its own pitch marks the
     /// moment. `Claude Design Round 2/design-source/spine-sound.js:236-252`.
+    /// UNWIRED(AUDIT D5.8 closed on the GRAB model 2026-08-30 — `join`/`ensemble` are the
+    /// OFFER model's company: five bodies each taking a voice as they enter the chain. The
+    /// Instrument's world VII holds ONE star and has no chain, so there is nothing to join.
+    /// Kept as a faithful port of `spine-sound.js:236-252`; see the §10 divergence.)
     func join(_ k: Int) {
         guard isRunning, dancers.count < 5 else { return }
         let d = DancerVoice(k: k)
@@ -793,6 +797,8 @@ final class SoundEngine: ObservableObject {
 
     /// `ensemble(lock)` — *"how in time they are. The detune closes as the lock rises, so the
     /// chord beats when it forms and tunes itself as they dance."* `:255-261`.
+    /// UNWIRED(AUDIT D5.8, as `join` — the detune closes as a CHAIN comes into time, and
+    /// the grab model has no chain. `leaveAll()` stays wired and is now a no-op tear-down.)
     func ensemble(lock: Double) {
         let k = 1 - max(0, min(1, lock))
         for d in dancers { d.setDetune(cents: d.restingDetuneCents * k) }
