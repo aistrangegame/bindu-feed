@@ -95,18 +95,29 @@ struct PlayersView: View {
                     lensGrid
                         .padding(.horizontal, BinduTheme.space16)
 
-                    sectionDivider(glyph: "▽", color: Color(hex: "#7A8899"), label: "ROOTS")
-                        .padding(.vertical, 28)
+                    // F7.4 · the dividers and Ash's card carry their own places in the
+                    // sequence — `dissolve 0.7s 0.62s`, `0.82s`, and `dissolve 0.9s 0.90s`.
+                    // They had none, so the whole screen after the lenses arrived at once.
+                    StaggeredReveal(triggered: true, delay: 0.62, duration: 0.7) {
+                        sectionDivider(glyph: "▽", color: Color(hex: "#7A8899"), label: "ROOTS")
+                    }
+                    .padding(.vertical, 28)
 
                     rootGrid
                         .padding(.horizontal, BinduTheme.space16)
 
-                    sectionDivider(glyph: "◉", color: BinduTheme.colorAsh, label: nil)
-                        .padding(.vertical, 28)
+                    StaggeredReveal(triggered: true, delay: 0.82, duration: 0.7) {
+                        sectionDivider(glyph: "◉", color: BinduTheme.colorAsh, label: nil)
+                    }
+                    .padding(.vertical, 28)
 
                     if let ash {
-                        AshramCard(archetype: ash) {
-                            $path.pushDissolve(FeedRoute.home(ash))
+                        // **HE ARRIVES LAST**, at 0.90s — after the lenses that read and the
+                        // roots that hold. The order is the sentence.
+                        StaggeredReveal(triggered: true, delay: 0.90, duration: 0.9) {
+                            AshramCard(archetype: ash) {
+                                $path.pushDissolve(FeedRoute.home(ash))
+                            }
                         }
                         .padding(.horizontal, BinduTheme.space16)
                     }
@@ -165,9 +176,18 @@ struct PlayersView: View {
 
     private var rootGrid: some View {
         LazyVGrid(columns: columns, spacing: 14) {
-            ForEach(roots) { archetype in
-                PlayerCard(archetype: archetype, isSubstrate: true) {
-                    $path.pushDissolve(FeedRoute.home(archetype))
+            // F7.4 · `substrateArrive 0.9s ease-out ${0.66 + i*0.10}s`, `translateY(6px)→0`,
+            // **ending at opacity 0.72** (`Claude Design Round 1/Players View.html:55-64,398-430`).
+            // The roots had NO stagger and no delay at all, so the gathering arrived as one
+            // block at full brightness — and the design's sequence is an ORDER and a WEIGHT:
+            // the lenses first, then the roots more quietly, then him. A gathering that
+            // arrives all at once and equally bright is a list.
+            ForEach(Array(roots.enumerated()), id: \.element.id) { i, archetype in
+                StaggeredReveal(triggered: true, delay: 0.66 + Double(i) * 0.10,
+                                duration: 0.9, rise: 6, settledOpacity: 0.72) {
+                    PlayerCard(archetype: archetype, isSubstrate: true) {
+                        $path.pushDissolve(FeedRoute.home(archetype))
+                    }
                 }
             }
         }

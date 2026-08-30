@@ -24,6 +24,9 @@ final class AxisTravel: ObservableObject {
     @Published private(set) var tension: Double = 0     // how hard the near membrane is felt, 0…1
     @Published private(set) var crossing = false        // inside a passage — the camera is out of the hand
     @Published private(set) var passageT: Double = 0     // 0…1 through the passage
+    /// C2.6 · `PS.after` — 1 at the landing, decaying over 0.75s. The passage's hold on the
+    /// surface does not end when the passage does.
+    @Published private(set) var after: Double = 0
 
     /// `flare` — `The Chrome.html:199-212`. **THE PASSAGE HAS A MIDDLE.**
     ///
@@ -284,6 +287,8 @@ final class AxisTravel: ObservableObject {
     /// step must be governed by the same rule a dropped frame is, or it would be exercising
     /// a machine the app never runs.
     func advance(dt rawDt: CFTimeInterval) {
+        // `:3604` — `if (this.after > 0) this.after = Math.max(0, this.after - dt/0.75)`.
+        if after > 0 { after = max(0, after - min(0.05, rawDt) / 0.75) }
         var dt = rawDt
         guard dt > 0 else { return }
         dt = Swift.min(dt, 1.0 / 30.0)
@@ -309,7 +314,11 @@ final class AxisTravel: ObservableObject {
             z = glideFrom + (glideTo - glideFrom) * e
             flash = Swift.max(0, flash - dt / 0.9)
             if tt >= 1 {
-                z = glideTo; crossing = false; passageT = 0; force = 0
+                // C2.6 · `:3612` — `this.on = false; this.after = 1;` **on the same frame.**
+                // The app set `crossing = false` and nothing else, so the rail, `#where` and
+                // the shells snapped back the instant he landed. Arriving somewhere and
+                // having the furniture reappear is a different act from it fading in.
+                z = glideTo; crossing = false; passageT = 0; force = 0; after = 1
                 // A slip-through keeps what it was given; an earned crossing ends at rest.
                 // `:249` zeroes `zv`; `:255` multiplies it by 0.45 and lets him carry on.
                 if !glideSwift { zv = 0 }

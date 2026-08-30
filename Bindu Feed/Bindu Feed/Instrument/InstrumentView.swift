@@ -41,6 +41,13 @@ struct InstrumentView: View {
     /// C7.6 · the passage's own progress, and 0 whenever no passage is running — which is
     /// `:5472`'s `B.rush(0, PS.dir)`. A continuous voice has to be told to stop.
     private var rushDrive: Double { travel.crossing ? travel.passageT : 0 }
+
+    /// C2.6 · `dom()` — how much the passage owns the surface, INCLUDING its 0.75s afterglow.
+    /// The chrome fades back rather than snapping: `crossing` alone returned everything on
+    /// the landing frame.
+    private var dom: Double {
+        Axis.dom(crossing: travel.crossing, passageT: travel.passageT, after: travel.after)
+    }
     // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
     // so the axis drag stands down and the card's own scroll/pan works. Without this, the
     // outer `.highPriorityGesture` steals every drag from the presented card.
@@ -469,7 +476,7 @@ struct InstrumentView: View {
         // `withStar` — the design's FOURTH hide condition (`:4979-4992`), and it was the one
         // never wired, because nothing on the Point side ever said a star was held. It showed
         // as the register's name printed straight through the star's own title.
-        let hidden = abs(travel.z) < 0.42 || travel.z > 8.6 || travel.crossing || pointHolds
+        let hidden = abs(travel.z) < 0.42 || travel.z > 8.6 || pointHolds
         return VStack(spacing: 0) {
             if let top = w.top {
                 Text(top.uppercased())
@@ -504,7 +511,7 @@ struct InstrumentView: View {
         // `:5646` shows it at `0.9*(1−hush)*(1−immA)`. The app has neither `hush` nor
         // `immA`, so the base 0.9 is what survives the port — 1.0 was the app's, not the
         // design's.
-        .opacity(hidden ? 0 : 0.9)
+        .opacity(hidden ? 0 : 0.9 * (1 - dom))   // C2.6 · the rail fades back over `after`
         .animation(.easeInOut(duration: 1.1), value: here.key)
         .animation(.easeInOut(duration: 1.1), value: hidden)
         .allowsHitTesting(false)
@@ -557,7 +564,7 @@ struct InstrumentView: View {
         }
         .allowsHitTesting(false)
         .ignoresSafeArea()
-        .opacity(travel.crossing ? 0 : 1)
+        .opacity(1 - dom)          // C2.6 · it comes back over the afterglow, not at once
         .animation(.easeInOut(duration: 0.5), value: here.i)
     }
 
@@ -603,7 +610,7 @@ struct InstrumentView: View {
         // neither state.
         //
         // `0.42`, not `0.4` — the design's own number.
-        let hidden = travel.crossing || z > 7.9 || pointHolds
+        let hidden = z > 7.9 || pointHolds
             || (here.key == "feed" && InstrumentNames.onGround(z: z))
         return GeometryReader { geo in
             Text(particleName(z).uppercased())
@@ -612,7 +619,7 @@ struct InstrumentView: View {
                 .position(x: geo.size.width / 2, y: geo.size.height * 0.5 + 22)
         }
         .allowsHitTesting(false)
-        .opacity(hidden ? 0 : 1)
+        .opacity(hidden ? 0 : 1 - dom)     // C2.6 · `#pname` is one of `dom()`'s own subjects
         .animation(.easeInOut(duration: 1.0), value: hidden)
     }
 

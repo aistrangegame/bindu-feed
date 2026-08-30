@@ -112,6 +112,17 @@ enum Axis {
         max(0, min(1, 1.30 - abs((z + 5) - Double(i)) * 1.30))
     }
 
+    /// C2.6 · `dom()` — `The Instrument v3.html:3616`:
+    /// `on ? min(1, t*2.0 + 0.12) : after*0.7`.
+    ///
+    /// How much the passage owns the surface. It drives the fade of the rail, `#where`, the
+    /// shells and the delivery bloom — so it is not one element's opacity but the chrome's
+    /// whole relationship to a crossing. **The app had no afterglow at all**: `crossing`
+    /// flipped false at the landing and everything returned in the same frame.
+    static func dom(crossing: Bool, passageT: Double, after: Double) -> Double {
+        crossing ? min(1, passageT * 2.0 + 0.12) : after * 0.7
+    }
+
     /// The register nearest a given Z.
     static func nearest(_ z: Double) -> AxisRegister {
         registers[max(0, min(14, Int((z + 5).rounded())))]
