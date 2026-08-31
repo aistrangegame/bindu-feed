@@ -93,8 +93,17 @@ final class UniverseCamera: ObservableObject {
     /// The mouth is open — `uni-fall.js:24`, `mouth = seg(0.84, 0.96)`.
     var atMouth: Bool { desc >= 0.84 }
 
+    /// B5.8 · `fall` — `The Universe v3.html:1506` ramps `+0.011` per frame while the camera
+    /// flies to the star, and `:895` derives `enter = min(1, fall)` from it. The app read
+    /// `enter` off the DESCENT depth (`d/0.3`), which is a different quantity entirely: the
+    /// descent is what he does after arriving, and `enter` is the arriving. So the company
+    /// faded in as he went DOWN rather than as he came IN, and a star opened at full descent
+    /// showed a gathering already seated.
+    private(set) var fall: Double = 0
+
     func setInFall(_ v: Bool) {
         inFall = v
+        if v { fall = 0 }
         if !v { desc = 0; descV = 0; driftX = 0; driftY = 0; mouthPull = 0; mouthMeant = false; asking = false }
     }
 
@@ -225,6 +234,8 @@ final class UniverseCamera: ObservableObject {
     }
 
     private func step() {
+        // `:1506` — the flight's own clock, independent of the descent that follows it.
+        if inFall && fall < 1 { fall = min(1, fall + 0.011) }
         let now = CACurrentMediaTime()
         var dt = now - lastTime
         lastTime = now

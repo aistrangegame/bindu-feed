@@ -28,6 +28,8 @@ private struct UMote {
     let rr: Double            // 1.62 + hash·0.72 (Ash: 1.30 + hash·0.26)
     let tip: Double           // (hash − 0.5)·0.9
     let size: Double; let wobble: Bool
+    /// B4.3 · Ash alone wears the patina ring once the planet is large enough to hold it.
+    let isAsh: Bool
 }
 private struct UStar {
     let id: String
@@ -47,7 +49,9 @@ private struct ULane {
     let local: Bool; let ph: Double; let spd: Double
     let rgb: [Double]
 }
-private struct UDust { let hx: Double, hy: Double; let layer: Int }
+/// B4.2 · dust lives in WORLD units — `The Universe v3.html:1203` — so it has a place the
+/// camera moves past, rather than a screen position that slides.
+private struct UDust { let wx: Double, wy: Double; let layer: Int; let kk: Double }
 
 struct UniverseView: View {
     let register: AxisRegister
@@ -253,7 +257,7 @@ struct UniverseView: View {
                                            per: 3 + ms * 23, ph: ms * 6.2831 + Double(v) * 0.7,
                                            rr: 1.62 + hash(s.id + name + "rr") * 0.72,
                                            tip: (hash(s.id + name + "tip") - 0.5) * 0.9,
-                                           size: isL ? 1.4 : 1.2, wobble: isL))
+                                           size: isL ? 1.4 : 1.2, wobble: isL, isAsh: false))
                     }
                     if stats.commentCount > stats.archetypes.count + 1 {
                         let ms = hash(s.id + "ash")
@@ -261,7 +265,7 @@ struct UniverseView: View {
                                            per: 8 + ms * 14, ph: ms * 6.2831,
                                            rr: 1.30 + ms * 0.26,          // he orbits closer
                                            tip: (hash(s.id + "ashtip") - 0.5) * 0.7,
-                                           size: 1.5, wobble: false))
+                                           size: 1.5, wobble: false, isAsh: true))
                     }
                 }
                 byRegion[ri].append(UStar(id: s.id, wx: sw.0, wy: sw.1, isMet: isMet,
@@ -303,9 +307,14 @@ struct UniverseView: View {
 
     private func rebuildDust() {
         var d: [UDust] = []
+        // `:1201-1203` — 58 in the near layer, 38 in each of the two behind it, spread
+        // over ±1500 × ±1700 world units.
         for (L, n) in [58, 38, 38].enumerated() {
             for i in 0..<n {
-                d.append(UDust(hx: nhash(Double(i) * 1.3 + Double(L) * 40), hy: nhash(Double(i) * 2.7 + Double(L) * 71), layer: L))
+                let kk = Double(i) + Double(L) * 97
+                d.append(UDust(wx: (nhash(kk) * 2 - 1) * 1500,
+                               wy: (nhash(kk + 0.5) * 2 - 1) * 1700,
+                               layer: L, kk: kk))
             }
         }
         dust = d
@@ -619,11 +628,16 @@ struct UniverseView: View {
     }
 
     // World coords → screen, with the register's zoom pulling the focus region toward the frame.
+    /// B1.6 · **ONE SCALE FOR BOTH AXES.** `The Universe v3.html:1193` projects with a single
+    /// isotropic `z`. This normalised x by 980 and y by 1930 and then multiplied by the
+    /// frame's own width and height — `393/980 = 0.401` px/unit across, `852/1930 = 0.4415`
+    /// down — so the thirteen regions' constellation was stretched ~10% vertically. A
+    /// constellation whose shape depends on the frame's aspect is not a constellation.
     private func worldToScreen(_ wx: Double, _ wy: Double, _ size: CGSize, zoom: Double, focus: CGPoint) -> CGPoint {
-        let nx = (wx + 490) / 980, ny = (wy + 1030) / 1930
-        let x = 0.5 + (nx - focus.x) * zoom
-        let y = 0.5 + (ny - focus.y) * zoom
-        return CGPoint(x: x * size.width, y: y * size.height)
+        let s = size.width / 980 * zoom                     // the one px/unit
+        let fx = focus.x * 980 - 490, fy = focus.y * 1930 - 1030
+        return CGPoint(x: size.width * 0.5 + (wx - fx) * s,
+                       y: size.height * 0.5 + (wy - fy) * s)
     }
     private func regionCenter(_ rm: UniRoom, _ size: CGSize, zoom: Double, focus: CGPoint) -> CGPoint {
         worldToScreen(rm.x, rm.y, size, zoom: zoom, focus: focus)
@@ -672,8 +686,31 @@ struct UniverseView: View {
 
         // ── region weather: weighted by the band, never gated by an if (uni-sky.js:187-203).
         // It used to snap on at a scale boundary; now it comes up with the region itself. ──
+        // B3.5 · **EVERY ROOM, WEIGHTED BY HOW FAR INSIDE IT HE IS.** `:1212-1227` walks all
+        // thirteen: `inside = clamp((room.r*1.6 − d) / (room.r*0.9))` in world units, and each
+        // room whose air reaches him contributes `amt = inside * B.reg` — a full-frame tint
+        // first (*"the air of the place, before anything in it"*), then its own field.
+        //
+        // The app drew ONE room, the nearest, at a flat `bands.region * 0.85`. So the weather
+        // SWITCHED at the midpoint between two regions instead of overlapping, and the air of
+        // a place he was leaving vanished the instant another became nearer — which is the
+        // difference between regions that bleed into one another and a slideshow of them.
         if bands.region > 0.02 {
-            RegionForm.field(ctx, focusRoom, W, H, t: t, a: bands.region * 0.85, c: focusRoom.rgb)
+            let camX = focus.x * 980 - 490, camY = focus.y * 1930 - 1030
+            for room in uniRooms {
+                let d = ((room.x - camX) * (room.x - camX) + (room.y - camY) * (room.y - camY)).squareRoot()
+                let inside = max(0, min(1, (room.r * 1.6 - d) / (room.r * 0.9)))
+                if inside <= 0.02 { continue }
+                let amt = inside * bands.region
+                // the air first — a full-frame gradient in the room's own colour
+                ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
+                         with: .radialGradient(
+                            Gradient(colors: [UniGeo.col(room.rgb, 0.055 * amt),
+                                              UniGeo.col(room.rgb, 0.014 * amt)]),
+                            center: CGPoint(x: W / 2, y: H * 0.44),
+                            startRadius: 0, endRadius: H * 0.95))
+                RegionForm.field(ctx, room, W, H, t: t, a: amt * 1.7, c: room.rgb)
+            }
         }
 
         // ── the thirteen regions: each its own figure, its stars strung on the armature ──
@@ -820,15 +857,25 @@ struct UniverseView: View {
             center: CGPoint(x: W / 2, y: H * 0.42), startRadius: 0, endRadius: max(W, H) * 0.85))
         // positions cached (no per-frame hashing); only the parallax + twinkle are per-frame
         let dustColor = Color(hex: "#C9CEDA")
+        // B4.2 · **THE DEPTHS MOVE AT THEIR OWN RATES, AND THE DUST HAS A PLACE.**
+        // `:1200-1208` — three layers at `par = 0.30 + L*0.40`, projected from WORLD
+        // coordinates, radius `(0.4 + L*0.35) · clamp(z, 0.7, 2.4)`.
+        //
+        // The app placed each mote at `hx * W` and slid it horizontally, wrapping modulo the
+        // frame — so the sky had no depth to move THROUGH: every layer travelled the same
+        // distance vertically (none), the motes never grew as he came in, and the same dust
+        // reappeared on the far edge. Parallax is the only thing that makes a sky a volume.
+        let s = W / 980 * zoom
+        let camX = focus.x * 980 - 490, camY = focus.y * 1930 - 1030
         for dm in dust {
             let par = 0.30 + Double(dm.layer) * 0.40
             let a = 0.10 + Double(dm.layer) * 0.05
-            let sz = 0.6 + Double(dm.layer) * 0.5
-            var px = dm.hx * W - (focus.x - 0.5) * W * par * 0.35
-            px = px.truncatingRemainder(dividingBy: W); if px < 0 { px += W }
-            let y = dm.hy * H
-            let tw = 0.5 + 0.5 * abs(sin(t * 0.5 + dm.hx * 6.2831))
-            ctx.fill(UniGeo.ringPath(px, y, sz), with: .color(dustColor.opacity(a * tw)))
+            let px = (dm.wx - camX * par) * s + W / 2
+            let py = (dm.wy - camY * par) * s + H / 2 + sin(t * 0.08 + dm.kk) * 3
+            if px < -20 || px > W + 20 || py < -20 || py > H + 20 { continue }
+            let sz = (0.4 + Double(dm.layer) * 0.35) * max(0.7, min(2.4, zoom))
+            let tw = 0.5 + 0.5 * sin(t * 0.4 + dm.kk)
+            ctx.fill(UniGeo.ringPath(px, py, sz), with: .color(dustColor.opacity(a * tw)))
         }
     }
 
@@ -948,15 +995,34 @@ struct UniverseView: View {
             // `tip` tilt, the 0.42 ellipse, and the behind/in-front term.
             let base = max(R, 3.2 + zoom * 1.1)
             for m in st.motes {
-                var orr = base * m.rr
-                if m.wobble { orr *= 1 + 0.18 * sin(t * 0.31 + st.twSeed * 6.2831) }
-                let ang = t * (2 * .pi / m.per) + m.ph
+                let orr = base * m.rr
+                // B4.3 · **LALITA'S WANDER IS ANGULAR, NOT RADIAL.** `uni-field.js` gives her
+                // alone `wob:1` as `ang += sin(t*0.37 + ph)*0.28` — she drifts ALONG the ring,
+                // ahead of the others and then behind. The app multiplied her RADIUS instead,
+                // so she breathed in and out of the planet: a different gesture entirely, and
+                // the one presence whose motion is meant to be a wandering.
+                var ang = t * (2 * .pi / m.per) + m.ph
+                if m.wobble { ang += sin(t * 0.37 + m.ph) * 0.28 }
                 let ct = cos(m.tip), stp = sin(m.tip)
                 let ox = cos(ang) * orr
                 let oy = sin(ang) * orr * 0.42          // seen at an angle, not flat on
                 let back = sin(ang) < 0 ? 0.44 : 1.0    // `uni-field.js:88`
-                ctx.fill(UniGeo.ringPath(sx + ox * ct - oy * stp, sy + ox * stp + oy * ct, m.size),
-                         with: .color(m.color.opacity((m.wobble ? 0.8 : 0.7) * moteIn * back)))
+                let mx = sx + ox * ct - oy * stp, my = sy + ox * stp + oy * ct
+                // `:812` — the size comes from the PLANET, so the company grows as he comes in
+                // rather than staying two fixed dots.
+                let sz = max(0.9, min(3.0, R * 0.10)) * (m.isAsh ? 1.14 : 1) * (0.86 + breath.value * 0.14)
+                let a0 = moteIn * back
+                // `:820` — a halo out to 5.2× the mote, so a presence has an air around it
+                ctx.fill(UniGeo.ringPath(mx, my, sz * 5.2),
+                         with: .radialGradient(Gradient(colors: [m.color.opacity(0.16 * a0), m.color.opacity(0)]),
+                                               center: CGPoint(x: mx, y: my), startRadius: 0, endRadius: sz * 5.2))
+                ctx.fill(UniGeo.ringPath(mx, my, sz),
+                         with: .color(m.color.opacity((m.wobble ? 0.8 : 0.7) * a0)))
+                // `:828` — Ash's patina ring, once the planet is big enough to carry it
+                if m.isAsh && R > 18 {
+                    ctx.stroke(UniGeo.ringPath(mx, my, sz * 2.1),
+                               with: .color(m.color.opacity(0.34 * a0)), lineWidth: 0.7)
+                }
             }
         }
     }
@@ -1228,7 +1294,10 @@ struct UniverseView: View {
         let n = d < 0.20 ? 0 : (d < 0.50 ? 1 : (d < 0.88 ? 2 : 3))
         let col = rm.rgb, br = UniGeo.breath(t), dep = depth(story)
         let cx = W / 2, cy = H * (0.40 - 0.10 * gath + 0.05 * strat)
-        let enter = min(1, d / 0.3)
+        // B5.8 · `:895` — `enter = min(1, v.fall)`, the FLIGHT's progress. This read
+        // `min(1, d/0.3)` off the descent depth: the descent is what he does after arriving,
+        // so the company faded in as he went down rather than as he came in.
+        let enter = min(1, cam.fall)
 
         // the sky closes over — what was above stays only as atmosphere
         ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
@@ -1304,13 +1373,26 @@ struct UniverseView: View {
             let m = max(1, voices.count)
             for (i, name) in voices.enumerated() {
                 let isAsh = name.lowercased() == "ash"
-                let ang = Double(i) / Double(m) * UniGeo.TAU + t * (1 - set * 0.92) * 0.3
+                // B5.7 · **EACH KEEPS ITS OWN ORBIT UNTIL THE MOMENT IT SITS.** `:955` — every
+                // presence carries its own `per` and `ph`. This was `i/m * TAU + t*…`: evenly
+                // spaced and phase-locked, so the company turned as one rigid ring. Whether
+                // they are separate presences or one decoration is exactly the difference.
+                let h = hash(name), h2 = hash(name + "·ph")
+                let per = 3 + h * 23                               // `uni-field.js` — its own period
+                let ang = h2 * UniGeo.TAU + t * (UniGeo.TAU / per) * (1 - set * 0.92)
                 let orbX = cx + cos(ang) * Sr * 2.2, orbY = cy + sin(ang) * Sr * 2.2
-                let f = m < 2 ? 0.5 : (Double(i) + 0.5) / Double(m)
+                // B5.6 · **THE FAN IS COMPUTED OVER NON-ASH PRESENCES, AND STAGGERS.**
+                // `:880-889` — `f` runs over the non-Ash seats only (Ash has his own place,
+                // so counting him compresses everyone else's arc), and `out = 1+(idx%2)*0.24`
+                // pushes every other one further out *"so no two sit on one line"*.
+                let idx = voices.prefix(i).filter { $0.lowercased() != "ash" }.count
+                let nonAsh = max(1, voices.filter { $0.lowercased() != "ash" }.count)
+                let f = nonAsh < 2 ? 0.5 : (Double(idx) + 0.5) / Double(nonAsh)
                 let seatAng = (0.11 + f * 0.78) * Double.pi
+                let out = 1 + Double(idx % 2) * 0.24
                 // Ash sits closest to the story — the one who lived it (uni-fall.js seat()).
-                let seatX = isAsh ? cx - S * 0.24 : cx + cos(seatAng) * S * 1.06
-                let seatY = isAsh ? cy + S * 0.46 : cy + sin(seatAng) * S * 0.98
+                let seatX = isAsh ? cx - S * 0.24 : cx + cos(seatAng) * S * 1.06 * out
+                let seatY = isAsh ? cy + S * 0.46 : cy + sin(seatAng) * S * 0.98 * out
                 let px2 = orbX + (seatX - orbX) * set, py2 = orbY + (seatY - orbY) * set
                 let arch = store.archetype(named: name)
                 let mc = arch?.color ?? Color(hex: rm.hex)
