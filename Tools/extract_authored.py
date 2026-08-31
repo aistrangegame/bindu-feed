@@ -15,7 +15,16 @@ Writes Tools/authored-candidates.json. The registry file carries the verdicts.
 import re, json, pathlib, unicodedata
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SOURCES = [ROOT/"canon", ROOT/"Claude Design Round 2"/"design-source", ROOT/"Claude Design Round 2"/"comps"]
+# **THE DELETION HALF OF RULE 4 WAS BLIND ON `Claude Design Round 1`.** 106 audit findings
+# cite it — the whole of Ash's Voice, the Return, the Rite, Home Feed, Settings and the
+# Instrument's own file — and none of its authored strings were ever enumerated here, so
+# `check_authored` could not fail when one was deleted. This build has deleted authored copy
+# on a false premise before (world VII's offer cues, the Light's beat cues), and both times
+# the registry is what caught it. `design_lib.SOURCES` was widened 2026-08-30 for the FORWARD
+# half; this is the backwards half catching up. Ruled 2026-08-31.
+SOURCES = [ROOT/"canon",
+           ROOT/"Claude Design Round 2"/"design-source", ROOT/"Claude Design Round 2"/"comps",
+           ROOT/"Claude Design Round 1"]
 DOC_TAGS = {"p","h1","h2","h3","h4","code","em","strong","s","li","blockquote","td","th","title","summary"}
 DOC_CLASSES = {"law","rule","sub","hd","k","note","legend","doc","caption"}
 

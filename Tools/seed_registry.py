@@ -5,7 +5,12 @@ import json, collections, re
 from authored_lib import ROOT, norm, load_app, present, load_registry
 
 SUPERSEDED_ONLY = {"Claude Design Round 2/design-source/The Point v9.html"}
-KEEP = {"ANNOTATION", "CONTENT", "SUPERSEDED", "DIVERGED", "FRAGMENT", "CSSVALUE"}
+# `RETRACTED` is a verdict `check_stale` ISSUES, and a status the tool issues MUST survive a
+# regeneration or the tool re-issues it forever: the 2026-08-31 reseed reverted the one
+# RETRACTED row to ANNOTATION and `check_stale` went red again on a finding already
+# adjudicated. Anything a checker writes belongs here by construction.
+KEEP = {"ANNOTATION", "CONTENT", "SUPERSEDED", "DIVERGED", "FRAGMENT", "CSSVALUE", "RETRACTED",
+        "AUTHORED-INTERPOLATED"}
 
 # CSS / animation shorthand and font stacks: design implementation, never app copy.
 CSSV = re.compile(r"""(?ix)^(

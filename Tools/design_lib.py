@@ -40,7 +40,12 @@ def _decode(t):
     # break on the screen. Left literal, the haystack held `watching,\nwhat` and the app's
     # rendered form could never match, so a TRUE authored string read as unauthored. Same
     # class as the `Or\u{00ED}` miss: the corpus is compared after both sides are decoded.
-    return re.sub(r'\\[nt]', ' ', t)
+    t = re.sub(r'\\[nt]', ' ', t)
+    # **AN ESCAPED QUOTE IS A QUOTE.** `Game View.html:` writes `wasn\'t` inside a single-quoted
+    # JS string; the extractor un-escapes it when it stores the row, so the two corpora differed
+    # by one backslash and a true authored line read as a stale claim. Same class as the escaped
+    # newline above, and the same rule: decode both sides or you are comparing spellings.
+    return re.sub(r"\\(['\"])", r"\1", t)
 
 def load_design(with_struck=False):
     """The haystack, with struck spans removed. `with_struck` also returns what they held."""

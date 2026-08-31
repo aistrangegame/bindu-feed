@@ -47,7 +47,8 @@ def load_rendered_reg():
 # The statuses that EXCUSE a rendered string. `INVENTION` is deliberately not here: a row
 # recording a removed invention is the healthy end state, and flagging it would delete the
 # only record that the invention was ever found. It excuses nothing, so it cannot go stale.
-EXCUSING = ("DIVERGENCE", "APP-OWN", "APP-OWN-INSTRUCTIONAL", "NON-UI")
+EXCUSING = ("DIVERGENCE", "APP-OWN", "APP-OWN-INSTRUCTIONAL", "NON-UI",
+            "AUTHORED-INTERPOLATED")
 
 # **MATCH THROUGH THE SAME EXTRACTOR THE REGISTRY WAS KEYED BY, NOT A SECOND ONE.** The first
 # run of this check compared registry rows against `authored_lib.load_app()` and reported 34

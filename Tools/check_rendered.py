@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """FORWARD half of Rule 4 — enforcement.
 
+**`APP-OWN` MUST NOT STRETCH, BECAUSE IT IS WHAT WOULD EXCUSE A REAL INVENTION.** It means
+*the app's own copy for a surface the design never drew*, and that claim is the one the whole
+registry rests on. An authored string rendered with an interpolation — `In reply to \(name)`,
+`\(i+1) / \(n) · the rest keep their record` — cannot literal-match the design, so the
+convention had been to file it `APP-OWN`. That is a false claim in the direction that costs
+most: every such row weakens the status a future invention would hide behind.
+`AUTHORED-INTERPOLATED` is the honest verdict — the literal segments resolve to a design line
+and the interpolation is a value the design also shows. Ruled 2026-08-31.
+
 Every string the app renders must be AUTHORED (traceable to the design), a recorded
 DIVERGENCE, or deliberate APP-OWN copy. Anything else is an INVENTION by construction.
 
@@ -76,12 +85,13 @@ def main():
         # may excuse it — the whole point is that the design NAMES it as one.
         if norm(c["s"]).strip().lower() in INVENTED:
             inventions.append(c); continue
-        if r and r["status"] in ("DIVERGENCE", "APP-OWN", "APP-OWN-INSTRUCTIONAL", "NON-UI"): continue
+        if r and r["status"] in ("DIVERGENCE", "APP-OWN", "APP-OWN-INSTRUCTIONAL", "NON-UI",
+                                 "AUTHORED-INTERPOLATED"): continue
         if in_design(c["s"], hay): authored += 1; continue
         (inventions if (r and r["status"] == "INVENTION") else untriaged).append(c)
 
     print(f"rendered {len(cands)} · authored {authored} · "
-          f"recorded {len([r for r in reg.values() if r['status'] in ('DIVERGENCE','APP-OWN','APP-OWN-INSTRUCTIONAL','NON-UI')])} · "
+          f"recorded {len([r for r in reg.values() if r['status'] in ('DIVERGENCE','APP-OWN','APP-OWN-INSTRUCTIONAL','NON-UI','AUTHORED-INTERPOLATED')])} · "
           f"INVENTION {len(inventions)} · untriaged {len(untriaged)}")
     for c in inventions:
         print(f"  INVENTION  {c['s'][:78]!r}\n             {c['sites'][0]}")

@@ -10,6 +10,12 @@
 # STATUS<TAB>STRING<TAB>SITE
 #   AUTHORED     traceable to canon/ or a design source. Auto-granted; the only one that is.
 #   DIVERGENCE   deliberately not the design's wording; the reason is in CLAUDE.md section 10.
+#   AUTHORED-INTERPOLATED
+#                authored, and rendered with an interpolation so it cannot literal-match:
+#                the LITERAL SEGMENTS resolve to a design line and the interpolated value is
+#                one the design also shows. Filed as APP-OWN until 2026-08-31, which was a
+#                false claim in the direction that costs most — APP-OWN is precisely what a
+#                real invention would hide behind, so it must never stretch.
 #   APP-OWN      the app's own copy for a surface the design never drew (token entry,
 #                settings, error states). Deliberate and named. NOT available for an
 #                INSTRUCTIONAL string - see below.
@@ -1006,5 +1012,5 @@ NON-UI	Stillness opened the Light.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:9
 NON-UI	The Light -- stood inside	Bindu Feed/Bindu Feed/Store/FeedStore.swift:945
 NON-UI	The Point -- walked to the centre	Bindu Feed/Bindu Feed/Store/FeedStore.swift:955
 NON-UI	The story was met in the Rite.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:606
-APP-OWN	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353
-APP-OWN	In reply to …	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:325
+AUTHORED-INTERPOLATED	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353
+AUTHORED-INTERPOLATED	In reply to …	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:325
