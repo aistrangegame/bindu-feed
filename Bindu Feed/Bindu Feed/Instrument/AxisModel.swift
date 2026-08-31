@@ -128,6 +128,13 @@ enum Axis {
         registers[max(0, min(14, Int((z + 5).rounded())))]
     }
 
+    /// C7.3 · the register at an index — `was`, the one he has just left. Bounds-checked
+    /// rather than trapping, because the index it is given is a REMEMBERED one and a
+    /// remembered index outliving its table is a crash at the moment of a crossing.
+    static func register(at i: Int) -> AxisRegister? {
+        registers.indices.contains(i) ? registers[i] : nil
+    }
+
     static func clampZ(_ z: Double) -> Double { max(minZ, min(maxZ, z)) }
 }
 

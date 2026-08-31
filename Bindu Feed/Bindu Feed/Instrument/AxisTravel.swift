@@ -254,11 +254,17 @@ final class AxisTravel: ObservableObject {
     func handVerticalToRegister(_ v: Bool) { handedToRegister = v }
 
     func applyDrag(_ deltaY: Double) {
-        guard !crossing else { return }                 // inside a passage the hand is ignored
         guard !handedToRegister else { return }         // the register owns the vertical
-        zv += (-deltaY) * DRAG
+        // C2.5 · `:5922` — `zv += (-dy)·DRAG; TR.force += (-dy)·DRAG;` runs whether or not a
+        // passage is on, and `:5448` hands `TR.force` to the passage as its lean. **The
+        // steering and the lean are two things**: inside a passage the hand must not move
+        // `zv` — he cannot steer — but it still presses, and the crossing answers by going
+        // faster. Guarding both together made the one event he is most invested in the one
+        // event he could not touch.
         force += (-deltaY) * DRAG
         lastInput = CACurrentMediaTime()
+        guard !crossing else { return }
+        zv += (-deltaY) * DRAG
     }
 
     func setDown(_ v: Bool) {
@@ -296,7 +302,10 @@ final class AxisTravel: ObservableObject {
 
         // Inside a passage: the camera glides across on a smoothstep; the hand is out.
         if crossing {
-            glideT += dt / glideDur
+            // `:3605` — `this.t += dt/this.dur * boost`. The lean is spent as it is read:
+            // `:5448` zeroes `TR.force` on the same line it passes it.
+            glideT += dt / glideDur * AxisPassage.boost(force: force)
+            force = 0
             let tt = Swift.min(1, glideT)
             passageT = tt
             // `:210-211` — the two gates, once each, and NEVER on a slip-through. A surface
@@ -476,8 +485,28 @@ final class AxisTravel: ObservableObject {
         flash = 1
     }
 
+    /// C7.3 · **THE TRAIL IS WHAT HE LEFT, NOT WHERE HE ARRIVED.**
+    ///
+    /// `canon/spine-sound.js:170-176` wraps the register voice:
+    ///
+    ///     var was = this.cur ? this.cur.f : 0;
+    ///     axis.call(this, Z);
+    ///     if (was && this.cur && this.cur.f !== was) this.trail(was);
+    ///
+    /// — under the comment at `:55`, *"what he left, still sounding behind him."* The tone
+    /// falls away as it goes (`setTargetAtTime(hz·0.985)`) over 7.5s, which only means
+    /// anything if it is the register receding behind him.
+    ///
+    /// **THIS IS THE NINTH SHAPE AND NOTHING OUTCOME-SHAPED CAN SEE IT.** A trail sounded on
+    /// every crossing, at a real register's pitch, decaying correctly — and it sang the
+    /// DESTINATION. *"A tone plays when you cross"* is true of both builds. What separates
+    /// them is which of the two registers it is, and the app had the arrival: the sound of
+    /// leaving somewhere, playing the name of the place you have just reached.
     private func detectCross() {
         let r = Axis.nearest(z)
-        if r.i != lastRegister { lastRegister = r.i; onCross?(r) }
+        guard r.i != lastRegister else { return }
+        let left = Axis.register(at: lastRegister)      // `was`
+        lastRegister = r.i
+        if let left { onCross?(left) }
     }
 }

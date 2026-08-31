@@ -21,6 +21,25 @@ enum AxisPassage {
     static let swiftDuration = 0.85
     static func duration(swift: Bool) -> Double { swift ? swiftDuration : earnedDuration }
 
+    /// C2.5 · `The Instrument v3.html:3603-3607` — `boost = 1 + min(1.5, |force|·2400)`,
+    /// under the design's own comment: *"he cannot steer inside a passage — but he can lean
+    /// into it."*
+    ///
+    /// **THE TWO HALVES OF THAT SENTENCE ARE DIFFERENT MECHANISMS AND THE APP HAD ONLY ONE.**
+    /// `applyDrag` returned early on `crossing`, which correctly refuses STEERING — the hand
+    /// must not move `zv` mid-passage — and in the same line refused the LEAN, because force
+    /// was accumulated on the next line down. So a crossing ran at exactly one speed however
+    /// hard he pulled, and the only thing the hand could do during the one event it is most
+    /// invested in was nothing.
+    ///
+    /// The `2400` is what makes it reachable: drags are small — `DRAG` scales a gesture into
+    /// the axis's units — so without the multiplier `|force|` would never approach the cap
+    /// and the boost would be 1.0 for every hand. Ported without it the row would read as
+    /// built and behave as absent.
+    static let leanScale = 2400.0
+    static let leanCap = 1.5
+    static func boost(force f: Double) -> Double { 1 + min(leanCap, abs(f) * leanScale) }
+
     /// `:199` — `gates:[0.34,0.68]`. Two flares, two strikes, once each per crossing.
     /// The comp's note: *"They exist so the crossing has a middle."*
     static let gates = [0.34, 0.68]

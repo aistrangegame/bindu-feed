@@ -352,8 +352,11 @@ struct InstrumentView: View {
             PointYantra.shared.setEnclosure(PointYantra.focus(forAxisZ: travel.z))
             // C7.11 · a DRIFT-PAST leaves a trail and strikes nothing. The threshold tone
             // moved to `onLand` below, where the design puts it.
-            travel.onCross = { reg in
-                soundEngine.axisTrail(hz: reg.hz)               // the register forming / left behind
+            // C7.3 · `onCross` now hands over the register he LEFT (`canon/spine-sound.js:175`
+            // — `if (was && this.cur.f !== was) this.trail(was)`), so the tail behind him is
+            // the place receding, not the one he has arrived at.
+            travel.onCross = { left in
+                soundEngine.axisTrail(hz: left.hz)             // what he left, still sounding
             }
             travel.onLand = { reg in
                 if reg.key == "gate" {
