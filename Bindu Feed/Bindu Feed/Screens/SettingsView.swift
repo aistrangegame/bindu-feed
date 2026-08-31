@@ -43,12 +43,27 @@ struct SettingsView: View {
 
                     glyphPicker
 
-                    if hasChanges {
-                        saveButton
-                    } else if justSaved {
+                    // F10.2 · `Claude Design Round 1/Settings.html:541-559` — **three mutually exclusive
+                    // states, and the app had two.** The order matters: `saved_` wins over
+                    // `changed`, so the confirmation is not immediately replaced by the pill
+                    // that produced it.
+                    if justSaved {
                         Text("Saved. You\u{2019}ve arrived.")
                             .font(.loraItalic(14))
-                            .foregroundColor(selectedColor.opacity(0.9))
+                            .foregroundColor(selectedColor.opacity(0.8))
+                            .transition(.opacity)
+                    } else if hasChanges {
+                        saveButton
+                    } else {
+                        // **THE THIRD STATE, WHICH WAS NOTHING AT ALL.** `:557` — a quiet
+                        // `NO CHANGES` in mono 9 at ink35. An empty space says the same thing
+                        // as a screen that is still loading, or one whose button has failed to
+                        // appear; the line says *there is nothing here to save, and that is
+                        // the correct state*. It is also what keeps the layout from jumping
+                        // by the height of a pill every time he saves.
+                        Text("NO CHANGES")
+                            .spaceMonoTracked(9, em: 0.1)
+                            .foregroundColor(BinduTheme.inkTertiary)
                             .transition(.opacity)
                     }
 
@@ -125,10 +140,10 @@ struct SettingsView: View {
                 .font(.lora(20, weight: .medium))
                 .foregroundColor(BinduTheme.inkPrimary)
 
-            Text(selectedMoodName)
-                .spaceMonoTracked(10)
-                .tracking(0.8)
-                .foregroundColor(selectedColor)
+            Text(selectedMoodQuality)
+                .spaceMonoTracked(10, em: 0.08)
+                .textCase(nil)                       // a spoken phrase, not chrome
+                .foregroundColor(selectedColor.opacity(0.75))
         }
         .padding(.vertical, BinduTheme.space12)
     }
@@ -141,7 +156,11 @@ struct SettingsView: View {
             TextField(
                 "",
                 text: $name,
-                prompt: Text("the name you arrive with").foregroundColor(BinduTheme.inkTertiary)
+                // F10.3 · `:471` — **the design ASKS.** *"What do you call yourself?"* against
+                // the app's *"the name you arrive with"*: one is a question put to him, the
+                // other is the app describing its own field. The whole screen is the one place
+                // he says who he is, and the difference is who is speaking.
+                prompt: Text("What do you call yourself?").foregroundColor(BinduTheme.inkTertiary)
             )
             .focused($nameFocused)
             .font(.lora(17))
@@ -158,6 +177,12 @@ struct SettingsView: View {
                     .strokeBorder(BinduTheme.hairline, lineWidth: 0.5)
             )
             .submitLabel(.done)
+            // `:472` — `maxLength={32}`, never enforced here. A name is a line, not a field to
+            // fill; without the cap the preview above wraps and the arrival card it feeds
+            // silently truncates somewhere else instead.
+            .onChange(of: name) { _, v in
+                if v.count > 32 { name = String(v.prefix(32)) }
+            }
             .onSubmit {
                 nameFocused = false
                 saveSettings()
@@ -235,22 +260,30 @@ struct SettingsView: View {
 
     // MARK: - Save button
 
+    /// F10.2 · `:546-554` — **a quiet `Save` in Lora 15, not a shouted instruction.**
+    ///
+    /// The app said `SAVE THE ARRIVAL` in tracked mono at 2.4 — a chrome label in the
+    /// imperative, telling him what the screen is for. The design says one Lora word in his
+    /// own chosen colour: the same act, offered rather than demanded. Everything else about
+    /// the pill is the design's own — `bg ${color}18`, `border ${color}40`, r100, 11/32, and
+    /// a `0 0 18px ${color}20` glow that the app had dropped, which is what makes it read as
+    /// lit from within rather than outlined.
     private var saveButton: some View {
         Button {
             saveSettings()
         } label: {
-            Text("SAVE THE ARRIVAL")
-                .spaceMonoTracked(11)
-                .tracking(2.4)
+            Text("Save")
+                .font(.lora(15)).tracking(0.02 * 15)
                 .foregroundColor(selectedColor)
-                .padding(.horizontal, BinduTheme.space24)
-                .padding(.vertical, BinduTheme.space12)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 11)
                 .background(
-                    Capsule().fill(selectedColor.opacity(0.10))
+                    Capsule().fill(selectedColor.opacity(0.094))      // `${color}18`
                 )
                 .overlay(
-                    Capsule().strokeBorder(selectedColor.opacity(0.55), lineWidth: 0.8)
+                    Capsule().strokeBorder(selectedColor.opacity(0.25), lineWidth: 1)   // `${color}40`
                 )
+                .shadow(color: selectedColor.opacity(0.125), radius: 9)                  // `0 0 18px ${color}20`
         }
         .buttonStyle(.plain)
         .transition(.opacity)
@@ -399,11 +432,23 @@ struct SettingsView: View {
         colorHex.isEmpty ? BinduTheme.accent : Color(hex: colorHex)
     }
 
-    private var selectedMoodName: String {
-        if let match = Self.moods.first(where: { $0.hex == colorHex }) {
-            return match.name.uppercased()
-        }
-        return "ARRIVING"
+    /// F10.1 · **THE PREVIEW SHOWS WHAT THE COLOUR MEANS, NOT WHAT IT IS CALLED.**
+    /// `Claude Design Round 1/Settings.html:452` renders `currentMood.quality` — *"grounded, present"* — under
+    /// the name, in the chosen colour at 0.75 and **not uppercased**.
+    ///
+    /// This returned `match.name.uppercased()`, so the preview read `TERRA`: the label of the
+    /// swatch he just tapped, repeated back at him. The quality phrase is the only line on
+    /// that card that says anything about HIM — it is the difference between a colour picker
+    /// confirming a selection and a page telling him how he is arriving today. The phrases
+    /// were already here, verbatim from the comp, and read by the picker two hundred lines
+    /// down while the preview showed the name instead.
+    ///
+    /// **AND IT IS NOT UPPERCASED.** Every mono label on this screen is, by the class rule —
+    /// but this one is a spoken phrase rather than chrome, and `.uppercase` would make
+    /// *grounded, present* into a category heading. The design leaves the case alone; so does
+    /// this, with `.textCase(nil)` saying so out loud rather than by omission.
+    private var selectedMoodQuality: String {
+        Self.moods.first { $0.hex == colorHex }?.quality ?? "arriving"
     }
 
     private var hasChanges: Bool {
@@ -430,7 +475,10 @@ struct SettingsView: View {
         let s = ArrivalSettings(name: name, glyph: glyph, colorHex: colorHex)
         s.save()
         withAnimation(.easeInOut(duration: 0.5)) { savedSnapshot = s; justSaved = true }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+        // `Claude Design Round 1/Settings.html:419` — `setTimeout(() => setSaved_(false), 2000)`. The app held it 2.4s, which is not a rounding of
+        // 2.0 but a fifth longer: long enough that the confirmation is still on screen after
+        // he has looked away and back, which is what turns *saved* into *stuck*.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
             withAnimation(.easeOut(duration: 0.8)) { justSaved = false }
         }
     }
