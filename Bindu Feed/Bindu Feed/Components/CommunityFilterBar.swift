@@ -28,7 +28,7 @@ private struct AllChip: View {
     var body: some View {
         Button(action: action) {
             Text("All")
-                .font(.spaceMono(10)).textCase(.uppercase)
+                .spaceMonoTracked(10)
                 .tracking(1)
                 .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkSecondary)
                 .padding(.horizontal, 12)
@@ -61,10 +61,8 @@ private struct RoomChip: View {
                     .font(.system(size: 11))
                     .foregroundColor(room.color)
 
-                Text(room.name)
-                    .font(nameFont)
+                roomName(10)
                     .foregroundColor(room.color.opacity(active ? 1.0 : 0.85))
-                    .tracking(room.name == "The Watcher" ? 1.0 : 0)
                     .lineLimit(1)
             }
             .padding(.horizontal, 10)
@@ -85,15 +83,19 @@ private struct RoomChip: View {
         .buttonStyle(.plain)
     }
 
-    private var nameFont: Font {
-        let size: CGFloat = 10
+    // E1.18 · **THE FACE AND ITS CASE ARE ONE DECISION, SO THE SWITCH RETURNS A VIEW, NOT A
+    // `Font`.** This was a `Font`-valued switch with the mono branch's tracking spelled out
+    // at the call site (`room.name == "The Watcher" ? 1.0 : 0`) — the face handed over bare
+    // and its two companions left to whoever drew it. Nothing enforced that pairing, which
+    // is the shape the whole row is about.
+    @ViewBuilder private func roomName(_ size: CGFloat) -> some View {
         switch room.name {
         case "The Descent", "The Return", "The Field":
-            return .loraItalic(size)
+            Text(room.name).font(.loraItalic(size))
         case "The Watcher":
-            return .spaceMono(size)
+            Text(room.name).spaceMonoTracked(size, em: 1 / size)
         default:
-            return .lora(size, weight: .medium)
+            Text(room.name).font(.lora(size, weight: .medium))
         }
     }
 }
@@ -105,7 +107,7 @@ struct FeedSortToggle: View {
         HStack(spacing: 10) {
             sortLabel("MOST ACTIVE", value: .mostActive)
             Text("·")
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .foregroundColor(BinduTheme.inkTertiary)
             sortLabel("MOST RECENT", value: .mostRecent)
         }
@@ -118,7 +120,7 @@ struct FeedSortToggle: View {
             sort = value
         } label: {
             Text(text)
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(1.2)
                 .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkTertiary)
         }

@@ -123,7 +123,7 @@ struct GameView: View {
                 navBarRoomLabel
                     .lineLimit(1)
                 Text("\(roomIndex + 1) · 13")
-                    .font(.spaceMono(9)).textCase(.uppercase)
+                    .spaceMonoTracked(9)
                     .tracking(1.4)
                     .foregroundColor(BinduTheme.inkTertiary)
             }
@@ -182,7 +182,7 @@ struct GameView: View {
                 .foregroundColor(BinduTheme.inkSecondary)
         case "The Watcher":
             Text(currentRoom.name.uppercased())
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(2.0)
                 .foregroundColor(BinduTheme.inkSecondary)
         default:
@@ -231,7 +231,7 @@ struct GameView: View {
                 .font(.lora(18, weight: .medium))
                 .foregroundColor(BinduTheme.inkPrimary)
             Text(label)
-                .font(.spaceMono(8)).textCase(.uppercase)
+                .spaceMonoTracked(8)
                 .tracking(0.56)     // 0.07em x 8 — Game View.html:526-533
                 .foregroundColor(BinduTheme.inkTertiary)
         }
@@ -276,7 +276,7 @@ struct GameView: View {
         } label: {
             VStack(spacing: 6) {
                 Text(text)
-                    .font(.spaceMono(9)).textCase(.uppercase)
+                    .spaceMonoTracked(9)
                     .tracking(0.72)
                     .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkTertiary)
                 Rectangle()

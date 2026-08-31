@@ -204,7 +204,7 @@ struct PointWorldView: View {
                 .ignoresSafeArea()
 
                 VStack(spacing: 6) {
-                    Text(u.name.uppercased()).font(.spaceMono(9)).textCase(.uppercase).tracking(2).foregroundStyle(hue)
+                    Text(u.name.uppercased()).spaceMonoTracked(9, em: 2 / 9).foregroundStyle(hue)
                     Text(u.sub).font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
                         .multilineTextAlignment(.center).lineLimit(2).padding(.horizontal, 44)
                     Spacer()
@@ -214,7 +214,7 @@ struct PointWorldView: View {
                 VStack {
                     HStack {
                         Button { withAnimation(.easeInOut(duration: 0.6)) { selectedUniverse = nil } } label: {
-                            Text("‹ the enclosure").font(.spaceMono(9)).textCase(.uppercase).tracking(2)
+                            Text("‹ the enclosure").spaceMonoTracked(9, em: 2 / 9)
                                 .foregroundStyle(BinduTheme.inkTertiary).padding(16)
                         }
                         Spacer()
@@ -244,14 +244,14 @@ struct PointWorldView: View {
                             .padding(.bottom, 9)
                         Button(action: onReturn) {
                             Text("open the return")
-                                .font(.spaceMono(9)).textCase(.uppercase).tracking(2).foregroundStyle(hue)
+                                .spaceMonoTracked(9, em: 2 / 9).foregroundStyle(hue)
                         }.padding(.bottom, 64)
                     }
                 }
                 if dimensionN == 7 {
                     VStack { Spacer()
                         Button { $path.pushDissolve(FeedRoute.aperture) } label: {
-                            Text("the aperture ›").font(.spaceMono(9)).textCase(.uppercase).tracking(2).foregroundStyle(hue)
+                            Text("the aperture ›").spaceMonoTracked(9, em: 2 / 9).foregroundStyle(hue)
                         }
                         .buttonStyle(.plain)
                         .padding(.bottom, 64)

@@ -66,7 +66,7 @@ struct RiteView: View {
                     HStack {
                         Button(action: leave) {
                             Text("‹ leave")
-                                .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
+                                .spaceMonoTracked(9, em: 2 / 9)
                                 .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
                                 .padding(16)
                         }
@@ -152,7 +152,7 @@ private struct RiteArrival: View {
         VStack(spacing: 22) {
             Spacer()
             Text(RiteWord.arrivalKicker)
-                .font(.spaceMono(10)).textCase(.uppercase).tracking(3)
+                .spaceMonoTracked(10, em: 0.3)
                 .foregroundStyle(BinduTheme.inkTertiary)
             Text(RiteWord.arrivalMeeting)
                 .font(.lora(15)).italic()
@@ -167,11 +167,11 @@ private struct RiteArrival: View {
                     .multilineTextAlignment(.center)
                 HStack(spacing: 8) {
                     Text(data.roomName)
-                        .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
+                        .spaceMonoTracked(9, em: 1.5 / 9)
                         .foregroundStyle(data.roomColor)
                     Text("·").foregroundStyle(BinduTheme.inkTertiary)
                     Text("\(data.codexId) · \(data.date)")
-                        .font(.spaceMono(9)).textCase(.uppercase).tracking(1)
+                        .spaceMonoTracked(9, em: 1 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary)
                 }
             }
@@ -182,7 +182,7 @@ private struct RiteArrival: View {
                 .padding(.top, 10)
             Spacer()
             Text(RiteWord.arrivalTouch)
-                .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
+                .spaceMonoTracked(9, em: 2 / 9)
                 .foregroundStyle(BinduTheme.inkTertiary)
                 .opacity(appear ? 0.7 : 0.2)
                 .padding(.bottom, 40)
@@ -250,7 +250,7 @@ private struct RiteReading: View {
             .overlay(alignment: .bottom) {
                 if !done {
                     Text(RiteWord.readingBaseLine)
-                        .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
+                        .spaceMonoTracked(9, em: 1.5 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary)
                         .padding(.bottom, 16)
                         .modifier(RiteBreathe())
@@ -287,7 +287,7 @@ private struct RiteSealed: View {
                     HStack(spacing: 8) {
                         Text(RiteAsh.glyph).foregroundStyle(RiteAsh.color)
                         Text(RiteWord.sealEntryLabel)
-                            .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
+                            .spaceMonoTracked(9, em: 1.5 / 9)
                             .foregroundStyle(BinduTheme.inkTertiary)
                     }
                     if !text.isEmpty {
@@ -320,7 +320,7 @@ private struct RiteSealed: View {
                         .multilineTextAlignment(.center)
                     Button(action: onDoor) {
                         Text(RiteWord.sealDoorWaits)
-                            .font(.spaceMono(10)).textCase(.uppercase).tracking(2)
+                            .spaceMonoTracked(10, em: 0.2)
                             .foregroundStyle(data.roomColor)
                             .padding(.top, 10)
                     }

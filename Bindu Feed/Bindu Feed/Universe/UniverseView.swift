@@ -649,14 +649,14 @@ struct UniverseView: View {
         // room's name alone — never a separator with nothing in front of it (§10: an unwired
         // slot renders absence). `:1560` uses the room's NAME, not its id.
         let codex = d.story.codexId.isEmpty ? d.room.id : "\(d.story.codexId) · \(d.room.id)"
-        ctx.draw(Text(codex).font(.spaceMono(9)).tracking(0.2 * 9)
+        ctx.draw(Text.spaceMono(codex, 9, em: 0.2, .asWritten)
                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34)),
                  at: CGPoint(x: cx, y: bottom - 58))
         ctx.draw(Text(d.story.title)
                     .font(.lora(21, weight: .medium)).tracking(-0.012 * 21)
                     .foregroundStyle(BinduTheme.inkPrimary),
                  at: CGPoint(x: cx, y: bottom - 30))
-        ctx.draw(Text("TOUCH TO READ").font(.spaceMono(8)).tracking(0.22 * 8)
+        ctx.draw(Text.spaceMono("TOUCH TO READ", 8, em: 0.22, .asWritten)
                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.4)),
                  at: CGPoint(x: cx, y: bottom - 5))
     }
@@ -683,8 +683,8 @@ struct UniverseView: View {
         ctx.draw(Text("You came down to it yourself.")
                     .font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary.opacity(open)),
                  at: CGPoint(x: cx, y: cy - 64))
-        ctx.draw(Text("OPEN THE RETURN")
-                    .font(.spaceMono(9)).foregroundStyle(Color(hex: "#E5533C").opacity(0.7 * open)),
+        ctx.draw(Text.spaceMono("OPEN THE RETURN", 9, .asWritten)
+                    .foregroundStyle(Color(hex: "#E5533C").opacity(0.7 * open)),
                  at: CGPoint(x: cx, y: cy + r + 26))
     }
 
@@ -847,7 +847,7 @@ struct UniverseView: View {
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
             let nameShow = max(0, min(1, (0.60 - zoom) / 0.24))          // uni-sky.js:320-330
             if nameShow > 0.02 {
-                ctx.draw(Text(rm.id.uppercased()).font(.spaceMono(9))
+                ctx.draw(Text.spaceMono(rm.id, 9, .upper)
                             .foregroundStyle(color.opacity(0.44 * nameShow)),
                          at: CGPoint(x: c.x, y: c.y + rm.r * zoom / 980 * W * 0.10 + 4))
             }
@@ -1003,7 +1003,7 @@ struct UniverseView: View {
             }
             // the belief, named at the head node — only once you've come in to a region
             if labels, z > 0.85, z < 6, let head = pts.first {
-                ctx.draw(Text(st.name).font(.spaceMono(9)).foregroundStyle(UniGeo.col(col, lens * min(0.42, (z - 0.85) * 0.7))),
+                ctx.draw(Text.spaceMono(st.name, 9, .asWritten).foregroundStyle(UniGeo.col(col, lens * min(0.42, (z - 0.85) * 0.7))),
                          at: CGPoint(x: head.x + 11, y: head.y + 3), anchor: .leading)
             }
         }
@@ -1167,12 +1167,19 @@ struct UniverseView: View {
             tx = tx.foregroundColor(c)
             ctx.draw(tx, at: CGPoint(x: cx, y: y), anchor: .center)
         }
+        // E1.18 · the mono one takes a SIZE, not a `Font`. A helper that passes a `Font`
+        // around can hand the face out bare; this one cannot, because the door it goes
+        // through uppercases on the way.
+        func mono(_ str: String, _ y: Double, _ size: CGFloat, _ c: Color) {
+            var tx = Text.spaceMono(str, size, .asWritten)
+            tx = tx.foregroundColor(c)
+            ctx.draw(tx, at: CGPoint(x: cx, y: y), anchor: .center)
+        }
         if third == 0 {
-            label("\(story.codexId) · \(rm.id.uppercased())", cy + rim * 0.86,
-                  .spaceMono(7.5), UniGeo.col(UniGeo.BONE, al * 0.34))
+            mono("\(story.codexId) · \(rm.id.uppercased())", cy + rim * 0.86, 7.5, UniGeo.col(UniGeo.BONE, al * 0.34))
             label(story.title, cy + rim * 0.86 + 21, .loraItalic(16), UniGeo.col(UniGeo.BONE, al * 0.86))
         } else if third == 1 {
-            label("WHO SAT WITH IT", cy + rim * 0.86, .spaceMono(7.5), UniGeo.col(UniGeo.BONE, al * 0.34))
+            mono("WHO SAT WITH IT", cy + rim * 0.86, 7.5, UniGeo.col(UniGeo.BONE, al * 0.34))
             // the company, by the same rule the fan uses — glyphs, never a count
             let names = Array(store.stats(for: story.id).archetypes.prefix(6))
             let gx = cx - Double(names.count - 1) * 13, gy = cy + rim * 0.86 + 22
@@ -1183,8 +1190,7 @@ struct UniverseView: View {
                 ctx.draw(tx, at: CGPoint(x: gx + Double(i) * 26, y: gy), anchor: .center)
             }
         } else {
-            label("HOW OFTEN YOU CAME BACK", cy + rim * 0.86,
-                  .spaceMono(7.5), UniGeo.col(UniGeo.BONE, al * 0.34))
+            mono("HOW OFTEN YOU CAME BACK", cy + rim * 0.86, 7.5, UniGeo.col(UniGeo.BONE, al * 0.34))
             let depth = store.returnRings[story.id]?.count ?? 0
             for k in 0...max(0, depth) {
                 let rr = 8 + Double(k) * 7
@@ -1192,7 +1198,7 @@ struct UniverseView: View {
                            with: .color(UniGeo.col(col, al * (0.30 - Double(k) * 0.03))), lineWidth: 0.7)
             }
         }
-        label("TURN IT", H - 186, .spaceMono(7), UniGeo.col(UniGeo.BONE, p * 0.24))
+        mono("TURN IT", H - 186, 7, UniGeo.col(UniGeo.BONE, p * 0.24))
     }
 
     private func drawPlanet(_ ctx: GraphicsContext, _ size: CGSize, story: Story, rm: UniRoom,
@@ -1431,7 +1437,7 @@ struct UniverseView: View {
             let set = max(0, min(1, (d - 0.17) / 0.16))
             let S = min(W * 0.40, 158)
             if set > 0.35 {
-                ctx.draw(Text(story.codexId).font(.spaceMono(9)).foregroundStyle(BinduTheme.inkTertiary),
+                ctx.draw(Text.spaceMono(story.codexId, 9, .asWritten).foregroundStyle(BinduTheme.inkTertiary),
                          at: CGPoint(x: cx, y: cy - hal * 0.42 - 18))
                 ctx.draw(Text(story.title).font(.lora(16, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
                          at: CGPoint(x: cx, y: cy - hal * 0.42))
@@ -1495,13 +1501,13 @@ struct UniverseView: View {
                          at: CGPoint(x: px2, y: py2))
                 if set > 0.6 {
                     let na = gath * (set - 0.6) / 0.4
-                    ctx.draw(Text(name.uppercased()).font(.spaceMono(8))
+                    ctx.draw(Text.spaceMono(name, 8, .upper)
                                 .foregroundStyle(mc.opacity(0.74 * na)),
                              at: CGPoint(x: px2, y: py2 + 15))
                     // a word waits near the presence, where the Archive holds one
                     if UniWords.word(storyID: story.id, voice: name) != nil, openWord == nil {
                         let wy = py2 + 27 + sin(t * 0.24 + Double(i)) * 1.6
-                        ctx.draw(Text("touch").font(.spaceMono(7.5))
+                        ctx.draw(Text.spaceMono("touch", 7.5, .asWritten)
                                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.30 * na)),
                                  at: CGPoint(x: px2, y: wy))
                     }
@@ -1532,8 +1538,7 @@ struct UniverseView: View {
         // he is in. The mouth's fade is `L.mouth`; the others breathe.
         let names = ["the story, close", "who sat with it", "what you left here", "the mouth of the return"]
         let fade = n == 3 ? mouth : 0.5 + 0.5 * sin(t * 0.5) * 0.2 + 0.4
-        var nameText = Text(names[n].uppercased())
-            .font(.spaceMono(8.5))
+        var nameText = Text.spaceMono(names[n], 8.5, .upper)
         nameText = nameText.foregroundColor(UniGeo.col(UniGeo.BONE, 0.26 * min(1, fade)))
         ctx.draw(nameText, at: CGPoint(x: cx, y: H - 172), anchor: .center)
 

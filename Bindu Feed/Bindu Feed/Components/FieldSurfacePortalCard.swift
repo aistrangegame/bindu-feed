@@ -61,7 +61,7 @@ struct FieldSurfacePortalCard: View {
 
                 if let label = config.label {
                     Text(label.uppercased())
-                        .font(.spaceMono(9)).textCase(.uppercase)
+                        .spaceMonoTracked(9)
                         .tracking(1.08)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

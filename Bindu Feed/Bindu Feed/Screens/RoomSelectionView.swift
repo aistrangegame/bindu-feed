@@ -65,7 +65,7 @@ struct RoomSelectionView: View {
                     .font(.system(size: 14))
                     .foregroundColor(BinduTheme.colorAsh)
                 Text("THIRTEEN ROOMS")
-                    .font(.spaceMono(11)).textCase(.uppercase)
+                    .spaceMonoTracked(11)
                     .tracking(1.54)
                     .foregroundColor(BinduTheme.inkSecondary)
             }
@@ -98,7 +98,7 @@ struct RoomSelectionView: View {
                 .padding(.vertical, BinduTheme.space24)
 
             Text("AND THE FIELD TURNS TO YOU")
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(1.62)     // 0.18em x 9 — Room Selection.html:745-749
                 .foregroundColor(BinduTheme.inkSecondary)
                 .padding(.horizontal, BinduTheme.space16)

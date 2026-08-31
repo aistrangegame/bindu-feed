@@ -335,14 +335,14 @@ enum RoomFigures {
         }
         if o.rev > 0.25 {
             let e = SC * sqrt(Double(N))
-            ctx.draw(Text("8").font(.spaceMono(8)).foregroundStyle(col([180, 240, 190], (o.rev - 0.25) * 1.1)),
+            ctx.draw(Text.spaceMono("8", 8, .asWritten).foregroundStyle(col([180, 240, 190], (o.rev - 0.25) * 1.1)),
                      at: CGPoint(x: o.cx - e * 0.80, y: o.cy - e * 0.62))
-            ctx.draw(Text("13").font(.spaceMono(8)).foregroundStyle(col([150, 224, 200], (o.rev - 0.25) * 1.1)),
+            ctx.draw(Text.spaceMono("13", 8, .asWritten).foregroundStyle(col([150, 224, 200], (o.rev - 0.25) * 1.1)),
                      at: CGPoint(x: o.cx + e * 0.80, y: o.cy - e * 0.62))
         }
         if off > 0.15 {
             let deg = String(format: "%.3f°", ang0 * 180 / Double.pi)
-            ctx.draw(Text(deg).font(.spaceMono(9)).foregroundStyle(col([200, 255, 190], off * 0.6)),
+            ctx.draw(Text.spaceMono(deg, 9, .asWritten).foregroundStyle(col([200, 255, 190], off * 0.6)),
                      at: CGPoint(x: o.cx, y: o.cy + SC * sqrt(Double(N)) * 1.06))
         }
 
@@ -660,8 +660,8 @@ enum RoomFigures {
                 var lbl = iris
                 lbl.translateBy(x: cos(a) * ir * 1.22, y: sin(a) * ir * 1.22)
                 lbl.rotate(by: .radians(-t * 0.04))
-                lbl.draw(Text(RoomPalette.names[(s / 8) % 10].uppercased())
-                            .font(.spaceMono(7)).foregroundStyle(col(c, (o.rev - 0.3) * 1.1)),
+                lbl.draw(Text.spaceMono(RoomPalette.names[(s / 8) % 10], 7, .upper)
+                            .foregroundStyle(col(c, (o.rev - 0.3) * 1.1)),
                          at: .zero)
             }
         }
@@ -749,8 +749,8 @@ enum RoomFigures {
             named.rotate(by: .radians(-(t * 0.05 + o.lat * 0.9)))
             for v in 0..<10 {
                 let a = (Double(v) / 10) * TAU - Double.pi / 2, rr = Ro * 1.16
-                named.draw(Text(RoomPalette.names[v].uppercased())
-                            .font(.spaceMono(8)).foregroundStyle(col(RoomPalette.at(v), o.rev * 0.8)),
+                named.draw(Text.spaceMono(RoomPalette.names[v], 8, .upper)
+                            .foregroundStyle(col(RoomPalette.at(v), o.rev * 0.8)),
                            at: CGPoint(x: cos(a) * rr, y: sin(a) * rr))
                 named.fill(ring(cos(a) * Ro * 1.02, sin(a) * Ro * 1.02, 1.5),
                            with: .color(col(RoomPalette.at(v), o.rev * 0.9)))
@@ -883,8 +883,8 @@ enum RoomFigures {
                     (col(RoomPalette.at(v), 0.5 * o.rev), 0), (col(RoomPalette.at(v), 0), 1)]))
                 ctx.stroke(line(CGPoint(x: px, y: py), CGPoint(x: o.cx, y: o.cy)),
                            with: .color(col(RoomPalette.at(v), 0.24 * o.rev)), lineWidth: 1)
-                ctx.draw(Text(RoomPalette.names[v].uppercased())
-                            .font(.spaceMono(7)).foregroundStyle(col(RoomPalette.at(v), o.rev * 0.85)),
+                ctx.draw(Text.spaceMono(RoomPalette.names[v], 7, .upper)
+                            .foregroundStyle(col(RoomPalette.at(v), o.rev * 0.85)),
                          at: CGPoint(x: px, y: py + sin(a) * 16 + 3))
             }
         }

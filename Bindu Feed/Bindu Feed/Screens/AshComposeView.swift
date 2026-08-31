@@ -141,7 +141,7 @@ struct AshComposeView: View {
     private var context: some View {
         VStack(spacing: 7) {
             Text("INTO THE FIELD")
-                .font(.spaceMono(10)).textCase(.uppercase)
+                .spaceMonoTracked(10)
                 .tracking(2.6)
                 .foregroundColor(accent.opacity(0.72))
 
@@ -248,7 +248,7 @@ struct AshComposeView: View {
             .gesture(holdGesture)
 
             Text(hintText)
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(1.6)
                 .foregroundColor(armed ? accent.opacity(0.62) : BinduTheme.inkTertiary)
                 .modifier(HintFade(active: armed && progress < 0.02))
@@ -374,7 +374,7 @@ struct AshComposeView: View {
                         onPosted()
                     } label: {
                         Text("RETURN TO THE STORY ›")
-                            .font(.spaceMono(9)).textCase(.uppercase)
+                            .spaceMonoTracked(9)
                             .tracking(1.8)
                             .foregroundColor(BinduTheme.inkTertiary)
                             .padding(10)
@@ -406,7 +406,7 @@ struct AshComposeView: View {
                         .font(.lora(13, weight: .medium))
                         .foregroundColor(accent)
                     Text("RELEASED JUST NOW")
-                        .font(.spaceMono(9)).textCase(.uppercase)
+                        .spaceMonoTracked(9)
                         .tracking(0.8)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

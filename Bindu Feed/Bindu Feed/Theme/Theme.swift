@@ -70,7 +70,10 @@ extension Font {
         .custom(loraPostScriptName(weight: weight, italic: true), size: size)
     }
 
-    static func spaceMono(_ size: CGFloat) -> Font {
+    /// **THE MONO FACE IS NOT AVAILABLE WITHOUT ITS CASE.** `fileprivate` on purpose: the
+    /// two entry points below are the only ways to ask for it, and both uppercase. See the
+    /// note on `spaceMonoTracked` for why case belongs to the role rather than to the string.
+    fileprivate static func spaceMonoFace(_ size: CGFloat) -> Font {
         .custom("SpaceMono-Regular", size: size)
     }
 
@@ -133,10 +136,43 @@ extension View {
     /// A label that genuinely should not uppercase opts out with `.textCase(nil)` — a
     /// decision with a name rather than an omission.
     ///
-    /// **CANVAS-DRAWN TEXT IS THE ONE PLACE THIS CANNOT REACH.** `GraphicsContext.draw` takes
-    /// a `Text` and `.textCase` returns `some View`, so those 15 labels uppercase their STRING
-    /// instead. Not a divergence — the same law, expressed where a modifier cannot go.
-    func spaceMonoTracked(_ size: CGFloat, em: CGFloat) -> some View {
-        self.font(.spaceMono(size)).textCase(.uppercase).tracking(em * size)
+    /// **CANVAS-DRAWN TEXT IS THE ONE PLACE A MODIFIER CANNOT REACH**, and E1.18 is what
+    /// happens when a law is documented as reaching everywhere it can and left to authors
+    /// everywhere it cannot: `GraphicsContext.draw` takes a `Text`, `.textCase` returns
+    /// `some View`, and 14 Canvas labels were drawing whatever case their string happened to
+    /// carry. The note here previously ASSERTED that those labels uppercase their string
+    /// instead. Most did. `Text("touch")` at `UniverseView` did not, and neither did five
+    /// data labels — **a documented contract with no mechanism behind it is a comment, and
+    /// this file was the thing telling readers the contract held.**
+    ///
+    /// So the face itself is `fileprivate` now and `Text.spaceMono(_:_:em:)` below is the
+    /// Canvas door. Both doors uppercase; there is no third door. The wrong thing is not
+    /// discouraged, it does not compile.
+    func spaceMonoTracked(_ size: CGFloat, em: CGFloat = 0) -> some View {
+        self.font(.spaceMonoFace(size)).textCase(.uppercase).tracking(em * size)
+    }
+}
+
+/// **THE CASE RULE STOPS AT THE CANVAS, AND THE DESIGN SAYS SO IN ITS OWN CODE.**
+/// `text-transform` is a CSS property of a DOM element; `fillText` never sees it. So the
+/// comps case canvas text **one call at a time**, and they are not uniform about it:
+/// `The Universe v3.html` has three `fillText(x.toUpperCase(), …)` and four plain ones — and
+/// `:977` draws *"touch"* in lower case on the line after `:973` uppercases a name.
+///
+/// **THIS ALMOST BECAME A DEFECT OF ITS OWN.** The first version of this door uppercased
+/// unconditionally, on the strength of the `.mono{text-transform:uppercase}` class rule. That
+/// rule is real and governs every mono ELEMENT — and it would have silently uppercased
+/// `'touch'`, `s.codex` and `st.name`, three labels the design deliberately leaves alone.
+/// A law generalised one surface past its evidence.
+///
+/// So the Canvas door does not decide; it makes deciding unavoidable. There is no default.
+enum MonoCase { case upper, asWritten }
+
+extension Text {
+    /// The mono face for `GraphicsContext.draw`, which needs a `Text` and cannot take a view
+    /// modifier. The case is required, and each call site's answer comes from the
+    /// corresponding `fillText` in the comp.
+    static func spaceMono(_ s: String, _ size: CGFloat, em: CGFloat = 0, _ c: MonoCase) -> Text {
+        Text(c == .upper ? s.uppercased() : s).font(.spaceMonoFace(size)).tracking(em * size)
     }
 }

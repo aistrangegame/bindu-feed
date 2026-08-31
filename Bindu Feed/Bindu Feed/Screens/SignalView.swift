@@ -71,7 +71,7 @@ struct SignalView: View {
 
     private var portalTitle: some View {
         Text("THE SIGNAL SPACE")
-            .font(.spaceMono(11)).textCase(.uppercase)
+            .spaceMonoTracked(11)
             .tracking(2.8)
             .foregroundColor(BinduTheme.colorAshrey.opacity(phase == .gone ? 0.4 : 0.8))
             .animation(.easeInOut(duration: 1.2), value: phase)
@@ -134,7 +134,7 @@ struct SignalView: View {
         switch phase {
         case .arriving:
             Text("A SIGNAL IS ARRIVING")
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(2.2)
                 .foregroundColor(BinduTheme.colorAshrey.opacity(0.5))
                 .modifier(BreathingOpacityHint())
@@ -169,7 +169,7 @@ struct SignalView: View {
                 duration: 1.6
             ) {
                 Text("— THE FIELD")
-                    .font(.spaceMono(10)).textCase(.uppercase)
+                    .spaceMonoTracked(10)
                     .tracking(2.0)
                     .foregroundColor(BinduTheme.colorAshrey.opacity(0.6))
                     .padding(.top, 18)
@@ -185,7 +185,7 @@ struct SignalView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
             Text("ONE A DAY · RETURN TOMORROW")
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(1.8)
                 .foregroundColor(BinduTheme.inkTertiary)
         }
@@ -196,7 +196,7 @@ struct SignalView: View {
     private var leaveButton: some View {
         Button { tapLeave() } label: {
             Text("LEAVE")
-                .font(.spaceMono(10)).textCase(.uppercase)
+                .spaceMonoTracked(10)
                 .tracking(2.2)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .padding(10)

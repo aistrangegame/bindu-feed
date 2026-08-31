@@ -27,7 +27,13 @@ SOURCES = [ROOT/"canon", ROOT/"Claude Design Round 2"/"design-source", ROOT/"Cla
 STRUCK = re.compile(r'<s>(.*?)</s>', re.S | re.I)
 
 def _decode(t):
-    return re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), t)
+    t = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), t)
+    # **AN ESCAPED LINE BREAK IS A LINE BREAK.** `The Mirror.html:70` writes a koan as
+    # `'If no one is watching,\nwhat is the watching?'` — two characters in the file, one
+    # break on the screen. Left literal, the haystack held `watching,\nwhat` and the app's
+    # rendered form could never match, so a TRUE authored string read as unauthored. Same
+    # class as the `Or\u{00ED}` miss: the corpus is compared after both sides are decoded.
+    return re.sub(r'\\[nt]', ' ', t)
 
 def load_design(with_struck=False):
     """The haystack, with struck spans removed. `with_struck` also returns what they held."""

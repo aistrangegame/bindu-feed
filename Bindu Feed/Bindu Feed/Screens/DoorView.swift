@@ -123,13 +123,13 @@ struct DoorView: View {
                     .font(.lora(24, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
                     .multilineTextAlignment(.center)
                 Text(storyData.roomName)
-                    .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5).foregroundStyle(room.opacity(0.85))
+                    .spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(room.opacity(0.85))
                 Text(RiteWord.arrivalNotDone)
                     .font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary)
                     .padding(.top, 6)
                 Spacer()
                 Text("touch to receive")
-                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
+                    .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(room.opacity(0.62))
                     .modifier(RiteBreathe())
                 Button {
@@ -137,7 +137,7 @@ struct DoorView: View {
                     onComplete()
                 } label: {
                     Text("not today · enter the field ›")
-                        .font(.spaceMono(8)).textCase(.uppercase).tracking(2)
+                        .spaceMonoTracked(8, em: 0.25)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
                 }
                 .padding(.top, 14).padding(.bottom, 40)
@@ -265,11 +265,11 @@ struct DoorRopeOverlay: View {
                             .transition(.opacity)
                         VStack(spacing: 18) {
                             Button { onExit(.point) } label: {
-                                Text("WALK THE POINT").font(.spaceMono(11)).textCase(.uppercase).tracking(2)
+                                Text("WALK THE POINT").spaceMonoTracked(11, em: 2 / 11)
                                     .foregroundStyle(Color(hex: "#C0392B").opacity(0.9))
                             }
                             Button { onExit(.day) } label: {
-                                Text("RETURN TO THE DAY").font(.spaceMono(11)).textCase(.uppercase).tracking(2)
+                                Text("RETURN TO THE DAY").spaceMonoTracked(11, em: 2 / 11)
                                     .foregroundStyle(BinduTheme.inkSecondary)
                             }
                         }

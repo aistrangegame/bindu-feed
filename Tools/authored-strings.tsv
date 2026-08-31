@@ -11,6 +11,10 @@
 #   REVIEW      authored, and NOT in the app. The backlog - where a never-built mechanic
 #               surfaces. Each is built, or reclassified with a reason.
 #   ANNOTATION  the design document explaining itself. Never app copy.
+#   RETRACTED   authored once and STRUCK by the design since. Not missing -- withdrawn, and
+#               the distinction matters: `absent` sends a reader hunting for who deleted it.
+#               Found by Tools/check_stale.py, which is the only thing that reads <s> spans
+#               back against this file.
 #   CONTENT     authored content that reaches the app from Airtable at runtime.
 #   CSSVALUE    CSS / animation shorthand or a font stack. Implementation, never copy.
 #   FRAGMENT    a template-literal fragment or code scrap the extractor split.
@@ -152,7 +156,7 @@ ANNOTATION	sky 1−((z−.55)/.5)	Claude Design Round 2/comps/The Seam.html [doc
 ANNOTATION	So all four slots fill locally, and none of them pretends. The register, its gloss, its tradition and where it lives -- and then the honest part:	Claude Design Round 2/comps/The Aperture.html [doc]
 ANNOTATION	So the depth-1 cluster is not a list of duplicates -- it is	Claude Design Round 2/comps/The Return.html [doc]
 ANNOTATION	strata seg(.44,.66)	Claude Design Round 2/comps/The Seam.html [doc]
-ANNOTATION	Ten read the Feed. One lives it. Each room is that voice's own mathematics -- the figure it already is.	Claude Design Round 2/comps/The Rooms v4.html [doc]
+RETRACTED	Ten read the Feed. One lives it. Each room is that voice's own mathematics -- the figure it already is.	Claude Design Round 2/comps/The Rooms v4.html [doc]
 ANNOTATION	That is also why the archive currently shows no voice returning twice:	Claude Design Round 2/comps/The Return.html [doc]
 ANNOTATION	The adjacency claims.	Claude Design Round 2/comps/The Aperture.html [doc]
 ANNOTATION	The Aperture -- what you did not choose	Claude Design Round 2/comps/The Aperture.html [doc]

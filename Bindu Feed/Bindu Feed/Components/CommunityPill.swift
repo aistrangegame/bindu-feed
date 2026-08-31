@@ -10,11 +10,9 @@ struct CommunityPill: View {
                 .font(.system(size: compact ? 11 : 12))
                 .foregroundColor(room.color)
 
-            Text(room.name)
-                .font(roomNameFont)
+            roomName(compact ? 10 : 11)
                 .foregroundColor(room.color.opacity(0.95))
                 .lineLimit(1)
-                .tracking(room.name == "The Watcher" ? 1.0 : 0)
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 3)
@@ -28,15 +26,19 @@ struct CommunityPill: View {
         )
     }
 
-    private var roomNameFont: Font {
-        let size: CGFloat = compact ? 10 : 11
+    // E1.18 · **THE FACE AND ITS CASE ARE ONE DECISION, SO THE SWITCH RETURNS A VIEW, NOT A
+    // `Font`.** This was a `Font`-valued switch with the mono branch's tracking spelled out
+    // at the call site (`room.name == "The Watcher" ? 1.0 : 0`) — the face handed over bare
+    // and its two companions left to whoever drew it. Nothing enforced that pairing, which
+    // is the shape the whole row is about.
+    @ViewBuilder private func roomName(_ size: CGFloat) -> some View {
         switch room.name {
         case "The Descent", "The Return", "The Field":
-            return .loraItalic(size)
+            Text(room.name).font(.loraItalic(size))
         case "The Watcher":
-            return .spaceMono(size)
+            Text(room.name).spaceMonoTracked(size, em: 1 / size)
         default:
-            return .lora(size, weight: .medium)
+            Text(room.name).font(.lora(size, weight: .medium))
         }
     }
 }

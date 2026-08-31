@@ -60,7 +60,7 @@ struct ReturnView: View {
             VStack {
                 HStack {
                     Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                        Text("‹ leave").font(.spaceMono(9)).textCase(.uppercase).tracking(2)
+                        Text("‹ leave").spaceMonoTracked(9, em: 2 / 9)
                             .foregroundStyle(ReturnCanon.ashColor.opacity(0.5)).padding(16)
                     }
                     Spacer()
@@ -105,7 +105,7 @@ struct ReturnView: View {
                 HStack(spacing: 7) {
                     Text("◉").font(.system(size: 13))
                     Text("hear the voice you left")
-                        .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
+                        .spaceMonoTracked(9, em: 1.5 / 9)
                 }
                 .foregroundStyle(ReturnCanon.ashColor.opacity(0.72))
             }
@@ -135,17 +135,17 @@ struct ReturnView: View {
     // I · Summons
     private var summons: some View {
         centered {
-            Text(ReturnCanon.summonsKicker).font(.spaceMono(9)).textCase(.uppercase).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
+            Text(ReturnCanon.summonsKicker).spaceMonoTracked(9, em: 2 / 9).foregroundStyle(BinduTheme.inkTertiary)
             Text(ReturnCanon.summonsLine).font(.lora(14)).italic().foregroundStyle(BinduTheme.inkSecondary)
             Text(storyData.title).font(.lora(26, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
                 .multilineTextAlignment(.center).padding(.top, 6)
             // The sealed line, cut in — debossed, not printed (the seal is pressed, not written).
             Text("\(storyData.codexId) · sealed \(storyData.sealedWhen)")
-                .font(.spaceMono(9)).textCase(.uppercase).tracking(1).foregroundStyle(BinduTheme.inkTertiary)
+                .spaceMonoTracked(9, em: 1 / 9).foregroundStyle(BinduTheme.inkTertiary)
                 .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)
             if !storyData.firstMet.isEmpty {
                 Text("you first met this · \(storyData.firstMet)")
-                    .font(.spaceMono(9)).textCase(.uppercase).tracking(1).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
+                    .spaceMonoTracked(9, em: 1 / 9).foregroundStyle(ReturnCanon.ashColor.opacity(0.6))
             }
             hint(ReturnCanon.summonsHint)
         }
@@ -227,7 +227,7 @@ struct ReturnView: View {
             let set = max(0, min(1, (d - 0.17) / 0.16))
             let S = min(W * 0.40, 158)
             if set > 0.35 {
-                ctx.draw(Text(storyData.codexId).font(.spaceMono(9)).foregroundStyle(BinduTheme.inkTertiary),
+                ctx.draw(Text.spaceMono(storyData.codexId, 9, .asWritten).foregroundStyle(BinduTheme.inkTertiary),
                          at: CGPoint(x: cx, y: cy - hal * 0.42 - 18))
                 ctx.draw(Text(storyData.title).font(.lora(16, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
                          at: CGPoint(x: cx, y: cy - hal * 0.42))
@@ -252,7 +252,7 @@ struct ReturnView: View {
                 ctx.draw(Text(v.glyph).font(.lora(isAsh ? 19 : 17)).foregroundStyle(mc.opacity(a)),
                          at: CGPoint(x: px, y: py))
                 if set > 0.6 {
-                    ctx.draw(Text(v.name.uppercased()).font(.spaceMono(8)).foregroundStyle(mc.opacity(0.66 * (set - 0.6) / 0.4)),
+                    ctx.draw(Text.spaceMono(v.name, 8, .upper).foregroundStyle(mc.opacity(0.66 * (set - 0.6) / 0.4)),
                              at: CGPoint(x: px, y: py + 15))
                 }
             }
@@ -279,7 +279,7 @@ struct ReturnView: View {
     // II · Aged Room
     private var room: some View {
         centered {
-            Text(ReturnCanon.roomRemembers(room: storyData.roomName)).font(.spaceMono(9)).textCase(.uppercase).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
+            Text(ReturnCanon.roomRemembers(room: storyData.roomName)).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
             Text(ReturnCanon.roomLine(when: storyData.sealedWhen)).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center).padding(.top, 10)
             hint(ReturnCanon.roomHint)
@@ -314,12 +314,12 @@ struct ReturnView: View {
                 Text(ReturnCanon.recordIntro).font(.lora(15)).italic().foregroundStyle(BinduTheme.inkSecondary).padding(.top, 56)
                 ForEach(storyData.record) { v in
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("\(v.name) · \(v.role)").font(.spaceMono(9)).textCase(.uppercase).tracking(0.5).foregroundStyle(v.color.opacity(0.7))
+                        Text("\(v.name) · \(v.role)").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(v.color.opacity(0.7))
                         Text(v.lines.first ?? "").font(.lora(14)).lineSpacing(5).foregroundStyle(BinduTheme.inkSecondary)
                     }
                     .saturation(0.5).brightness(-0.04)     // .pressed — the aged gathering
                 }
-                Text(ReturnCanon.recordSealedYou(when: storyData.sealedWhen)).font(.spaceMono(9)).textCase(.uppercase).tracking(0.5).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
+                Text(ReturnCanon.recordSealedYou(when: storyData.sealedWhen)).spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
                 Text(storyData.sealedSelf)
                     .font(.loraItalic(15)).lineSpacing(6)
                     .foregroundStyle(ReturnCanon.ashColor)
@@ -344,16 +344,16 @@ struct ReturnView: View {
     // V · The Field, Settled (1–2 voices speak anew, living ink)
     private var fieldAnew: some View {
         centered {
-            Text(ReturnCanon.fieldAnewTitle).font(.spaceMono(9)).textCase(.uppercase).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
+            Text(ReturnCanon.fieldAnewTitle).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
             ForEach(Array(storyData.anew.prefix(max(1, anewShown)).enumerated()), id: \.offset) { _, v in
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(v.name) · now").font(.spaceMono(9)).textCase(.uppercase).tracking(0.5).foregroundStyle(BinduTheme.inkTertiary)
+                    Text("\(v.name) · now").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
                     Text(v.line).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkPrimary)
                 }
                 .transition(.opacity).padding(.top, 8)
             }
             Text("\(min(max(1, anewShown), storyData.anew.count)) / \(storyData.anew.count) · the rest keep their record")
-                .font(.spaceMono(8)).textCase(.uppercase).tracking(1).foregroundStyle(BinduTheme.inkTertiary).padding(.top, 10)
+                .spaceMonoTracked(8, em: 0.125).foregroundStyle(BinduTheme.inkTertiary).padding(.top, 10)
         }
         .contentShape(Rectangle())
         .onAppear { if anewShown == 0 { anewShown = 1; soundEngine.riteVoice(hz: 285, dur: 7) } }
@@ -388,7 +388,7 @@ struct ReturnView: View {
                     let rel = ReturnRingRow.rel(index: row.id, of: rows.count)
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Text(row.when)
-                            .font(.spaceMono(8)).textCase(.uppercase).tracking(1.2)
+                            .spaceMonoTracked(8, em: 0.15)
                             .foregroundStyle(ReturnDeboss.ink.opacity(ReturnRingRow.whenOpacity(rel: rel)))
                             .frame(width: 74, alignment: .leading)
                         VStack(alignment: .leading, spacing: 3) {
@@ -396,7 +396,7 @@ struct ReturnView: View {
                                 .font(.lora(13)).lineSpacing(4)
                                 .foregroundStyle(BinduTheme.inkPrimary.opacity(ReturnRingRow.fragOpacity(rel: rel)))
                             Text(row.answerLine)
-                                .font(.spaceMono(8)).textCase(.uppercase).tracking(1.1)
+                                .spaceMonoTracked(8, em: 0.1375)
                                 .foregroundStyle(BinduTheme.inkTertiary)
                         }
                     }
@@ -410,7 +410,7 @@ struct ReturnView: View {
     // VI · The Rings
     private var rings: some View {
         centered {
-            Text(ReturnCanon.ringsTitle).font(.spaceMono(9)).textCase(.uppercase).tracking(1.5).foregroundStyle(BinduTheme.inkTertiary)
+            Text(ReturnCanon.ringsTitle).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
             ReturnRings(newRing: false, priorRings: storyData.returnCount).frame(height: 180)
             Text(ReturnCanon.ringsBody).font(.lora(14)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center)
@@ -426,9 +426,9 @@ struct ReturnView: View {
         VStack(spacing: 16) {
             Spacer()
             Text("◉ you, now · in reply to you, \(storyData.sealedWhen)")
-                .font(.spaceMono(9)).textCase(.uppercase).tracking(0.5).foregroundStyle(ReturnCanon.ashColor)
+                .spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(ReturnCanon.ashColor)
             if let frame = prompt.frame, let quote = prompt.quote {
-                Text(frame).font(.spaceMono(9)).textCase(.uppercase).tracking(1).foregroundStyle(BinduTheme.inkTertiary)
+                Text(frame).spaceMonoTracked(9, em: 1 / 9).foregroundStyle(BinduTheme.inkTertiary)
                 Text("\u{201C}\(quote)\u{201D}")
                     .font(.loraItalic(15)).foregroundStyle(ReturnCanon.ashColor).saturation(0.85)
                     .multilineTextAlignment(.center)
@@ -445,7 +445,7 @@ struct ReturnView: View {
                             .padding(.horizontal, 13).padding(.vertical, 16).allowsHitTesting(false)
                     }
                 }
-            Text(ReturnCanon.replyKept).font(.spaceMono(9)).textCase(.uppercase).tracking(1).foregroundStyle(BinduTheme.inkTertiary)
+            Text(ReturnCanon.replyKept).spaceMonoTracked(9, em: 1 / 9).foregroundStyle(BinduTheme.inkTertiary)
             Button {
                 guard !replyText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                 addRing()
@@ -519,7 +519,7 @@ struct ReturnView: View {
     // VIII · The Sealing
     private var sealing: some View {
         centered {
-            Text("◉ you, now · today").font(.spaceMono(9)).textCase(.uppercase).tracking(0.5).foregroundStyle(ReturnCanon.ashColor)
+            Text("◉ you, now · today").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(ReturnCanon.ashColor)
             ReturnRings(newRing: true, priorRings: storyData.returnCount).frame(height: 150)
             if sealPhase == 0 {
                 Text(ReturnCanon.sealPlain).font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary).multilineTextAlignment(.center)
@@ -542,7 +542,7 @@ struct ReturnView: View {
                             store.pendingLaunchRoute = .instrument(Int(z.rounded()))
                         } else if !path.isEmpty { $path.popToRootDissolve() }
                     } label: {
-                        Text(ReturnCanon.archiveWaits).font(.spaceMono(10)).textCase(.uppercase).tracking(2).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
+                        Text(ReturnCanon.archiveWaits).spaceMonoTracked(10, em: 0.2).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
                     }
                 }
                 .transition(.opacity)
@@ -561,7 +561,7 @@ struct ReturnView: View {
             .padding(.horizontal, 40).frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     private func hint(_ text: String) -> some View {
-        Text(text).font(.spaceMono(9)).textCase(.uppercase).tracking(2).foregroundStyle(BinduTheme.inkTertiary).modifier(RiteBreathe()).padding(.top, 20)
+        Text(text).spaceMonoTracked(9, em: 2 / 9).foregroundStyle(BinduTheme.inkTertiary).modifier(RiteBreathe()).padding(.top, 20)
     }
 }
 

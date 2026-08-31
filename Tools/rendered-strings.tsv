@@ -26,7 +26,6 @@
 # Regenerate: python3 Tools/extract_rendered.py && python3 Tools/seed_rendered.py
 # Enforce:    python3 Tools/check_rendered.py [--triage]
 APP-OWN	... days ago	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:129
-APP-OWN	... hands · the dance is carrying you	Bindu Feed/Bindu Feed/Point/PointReadings.swift:984
 APP-OWN	... in the archive · ... in the record	Bindu Feed/Bindu Feed/Rooms/RoomView.swift:628
 APP-OWN	... spoke here.	Bindu Feed/Bindu Feed/Universe/UniWords.swift:49
 APP-OWN	... visitors arrived that you did not choose.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:42

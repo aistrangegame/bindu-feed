@@ -126,7 +126,7 @@ struct AshVoiceView: View {
                 .foregroundColor(BinduTheme.inkPrimary)
 
             Text("PHYSICAL SYNTHESIS")
-                .font(.spaceMono(11)).textCase(.uppercase)
+                .spaceMonoTracked(11)
                 .tracking(1.32)
                 .foregroundColor(terra.opacity(0.75))
         }
@@ -161,7 +161,7 @@ struct AshVoiceView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(label)
-                .font(.spaceMono(9)).textCase(.uppercase)
+                .spaceMonoTracked(9)
                 .tracking(0.63)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .multilineTextAlignment(.center)
@@ -275,7 +275,7 @@ private struct AshCommentRow: View {
                 }
                 if !comment.sourceDate.isEmpty {
                     Text(formatted(comment.sourceDate))
-                        .font(.spaceMono(9)).textCase(.uppercase)
+                        .spaceMonoTracked(9)
                         .tracking(0.4)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }
@@ -291,7 +291,7 @@ private struct AshCommentRow: View {
 
             if let parentArchetypeName {
                 Text("↩ In reply to \(parentArchetypeName)")
-                    .font(.spaceMono(10)).textCase(.uppercase)
+                    .spaceMonoTracked(10)
                     .tracking(0.4)
                     .foregroundColor(BinduTheme.inkTertiary)
                     .padding(.top, 4)

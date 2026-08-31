@@ -18,7 +18,7 @@
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
-CHECKS=(check_authored check_rendered check_citations check_audit_ids check_status check_wired)
+CHECKS=(check_authored check_rendered check_citations check_audit_ids check_status check_wired check_stale)
 failed=()
 
 for c in "${CHECKS[@]}"; do

@@ -44,7 +44,7 @@ struct PracticeDoorView: View {
                         Task { await store.loadFoundation(); startIfReady() }
                     } label: {
                         Text("TRY AGAIN")
-                            .font(.spaceMono(9)).textCase(.uppercase).tracking(2.0)
+                            .spaceMonoTracked(9, em: 2.0 / 9)
                             .foregroundColor(BinduTheme.inkSecondary)
                     }
                     .buttonStyle(.plain)
@@ -81,7 +81,7 @@ struct PracticeDoorView: View {
                     Task { await store.loadFoundation() }
                 } label: {
                     Text("TRY AGAIN")
-                        .font(.spaceMono(9)).textCase(.uppercase)
+                        .spaceMonoTracked(9)
                         .tracking(2.0)
                         .foregroundColor(BinduTheme.inkSecondary)
                 }
@@ -118,7 +118,7 @@ struct PracticeDoorView: View {
                 let label = labelText(for: content)
                 if !label.isEmpty {
                     Text(label)
-                        .font(.spaceMono(10)).textCase(.uppercase)
+                        .spaceMonoTracked(10)
                         .tracking(2.4)
                         .foregroundColor(accent.opacity(0.66))
                         .padding(.bottom, 36)
@@ -242,7 +242,7 @@ struct PracticeDoorView: View {
             }
             if !story.codexId.isEmpty {
                 Text(story.codexId)
-                    .font(.spaceMono(10)).textCase(.uppercase)
+                    .spaceMonoTracked(10)
                     .tracking(0.6)
                     .foregroundColor(BinduTheme.inkTertiary)
             }
@@ -251,7 +251,7 @@ struct PracticeDoorView: View {
 
     private var tapHint: some View {
         Text("TAP TO CROSS")
-            .font(.spaceMono(9)).textCase(.uppercase)
+            .spaceMonoTracked(9)
             .tracking(1.6)
             .foregroundColor(BinduTheme.inkTertiary)
             .opacity(0.24 + 0.31 * breath.value)   // the one master breath

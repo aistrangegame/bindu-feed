@@ -112,7 +112,7 @@ struct StoryDetailView: View {
                     if !ashNodes.isEmpty {
                         Button { $path.pushDissolve(FeedRoute.returnCeremony(story)) } label: {
                             Text("you sealed this once · return ›")
-                                .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
+                                .spaceMonoTracked(9, em: 1.5 / 9)
                                 .foregroundColor(BinduTheme.inkTertiary)
                         }
                         .buttonStyle(.plain)
@@ -161,7 +161,7 @@ struct StoryDetailView: View {
                 }
                 Spacer(minLength: BinduTheme.space12)
                 Text(metaLine)
-                    .font(.spaceMono(10)).textCase(.uppercase)
+                    .spaceMonoTracked(10)
                     .tracking(0.6)
                     .foregroundColor(BinduTheme.inkTertiary)
             }
@@ -400,7 +400,7 @@ struct StoryDetailView: View {
                 )
 
                 Text("\(story.resonance + resonanceBoost)")
-                    .font(.spaceMono(11)).textCase(.uppercase)
+                    .spaceMonoTracked(11)
                     .foregroundColor(BinduTheme.inkSecondary)
 
                 Spacer()
