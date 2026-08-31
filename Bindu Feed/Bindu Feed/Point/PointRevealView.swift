@@ -71,14 +71,14 @@ struct PointRevealView: View {
                     }
                     if line >= lines.count - 1 {
                         Button { $path.popToRootDissolve() } label: {
-                            Text("OM · 136.1").font(.spaceMono(10)).tracking(3).foregroundStyle(Color(hex: "#D4A94B"))
+                            Text("OM · 136.1").font(.spaceMono(10)).textCase(.uppercase).tracking(3).foregroundStyle(Color(hex: "#D4A94B"))
                         }
                         .padding(.top, 12).transition(.opacity)
                     }
                 }
                 Spacer()
                 if collapsed && line < lines.count - 1 {
-                    Text("touch").font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.3 * breath.value))
+                    Text("touch").font(.spaceMono(8)).textCase(.uppercase).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.3 * breath.value))
                         .padding(.bottom, 30)
                 }
             }

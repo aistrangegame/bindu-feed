@@ -77,7 +77,7 @@ struct SettingsView: View {
     private var label: some View {
         VStack(spacing: 6) {
             Text("HOW YOU ARRIVE")
-                .font(.spaceMono(11))
+                .font(.spaceMono(11)).textCase(.uppercase)
                 .tracking(1.54)
                 .foregroundColor(BinduTheme.inkSecondary)
             Text("Personal to this device.")
@@ -126,7 +126,7 @@ struct SettingsView: View {
                 .foregroundColor(BinduTheme.inkPrimary)
 
             Text(selectedMoodName)
-                .font(.spaceMono(10))
+                .font(.spaceMono(10)).textCase(.uppercase)
                 .tracking(0.8)
                 .foregroundColor(selectedColor)
         }
@@ -213,7 +213,7 @@ struct SettingsView: View {
                                     .font(.lora(13, weight: .medium))
                                     .foregroundColor(active ? mc : BinduTheme.inkSecondary)
                                 Text(mood.quality)
-                                    .font(.spaceMono(9)).tracking(0.3)
+                                    .font(.spaceMono(9)).textCase(.uppercase).tracking(0.3)
                                     .foregroundColor(BinduTheme.inkTertiary)
                                     .lineLimit(1)
                             }
@@ -240,7 +240,7 @@ struct SettingsView: View {
             saveSettings()
         } label: {
             Text("SAVE THE ARRIVAL")
-                .font(.spaceMono(11))
+                .font(.spaceMono(11)).textCase(.uppercase)
                 .tracking(2.4)
                 .foregroundColor(selectedColor)
                 .padding(.horizontal, BinduTheme.space24)
@@ -270,7 +270,7 @@ struct SettingsView: View {
             } label: {
                 HStack(spacing: 8) {
                     Text("CHANGE TOKEN")
-                        .font(.spaceMono(11))
+                        .font(.spaceMono(11)).textCase(.uppercase)
                         .tracking(2.4)
                         .foregroundColor(BinduTheme.inkSecondary)
                     Spacer()
@@ -327,7 +327,7 @@ struct SettingsView: View {
             } label: {
                 HStack(spacing: 8) {
                     Text(soundEngine.isMuted ? "\u{2299} sound" : "\u{25C9} sound")
-                        .font(.spaceMono(11))
+                        .font(.spaceMono(11)).textCase(.uppercase)
                         .tracking(2.4)
                         .foregroundColor(soundEngine.isMuted
                                          ? BinduTheme.inkTertiary : BinduTheme.inkSecondary)
@@ -389,7 +389,7 @@ struct SettingsView: View {
 
     private func sectionLabel(_ text: String) -> some View {
         Text(text)
-            .font(.spaceMono(9))
+            .font(.spaceMono(9)).textCase(.uppercase)
             .tracking(0.9)
             .foregroundColor(BinduTheme.inkSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)

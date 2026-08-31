@@ -72,7 +72,7 @@ struct MirrorView: View {
     private var header: some View {
         VStack(spacing: 9) {
             Text("THE MIRROR")
-                .font(.spaceMono(11))
+                .font(.spaceMono(11)).textCase(.uppercase)
                 .tracking(2.6)
                 .foregroundColor(BinduTheme.colorAsh.opacity(0.78))
             Text("what surfaces on \(prettyDayLabel)")
@@ -143,7 +143,7 @@ struct MirrorView: View {
             .disabled(drawn)
 
             Text(drawn ? "DRAWN · RETURN TOMORROW" : "DRAW ONCE MORE")
-                .font(.spaceMono(9))
+                .font(.spaceMono(9)).textCase(.uppercase)
                 .tracking(1.8)
                 .foregroundColor(drawn ? BinduTheme.inkTertiary : BinduTheme.colorBindu.opacity(0.62))
                 .modifier(BreathingOpacity(active: !drawn, lo: 0.26, hi: 1.0, duration: 5))
@@ -297,7 +297,7 @@ private struct ReflectionCard: View {
 
         VStack(spacing: 30) {
             Text(registerLabel)
-                .font(.spaceMono(10))
+                .font(.spaceMono(10)).textCase(.uppercase)
                 .tracking(2.5)
                 .foregroundColor(BinduTheme.colorAsh.opacity(0.72))
 

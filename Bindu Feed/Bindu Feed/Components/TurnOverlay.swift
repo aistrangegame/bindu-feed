@@ -61,7 +61,7 @@ struct TurnOverlay: View {
 
             VStack(spacing: 0) {
                 Text("WHERE TO")
-                    .font(.spaceMono(10)).tracking(3.4)
+                    .font(.spaceMono(10)).textCase(.uppercase).tracking(3.4)
                     .foregroundStyle(BinduTheme.inkTertiary)
                     .padding(.top, 80).padding(.bottom, 30)
 
@@ -90,8 +90,8 @@ struct TurnOverlay: View {
                 .padding(.horizontal, 30)
 
                 Spacer()
-                Text("tap anywhere to stay".uppercased())
-                    .font(.spaceMono(9)).tracking(2)
+                Text("tap anywhere to stay")
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.4 * breath.value))
                     .padding(.bottom, 40)
             }

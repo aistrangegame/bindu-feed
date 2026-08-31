@@ -49,7 +49,7 @@ struct TokenEntryView: View {
                 SecureField("", text: $token, prompt: Text("paste token")
                     .foregroundColor(BinduTheme.inkTertiary))
                     .focused($fieldFocused)
-                    .font(.spaceMono(13))
+                    .font(.spaceMono(13)).textCase(.uppercase)
                     .foregroundColor(BinduTheme.inkPrimary)
                     .tint(BinduTheme.accent)
                     .textInputAutocapitalization(.never)
@@ -79,7 +79,7 @@ struct TokenEntryView: View {
                 #if DEBUG
                 Button { demoStartZ = 0; showInstrument = true } label: {
                     Text("⟿ walk the Instrument")
-                        .font(.spaceMono(10)).tracking(2)
+                        .font(.spaceMono(10)).textCase(.uppercase).tracking(2)
                         .foregroundColor(BinduTheme.inkTertiary)
                         .padding(.top, BinduTheme.space16)
                 }
@@ -89,7 +89,7 @@ struct TokenEntryView: View {
                     ForEach([("sky", -4), ("light", -5), ("point", 1)], id: \.0) { name, z in
                         Button { demoStartZ = z; showInstrument = true } label: {
                             Text("⟿ \(name)")
-                                .font(.spaceMono(9)).tracking(1.8)
+                                .font(.spaceMono(9)).textCase(.uppercase).tracking(1.8)
                                 .foregroundColor(BinduTheme.inkTertiary.opacity(0.7))
                         }
                     }
@@ -97,7 +97,7 @@ struct TokenEntryView: View {
                 .padding(.top, BinduTheme.space8)
                 Button { showRite = true } label: {
                     Text("⟿ the Rite")
-                        .font(.spaceMono(10)).tracking(2)
+                        .font(.spaceMono(10)).textCase(.uppercase).tracking(2)
                         .foregroundColor(BinduTheme.inkTertiary)
                         .padding(.top, BinduTheme.space8)
                 }
@@ -113,7 +113,7 @@ struct TokenEntryView: View {
             ZStack(alignment: .topTrailing) {
                 InstrumentView(path: $demoPath, startZ: demoStartZ)
                 Button { showInstrument = false } label: {
-                    Text("✕").font(.spaceMono(15))
+                    Text("✕").font(.spaceMono(15)).textCase(.uppercase)
                         .foregroundColor(BinduTheme.inkSecondary)
                         .padding(16)
                 }
@@ -123,7 +123,7 @@ struct TokenEntryView: View {
             ZStack(alignment: .topTrailing) {
                 RiteView(path: $demoPath, onFinish: { showRite = false })
                 Button { showRite = false } label: {
-                    Text("✕").font(.spaceMono(15))
+                    Text("✕").font(.spaceMono(15)).textCase(.uppercase)
                         .foregroundColor(BinduTheme.inkSecondary)
                         .padding(16)
                 }

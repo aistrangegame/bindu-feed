@@ -84,7 +84,7 @@ struct AshPostedCard: View {
                         .font(.lora(13, weight: .medium))
                         .foregroundColor(terra)
                     Text(date)
-                        .font(.spaceMono(10))
+                        .font(.spaceMono(10)).textCase(.uppercase)
                         .tracking(0.6)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

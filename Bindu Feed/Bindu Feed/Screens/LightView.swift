@@ -110,7 +110,7 @@ struct LightView: View {
             VStack {
                 HStack {
                     Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
+                        Text("‹ leave").font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                             .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.4)).padding(16)
                     }
                     Spacer()
@@ -184,7 +184,7 @@ struct LightView: View {
                 }
                 Spacer()
                 Text(LightCanon.touchOnce)
-                    .font(.spaceMono(9)).tracking(2)
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6 * (1 - still)))
                 Text(LightCanon.approachSubtitle)
                     .font(.lora(12)).italic()
@@ -272,7 +272,7 @@ struct LightView: View {
         VStack {
             Spacer()
             Text("hold")
-                .font(.spaceMono(9)).tracking(3)
+                .font(.spaceMono(9)).textCase(.uppercase).tracking(3)
                 .foregroundStyle(BinduTheme.inkTertiary.opacity(holdDimmed ? 0 : 0.6))
                 .padding(.bottom, 56)
         }
@@ -378,7 +378,7 @@ struct LightView: View {
                             withAnimation(.easeInOut(duration: 1.0)) { stage = .out }
                         } label: {
                             Text(LightCanon.walkBackOut)
-                                .font(.spaceMono(10)).tracking(2)
+                                .font(.spaceMono(10)).textCase(.uppercase).tracking(2)
                                 .foregroundStyle(Color(hex: "#EDE3CE"))
                         }
                     }
@@ -393,7 +393,7 @@ struct LightView: View {
                     // it` over a six-press beat is authored copy on the wrong mechanism, which
                     // passes every checker and reads as fixed.
                     Text(LightCanon.beatCue)
-                        .font(.spaceMono(9)).tracking(2)
+                        .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary)
                         .modifier(RiteBreathe())
                         .padding(.top, 8)
@@ -422,7 +422,7 @@ struct LightView: View {
         .overlay(alignment: .bottom) {
             if stage == .scene, !beatActive, !breathCue.isEmpty {
                 Text(breathCue)
-                    .font(.spaceMono(9)).tracking(3)
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(3)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.55))
                     .padding(.bottom, 26)
             }
@@ -641,10 +641,10 @@ struct LightView: View {
             Spacer()
             HStack(spacing: 26) {
                 Button { restart() } label: {
-                    Text("again ›".uppercased()).font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
+                    Text("again ›").font(.spaceMono(10)).textCase(.uppercase).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
                 }
                 Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                    Text("the archive waits ›".uppercased()).font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
+                    Text("the archive waits ›").font(.spaceMono(10)).textCase(.uppercase).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }
             }
             .padding(.bottom, 44)

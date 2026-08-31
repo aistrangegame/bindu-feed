@@ -199,7 +199,7 @@ struct PointUniversesView: View {
                 }
                 VStack(spacing: 6) {
                     Text("\(dim.roman) · \(dim.name.uppercased())")
-                        .font(.spaceMono(9)).tracking(2.5).foregroundStyle(hue)
+                        .font(.spaceMono(9)).textCase(.uppercase).tracking(2.5).foregroundStyle(hue)
                     Text(dim.voice)
                         .font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
                         .multilineTextAlignment(.center).lineLimit(2).padding(.horizontal, 44)
@@ -211,7 +211,7 @@ struct PointUniversesView: View {
                     // Canon — The Point v9.html:890. The slot exists; the invented line
                     // that was here did not.
                     Text("enter a universe")
-                        .font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
+                        .font(.spaceMono(8)).textCase(.uppercase).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.45))
                         .padding(.bottom, 40)
                 }
             }

@@ -47,7 +47,7 @@ struct ReplyRow: View {
                     if displayResonance > 0 {
                         Button(action: handleResonate) {
                             Text("♡ \(displayResonance)")
-                                .font(.spaceMono(10))
+                                .font(.spaceMono(10)).textCase(.uppercase)
                                 .foregroundColor(BinduTheme.inkTertiary)
                                 .contentShape(Rectangle())
                         }
@@ -60,7 +60,7 @@ struct ReplyRow: View {
 
                 if let role = archetype?.role, !role.isEmpty {
                     Text(role.uppercased())
-                        .font(.spaceMono(10))
+                        .font(.spaceMono(10)).textCase(.uppercase)
                         .tracking(0.6)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

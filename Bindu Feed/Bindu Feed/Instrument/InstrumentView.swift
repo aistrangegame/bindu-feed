@@ -480,7 +480,7 @@ struct InstrumentView: View {
         return VStack(spacing: 0) {
             if let top = w.top {
                 Text(top.uppercased())
-                    .font(.spaceMono(9)).tracking(2.7)          // .3em × 9
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2.7)          // .3em × 9
                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34))
             }
             Text(w.name)                                        // its own casing
@@ -614,7 +614,7 @@ struct InstrumentView: View {
             || (here.key == "feed" && InstrumentNames.onGround(z: z))
         return GeometryReader { geo in
             Text(particleName(z).uppercased())
-                .font(.spaceMono(7.5)).tracking(1.5)
+                .font(.spaceMono(7.5)).textCase(.uppercase).tracking(1.5)
                 .foregroundStyle(Color(hex: "#E5533C").opacity(0.52))
                 .position(x: geo.size.width / 2, y: geo.size.height * 0.5 + 22)
         }
@@ -929,7 +929,7 @@ private struct AxisFeedSeam: View {
     var body: some View {
         Button(action: onEnter) {
             Text("enter the feed ›")
-                .font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.colorBindu)
+                .font(.spaceMono(10)).textCase(.uppercase).tracking(2).foregroundStyle(BinduTheme.colorBindu)
         }
     }
 }
@@ -989,7 +989,7 @@ private struct AxisLightSeam: View {
             VStack(spacing: 12) {
                 Spacer()
                 Button(action: onEnter) {
-                    Text("stand inside ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
+                    Text("stand inside ›").font(.spaceMono(10)).textCase(.uppercase).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }.padding(.top, 6)
                 Spacer().frame(height: 150)
             }

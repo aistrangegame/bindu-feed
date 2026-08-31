@@ -144,7 +144,7 @@ struct UniverseView: View {
                             Spacer()
                             Button(action: toggleLens) {
                                 Text(lensOn ? "the light ›" : "the structure ›")
-                                    .font(.spaceMono(9)).tracking(2)
+                                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                                     .foregroundStyle(Color(hex: "#AAB2BC").opacity(lensOn ? 0.9 : 0.5))
                                     .padding(16)
                             }

@@ -35,7 +35,7 @@ struct RiteRecognitionView: View {
             HStack(spacing: 8) {
                 Text(RiteAsh.glyph).foregroundStyle(RiteAsh.color)
                 Text(RiteWord.recogKeptLabel)
-                    .font(.spaceMono(9)).tracking(1.5)
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
                     .foregroundStyle(BinduTheme.inkTertiary)
             }
 
@@ -52,21 +52,21 @@ struct RiteRecognitionView: View {
                         .background(Circle().stroke(RiteAsh.color.opacity(0.4), lineWidth: 1))
                 }
                 Text(RiteWord.recogTouchSpeak)
-                    .font(.spaceMono(9)).tracking(2)
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary)
                 // Leaving a word is a CHOICE, never a requirement — seal with nothing.
                 Button { onSealed("", recorder.keptFilename) } label: {
                     Text("nothing to leave · seal ›")
-                        .font(.spaceMono(8)).tracking(2)
+                        .font(.spaceMono(8)).textCase(.uppercase).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
                 }
                 .padding(.top, 10)
 
             case .listening:
                 Text(mmss)
-                    .font(.spaceMono(22)).foregroundStyle(BinduTheme.inkPrimary)
+                    .font(.spaceMono(22)).textCase(.uppercase).foregroundStyle(BinduTheme.inkPrimary)
                 Text(RiteWord.recogListening)
-                    .font(.spaceMono(9)).tracking(2)
+                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                     .foregroundStyle(RiteAsh.color)
                     .modifier(RiteBreathe())
                 Button(action: stopListening) {
@@ -85,7 +85,7 @@ struct RiteRecognitionView: View {
             case .words:
                 VStack(spacing: 14) {
                     Text(RiteWord.recogTranscript)
-                        .font(.spaceMono(9)).tracking(1.5)
+                        .font(.spaceMono(9)).textCase(.uppercase).tracking(1.5)
                         .foregroundStyle(BinduTheme.inkTertiary)
                     TextEditor(text: $text)
                         // `inkTouch()` — `field-sound.js:203-209`. The field leans in on each
@@ -103,7 +103,7 @@ struct RiteRecognitionView: View {
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.03)))
                     HStack {
                         Text("voice kept · \(mmss)")
-                            .font(.spaceMono(9)).tracking(1)
+                            .font(.spaceMono(9)).textCase(.uppercase).tracking(1)
                             .foregroundStyle(BinduTheme.inkTertiary)
                         Spacer()
                         Button(RiteWord.recogKeepIt) {

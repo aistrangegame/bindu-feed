@@ -124,7 +124,19 @@ extension View {
     ///
     /// Pass the size and the em straight off the comp — `spaceMonoTracked(10, em: 0.14)` —
     /// and let this do the arithmetic, so the call site keeps the design's own numbers.
+    /// **CASE IS A PROPERTY OF THE ROLE, NOT OF THE STRING.** Three design sources define
+    /// `.mono` with `text-transform:uppercase` INDEPENDENTLY — `The Light v2.html:25`,
+    /// `The Point v9.html:16` and `Claude Design Round 1/The Return v2.html:923` — so every
+    /// mono element in the design is uppercase by class. The app carried it per-string at 21
+    /// sites and omitted it at the rest: the duplicated-contract shape, fourth instance.
+    ///
+    /// A label that genuinely should not uppercase opts out with `.textCase(nil)` — a
+    /// decision with a name rather than an omission.
+    ///
+    /// **CANVAS-DRAWN TEXT IS THE ONE PLACE THIS CANNOT REACH.** `GraphicsContext.draw` takes
+    /// a `Text` and `.textCase` returns `some View`, so those 15 labels uppercase their STRING
+    /// instead. Not a divergence — the same law, expressed where a modifier cannot go.
     func spaceMonoTracked(_ size: CGFloat, em: CGFloat) -> some View {
-        self.font(.spaceMono(size)).tracking(em * size)
+        self.font(.spaceMono(size)).textCase(.uppercase).tracking(em * size)
     }
 }

@@ -87,7 +87,7 @@ struct RiteGatheringView: View {
                 // say "touch to move on", a finished voice "the next presence", else "continue".
                 if phase == .playing, let v = current {
                     Text(hintText(v))
-                        .font(.spaceMono(9)).tracking(2)
+                        .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.28 + 0.28 * breath.value))
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .padding(.bottom, 30)
@@ -128,7 +128,7 @@ struct RiteGatheringView: View {
         .padding(.top, 70)
         .overlay(alignment: .top) {
             Text(RiteWord.silentLabel)
-                .font(.spaceMono(8)).tracking(1.5)
+                .font(.spaceMono(8)).textCase(.uppercase).tracking(1.5)
                 .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5 + 0.3 * breath.value))
                 .padding(.top, 96)
         }
@@ -275,12 +275,12 @@ private struct VoiceText: View {
                         .font(.lora(13)).italic()
                         .foregroundStyle(voice.color)
                     Text(voice.role)
-                        .font(.spaceMono(8)).tracking(1.2)
+                        .font(.spaceMono(8)).textCase(.uppercase).tracking(1.2)
                         .foregroundStyle(BinduTheme.inkTertiary)
                     // "answering Sakshi" — the one who speaks in reply (comp The Rite v3).
                     if let answering = voice.answering {
                         Text("answering \(answering)")
-                            .font(.spaceMono(8)).tracking(1)
+                            .font(.spaceMono(8)).textCase(.uppercase).tracking(1)
                             .foregroundStyle(voice.color.opacity(0.6))
                     }
                 }

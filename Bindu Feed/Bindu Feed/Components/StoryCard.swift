@@ -42,7 +42,7 @@ struct StoryCard: View {
             }
             Spacer(minLength: BinduTheme.space12)
             Text(story.codexId)
-                .font(.spaceMono(10))
+                .font(.spaceMono(10)).textCase(.uppercase)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .tracking(0.5)
         }
@@ -71,7 +71,7 @@ struct StoryCard: View {
             Button(action: handleResonate) {
                 Label {
                     Text("\(story.resonance + resonanceBoost)")
-                        .font(.spaceMono(11))
+                        .font(.spaceMono(11)).textCase(.uppercase)
                         .foregroundColor(BinduTheme.inkSecondary)
                 } icon: {
                     Text("\u{2661}")                        // ♡ — the resonance glyph, one across the app
@@ -87,7 +87,7 @@ struct StoryCard: View {
 
             Label {
                 Text("\(stats.commentCount)")
-                    .font(.spaceMono(11))
+                    .font(.spaceMono(11)).textCase(.uppercase)
                     .foregroundColor(BinduTheme.inkSecondary)
             } icon: {
                 Text("\u{21B3}")                            // ↳ — comments, the comp's own mark

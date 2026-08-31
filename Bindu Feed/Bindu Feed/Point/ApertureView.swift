@@ -185,7 +185,7 @@ struct ApertureView: View {
             VStack {
                 HStack {
                     Button { $path.popDissolve() } label: {
-                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
+                        Text("‹ leave").font(.spaceMono(9)).textCase(.uppercase).tracking(2)
                             .foregroundStyle(hue.opacity(0.6)).padding(16)
                     }
                     Spacer()
@@ -260,7 +260,7 @@ struct ApertureView: View {
                 .font(.loraItalic(12)).foregroundStyle(faint)
                 .fixedSize(horizontal: false, vertical: true)
             SecureField("anthropic api key", text: $keyInput)
-                .font(.spaceMono(12)).foregroundStyle(cream)
+                .font(.spaceMono(12)).textCase(.uppercase).foregroundStyle(cream)
                 .textInputAutocapitalization(.never).autocorrectionDisabled()
                 .padding(10).background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.04)))
             Button {

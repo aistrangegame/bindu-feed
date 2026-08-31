@@ -28,7 +28,7 @@ private struct AllChip: View {
     var body: some View {
         Button(action: action) {
             Text("All")
-                .font(.spaceMono(10))
+                .font(.spaceMono(10)).textCase(.uppercase)
                 .tracking(1)
                 .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkSecondary)
                 .padding(.horizontal, 12)
@@ -105,7 +105,7 @@ struct FeedSortToggle: View {
         HStack(spacing: 10) {
             sortLabel("MOST ACTIVE", value: .mostActive)
             Text("·")
-                .font(.spaceMono(9))
+                .font(.spaceMono(9)).textCase(.uppercase)
                 .foregroundColor(BinduTheme.inkTertiary)
             sortLabel("MOST RECENT", value: .mostRecent)
         }
@@ -118,7 +118,7 @@ struct FeedSortToggle: View {
             sort = value
         } label: {
             Text(text)
-                .font(.spaceMono(9))
+                .font(.spaceMono(9)).textCase(.uppercase)
                 .tracking(1.2)
                 .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkTertiary)
         }

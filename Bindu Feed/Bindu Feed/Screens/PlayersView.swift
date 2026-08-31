@@ -212,7 +212,7 @@ struct PlayersView: View {
 
             if let label {
                 Text(label)
-                    .font(.spaceMono(9))
+                    .font(.spaceMono(9)).textCase(.uppercase)
                     .tracking(1.26)
                     .foregroundColor(BinduTheme.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -257,7 +257,7 @@ private struct PlayerCard: View {
                         .foregroundColor(archetype.color.opacity(isSubstrate ? 0.80 : 0.94))
                         .lineLimit(1)
                     Text(archetype.role.uppercased())
-                        .font(.spaceMono(8))
+                        .font(.spaceMono(8)).textCase(.uppercase)
                         .tracking(0.8)
                         .foregroundColor(isSubstrate ? archetype.color.opacity(0.50) : BinduTheme.inkTertiary)
                         .multilineTextAlignment(.center)
@@ -366,7 +366,7 @@ private struct AshramCard: View {
                         .font(.lora(14, weight: .medium))
                         .foregroundColor(archetype.color.opacity(0.94))
                     Text(archetype.role.uppercased())
-                        .font(.spaceMono(9))
+                        .font(.spaceMono(9)).textCase(.uppercase)
                         .tracking(0.9)
                         .foregroundColor(BinduTheme.inkTertiary)
                     Text("the one who replies")

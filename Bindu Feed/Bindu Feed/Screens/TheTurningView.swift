@@ -153,7 +153,7 @@ struct TheTurningView: View {
 
             if !archetype.role.isEmpty {
                 Text(archetype.role.uppercased())
-                    .font(.spaceMono(11))
+                    .font(.spaceMono(11)).textCase(.uppercase)
                     .tracking(1.32)
                     .foregroundColor(BinduTheme.inkSecondary)
                     .multilineTextAlignment(.center)
@@ -208,7 +208,7 @@ struct TheTurningView: View {
                 .foregroundColor(archetype.color)
                 .lineLimit(1)
             Text(label)
-                .font(.spaceMono(9))
+                .font(.spaceMono(9)).textCase(.uppercase)
                 .tracking(0.8)
                 .foregroundColor(BinduTheme.inkTertiary)
         }
@@ -273,7 +273,7 @@ struct TheTurningView: View {
             .frame(width: 150, height: 80)
 
             Text(caption.uppercased())
-                .font(.spaceMono(9))
+                .font(.spaceMono(9)).textCase(.uppercase)
                 .tracking(1.08)
                 .foregroundColor(archetype.color.opacity(captionOpacity))
                 .modifier(HintPulse(active: !done && progress < 0.04))
@@ -367,7 +367,7 @@ struct TheTurningView: View {
     private var wordsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("WHAT \(archetype.name.uppercased()) HAS SAID")
-                .font(.spaceMono(9))
+                .font(.spaceMono(9)).textCase(.uppercase)
                 .tracking(1.6)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .padding(.horizontal, BinduTheme.space20)
@@ -518,7 +518,7 @@ private struct WordCard: View {
                 Spacer(minLength: 8)
                 if !comment.sourceDate.isEmpty {
                     Text(formatted(comment.sourceDate))
-                        .font(.spaceMono(10))
+                        .font(.spaceMono(10)).textCase(.uppercase)
                         .foregroundColor(BinduTheme.inkTertiary)
                         .lineLimit(1)
                 }
@@ -547,7 +547,7 @@ private struct WordCard: View {
             HStack {
                 Spacer()
                 Text("♡ \(comment.resonance)")
-                    .font(.spaceMono(10))
+                    .font(.spaceMono(10)).textCase(.uppercase)
                     .foregroundColor(BinduTheme.inkTertiary)
             }
         }

@@ -608,7 +608,7 @@ struct RoomView: View {
                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.92))
                 Spacer(minLength: 0)
                 if c.resonance > 0 {
-                    Text("♡ \(c.resonance)").font(.spaceMono(7.5))
+                    Text("♡ \(c.resonance)").font(.spaceMono(7.5)).textCase(.uppercase)
                         .foregroundStyle(BinduTheme.inkPrimary.opacity(0.34))
                 }
             }
