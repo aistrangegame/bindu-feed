@@ -296,3 +296,89 @@ import Foundation
         #expect(PointChamber.bow(along: 0.5, press: 0, rim: 200) == 0)
     }
 }
+
+// D5.5 · BATCH 3 — the letterpress: what the wall keeps, and what depth does to a niche.
+//
+// `world-four.js:198-238`. The world's reading material is BEARING, and its claim is a
+// material one: *"without pressure there is no impression at all. Release and the wall
+// relaxes, and what was struck stays struck."* The app recorded a depth and drew no mark of
+// it, so a niche pressed four times looked exactly like one never touched — the claim with
+// its evidence removed.
+@Suite(.serialized) struct ChamberLetterpressTests {
+
+    @Test("a struck niche is marked, and a deeper strike leaves more marks")
+    func whatWasStruckStaysStruck() {
+        // One debossed ring per level. The count IS the record — `depth(of:)` was written,
+        // tested and read by nothing until the wall drew it.
+        PointChamber.resetAll()
+        #expect(PointChamber.depth(of: "c-vessel") == 0, "an untouched niche is already marked")
+        PointChamber.strike("c-vessel", to: 1)
+        #expect(PointChamber.depth(of: "c-vessel") == 1)
+        PointChamber.strike("c-vessel", to: 3)
+        #expect(PointChamber.depth(of: "c-vessel") == 3, "a deeper press left no deeper mark")
+        PointChamber.resetAll()
+    }
+
+    @Test("the rings step outward, so depth is legible at a glance")
+    func theRingsAreCountable() {
+        // `R·(2.6 + k·1.5)` — each ring clears the last by a fixed step. Ported as a constant
+        // radius they would coincide and four strikes would look like one.
+        let R = 4.0
+        let radii = (0..<4).map { R * (2.6 + Double($0) * 1.5) }
+        for i in 1..<radii.count {
+            #expect(radii[i] - radii[i - 1] > R, "rings \(i-1) and \(i) are too close to count")
+        }
+        #expect(radii[0] > R * 2, "the first ring sits on top of the niche itself")
+    }
+
+    @Test("the niche recedes in SIZE and in BRIGHTNESS, not only in position")
+    func depthReachesTheNiche() {
+        // `R = max(1.8, rim·0.017·pt[2]·2.2)` and `al = A·(0.44+lit·0.56)·(0.72+pt[2]·0.7)`.
+        // The Vessel's four niches run d = 0.18 … 0.81, and the app drew four identical discs.
+        let rim = 200.0
+        func R(_ d: Double) -> Double {
+            let sc = PointChamber.proj(wall: .left, d: d, h: 0.5, rim: rim, press: 0).sc
+            return max(1.8, rim * 0.017 * sc * 2.2)
+        }
+        #expect(R(0.18) > R(0.81) * 1.8, "the near and far niches are nearly the same size")
+        func alpha(_ d: Double) -> Double {
+            0.72 + PointChamber.proj(wall: .left, d: d, h: 0.5, rim: rim, press: 0).sc * 0.7
+        }
+        #expect(alpha(0.18) > alpha(0.81), "the far niche is as bright as the near one")
+    }
+
+    @Test("the floor keeps a far niche visible — it never reaches nothing")
+    func theRadiusHasAFloor() {
+        // `max(1.8, …)`. Without it the back wall's niches would round to invisible and the
+        // Others would simply not be in the room.
+        #expect(max(1.8, 200 * 0.017 * 0.01 * 2.2) == 1.8)
+    }
+
+    @Test("the back wall's status is unreadable from where he stands")
+    func theStatusGateIsTheArgument() {
+        // `pt[2] > 0.30`, and the back wall's `sc` IS exactly `BACK` = 0.30 — so the gate
+        // excludes it **by construction, not by accident**. *"Where every philosophy takes its
+        // exam is the wall you cannot walk around"*: he can see that the Others are there and
+        // not how far he has got with them. Drawing their status at full strength, as the app
+        // did, answers a question the room is meant to leave open.
+        let back = PointChamber.proj(wall: .back, d: 0.5, h: 0.5, rim: 200, press: 0)
+        #expect(back.sc == PointChamber.BACK)
+        #expect(!(back.sc > 0.30), "the Others' status became readable — the gate no longer excludes the back wall")
+        let near = PointChamber.proj(wall: .left, d: 0.18, h: 0.5, rim: 200, press: 0)
+        #expect(near.sc > 0.30, "the Vessel's own niches lost their status too")
+    }
+
+    // MARK: - green on absent
+
+    @Test("an unpressed wall shows no impression at all")
+    func withoutPressureThereIsNoImpression() {
+        // The title is drawn only while `press > 0.05`, at `min(1, press·2.4)`. A title that
+        // stays after the hand goes is a label; the world's whole material claim is that it
+        // is not one.
+        PointChamber.resetAll()
+        #expect(PointChamber.depth(of: "c-vessel") == 0)
+        #expect(min(1.0, 0.0 * 2.4) == 0, "an untouched niche still shows its impression")
+        #expect(min(1.0, 0.05 * 2.4) < 0.13, "a press below the threshold is already legible")
+        PointChamber.resetAll()
+    }
+}

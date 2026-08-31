@@ -139,10 +139,10 @@ enum PointChamber {
         struck[id] = max(struck[id] ?? 0, given)
     }
 
-    /// UNWIRED(AUDIT D5.5 — the last open BLOCKER. The press strikes an inscription and the
-    /// depth is recorded, and **nothing renders it**: the letterpress claim is that the harder
-    /// the press the deeper the strike, and with no reader the wall looks the same at every
-    /// depth. Part of the row's still-open remainder, with the three-surface geography.)
+    /// D5.5 · BATCH 3 — **read by the wall now.** This carried `UNWIRED(D5.5)` because the
+    /// press recorded a depth that nothing rendered: a niche pressed four times looked exactly
+    /// like one never touched, which is the letterpress claim with the impression left out.
+    /// `WorldChamber` draws one debossed ring per level of it.
     static func depth(of id: String) -> Int { struck[id] ?? 0 }
 
     // ── the room under load ───────────────────────────────────────────

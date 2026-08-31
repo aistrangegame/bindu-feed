@@ -674,6 +674,23 @@ private struct WorldChamber: View {
 
     /// A star's point in the drawn room. A star with no niche (a fourth universe, if one ever
     /// appears) falls back to the back wall rather than to a coordinate nobody chose.
+    /// D5.5 · BATCH 3 · the niche's place AND its depth. `sc` was computed by `proj`,
+    /// returned by `place`, and **dropped at the one call site** — `chamberPoint` bound the
+    /// tuple and read only `dx`/`dy`. So niches receded in POSITION and stayed the same size,
+    /// the same brightness and the same reach at every distance: the four things the design
+    /// hangs on `pt[2]` all read a constant.
+    private func chamberPlace(_ p: PlacedStar, in size: CGSize) -> (pt: CGPoint, sc: Double) {
+        let n = niches[p.id] ?? PointChamber.Niche(id: p.id, uni: 2, wall: .back, d: 0.27, h: 0.16)
+        let cx = size.width / 2, cy = size.height * 0.42
+        let rim = min(size.width, size.height) * 0.46
+        let v = PointChamber.place(n, rim: rim, press: bearing)
+        return (CGPoint(x: cx + v.dx, y: cy + v.dy), v.sc)
+    }
+
+    /// The room's half-extent, shared by the projection, the Canvas and the reach so all
+    /// three agree about how big the room is.
+    private func rimOf(_ size: CGSize) -> Double { min(size.width, size.height) * 0.46 }
+
     private func chamberPoint(_ p: PlacedStar, in size: CGSize) -> CGPoint {
         let n = niches[p.id] ?? PointChamber.Niche(id: p.id, uni: 2, wall: .back, d: 0.27, h: 0.16)
         // The vanishing point is the particle's — `:95`, *"never a niche."* The Canvas behind
@@ -777,6 +794,73 @@ private struct WorldChamber: View {
                                    lineWidth: 0.6 + conc * pr * 1.0)
                     }
 
+                    // `:214-222` · **WHAT HAS BEEN STRUCK STAYS STRUCK — a debossed ring in
+                    // the wall.** This is the whole of world IV's reading material, and the
+                    // app had no mark of it at all: `PointChamber.strike` recorded a depth and
+                    // `depth(of:)` was read by nothing, so a niche pressed four times looked
+                    // exactly like one never touched. *"Letterpress: without pressure there is
+                    // no impression at all. Release and the wall relaxes, and what was struck
+                    // stays struck."* The relaxing is `pr` falling; the staying is these rings.
+                    //
+                    // **A RING IS TWO STROKES.** A dark one on the mark, and a light one
+                    // offset up and left by 0.6 — that pair IS the deboss: one edge in shadow,
+                    // the opposite edge catching the light from below. A single stroke is a
+                    // drawn circle, which is the difference between something cut into a wall
+                    // and something printed on it.
+                    for p in stars {
+                        let place = chamberPlace(p, in: size)
+                        let st = PointChamber.depth(of: p.star.key)
+                        guard st > 0 else { continue }
+                        let R = max(1.8, rim * 0.017 * place.sc * 2.2)
+                        let at = CGPoint(x: place.pt.x + panX, y: place.pt.y)
+                        for k in 0..<st {
+                            let rr = R * (2.6 + Double(k) * 1.5)
+                            ctx.stroke(Path(ellipseIn: CGRect(x: at.x - rr, y: at.y - rr, width: rr * 2, height: rr * 2)),
+                                       with: .color(UniGeo.col(UniGeo.mix(hueRGB, [42, 21, 12], 0.4), 0.30)),
+                                       lineWidth: 1.1)
+                            ctx.stroke(Path(ellipseIn: CGRect(x: at.x - 0.6 - rr, y: at.y - 0.6 - rr, width: rr * 2, height: rr * 2)),
+                                       with: .color(Color(.sRGB, red: 1, green: 232 / 255, blue: 208 / 255, opacity: 0.14)),
+                                       lineWidth: 0.6)
+                        }
+                    }
+
+                    // `:224-228` — the status glyph, **gated on depth**. `pt[2] > 0.30`, and
+                    // the back wall's `sc` IS exactly 0.30, so the Others' status is
+                    // deliberately unreadable from where he stands: *"where every philosophy
+                    // takes its exam is the wall you cannot walk around"* — you can see that
+                    // they are there and not how far you have got with them. The app drew
+                    // every status at full strength at every distance.
+                    for p in stars {
+                        let place = chamberPlace(p, in: size)
+                        guard place.sc > 0.30 else { continue }
+                        let R = max(1.8, rim * 0.017 * place.sc * 2.2)
+                        let glyph = ["\u{25CB}", "\u{25D0}", "\u{25CF}"][min(2, max(0, p.status))]
+                        ctx.draw(Text.spaceMono(glyph, 7, .asWritten).foregroundStyle(hue.opacity(0.36)),
+                                 at: CGPoint(x: place.pt.x + panX, y: place.pt.y - R * 3.6), anchor: .center)
+                    }
+
+                    // `:230-236` · **THE TITLE IS STRUCK INTO THE WALL, NOT LAID ON IT.**
+                    // *"An impression needs a dark side and a lit side, and it deepens under
+                    // load."* Two draws of the same words: `#28130A` offset +0.9/+0.9 for the
+                    // cut, then the lit face on top. Alpha is `min(1, press·2.4)` — it comes
+                    // up as he bears and is gone the moment he is not, which is the sentence
+                    // the world is making: without pressure there is no impression at all.
+                    if let id = pressing, press > 0.05,
+                       let p = stars.first(where: { $0.id == id }) {
+                        let place = chamberPlace(p, in: size)
+                        let R = max(1.8, rim * 0.017 * place.sc * 2.2)
+                        let ta = min(1, press * 2.4)
+                        let ty = place.pt.y + R * 4.6
+                        let x0 = place.pt.x + panX
+                        ctx.draw(Text(p.star.t).font(.loraItalic(13.5))
+                                    .foregroundStyle(Color(.sRGB, red: 40 / 255, green: 19 / 255, blue: 10 / 255,
+                                                           opacity: ta * 0.86)),
+                                 at: CGPoint(x: x0 + 0.9, y: ty + 0.9), anchor: .center)
+                        ctx.draw(Text(p.star.t).font(.loraItalic(13.5))
+                                    .foregroundStyle(UniGeo.col(UniGeo.mix([255, 238, 220], hueRGB, 0.18), ta * 0.94)),
+                                 at: CGPoint(x: x0, y: ty), anchor: .center)
+                    }
+
                     // ember from below-left
                     ctx.fill(Path(ellipseIn: CGRect(x: -80, y: size.height - 60, width: 260, height: 260)),
                              with: .radialGradient(.init(colors: [hue.opacity(0.14), .clear]),
@@ -791,8 +875,20 @@ private struct WorldChamber: View {
                   .onChange(of: tl.date) { _, now in advancePress(to: now) }
                 }
                 ForEach(stars) { p in
+                    let place = chamberPlace(p, in: geo.size)
+                    let nicheScale: Double = 0.72 + place.sc * 0.7
+                    let nicheAlpha: Double = 0.44 + (pressing == p.id ? press : 0) * 0.56
+                    let reachPad: Double = max(5, min(rimOf(geo.size) * 0.15 * place.sc + 22, 34) * 0.28)
+                    // `:202` — `R = max(1.8, rim·0.017·pt[2]·2.2)`. The Vessel's four niches sit
+                    // at d = 0.18 … 0.81, so `sc` runs 0.64 → 0.29: a 2.2× size ratio the design
+                    // draws and the app rendered as four identical discs.
+                    // `:204` — `al = A·(0.44 + lit·0.56)·(0.72 + pt[2]·0.7)`, brightness by depth.
                     StarMark(placed: p, hue: hue, compact: quiet)
-                        .padding(5)
+                        .scaleEffect(nicheScale, anchor: .leading)
+                        .opacity(nicheAlpha)
+                        // `:238` — `rad = max(26, rim·0.15·pt[2] + 22)`. A near niche is easier
+                        // to reach than a far one; a constant padding made them all the same.
+                        .padding(reachPad)
                         .background(Ellipse().fill(Color.black.opacity(0.28)).blur(radius: 2.5))   // the carved recess
                         .shadow(color: .black.opacity(0.55), radius: 0, x: 0, y: 1)                  // deboss — cut INTO the wall
                         .shadow(color: hue.opacity(0.25), radius: 0, x: 0, y: -0.7)                  // the lit upper lip
