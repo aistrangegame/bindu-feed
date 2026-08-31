@@ -75,7 +75,7 @@ enum Axis {
     /// Sub-lines and romans verbatim from The Chrome.html:134-148, cross-checked against
     /// spine-axis.js:40-55. NOTE spine-axis.js is the pre-Light 14-register extraction
     /// (Z0=−4, NSHELL=14) — its STRINGS are canon, its INDEXING is not. This table is
-    /// fifteen, i = Z + 5, matching InstrumentField.metal:188 `float zi = uZ + 5.0`.
+    /// fifteen, i = Z + 5, matching InstrumentField.metal:195 `float zi = uZ + 5.0`.
     static let registers: [AxisRegister] = [
         .init(i: 0,  z: -5, key: "light",  name: "the Light",   hz: 174,   sub: "what has not yet been"),
         .init(i: 1,  z: -4, key: "sky",    name: "the sky",     hz: 110,   sub: "everything you have lived"),
@@ -108,6 +108,72 @@ enum Axis {
     /// makes the centre unreachable.
     static let maxZ: Double = 9.62
 
+    // ── C1.8 · THE GEOMETRY EVERY LAYER MUST AGREE ON ────────────────────────────────
+    //
+    // `The Instrument v3.html:1040-1046` gives these two under that exact header, and the app
+    // had **neither in Swift** — the law was prose in the comment at the top of this file, the
+    // shader kept a private copy at `InstrumentField.metal:195-199`, and the only executable
+    // Swift copy was one Point world's. So no CPU layer could agree with the shader about
+    // which shells exist, and every world that needed a radius invented `min(w,h)·k`.
+    //
+    // **THE TWO ARE A PAIR AND THEY DIVIDE THE WORK.** `rim` answers *how big is register i
+    // from here* and NOTHING ELSE. `weight` answers *does register i exist this frame, and
+    // how strongly*. Folding the second into the first is how `PointChamber.rim` came to
+    // carry a ±2 clamp the design does not have: with no `weight` to cull, the culling went
+    // into the scale, and the two laws disagree exactly at the edges — the design fades a
+    // register out across 1.35 registers, a clamp holds it at fixed size and then cuts.
+
+    /// `:1041` — `rim(i,Z,R0) = R0·2^((Z+5)−i)`. **A SCALE, NOT A CULL**: nothing is wrapped
+    /// around the exponent, and nothing should be. One register nearer is twice the size,
+    /// which is what makes every register exist at every moment at its own scale rather than
+    /// being created and destroyed as he moves.
+    static func rim(_ i: Int, _ z: Double, R0: Double) -> Double {
+        R0 * pow(2, (z + 5) - Double(i))
+    }
+
+    /// `:1042-1046` — the culling window and its two fades. **This is where the bound lives.**
+    ///
+    ///     if (rel < -2.7 || rel > 2.0) return 0
+    ///     return sm(-2.7, -1.35, rel) * (1 - sm(0.80, 1.95, rel))
+    ///
+    /// The window is **asymmetric on purpose**: 2.7 registers of reach outward against 2.0
+    /// inward, because what is ahead of him is further away than what he has passed. The
+    /// fade-in takes 1.35 registers; the fade-out begins 0.8 PAST standing in a register, so
+    /// `rel = 0` — standing in it — is still full weight.
+    ///
+    /// **IT STOPS HERE, AND THAT BOUNDARY IS THE POINT.** The shader multiplies three more
+    /// terms onto its own `w` (`InstrumentField.metal:200-203`: the `0.002` cutoff, the
+    /// `0.30 + 0.70·ahead` lean, and `1 − 0.48·smoothstep(0, 1.1, rel)` — *the passed shells
+    /// recede into atmosphere*). Those are the FIELD's depth dressing and the design keeps
+    /// them in the field: `Claude Design Round 2/design-source/spine-field.js:152-153`, inside
+    /// the shader string, not in the `Spine` object. Fold them in here and every CPU consumer
+    /// double-applies them, so a CPU-drawn ring sits at a different opacity from the shell it
+    /// is the rim of.
+    /// UNWIRED(AUDIT C4.7 and C4.2, both OPEN — `weight` is ported and correct and **nothing
+    /// in the app reads it yet**, because the layer that would is the presence-weighted CPU
+    /// layer C4.7 covers and the `uBack` normalisation C4.2 covers. `check_wired` caught this
+    /// in the same batch that built it, which is the point of the pass: C1.8 stays PARTIAL
+    /// rather than closing on a declaration, exactly as E3.8 was reopened for.)
+    static func weight(_ i: Int, _ z: Double) -> Double {
+        let rel = (z + 5) - Double(i)
+        if rel < -2.7 || rel > 2.0 { return 0 }
+        return smoothstep(-2.7, -1.35, rel) * (1 - smoothstep(0.80, 1.95, rel))
+    }
+
+    /// `:1101` — `sm(a,b,x)`. The Hermite curve, bit-for-bit what Metal's `smoothstep` is, so
+    /// the CPU and the shader ramp identically. A linear ramp here would agree at the ends and
+    /// differ everywhere between them, which is the whole span that matters.
+    /// UNWIRED(AUDIT C4.7, still OPEN — reached only through `weight`, so it waits on the
+    /// same consumer.)
+    static func smoothstep(_ a: Double, _ b: Double, _ x: Double) -> Double {
+        let t = max(0, min(1, (x - a) / (b - a)))
+        return t * t * (3 - 2 * t)
+    }
+
+    /// `:1047-1051` — **a different law from `weight`, and not a substitute for it.**
+    /// `presence` is a symmetric linear triangle, zero at |rel| ≥ 1: it gates whether CONTENT
+    /// speaks. `weight` gates whether the SHELL is drawn, is asymmetric, and reaches 2.7
+    /// registers out. Both are called in the same frame.
     static func presence(_ i: Int, _ z: Double) -> Double {
         max(0, min(1, 1.30 - abs((z + 5) - Double(i)) * 1.30))
     }

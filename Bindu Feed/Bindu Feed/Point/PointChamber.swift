@@ -200,7 +200,10 @@ enum PointChamber {
     /// Unclamped now. The window belongs to `Axis.weight`, which **AUDIT C1.8 — still
     /// OPEN** covers: `rim()`/`weight()` were never ported to the axis at all.
     static func rim(liveZ: Double, base: Double) -> Double {
-        base * pow(2, liveZ - z)
+        // C1.8 · one source for the law now. `Axis.rim` takes a register INDEX; the chamber
+        // knows its own `z`, and `i = z + 5`, so this is the same expression asked of the
+        // axis instead of restated here. The room's `base` plays `R0`.
+        Axis.rim(Int(z) + 5, liveZ, R0: base)
     }
 
     static func bearing(z: Double, press: Double) -> Double {
