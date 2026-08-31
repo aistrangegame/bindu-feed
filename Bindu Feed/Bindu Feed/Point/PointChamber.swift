@@ -169,9 +169,22 @@ enum PointChamber {
         max(load(z: z) * 0.34, max(0, min(1, press)))
     }
 
-    /// The chamber's own depth on the axis. `pressRate(z: 3)` was written as a literal at two
-    /// call sites with the same comment; a register is not a magic number.
-    static let z: Double = 3
+    /// The chamber's own depth on the axis — **asked of the axis, not asserted here.**
+    ///
+    /// **THIS WAS `3` AND THE AXIS SAYS `5`.** The literal was already at two call sites
+    /// (`pressRate(z: 3)`), and batch 1 lifted it into a named constant under the comment
+    /// *"a register is not a magic number"* — without checking it against the table that
+    /// states the number. Naming an unexamined literal does not examine it; it promotes it,
+    /// and a wrong value with a name on it reads as a decision. `AxisModel.swift:90` places
+    /// The Chamber at `z: 5`.
+    ///
+    /// The cost was not cosmetic. `load = clamp((z+4)/9)` gave 0.78 where the axis says 1.0,
+    /// so the standing load — the shells this world is ABOUT — was understated by 24%, the
+    /// bearing floor sat at 0.26 instead of 0.34, and the press cut at 0.50/s instead of
+    /// 0.56. Every deformation in batches 1–4 was drawn against a room bearing less than it
+    /// stands under. The fallback is the old value so a table change can never crash a world,
+    /// and `ChamberBearingTests` asserts the two agree.
+    static let z: Double = Axis.z(ofDimension: 4) ?? 3
 
     /// `press += dt*(0.30 + load(Z)*0.26)` — *"the deeper the shell, the more load there
     /// already is, so his own press has more to work with."* The same hold reaches the fourth

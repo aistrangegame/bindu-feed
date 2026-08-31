@@ -117,6 +117,32 @@ import Foundation
 // painted backdrop that happened to contain the right arithmetic.
 @Suite struct ChamberBearingTests {
 
+    @Test("the chamber's depth is the axis's, not a copy of it")
+    func theRegisterOwnsItsDepth() {
+        // **THE CONSTANT SAID 3 AND THE AXIS SAYS 5.** The literal was at two call sites and
+        // batch 1 lifted it into a named constant under the words *a register is not a magic
+        // number* — without checking it against the table that states the number. Naming an
+        // unexamined literal does not examine it; it promotes it, and a wrong value with a
+        // name on it reads as a decision.
+        //
+        // The cost was the world's own subject: `load` gave 0.78 where the axis says 1.0, so
+        // the shells standing over this register — what world IV IS — were understated by 24%.
+        #expect(Axis.z(ofDimension: 4) == 5, "the axis moved The Chamber")
+        #expect(PointChamber.z == Axis.z(ofDimension: 4), "the chamber is carrying its own copy again")
+        #expect(PointChamber.load(z: PointChamber.z) == 1, "at its true depth the chamber bears the full load")
+    }
+
+    @Test("every Point world can be asked its depth, and each gets its own")
+    func theTableAnswersForAllSeven() {
+        // Guards the lookup itself: a `first { $0.dim == n }` that matched the wrong row, or
+        // matched nothing and fell back, would put every world at one depth and no test of a
+        // single world could see it.
+        let zs = (1...7).compactMap { Axis.z(ofDimension: $0) }
+        #expect(zs.count == 7, "a Point world has no register")
+        #expect(Set(zs).count == 7, "two worlds share a depth")
+        #expect(zs == zs.sorted(), "the worlds are not in axis order")
+    }
+
     @Test("the room is already bearing before he touches it")
     func theStandingLoadIsNotZero() {
         // *"You are the magma layer — pressured by every shell above."* The shells are the
@@ -125,6 +151,7 @@ import Foundation
         // nothing presses on him until he presses back.
         let atRest = PointChamber.bearing(z: PointChamber.z, press: 0)
         #expect(atRest > 0.2, "the room bears nothing at rest — the shells above are decoration")
+        #expect(abs(atRest - 0.34) < 1e-9, "the standing load is not the full shell count")
         #expect(abs(atRest - PointChamber.load(z: PointChamber.z) * 0.34) < 1e-9)
     }
 

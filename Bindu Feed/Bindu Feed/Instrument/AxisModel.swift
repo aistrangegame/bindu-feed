@@ -135,6 +135,14 @@ enum Axis {
         registers.indices.contains(i) ? registers[i] : nil
     }
 
+    /// The axis depth of a Point world, by its dimension number. **The register table is the
+    /// only place a register's depth is stated**, and anything that computes from depth — a
+    /// world's load, its press rate, the size of its room — must read it from here rather
+    /// than carry its own copy.
+    static func z(ofDimension n: Int) -> Double? {
+        registers.first { $0.dim == n }.map { Double($0.z) }
+    }
+
     static func clampZ(_ z: Double) -> Double { max(minZ, min(maxZ, z)) }
 }
 
