@@ -44,6 +44,12 @@ reached either, and it is reported the moment its own reader is exempted. That c
 useful direction: `ReturnTally.standings` surfaced exactly this way, one link below a
 `spokeTwice` marked in an earlier pass.
 
+**THE FIXED POINT PROPAGATES A FALSE POSITIVE DOWNWARD.** If one symbol is wrongly judged
+unreachable, everything reached only through it follows. That is contained here by reporting
+only what a test also touches — the signal is far stronger there — but a bare sweep over
+unreachable symbols is noisy for exactly this reason, and reading such a list rather than
+trusting it is what turned up the method-reference gap above.
+
 LIMITS, NAMED SO THEY ARE NOT REDISCOVERED AS BUGS. Function references are matched by name,
 so a same-named method on another type masks an unwired one; value references are matched as
 `Owner.member`, so a reference through a typealias or an instance is missed. Both directions
@@ -171,7 +177,25 @@ for p, raw in app_raw.items():
 
 def patterns_for(c):
     if c["kind"] == "func":
-        return [re.compile(r"(?<!\w)" + re.escape(c["name"]) + r"\s*\(")], None
+        # **A METHOD REFERENCE IS A CALLER.** `Button(action: dismiss)` and `perform: handle`
+        # pass the function without ever writing `(`, so matching only `name(` would report a
+        # correctly-wired method as unreachable the moment anyone wrote a test for it — a
+        # false red on working code, in the one quadrant that walks you backwards. Found by
+        # sweeping for unreachable symbols and reading the list rather than trusting it:
+        # `HubOverlay.dismiss`, `DoorView.handleRope` and six others are exactly this shape.
+        # **THE LOOKBEHIND IS `\w`, NOT `[\w.]`.** Tightening it to exclude a preceding dot
+        # also excluded every QUALIFIED call — `Axis.clampZ(z)`, `store.logStoryMet(...)` —
+        # and the checker promptly reported four correct values as unread because the only
+        # function that reads them stopped counting as a caller. Six false reds, from one
+        # character, in the direction that walks you backwards.
+        # The second form is a method REFERENCE in an argument position — `Button(action:
+        # dismiss)`, `perform: handle`, `map(transform)`. **It is deliberately narrow.** A
+        # bare `name` anywhere was tried first and cost more than it bought: `label` occurs as
+        # a word throughout SwiftUI, so `LensRail.label` read as reachable from everywhere and
+        # the chain case stopped firing. The trailing `(?![\w(:])` keeps a PARAMETER label —
+        # `label:` — from counting as a reference to a function of the same name.
+        return [re.compile(r"(?<!\w)" + re.escape(c["name"]) + r"\s*\("),
+                re.compile(r"[:,(]\s*(?:self\s*\.\s*)?" + re.escape(c["name"]) + r"(?![\w(:])")], None
     qual = (re.compile(r"(?<!\w)" + re.escape(c["owner"]) + r"\s*\.\s*" + re.escape(c["name"]) + r"(?!\w)")
             if c["owner"] else None)
     local = re.compile(r"(?<![\w.])(?:Self\s*\.\s*)?" + re.escape(c["name"]) + r"(?!\w)")
