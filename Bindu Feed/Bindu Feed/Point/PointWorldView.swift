@@ -10,6 +10,11 @@ import SwiftUI
 
 struct PointWorldView: View {
     let dimensionN: Int          // 1…7 → m1…m7
+    /// D5.5 · the LIVE axis position. The register's own worlds are drawn while he is standing
+    /// in that register's band, so this moves — and `world-four.js:141` sizes the whole room
+    /// from it. It was available at the presentation site (`InstrumentView` picks the world
+    /// from `travel.z`) and simply never handed down.
+    var liveZ: Double = PointChamber.z
     @Binding var path: [FeedRoute]
     let onReturn: () -> Void
     /// The Point's half of `handedToRegister` — the same contract the Universe's fall uses.
@@ -153,7 +158,7 @@ struct PointWorldView: View {
             // stays OUT of the reading, because only the material is drawn behind — the
             // chrome belongs to the level he is not on.
             if let star = openStar, let u = selectedUniverse {
-                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue,
+                PointWorld(dimensionN: dimensionN, liveZ: liveZ, stars: PointWorlds.placed(u), hue: hue,
                            onOpen: { _ in }, quiet: true, onLaw: apply)
                     .ignoresSafeArea()
                     .allowsHitTesting(false)
@@ -173,7 +178,7 @@ struct PointWorldView: View {
             } else if let u = selectedUniverse {
                 // LEVEL 1 — the universe as a constellation: its stars in the world's native
                 // material (Amendment §7.3: the universe, drawn inside the figure).
-                PointWorld(dimensionN: dimensionN, stars: PointWorlds.placed(u), hue: hue,
+                PointWorld(dimensionN: dimensionN, liveZ: liveZ, stars: PointWorlds.placed(u), hue: hue,
                            onOpen: { s in
                     // `world-five.js:49-50` — *"at the exact instant every other star sounds
                     // its arrival, this one is silent: a true null, the only deliberate

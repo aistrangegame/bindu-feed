@@ -409,3 +409,71 @@ import Foundation
         PointChamber.resetAll()
     }
 }
+
+// D5.5 · the remainder, first pass — the room's size, and the close threshold.
+@Suite struct ChamberRimTests {
+
+    @Test("the room opens out as he descends toward it and closes as he leaves")
+    func theRoomIsWhereHeIs() {
+        // `spine-axis.js:75` — `rim = R0·2^((Z+4)−i)`, called as `S.rim(9, Z, R0)`. The app
+        // used a fixed `min(w,h)·0.46`, so **the register never opened out as he came down**:
+        // the room was the same size from every distance, which is the one thing a register
+        // on an axis cannot be.
+        let base = 200.0
+        let atHome = PointChamber.rim(liveZ: PointChamber.z, base: base)
+        #expect(abs(atHome - base) < 1e-9, "the room is not its own size at its own register")
+        #expect(PointChamber.rim(liveZ: PointChamber.z + 1, base: base) > atHome, "descending did not open it")
+        #expect(PointChamber.rim(liveZ: PointChamber.z - 1, base: base) < atHome, "rising did not close it")
+    }
+
+    @Test("one register is a doubling — the exponent is the mechanism")
+    func itDoublesPerRegister() {
+        // Ported as a linear taper it would look like a room that changes size; the doubling
+        // is what makes it a room seen from a distance on an axis.
+        let base = 200.0
+        let here = PointChamber.rim(liveZ: PointChamber.z, base: base)
+        let one = PointChamber.rim(liveZ: PointChamber.z + 1, base: base)
+        #expect(abs(one - here * 2) < 1e-9, "a register is not a doubling")
+        #expect(abs(PointChamber.rim(liveZ: PointChamber.z - 1, base: base) - here / 2) < 1e-9)
+    }
+
+    @Test("the two rounds agree once the index convention is matched")
+    func theRoundsDoNotConflict() {
+        // They LOOK like a conflict and are not: `Claude Design Round 1/The Instrument
+        // v3.html:1041` is `R0·2^((Z+5)−i)` and Round 2's `spine-axis.js:75` is `(Z+4)−i`.
+        // Round 1 indexes at `i = z+5` — which is what `AxisRegister.i` uses — and Round 2 at
+        // `i = z+4`. Both reduce to `2^(liveZ − registerZ)`, which is the form built.
+        let z = PointChamber.z, base = 100.0
+        let r1 = base * pow(2, (z + 5) - 10)      // Round 1: The Chamber is i = 10
+        let r2 = base * pow(2, (z + 4) - 9)       // Round 2: the world passes 9
+        #expect(abs(r1 - r2) < 1e-9, "the two conventions disagree — one of them was misread")
+        #expect(abs(PointChamber.rim(liveZ: z, base: base) - r1) < 1e-9)
+    }
+
+    @Test("it is clamped, so a far register cannot make the room unusable")
+    func theClampHolds() {
+        // Four registers away is a sixteenth or sixteen times, and the world is only ever
+        // drawn inside its own band — but a clamp costs nothing and a NaN-sized room costs a
+        // frame. Bounded both ways at ±2 registers.
+        let base = 200.0
+        #expect(PointChamber.rim(liveZ: 99, base: base) == base * 4)
+        #expect(PointChamber.rim(liveZ: -99, base: base) == base / 4)
+    }
+
+    // MARK: - the close threshold
+
+    @Test("the niche closes when the WALL has relaxed, not when the finger lifts")
+    func aLiftIsNotARelease() {
+        // `:130-133` — `if (press <= 0.02) { on = null; given = 0; }`. So lifting for a moment
+        // and pressing again continues the same impression; only a full release starts a new
+        // one. **That is what letterpress means about a hand: the press is one act, and it
+        // survives a flinch.** The app cleared the niche on lift, so every flinch was a full
+        // release — and `closesBelow` had nothing to be below, with zero readers in app OR
+        // tests. It was filed four ways across three dimensions of the gap map.
+        #expect(PointChamber.closesBelow == 0.02)
+        // the relax rate and the threshold together are the grace period the hand gets
+        let grace = (0.5 - PointChamber.closesBelow) / PointChamber.relaxRate
+        #expect(grace > 0.7, "a half-made impression is thrown away in under a second")
+        #expect(grace < 2.0, "the wall holds a press open long enough to feel like a bug")
+    }
+}

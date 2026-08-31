@@ -165,6 +165,29 @@ enum PointChamber {
     /// every light expression ported from this world was therefore multiplied by zero at
     /// rest: `W = rim*(1.04 − pr*0.05)`, `H = rim*(1.12 − pr*0.13)` and `bow` are all present
     /// in `proj` above and have never once been given a nonzero `pr` on screen.
+    /// D5.5 · **THE ROOM'S SIZE IS WHERE HE IS.** `spine-axis.js:75` — `rim(i,Z,R0) =
+    /// R0·2^((Z+4)−i)`, called at `world-four.js:141` as `S.rim(9, Z, R0)`: the room's
+    /// half-extent doubles for every register he descends toward it and halves for every one
+    /// he rises away. The app used a fixed `min(w,h)·0.46` at three sites, so **the register
+    /// never opened out as he came down or closed as he left** — the one dimension none of
+    /// the five batches touched, and now the load-bearing one: `rim` feeds the magma's anchor,
+    /// the hairline sag, every niche radius, `bh` and the rope.
+    ///
+    /// **THE TWO ROUNDS AGREE ONCE THE INDEX CONVENTION IS MATCHED**, which is worth writing
+    /// down because they look like a conflict: `Claude Design Round 1/The Instrument
+    /// v3.html:1041` is `R0·2^((Z+5)−i)` and Round 2's is `(Z+4)−i`. Round 1 indexes registers
+    /// at `i = z+5` — which is what `AxisRegister.i` uses (The Chamber is `i: 10, z: 5`) —
+    /// and Round 2 at `i = z+4`, where the chamber is the 9 the world passes. Both reduce to
+    /// the same thing, and it is the form that survives either convention:
+    ///
+    ///     rim = base · 2^(liveZ − registerZ)
+    ///
+    /// `base` is the room at its own register, so this is exactly neutral where he stands and
+    /// only ever changes as he moves — which is the whole of what it says.
+    static func rim(liveZ: Double, base: Double) -> Double {
+        base * pow(2, max(-2, min(2, liveZ - z)))
+    }
+
     static func bearing(z: Double, press: Double) -> Double {
         max(load(z: z) * 0.34, max(0, min(1, press)))
     }
@@ -207,5 +230,7 @@ enum PointChamber {
     /// `press -= dt*0.52` when not holding, and below 0.02 the niche closes and `given`
     /// resets. The IMPRESSION does not.
     static let relaxRate = 0.52
+    /// D5.5 · **read by the wall now.** `world-four.js:133` — the niche closes when the WALL
+    /// has finished relaxing, not when the finger lifts, so a lift and a return are one act.
     static let closesBelow = 0.02
 }

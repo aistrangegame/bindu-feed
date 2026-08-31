@@ -825,7 +825,7 @@ struct InstrumentView: View {
     @ViewBuilder private var content: some View {
         switch here.key {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
-            PointWorldView(dimensionN: here.z - 1, path: $path,
+            PointWorldView(dimensionN: here.z - 1, liveZ: travel.z, path: $path,
                            onReturn: {
                                store.markDeparture(z: travel.z)
                                $path.pushDissolve(FeedRoute.returnCeremony(nil))

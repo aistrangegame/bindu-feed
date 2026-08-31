@@ -119,6 +119,7 @@ enum PointLawSignal: Equatable {
 
 struct PointWorld: View {
     let dimensionN: Int
+    var liveZ: Double = PointChamber.z
     let stars: [PlacedStar]
     let hue: Color
     let onOpen: (PointStar) -> Void
@@ -142,7 +143,7 @@ struct PointWorld: View {
         case 1: WorldPoint(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
         case 2: WorldTurn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
         case 3: WorldVeil(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
-        case 4: WorldChamber(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
+        case 4: WorldChamber(stars: stars, liveZ: liveZ, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
         case 5: WorldMirrors(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
         case 6: WorldReturn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
         // I's quantity is the READING's, not the world's — `PointWorldView` owns `revealed`
@@ -645,6 +646,20 @@ private struct WorldChamber: View {
             press = min(1, press + dt * PointChamber.pressRate(z: PointChamber.z))
         } else if press > 0 {
             press = max(0, press - dt * PointChamber.relaxRate)
+            // D5.5 · `world-four.js:130-133` — **THE NICHE DOES NOT CLOSE WHEN THE HAND LIFTS.
+            // IT CLOSES WHEN THE WALL HAS FINISHED RELAXING.** `if (press <= 0.02) { on = null;
+            // given = 0; }` — so lifting for a moment and pressing again CONTINUES the same
+            // impression, and only a full release starts a new one. That is what letterpress
+            // means about a hand: the press is one act, and it survives a flinch.
+            //
+            // `PointChamber.closesBelow` was a declaration with **zero readers in the app AND
+            // in the tests** — the mechanism was filed four ways across three dimensions of
+            // the gap map and existed nowhere. The app cleared the niche eagerly on lift, so
+            // every lift was a full release and the constant had nothing to be below.
+            if press <= PointChamber.closesBelow {
+                press = 0
+                borne = nil
+            }
         }
     }
 
@@ -653,7 +668,7 @@ private struct WorldChamber: View {
         pressing = nil
     }
 
-    let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
+    let stars: [PlacedStar]; var liveZ: Double = PointChamber.z; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
     var onLaw: (PointLawSignal) -> Void = { _ in }
     @EnvironmentObject private var breath: Breath   // the one master breath
@@ -683,14 +698,15 @@ private struct WorldChamber: View {
     private func chamberPlace(_ p: PlacedStar, in size: CGSize) -> (pt: CGPoint, sc: Double) {
         let n = niches[p.id] ?? PointChamber.Niche(id: p.id, uni: 2, wall: .back, d: 0.27, h: 0.16)
         let cx = size.width / 2, cy = size.height * 0.42
-        let rim = min(size.width, size.height) * 0.46
-        let v = PointChamber.place(n, rim: rim, press: bearing)
+        let v = PointChamber.place(n, rim: rimOf(size), press: bearing)
         return (CGPoint(x: cx + v.dx, y: cy + v.dy), v.sc)
     }
 
     /// The room's half-extent, shared by the projection, the Canvas and the reach so all
     /// three agree about how big the room is.
-    private func rimOf(_ size: CGSize) -> Double { min(size.width, size.height) * 0.46 }
+    private func rimOf(_ size: CGSize) -> Double {
+        PointChamber.rim(liveZ: liveZ, base: min(size.width, size.height) * 0.46)
+    }
 
     private func chamberPoint(_ p: PlacedStar, in size: CGSize) -> CGPoint {
         let n = niches[p.id] ?? PointChamber.Niche(id: p.id, uni: 2, wall: .back, d: 0.27, h: 0.16)
@@ -718,6 +734,10 @@ private struct WorldChamber: View {
     /// clock writes, because a value SwiftUI cannot observe cannot deform anything.
     @State private var press: Double = 0
     @State private var lastTick = Date()
+    /// `on` in the design — the niche the WALL is still bearing, which outlives the finger.
+    /// Distinct from `pressing`, which is the finger itself: `:131` keeps `on` until the press
+    /// has relaxed past `closesBelow`, so a lift and a return are one act rather than two.
+    @State private var borne: String? = nil
 
     var body: some View {
         GeometryReader { geo in
@@ -743,7 +763,7 @@ private struct WorldChamber: View {
                     // The centre and the rim are the ones `chamberPoint` uses, so the room and
                     // the niches standing in it agree about where the walls are.
                     let cx = size.width / 2, cy = size.height * 0.42
-                    let rim = min(size.width, size.height) * 0.46
+                    let rim = rimOf(size)
                     // The world's own hue as components — the design mixes it toward four
                     // different creams and a Color cannot be mixed.
                     let hueRGB = UniGeo.hx(PointContent.hues["m4"] ?? "#E0713F")
@@ -1007,6 +1027,12 @@ private struct WorldChamber: View {
                                     guard pressing == nil || pressing == p.id else { return }
                                     if pressing == nil {
                                         pressing = p.id
+                                        // `:112` — `if (best !== this.on) { this.on = best;
+                                        // this.given = 0; }`. Moving to a DIFFERENT niche is
+                                        // what resets the press; returning to the same one
+                                        // resumes it, which is the whole of the rule.
+                                        if borne != p.id { press = 0 }
+                                        borne = p.id
                                         PressClaim.claim("chamber." + p.id)
                                         pressedAt = Date()
                                     }
