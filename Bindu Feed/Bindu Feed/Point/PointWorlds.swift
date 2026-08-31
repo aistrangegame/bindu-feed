@@ -633,6 +633,21 @@ private struct WorldChamber: View {
     /// ONE RELEASE, CALLED BY EVERY EXIT (§10). The press ends when it opens the niche, when
     /// the finger lifts, and when the view goes away — and a claim left behind makes the rope
     /// dead for the rest of the session, which is the fault this rule was written for.
+    /// `:119` and `:130` — the press builds while a niche is under the hand and relaxes when
+    /// it is not, and `:131` releases the niche once it has fallen below 0.02. The rate is the
+    /// load's: *"the deeper the shell, the more load there already is, so his own press has
+    /// more to work with."*
+    private func advancePress(to now: Date) {
+        let dt = min(0.1, now.timeIntervalSince(lastTick))
+        lastTick = now
+        guard dt > 0 else { return }
+        if pressing != nil {
+            press = min(1, press + dt * PointChamber.pressRate(z: PointChamber.z))
+        } else if press > 0 {
+            press = max(0, press - dt * PointChamber.relaxRate)
+        }
+    }
+
     private func endPress() {
         if let id = pressing { PressClaim.release("chamber." + id) }
         pressing = nil
@@ -665,22 +680,39 @@ private struct WorldChamber: View {
         // draws its own vanishing line at `height * 0.42`, so the room and its contents agree.
         let cx = size.width / 2, cy = size.height * 0.42
         let rim = min(size.width, size.height) * 0.46
-        let v = PointChamber.place(n, rim: rim, press: pressDepth)
+        let v = PointChamber.place(n, rim: rim, press: bearing)
         return CGPoint(x: cx + v.dx, y: cy + v.dy)
     }
 
-    /// How hard the room is being leaned on, 0…1 — the `pr` the projection deforms by.
-    private var pressDepth: Double {
-        guard pressing != nil else { return 0 }
-        return min(1, Date().timeIntervalSince(pressedAt) * PointChamber.pressRate(z: 3))
-    }
+    /// D5.5 · **`pr` — HOW HARD THE ROOM IS BEING BORNE**, hand or no hand.
+    /// `world-four.js:143` — `pr = max(load(Z)*0.34, press)`.
+    ///
+    /// This was `pressDepth`, and it was zero whenever no finger was down — so the projection
+    /// it feeds deformed by nothing at rest, and every ported expression that multiplies by
+    /// `pr` was multiplied by zero. Two further reasons it could never have shown: it was
+    /// derived from `Date()`, which SwiftUI does not observe, so a held finger produced one
+    /// render at elapsed ≈ 0 and no more; and the press ends at the first gate, capping any
+    /// hand contribution at 0.22. The standing load has no such ceiling and needs no hand.
+    private var bearing: Double { PointChamber.bearing(z: PointChamber.z, press: press) }
+
+    /// The hand's own contribution, advanced per frame while held and relaxing when let go —
+    /// `:119` `press += dt*(0.30 + load(Z)*0.26)`, `:130` `press -= dt*0.52`. A `@State` the
+    /// clock writes, because a value SwiftUI cannot observe cannot deform anything.
+    @State private var press: Double = 0
+    @State private var lastTick = Date()
 
     var body: some View {
         GeometryReader { geo in
             let W = geo.size.width, H = geo.size.height
             let spread = W * 1.7
             ZStack {
-                Canvas { ctx, size in
+                // D5.5 · the room is drawn on a clock now, because `pr` MOVES: the hand
+                // advances it while it bears and it relaxes when the hand goes. A plain
+                // `Canvas` repaints only when SwiftUI notices a change, and the thing that
+                // was changing — elapsed time — is not something it can notice.
+                TimelineView(.animation) { tl in
+                  let pr = bearing
+                  Canvas { ctx, size in
                     let vpx = size.width / 2, vpy = size.height * 0.42
                     // the courses, tapering inward toward the vanishing line — the interior recedes
                     for c in 0..<9 {
@@ -704,6 +736,15 @@ private struct WorldChamber: View {
                         let gy = (sin(Double(g) * 78.233) * 0.5 + 0.5) * size.height
                         ctx.fill(Path(ellipseIn: CGRect(x: gx, y: gy, width: 1.1, height: 1.1)), with: .color(hue.opacity(0.045)))
                     }
+                    // BATCH 1 · the bearing has REACHED the room. What it deforms is batch 2;
+                    // that it arrives, moves, and is never zero is this batch's whole claim.
+                    // Drawn as the vault's own line so the value is visible on screen rather
+                    // than merely threaded — it descends as `pr` rises.
+                    let vy = size.height * (0.10 - 0.045 * pr)
+                    ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: vy)); $0.addLine(to: CGPoint(x: size.width, y: vy)) },
+                               with: .color(hue.opacity(0.10 + 0.16 * pr)), lineWidth: 0.8)
+                  }
+                  .onChange(of: tl.date) { _, now in advancePress(to: now) }
                 }
                 ForEach(stars) { p in
                     StarMark(placed: p, hue: hue, compact: quiet)
@@ -754,7 +795,7 @@ private struct WorldChamber: View {
                                     let held = Date().timeIntervalSince(pressedAt)
                                     // `pressRate(z:)` at world IV's own depth — the load of the
                                     // registers standing over this one sets how fast it cuts.
-                                    if held * PointChamber.pressRate(z: 3) >= PointChamber.gates[0] {
+                                    if held * PointChamber.pressRate(z: PointChamber.z) >= PointChamber.gates[0] {
                                         PointChamber.strike(p.star.key, to: 1)
                                         endPress()
                                         onOpen(p.star)

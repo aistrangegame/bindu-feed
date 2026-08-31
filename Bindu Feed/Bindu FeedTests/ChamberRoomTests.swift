@@ -98,7 +98,101 @@ import Foundation
             case .left:  #expect(v.dx < 0, "a Vessel niche is not on the left: \(v.dx)")
             case .floor: #expect(v.dy > 0, "a Rules flagstone is not underfoot: \(v.dy)")
             case .back:  #expect(abs(v.dx) < 200, "the back wall is off in the wings")
+            // No niche is on the right wall — the Vessel is left, the Rules underfoot, the
+            // Others on the back wall. If one ever is, this fails rather than passing quietly,
+            // which is why the case is spelled out instead of defaulted.
+            case .right: Issue.record("a niche was placed on the right wall: \(n.id)")
             }
         }
+    }
+}
+
+// D5.5 · BATCH 1 — the spine: `pr`, the term the whole room is written against.
+//
+// `world-four.js:143` — `var ld = this.load(Z), pr = Math.max(ld*0.34, this.press);`
+//
+// **THE APP HAD NO SUCH TERM.** `pressDepth` was zero whenever no finger was down, so every
+// ported expression that multiplies by `pr` — the vault's descent, the walls' bow, the room's
+// shrink, every light amount in the world — was multiplied by zero at rest and the room was a
+// painted backdrop that happened to contain the right arithmetic.
+@Suite struct ChamberBearingTests {
+
+    @Test("the room is already bearing before he touches it")
+    func theStandingLoadIsNotZero() {
+        // *"You are the magma layer — pressured by every shell above."* The shells are the
+        // registers standing over this one, so at world IV's own depth the room is deformed
+        // with no hand anywhere near it. A `pr` that starts at zero says the opposite: that
+        // nothing presses on him until he presses back.
+        let atRest = PointChamber.bearing(z: PointChamber.z, press: 0)
+        #expect(atRest > 0.2, "the room bears nothing at rest — the shells above are decoration")
+        #expect(abs(atRest - PointChamber.load(z: PointChamber.z) * 0.34) < 1e-9)
+    }
+
+    @Test("a hand can only press it further — max, never a sum")
+    func theHandDoesNotAdd() {
+        // `Math.max(ld*0.34, this.press)`. Summing would make a light touch at depth exceed a
+        // full press at the surface, which inverts what the world says: the load is the floor
+        // the hand works from, not a quantity the hand adds to.
+        let z = PointChamber.z
+        let rest = PointChamber.bearing(z: z, press: 0)
+        #expect(PointChamber.bearing(z: z, press: 0.1) == rest, "a touch lighter than the load moved it")
+        #expect(PointChamber.bearing(z: z, press: 0.9) == 0.9, "a real press did not take over")
+        #expect(PointChamber.bearing(z: z, press: 2) == 1, "the bearing left the 0…1 range")
+    }
+
+    @Test("a deeper register bears more, and the surface bears least")
+    func loadIsDepth() {
+        // `load(Z) = clamp((Z+4)/9)` — the count of shells, as a fraction. Two registers deep
+        // and ten registers deep must not deform the same room by the same amount.
+        #expect(PointChamber.load(z: -4) == 0, "at the top of the axis something still stands above him")
+        #expect(PointChamber.load(z: 5) == 1)
+        #expect(PointChamber.bearing(z: 5, press: 0) > PointChamber.bearing(z: -4, press: 0))
+    }
+
+    // MARK: - the right wall
+
+    @Test("the room has a right wall, and it mirrors the left")
+    func theRightWallExists() {
+        // `:92`. No NICHE uses it — the Vessel is left, the Rules underfoot, the Others on the
+        // back wall — which is exactly why its absence was invisible: the only live call into
+        // the projection was niche placement, so nothing ever asked. The design asks twice,
+        // both structural: the right-hand receding edges, and the far end of the vault span
+        // the nine stress hairlines are strung between.
+        let l = PointChamber.proj(wall: .left, d: 0.4, h: 0.5, rim: 100, press: 0.3)
+        let r = PointChamber.proj(wall: .right, d: 0.4, h: 0.5, rim: 100, press: 0.3)
+        #expect(abs(l.dx + r.dx) < 1e-9, "the two walls are not mirrored")
+        #expect(l.dy == r.dy && l.sc == r.sc)
+        #expect(r.dx > 0, "the right wall is on the left")
+    }
+
+    @Test("the bow pulls BOTH walls inward, not one in and one out")
+    func theBowIsSymmetric() {
+        // The sign is the whole of it. `-(W − bw)` on the left and `+(W − bw)` on the right:
+        // subtracting the bow from the half-width narrows the room from each side. A sign
+        // slip here gives a room that leans rather than one that is squeezed.
+        let slack = PointChamber.proj(wall: .right, d: 0.5, h: 0.5, rim: 100, press: 0)
+        let borne = PointChamber.proj(wall: .right, d: 0.5, h: 0.5, rim: 100, press: 1)
+        #expect(borne.dx < slack.dx, "the right wall moved outward under load")
+        let lSlack = PointChamber.proj(wall: .left, d: 0.5, h: 0.5, rim: 100, press: 0)
+        let lBorne = PointChamber.proj(wall: .left, d: 0.5, h: 0.5, rim: 100, press: 1)
+        #expect(lBorne.dx > lSlack.dx, "the left wall moved outward under load")
+    }
+
+    @Test("the bow is greatest mid-wall and exactly nothing at either end")
+    func theBowIsAnArch() {
+        // `sin(d·π)` — a wall is held at its corners and gives in the middle. Ported as a
+        // constant it would bow the corners too, which is a wall coming away from the room
+        // rather than a wall under load.
+        #expect(abs(PointChamber.bow(along: 0, press: 1, rim: 100)) < 1e-9)
+        #expect(abs(PointChamber.bow(along: 1, press: 1, rim: 100)) < 1e-9)
+        #expect(PointChamber.bow(along: 0.5, press: 1, rim: 100) > PointChamber.bow(along: 0.2, press: 1, rim: 100))
+    }
+
+    // MARK: - green on absent
+
+    @Test("no load and no hand deforms nothing")
+    func theUnloadedRoomIsSquare() {
+        #expect(PointChamber.bearing(z: -4, press: 0) == 0)
+        #expect(PointChamber.bow(along: 0.5, press: 0, rim: 100) == 0)
     }
 }

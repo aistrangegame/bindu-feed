@@ -21,7 +21,14 @@ enum PointChamber {
     /// INSCRIBED."* `world-four.js:47-49` — the Vessel is the left wall *"because equipment
     /// hangs on walls"*, the Rules are the floor *"underfoot"*, and the Others are the back
     /// wall, *"facing him, unavoidable."*
-    enum Wall: String { case left, floor, back }
+    /// D5.5 · **`right` IS NOT A NICHE'S WALL AND IS STILL PART OF THE ROOM.** No entry in
+    /// `NICHES` uses it (`world-four.js:52-63` puts the Vessel left, the Rules underfoot and
+    /// the Others on the back wall), which is exactly why its absence was invisible: the only
+    /// live call into the projection was niche placement, so nothing ever asked for it. The
+    /// design asks twice, both structural — the two right-hand receding edges at `:163`, and
+    /// the far end of the vault span at `:180`, which is what the nine stress hairlines are
+    /// strung between. Without this case the room cannot be drawn at all, only painted.
+    enum Wall: String { case left, right, floor, back }
 
     struct Niche: Identifiable {
         let id: String
@@ -84,6 +91,9 @@ enum PointChamber {
         let bw = bow(along: d, press: pr, rim: rim)
         switch wall {
         case .left:  return (-(W - bw) * sc, (h - 0.5) * 2 * H * sc, sc)
+        // `:92` — the mirror of `.left`, and the sign is the whole of it: the bow pulls BOTH
+        // walls inward, so the term is subtracted from the half-width on each side.
+        case .right: return ((W - bw) * sc, (h - 0.5) * 2 * H * sc, sc)
         case .floor: return ((h - 0.5) * 2 * W * sc, (H - bw * 0.6) * sc, sc)
         case .back:
             // *"d runs across it, h runs up it. Both, or it is not a wall — and the vanishing
@@ -140,6 +150,28 @@ enum PointChamber {
     /// `load(Z)` — `world-four.js:81`. *"the load standing over this register. Not decoration:
     /// it is the count of shells above, and it is what the room is holding up."*
     static func load(z: Double) -> Double { max(0, min(1, (z + 4) / 9)) }
+
+    /// D5.5 · **`pr` — THE TERM THE WHOLE ROOM IS WRITTEN AGAINST**, and the one the app did
+    /// not have. `world-four.js:143` — `var ld = this.load(Z), pr = Math.max(ld*0.34, this.press);`
+    ///
+    /// **THE ROOM IS ALREADY BEARING BEFORE HE TOUCHES IT.** That is the world's claim in one
+    /// expression: *"you are the magma layer — pressured by every shell above,"* and the
+    /// shells are not metaphor, they are the registers standing over this one. So `pr` has a
+    /// floor of `load·0.34` with no hand anywhere near it, and a hand can only ever press it
+    /// FURTHER — `max`, never a sum. At world IV's own depth the floor is 0.26, so the vault
+    /// sits visibly down and the walls visibly in from the moment he arrives.
+    ///
+    /// The app had `pressDepth`, which is 0 unless a finger is down. Every deformation and
+    /// every light expression ported from this world was therefore multiplied by zero at
+    /// rest: `W = rim*(1.04 − pr*0.05)`, `H = rim*(1.12 − pr*0.13)` and `bow` are all present
+    /// in `proj` above and have never once been given a nonzero `pr` on screen.
+    static func bearing(z: Double, press: Double) -> Double {
+        max(load(z: z) * 0.34, max(0, min(1, press)))
+    }
+
+    /// The chamber's own depth on the axis. `pressRate(z: 3)` was written as a literal at two
+    /// call sites with the same comment; a register is not a magic number.
+    static let z: Double = 3
 
     /// `press += dt*(0.30 + load(Z)*0.26)` — *"the deeper the shell, the more load there
     /// already is, so his own press has more to work with."* The same hold reaches the fourth
