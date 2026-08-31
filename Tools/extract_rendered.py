@@ -68,6 +68,12 @@ def candidates():
             # false-positive class -- a canon Rite line read as invented because the design
             # writes the quotes plainly and the app escapes them.
             lit = lit.replace('\\"', '"').replace("\\\\", "\\")
+            # **AN ESCAPED NEWLINE IS A NEWLINE, ON BOTH SIDES OF THE COMPARISON.**
+            # `design_lib._decode` already reads the design's `'entries\nleft'` as two words
+            # with a break between them; the app writes the same string the same way, and
+            # leaving the escape literal here made three authored labels read as inventions.
+            # The two corpora have to be decoded alike or the check is comparing spellings.
+            lit = re.sub(r"\\[nt]", " ", lit)
             s = norm(lit)
             s = re.sub(r'\\\((?:[^()]|\([^()]*\))*\)', '\u2026', s)   # \(interp) -> ellipsis
             if not s or len(s) > 400: continue

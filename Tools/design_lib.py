@@ -22,7 +22,14 @@ any comp that documents a fault the same way.
 import re, pathlib
 from authored_lib import ROOT, norm
 
-SOURCES = [ROOT/"canon", ROOT/"Claude Design Round 2"/"design-source", ROOT/"Claude Design Round 2"/"comps"]
+# **THE CORPUS OMITTED THE SOURCE 106 AUDIT FINDINGS ARE BUILT FROM.** `Claude Design Round
+# 1` — its comps, and the four register files at its root — was never in the haystack, so
+# every string on the screens it specifies was unverifiable in both directions: `check_authored`
+# never enumerated them, and `check_rendered` could only call them untriaged and wait for a
+# hand verdict. Found when three authored stat labels on Ash's Voice came up as inventions.
+SOURCES = [ROOT/"canon",
+           ROOT/"Claude Design Round 2"/"design-source", ROOT/"Claude Design Round 2"/"comps",
+           ROOT/"Claude Design Round 1"]
 
 STRUCK = re.compile(r'<s>(.*?)</s>', re.S | re.I)
 

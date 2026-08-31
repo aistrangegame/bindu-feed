@@ -52,7 +52,6 @@ APP-OWN	Enter your Airtable	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:4
 APP-OWN	Every time you chose to enter the room. Newest first.	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:66
 APP-OWN	everything that was already here →	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:36
 APP-OWN	expressive, alive	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:401
-APP-OWN	FIELDS ENTERED	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:143
 APP-OWN	floors entered	Bindu Feed/Bindu Feed/Screens/GameView.swift:199
 APP-OWN	grounded, present	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:397
 APP-OWN	He is the only one with no figure in the Rite, and he should not have one -- he is not a vantage, he is the one the vantages are about. So his mathematics is the only one that is not a geometry. His days, as a spine, flecked where a voice spoke.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:137
@@ -95,7 +94,7 @@ APP-OWN	the name you arrive with	Bindu Feed/Bindu Feed/Screens/SettingsView.swif
 APP-OWN	The nearest thing this library has walked: ... · ....	Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:93
 APP-OWN	the room is gathering...	Bindu Feed/Bindu Feed/Screens/GameView.swift:295
 APP-OWN	the room remembers you · ...	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:32
-APP-OWN	The signal was received.\nThe field is quiet now.	Bindu Feed/Bindu Feed/Screens/SignalView.swift:182
+APP-OWN	The signal was received. The field is quiet now.	Bindu Feed/Bindu Feed/Screens/SignalView.swift:182
 APP-OWN	the story is coming to meet you...	Bindu Feed/Bindu Feed/Screens/RootView.swift:246
 APP-OWN	the words are gathering...	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:393
 APP-OWN	this is where you began	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:78
@@ -119,7 +118,6 @@ APP-OWN	YOUR COLOR TODAY	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:192
 APP-OWN	YOUR MARK	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:164
 APP-OWN	· and ... more	Bindu Feed/Bindu Feed/Point/PointJourney.swift:29
 APP-OWN	‹ leave	Bindu Feed/Bindu Feed/Point/ApertureView.swift:184
-APP-OWN	↩ In reply to ...	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:295
 APP-OWN	◉ and then you sealed yours · ...	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:38
 APP-OWN	◉ you, now · in reply to you, ...	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:383
 APP-OWN	⟿ the Rite	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:99
@@ -1009,3 +1007,4 @@ NON-UI	The Light -- stood inside	Bindu Feed/Bindu Feed/Store/FeedStore.swift:945
 NON-UI	The Point -- walked to the centre	Bindu Feed/Bindu Feed/Store/FeedStore.swift:955
 NON-UI	The story was met in the Rite.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:606
 APP-OWN	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353
+APP-OWN	In reply to …	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:325
