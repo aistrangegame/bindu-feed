@@ -21,6 +21,10 @@ enum ReturnPatina {
     /// `#C09550`, and nothing else is gold.
     static let gold = (r: 192.0, g: 149.0, b: 80.0)
 
+    /// UNWIRED(E3.8 — REOPENED 2026-08-30. The gold amounts below are built, tested and
+    /// applied to nothing: `grep ReturnPatina. "Bindu Feed"` returns zero app reads. The row
+    /// was closed 2026-08-29 on the evidence that `towardGold` EXISTS, which is not the
+    /// claim it makes. Found by `check_wired`'s value pass.)
     static let border = 0.50
     static let glyph  = 0.45
     static let name   = 0.42
@@ -61,6 +65,9 @@ enum ReturnPatina {
 /// indistinguishable from the ones around it.
 enum ReturnDeboss {
     static let size: CGFloat = 17.5
+    /// UNWIRED(E3.8 — the sealed line is set at `size` but the paragraphs around it are set
+    /// by hand at `.lora(16)`, so the contrast the deboss depends on is a coincidence rather
+    /// than a relationship. Two literals agreeing today.)
     static let ordinarySize: CGFloat = 16
     static let ink = Color(hex: "#C2A472")
     /// `0 1px 0 rgba(0,0,0,.65)` — the cut's own shadow, below.

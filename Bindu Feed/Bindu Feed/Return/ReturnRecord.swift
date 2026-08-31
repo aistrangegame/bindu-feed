@@ -73,6 +73,9 @@ enum ReturnRecord {
     /// the Rite's are three. `ReturnRecordTests` holds it, because a future pass filling the
     /// Record from `RiteVoices` would restore exactly the fault E3.3 names and would look
     /// like more content rather than less.
+    /// TEST-ONLY(it asserts a property of the corpus rather than serving a surface — the
+    /// app has no use for the answer, and a future pass filling the Record from `RiteVoices`
+    /// is what it exists to fail against.)
     static var isCondensed: Bool { gathering.allSatisfy { !$0.line.contains("\n") } }
 
     /// E3.3 · **A RECORD RECALLS; IT DOES NOT RE-READ.** The corpus above was built, tested

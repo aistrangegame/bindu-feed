@@ -78,6 +78,9 @@ enum ReturnTally {
     /// it is rendered, leaves that voice at one and the story reads *"no voice has spoken
     /// twice here yet"* — which is the design telling the truth about a return that produced
     /// nothing.
+    /// UNWIRED(no audit row names this — its only app caller is `spokeTwice`, which is
+    /// itself unwired, so nothing the app runs reaches either. The reference count said
+    /// otherwise; the reachability pass is what tells them apart.)
     static func standings(spoke: [String], answers: [ReturnAnswer]) -> [Standing] {
         var total: [String: Int] = [:], answering: [String: Int] = [:]
         for k in spoke where !k.isEmpty { total[k] = 1 }
@@ -118,5 +121,7 @@ enum ReturnTally {
 
     /// *"no voice has spoken twice here yet"* — the honest state of a story that has been
     /// returned to and not answered, and the state a DUPLICATE would also produce.
+    /// UNWIRED(no audit row names this — authored at `Claude Design Round 2/comps/The
+    /// Return.html:277` and part of the same unbuilt *where this lands* panel as `standings`.)
     static let noneTwice = "no voice has spoken twice here yet"
 }
