@@ -656,6 +656,7 @@ private struct WorldChamber: View {
     let stars: [PlacedStar]; let hue: Color; let onOpen: (PointStar) -> Void
     var quiet: Bool = false
     var onLaw: (PointLawSignal) -> Void = { _ in }
+    @EnvironmentObject private var breath: Breath   // the one master breath
     @State private var panX: CGFloat = 0
     @State private var panBase: CGFloat = 0
     /// D5.5 · which niche is under the press, and since when. `nil` when nothing is.
@@ -742,10 +743,41 @@ private struct WorldChamber: View {
                     // the niches standing in it agree about where the walls are.
                     let cx = size.width / 2, cy = size.height * 0.42
                     let rim = min(size.width, size.height) * 0.46
+                    // The world's own hue as components — the design mixes it toward four
+                    // different creams and a Color cannot be mixed.
+                    let hueRGB = UniGeo.hx(PointContent.hues["m4"] ?? "#E0713F")
                     func P(_ w: PointChamber.Wall, _ d: Double, _ h: Double) -> CGPoint {
                         let v = PointChamber.proj(wall: w, d: d, h: h, rim: rim, press: pr)
                         return CGPoint(x: cx + v.dx, y: cy + v.dy)
                     }
+
+                    // `:151-157` · **THE MAGMA UNDER THE FLOOR — the light this room is lit
+                    // by, and the app had none of it.** *"He is the molten layer, so the light
+                    // comes from below and the vault is dark."* Everything else here is drawn
+                    // against that fact: the niche is *a cut in the wall, lit from the floor*,
+                    // the deboss's light edge is its UPPER one, and the vault is the darkest
+                    // thing on screen. Without the source, every one of those reads as an
+                    // arbitrary choice of shading.
+                    //
+                    // Three stops, and the geometry is half the claim: it starts BELOW the
+                    // horizon at `cy + rim·0.30` and is confined to `cy…H`, so the glow is
+                    // under the floor rather than a wash over the room. It warms toward
+                    // `#FFD9A8` only at the very bottom — the molten layer is deepest away
+                    // from him — and it **breathes**, which is what separates a light source
+                    // from a gradient.
+                    let br = breath.value
+                    let magmaTop = cy + rim * 0.30
+                    ctx.fill(
+                        Path(CGRect(x: 0, y: cy, width: size.width, height: size.height - cy)),
+                        with: .linearGradient(
+                            Gradient(stops: [
+                                .init(color: hue.opacity(0), location: 0),
+                                .init(color: hue.opacity(0.10 * (0.7 + br * 0.4)), location: 0.42),
+                                .init(color: UniGeo.col(UniGeo.mix(hueRGB, [255, 217, 168], 0.30),
+                                                        (0.20 + pr * 0.16) * (0.8 + br * 0.3)),
+                                      location: 1)]),
+                            startPoint: CGPoint(x: 0, y: magmaTop),
+                            endPoint: CGPoint(x: 0, y: size.height)))
 
                     // `:161-167` — the room's edges, receding to the particle. Four lines:
                     // both side walls, at the floor and at the vault.
@@ -773,10 +805,6 @@ private struct WorldChamber: View {
                     // the back wall by `conc·(ld·rim·0.05 + pr·rim·0.055)`, so the vault
                     // visibly gives where the weight is. This replaces nine evenly-spaced
                     // horizontal rules that were the same at every load.
-                    // `:185` — the hairline warms toward `#FFE2C4` where the load
-                    // concentrates: the vault is not merely thinner in the middle, it is
-                    // brighter there, which is what stress looks like in stone.
-                    let hueRGB = UniGeo.hx(PointContent.hues["m4"] ?? "#E0713F")
                     let ld = PointChamber.load(z: PointChamber.z)
                     let a0 = P(.left, 0, 1), a1 = P(.right, 0, 1)
                     for v in 0..<9 {
@@ -792,6 +820,31 @@ private struct WorldChamber: View {
                                    with: .color(UniGeo.col(UniGeo.mix(hueRGB, [255, 226, 196], conc * 0.5),
                                                           0.06 + conc * (0.10 + pr * 0.20))),
                                    lineWidth: 0.6 + conc * pr * 1.0)
+                    }
+
+                    // `:205-213` · **THE NICHE IS A CUT IN THE WALL, LIT FROM THE FLOOR.**
+                    // A radial glow whose RADIUS grows with the press — `R·(6 + lit·8)`, so
+                    // bearing on a niche opens it rather than merely brightening it — over a
+                    // core mixed toward `#FFF6EC`. The app drew a flat 9pt disc with a fixed
+                    // shadow: a marker on a wall rather than an opening in one, and nothing
+                    // about it answered the hand.
+                    for p in stars {
+                        let place = chamberPlace(p, in: size)
+                        let lit = (pressing == p.id) ? press : 0
+                        let R = max(1.8, rim * 0.017 * place.sc * 2.2)
+                        let al = (0.44 + lit * 0.56) * (0.72 + place.sc * 0.7)
+                        let col = UniGeo.mix(hueRGB, [255, 224, 188], 0.18 + lit * 0.42)
+                        let at = CGPoint(x: place.pt.x + panX, y: place.pt.y)
+                        let glow = R * (6 + lit * 8)
+                        ctx.fill(Path(ellipseIn: CGRect(x: at.x - glow, y: at.y - glow, width: glow * 2, height: glow * 2)),
+                                 with: .radialGradient(
+                                    Gradient(stops: [
+                                        .init(color: UniGeo.col(col, al * (0.40 + lit * 0.34)), location: 0),
+                                        .init(color: UniGeo.col(hueRGB, al * 0.18), location: 0.24),
+                                        .init(color: UniGeo.col(hueRGB, 0), location: 1)]),
+                                    center: at, startRadius: 0, endRadius: glow))
+                        ctx.fill(Path(ellipseIn: CGRect(x: at.x - R, y: at.y - R, width: R * 2, height: R * 2)),
+                                 with: .color(UniGeo.col(UniGeo.mix(col, [255, 246, 236], 0.4), min(1, al * 1.2))))
                     }
 
                     // `:214-222` · **WHAT HAS BEEN STRUCK STAYS STRUCK — a debossed ring in
