@@ -98,7 +98,13 @@ struct UniverseView: View {
     // The structure lens — 0 lit sky … 1 the belief-lattice thrown over the regions.
     @State private var lens: Double = 0
     @State private var lensOn = false
+    @State private var lensTarget: Double = 0
     @State private var lensTimer: Timer?
+    // the hand on the rail: where it landed and what the lens was worth then (`:1678`)
+    @State private var railing = false
+    @State private var railBase: Double = 0
+    @State private var railStartX: Double = 0
+    @State private var labelShown = false
 
     // Caches (rebuilt on data change, read every frame). See the UStar/ULane/UDust types above.
     @State private var starsByRegion: [[UStar]] = []
@@ -140,23 +146,19 @@ struct UniverseView: View {
                 // `.word` — what one presence left, or that it left nothing.
                 if let w = openWord { wordPanel(w) }
 
-                // The structure lens toggle — only where the regions are legible (sky/region).
+                // B7.4 · **THE LENS RAIL — the control a CONTINUOUS quantity needs.**
+                // `Claude Design Round 1/comps/The Universe v3.html:1383-1388` — a 30px
+                // right-edge strip, a 148px hairline track, a 6px knob dragged
+                // `(railX − x)/150` and snapping 0/1 on release.
+                //
+                // **THE DECIDING EVIDENCE IS NOT THE LABEL, IT IS THAT `lens` IS A 0…1 SCALAR
+                // THREADED THROUGH THE WHOLE RENDERER** — `(1 − lens*0.94)` on the motes,
+                // `mix(room.rgb, BONE, lens*0.3)` on the fall, `lens*0.35` on the planet — so
+                // it fades the world toward bone as it rises. A tap is the control a BOOLEAN
+                // needs; every `lens*k` term above only ever saw 0 or 1, which is not a lesser
+                // rail but a different quantity.
                 if bands.world < 0.4 {
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Button(action: toggleLens) {
-                                Text(lensOn ? "the light ›" : "the structure ›")
-                                    .font(.spaceMono(9)).textCase(.uppercase).tracking(2)
-                                    .foregroundStyle(Color(hex: "#AAB2BC").opacity(lensOn ? 0.9 : 0.5))
-                                    .padding(16)
-                            }
-                        }
-                    }
-                    // the field is on the physical frame now; this control is not part of the
-                    // comp's coordinate system and keeps its distance from the home indicator
-                    .padding(.bottom, 34)
+                    lensRail
                 }
                 // No standing how-to. The design has none: `say()` (The Universe v3.html:1470-1474)
                 // is transient — 3400ms, then gone — and it names WHERE he is, never how to move.
@@ -346,16 +348,101 @@ struct UniverseView: View {
         return best
     }
 
-    // Ramp the lens toward its toggled target over ~1s (Canvas reads `lens` each tick).
-    private func toggleLens() {
-        lensOn.toggle()
-        let target: Double = lensOn ? 1 : 0
+    // B7.4 · `The Universe v3.html:1517` — `lens += (lensTarget − lens)·0.07` per frame. The
+    // rail moves `lensTarget` under the hand; this is the sky catching up to it. The old ramp
+    // walked a fixed step to a fixed target over ~1s, which is a transition rather than a lag.
+    private func chaseLens() {
         lensTimer?.invalidate()
         lensTimer = Timer.scheduledTimer(withTimeInterval: 0.033, repeats: true) { _ in
-            let step = 0.06
-            if abs(lens - target) <= step { lens = target; lensTimer?.invalidate(); lensTimer = nil }
-            else { lens += lens < target ? step : -step }
+            lens = LensRail.follow(lens, target: lensTarget)
+            if abs(lens - lensTarget) < 0.001 {
+                lens = lensTarget; lensTimer?.invalidate(); lensTimer = nil
+            }
         }
+    }
+
+    /// `:1689` / `:1698` — **the voice belongs to the crossing.** Sakshi answers the structure,
+    /// Shweta the stars. The comp's own `S()` passes 285 and 329; the app takes pitch from
+    /// `RoomKey.hz` as everywhere else (sakshi 285 agrees, shweta is 342 — the recorded
+    /// VOICES-vs-CHAR disagreement, where VOICES holds the pitch).
+    private func lensVoice(_ to: Double) {
+        soundEngine.presence(to > 0.5 ? .sakshi : .shweta, dur: 9)
+    }
+
+    private func setLens(_ to: Double, from was: Double) {
+        if LensRail.crossed(was: was, to: to) { lensVoice(to) }
+        lensTarget = to
+        lensOn = to > 0.5
+        chaseLens()
+    }
+
+    /// B7.4 · the rail itself — a 30px strip down the right edge, a 148px hairline track, a
+    /// 6px knob. The label is shown only while the hand is on it (`:1679`, `:1691`), so the
+    /// sky is not captioned at rest.
+    private var lensRail: some View {
+        HStack {
+            Spacer()
+            ZStack(alignment: .trailing) {
+                Rectangle()
+                    .fill(LinearGradient(colors: [.clear,
+                                                  Color(hex: "#EDE8E3").opacity(0.18),
+                                                  .clear],
+                                         startPoint: .top, endPoint: .bottom))
+                    .frame(width: 1, height: 148)
+                    .padding(.trailing, 9)
+                Circle()
+                    .fill(Color(hex: "#EDE8E3").opacity(LensRail.knobAlpha(lensTarget)))
+                    .frame(width: 6, height: 6)
+                    .shadow(color: Color(hex: "#EDE8E3").opacity(0.20), radius: 5)
+                    .padding(.trailing, 6.5)
+                    .offset(x: LensRail.knobX(lensTarget))
+                    .animation(railing ? nil : .timingCurve(0.2, 0.7, 0.2, 1, duration: 0.5),
+                               value: lensTarget)
+                // **THE NAMES ARE BACK BECAUSE THE CONTROL THEY NAME IS ON SCREEN.** The
+                // recorded divergence — which replaced them with `the structure ›` / `the
+                // light ›` — retires here as resolved by build, not corrected as an error: it
+                // was right that reverting the strings alone would have named a rail that did
+                // not exist.
+                // `:1386` — `font-size:8px; letter-spacing:.2em; text-transform:uppercase`.
+                // Through `spaceMonoTracked` so the case comes from the ROLE, as E1.18's
+                // ruling put it, and not from this call site remembering to ask.
+                Text(LensRail.label(lensTarget))
+                    .spaceMonoTracked(8, em: 0.2)
+                    .foregroundStyle(Color(hex: "#EDE8E3").opacity(0.46))
+                    .padding(.trailing, 36)
+                    .fixedSize()
+                    .opacity(labelShown ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.6), value: labelShown)
+            }
+            .frame(width: 30)
+            .contentShape(Rectangle())
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { v in
+                    if !railing {
+                        railing = true; railBase = lensTarget
+                        railStartX = Double(v.startLocation.x)
+                        labelShown = true
+                    }
+                    lensTarget = LensRail.drag(base: railBase,
+                                               startX: railStartX,
+                                               x: Double(v.location.x))
+                    chaseLens()
+                }
+                .onEnded { v in
+                    railing = false
+                    labelShown = false
+                    let moved = abs(railStartX - Double(v.location.x))
+                    // `:1694` — under the slop it was a tap, and a tap goes to the other end.
+                    let to = moved > LensRail.tapSlop ? LensRail.snap(lensTarget)
+                                                      : LensRail.toggle(railBase)
+                    setLens(to, from: railBase)
+                    if moved <= LensRail.tapSlop {
+                        labelShown = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) { labelShown = false }
+                    }
+                })
+        }
+        .padding(.bottom, 34)
     }
 
     /// A tap. `The Universe v3.html:1638-1673`.
@@ -368,7 +455,8 @@ struct UniverseView: View {
     /// The hit radius grows with the approach — `max(16, pr·z·1.2)` — so a far star stays
     /// tappable and a near one is easy to hit.
     private func handleTap(_ loc: CGPoint, _ size: CGSize) {
-        // Leave the top-left corner to the ‹ chevron and the bottom-right to the lens toggle.
+        // Leave the top-left corner to the ‹ chevron. The lens rail owns the right edge and
+        // takes its own gesture, so it needs no exclusion here.
         if loc.y < 78 { return }
 
         // ── INSIDE THE FALL, THE TOUCHABLE THINGS COME FIRST. `uni-fall.js:163-167` tests

@@ -53,7 +53,15 @@ struct LightView: View {
     /// E1.3 · the Declaration drawing itself in, unasked — `spine-light.js:149`.
     @State private var drew: Double = 0
     @State private var carved = false
-    @State private var pendingAnchor = false      // a touch asked; the next exhale answers
+    /// E1.7 · **UP TO TWO ASKS MAY BE QUEUED, AND THE EXHALE ANSWERS ONE PER BREATH.**
+    /// `Claude Design Round 1/comps/The Light v2.html:759` — `wants = min(2, wants+1)`. A
+    /// `Bool` could hold only one, so a second touch during a breath was simply lost: the
+    /// register's law is *a touch asks and the next exhale answers*, and dropping the ask
+    /// makes it *a touch asks unless you already asked*.
+    @State private var wants = 0
+    /// The cycle the last delivery went out on — `:763`'s `last`. Delivery needs a NEW
+    /// breath, not merely an exhaling one, or one long exhale delivers everything.
+    @State private var lastDelivered = -1
 
     // The Declaration — drawn in one line at a time, each over ~4.2s of held breath
     // (comp The Light v2 · LitSpace). Never delivered whole.
@@ -91,6 +99,8 @@ struct LightView: View {
     private func anchorInk(_ newest: Bool) -> Color { isNave ? Color(hex: newest ? "#16131B" : "#625849") : BinduTheme.inkSecondary }
     private var carveInk: Color { isNave ? Color(hex: "#16131B") : Color(hex: "#F5E8DE") }
     private var carveShadow: Color { isNave ? Color.white.opacity(0.92) : Color.black.opacity(0.72) }
+    /// `:30` — `0 -0.5px 0.5px rgba(22,19,27,0.22)`, the dark lip above the cut.
+    private var carveRim: Color { isNave ? Color(hex: "#16131B").opacity(0.22) : Color.white.opacity(0.16) }
 
     var body: some View {
         ZStack {
@@ -315,20 +325,42 @@ struct LightView: View {
         return -filled * 96 - (beatActive ? 42 : 0)
     }
 
+    // E1.17 · **THE TYPE IS THE REGISTER'S ONLY VOICE HERE, SO ITS SIZES ARE THE CONTENT.**
+    // `The Light v2.html:826-853`. Every number below is that block's, and three of them are
+    // not decoration:
+    //
+    //  · **the whole SHRINKS, 21 → 15, over 2.6s** as the first anchor lands (`:827-828`
+    //    transitions `font-size`, `color` and `line-height` together). It arrives at the size
+    //    of the only thing on the floor and demotes itself to a heading once it has been
+    //    received. The app held it at a fixed 19 — between the two, so it was never either.
+    //  · **the Declaration is 21, not 17, and carries NO extra weight** (`:841`). The app made
+    //    it `.semibold` to read as cut; the comp cuts it with the shadow pair, not the face.
+    //  · **the deboss is TWO shadows** (`:30`) — white below AND a dark hairline above. One
+    //    shadow is a drop shadow; the pair is a groove.
+    private var wholeIsAlone: Bool { shownAnchors == 0 }
+    private var settledInk: Color { anchorInk(false) }
+
     private var sceneBody: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 0) {
             Spacer()
-            // The whole — arrives with the light.
+            // The whole — arrives with the light, then settles as the anchors take over.
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(scene.whole, id: \.self) { line in
-                    Text(line).font(.lora(19, weight: .medium)).foregroundStyle(wholeInk)
+                    Text(line)
+                        .loraSize(LightType.wholeSize(alone: wholeIsAlone))
+                        .tracking(LightType.wholeTracking(alone: wholeIsAlone))
+                        .lineSpacing(LightType.wholeLeading(alone: wholeIsAlone))
+                        .foregroundStyle(wholeInk)
                 }
             }
+            .padding(.bottom, LightType.wholeGap(alone: wholeIsAlone))
+            .animation(.easeInOut(duration: 2.6), value: wholeIsAlone)
 
             // The anchors — one at a time, on a touch (release answers the ungrip).
             ForEach(Array(scene.anchors.prefix(shownAnchors).enumerated()), id: \.offset) { i, line in
-                Text(line).font(.lora(15)).lineSpacing(6)
+                Text(line).font(.lora(LightType.anchorSize)).lineSpacing(LightType.anchorLeading)
                     .foregroundStyle(anchorInk(i == shownAnchors - 1))   // only the newest is living
+                    .padding(.bottom, LightType.anchorGap)
                     .transition(.opacity)
             }
 
@@ -336,20 +368,23 @@ struct LightView: View {
             // over ~4.2s of held breath (never delivered whole); it locks when he has taken
             // the whole of it. The turn to first person happens in his body first.
             if shownAnchors >= scene.anchors.count {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: LightType.beatGap) {
                     // the locked lines — debossed into the floor, they never settle
                     ForEach(0..<max(0, beatLine + 1), id: \.self) { i in
                         Text(scene.beat[i])
-                            .font(.lora(17, weight: .semibold))
+                            .font(.lora(LightType.beatSize)).tracking(LightType.beatTracking).lineSpacing(LightType.beatLeading)
                             .foregroundStyle(carveInk)
                             .shadow(color: carveShadow, radius: 0, x: 0, y: 1)
+                            .shadow(color: carveRim, radius: 0.5, x: 0, y: -0.5)
                     }
                     // the line surfacing out of the stone right now, as he draws it in
                     if moreBeat, drawing > 0 {
                         Text(scene.beat[beatLine + 1])
-                            .font(.lora(17, weight: .semibold))
+                            .font(.lora(LightType.beatSize)).tracking(LightType.beatTracking).lineSpacing(LightType.beatLeading)
                             .foregroundStyle(carveInk.opacity(0.06 + drawing * 0.94))
-                            .shadow(color: carveShadow.opacity(drawing), radius: 0, x: 0, y: 1)
+                            // `:848` — the highlight RISES with the draw (`0 ${drawing}px`), so
+                            // the groove deepens as the line surfaces rather than arriving cut.
+                            .shadow(color: carveShadow.opacity(drawing * 0.95), radius: 0, x: 0, y: drawing)
                             .offset(y: (1 - drawing) * 10)
                             .blur(radius: (1 - drawing) * 3.4)
                     }
@@ -359,7 +394,8 @@ struct LightView: View {
                 if landed {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(scene.landing)
-                            .font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
+                            .font(.loraItalic(LightType.landingSize)).lineSpacing(LightType.landingLeading)
+                            .foregroundStyle(settledInk)
                         Button {
                             // `The Light v2.html:801` — `const leave = () => {
                             // Sound.closeTheRoom(6); Sound.darkReturns(); onLeave(); }`.
@@ -562,7 +598,7 @@ struct LightView: View {
             ungrips += 1
             soundEngine.axisUngrip()              // the field answers the opened hand
         } else {
-            pendingAnchor = true                  // wait for the breath to turn
+            wants = min(2, wants + 1)             // `:759` — a second ask is kept
         }
     }
 
@@ -574,9 +610,18 @@ struct LightView: View {
     }
 
     // The exhale answers what the touch asked (delivered near the breath's turn).
+    /// E1.7 · `:764-765` — fires only on a NEW breath cycle whose phase is `'out'`.
+    ///
+    /// This read `breath.value > 0.9`, and on an eased 0→1→0 curve that is **the peak of the
+    /// INHALE** — so the register's one law, *a touch asks and the next exhale answers*,
+    /// delivered on the wrong half of the breath. The value alone cannot tell the two halves
+    /// apart: 0.9 rising and 0.9 falling are the same number. The linear `phase` can —
+    /// `0.5 … 1.0` is the falling half.
     private func deliverOnExhale() {
-        guard pendingAnchor, breath.value > 0.9 else { return }
-        pendingAnchor = false
+        guard wants > 0 else { return }
+        guard breath.phase >= 0.5, breath.cycle != lastDelivered else { return }
+        lastDelivered = breath.cycle
+        wants -= 1
         revealAnchor()
     }
 
@@ -622,7 +667,13 @@ struct LightView: View {
         if beatLine >= scene.beat.count - 1 {
             let declaration = scene.beat.joined(separator: " ")
             Task { await store.writeVow(text: declaration) }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            // E1.8 · `Claude Design Round 1/comps/The Light v2.html:792` —
+            // `setTimeout(…, breathMs*1.6)`, and `breathMs` is the true breath: **16 000ms**,
+            // not 1.6 seconds. The comment said *"a breath and a half later"* and the number
+            // said a breath and a half of nothing — a tenth of the wait, so the landing
+            // arrived while the last line was still settling instead of after it had been sat
+            // with. The unit was dropped, and the prose kept describing the intent.
+            DispatchQueue.main.asyncAfter(deadline: .now() + Breath.period * 1.6) {
                 withAnimation(.easeInOut(duration: 1.0)) { landed = true }
             }
         }
@@ -659,7 +710,7 @@ struct LightView: View {
         stillMs = 0; shownAnchors = 0; ungrips = 0; arrive = 0; wholeDelivered = false
         drew = 0; carved = false
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
-        pendingAnchor = false; touching = false; lastInput = Date()
+        wants = 0; lastDelivered = -1; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }
         begin()
     }
@@ -756,4 +807,20 @@ private struct LightStars: View {
         let x = sin(i * 127.1 + 31.4) * 43758.5453
         return x - floor(x)
     }
+}
+
+// E1.17 · SwiftUI will not interpolate a `.font`, so a size that is meant to TRAVEL needs its
+// own animatable channel — otherwise `21 → 15` snaps and the 2.6s settle is not on screen.
+private struct LoraSize: ViewModifier, Animatable {
+    var size: CGFloat
+    var animatableData: CGFloat {
+        get { size }
+        set { size = newValue }
+    }
+    func body(content: Content) -> some View { content.font(.lora(size)) }
+}
+
+extension View {
+    /// The Lora face at a size that can be animated between two values.
+    func loraSize(_ size: CGFloat) -> some View { modifier(LoraSize(size: size)) }
 }
