@@ -143,6 +143,23 @@ import Foundation
         #expect(zs == zs.sorted(), "the worlds are not in axis order")
     }
 
+    @Test("the load counts the shells over HIM, not over the room")
+    func theLoadIsReadFromWhereHeIs() {
+        // `:120` and `:143` both pass the LIVE Z — `bear(dt, Z)`, `ld = this.load(Z)`. The
+        // register's own depth is the right reference for `rim`, which asks *how far is this
+        // room from me*; it is the wrong one for the load, which asks *how much is standing on
+        // me*. Using it there froze the count however far in he actually was.
+        #expect(PointChamber.load(z: PointChamber.z + 1) >= PointChamber.load(z: PointChamber.z))
+        #expect(PointChamber.load(z: PointChamber.z - 2) < PointChamber.load(z: PointChamber.z),
+                "rising toward the surface did not lighten the load")
+        // and the two readings are genuinely different questions about the same axis
+        let base = 100.0
+        #expect(PointChamber.rim(liveZ: PointChamber.z, base: base) == base,
+                "`rim` is not neutral at the room's own register")
+        #expect(PointChamber.load(z: PointChamber.z) == 1,
+                "the room's own register is not the full shell count")
+    }
+
     @Test("the room is already bearing before he touches it")
     func theStandingLoadIsNotZero() {
         // *"You are the magma layer — pressured by every shell above."* The shells are the

@@ -643,7 +643,7 @@ private struct WorldChamber: View {
         lastTick = now
         guard dt > 0 else { return }
         if pressing != nil {
-            press = min(1, press + dt * PointChamber.pressRate(z: PointChamber.z))
+            press = min(1, press + dt * PointChamber.pressRate(z: liveZ))
         } else if press > 0 {
             press = max(0, press - dt * PointChamber.relaxRate)
             // D5.5 · `world-four.js:130-133` — **THE NICHE DOES NOT CLOSE WHEN THE HAND LIFTS.
@@ -727,7 +727,13 @@ private struct WorldChamber: View {
     /// derived from `Date()`, which SwiftUI does not observe, so a held finger produced one
     /// render at elapsed ≈ 0 and no more; and the press ends at the first gate, capping any
     /// hand contribution at 0.22. The standing load has no such ceiling and needs no hand.
-    private var bearing: Double { PointChamber.bearing(z: PointChamber.z, press: press) }
+    /// **THE LOAD IS READ FROM WHERE HE IS, NOT FROM WHERE THE ROOM LIVES.** `world-four.js:120`
+    /// and `:143` both pass the LIVE `Z` — `bear(dt, Z)` and `ld = this.load(Z)` — so the
+    /// shells standing over him are counted from his own position on the axis, and the room
+    /// bears more as he descends into it. `PointChamber.z` is the room's own register and is
+    /// the right reference for `rim`; it is the wrong one for the load, and using it there
+    /// froze the count at the register's value however far in he actually was.
+    private var bearing: Double { PointChamber.bearing(z: liveZ, press: press) }
 
     /// The hand's own contribution, advanced per frame while held and relaxing when let go —
     /// `:119` `press += dt*(0.30 + load(Z)*0.26)`, `:130` `press -= dt*0.52`. A `@State` the
@@ -826,7 +832,7 @@ private struct WorldChamber: View {
                     // the back wall by `conc·(ld·rim·0.05 + pr·rim·0.055)`, so the vault
                     // visibly gives where the weight is. This replaces nine evenly-spaced
                     // horizontal rules that were the same at every load.
-                    let ld = PointChamber.load(z: PointChamber.z)
+                    let ld = PointChamber.load(z: liveZ)
                     let a0 = P(.left, 0, 1), a1 = P(.right, 0, 1)
                     for v in 0..<9 {
                         let f = (Double(v) + 0.5) / 9
@@ -1039,7 +1045,7 @@ private struct WorldChamber: View {
                                     let held = Date().timeIntervalSince(pressedAt)
                                     // `pressRate(z:)` at world IV's own depth — the load of the
                                     // registers standing over this one sets how fast it cuts.
-                                    if held * PointChamber.pressRate(z: PointChamber.z) >= PointChamber.gates[0] {
+                                    if held * PointChamber.pressRate(z: liveZ) >= PointChamber.gates[0] {
                                         PointChamber.strike(p.star.key, to: 1)
                                         endPress()
                                         onOpen(p.star)
