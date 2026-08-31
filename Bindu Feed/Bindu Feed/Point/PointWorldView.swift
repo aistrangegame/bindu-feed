@@ -22,6 +22,17 @@ struct PointWorldView: View {
     /// and `#where` steps aside because a star is held.
     var onHold: (Bool) -> Void = { _ in }
 
+    /// `piece()` — `The Instrument v3.html:5307-5311`. How much of the open reading he has
+    /// been given, or `nil` when no reading is open. This is `immA`'s only input from the
+    /// Point side, and it is deliberately NARROWER than `onHold`:
+    ///
+    /// `onHold` is true for a universe body as well as a reading, because its question is
+    /// *"does a front layer own the vertical"*. `piece()` has no case for a world body at all
+    /// — a constellation he is standing in front of is not a piece he is inside — so a
+    /// universe body must not withdraw the world. Two questions, two channels; collapsing
+    /// them would make the axis fade out the instant he opened a universe.
+    var onPiece: (Int?) -> Void = { _ in }
+
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var selectedUniverse: PointUniverse?   // the middle tier: dimension → universe → star
     @State private var openStar: PointStar?
@@ -286,6 +297,10 @@ struct PointWorldView: View {
         // describes, and the others hold their own beat unless their law moves it.
         .onChange(of: revealed) { _, r in
             if dimensionN == 1 { apply(.admitted(Double(r) / 4)) }
+            // `:5498` — `given(pc.m)/4` is `immA`'s target, so the count has to travel too.
+            // `syncAxisLock` only fires when a reading OPENS or CLOSES; the four sections in
+            // between are exactly the depth `immA` exists to measure.
+            if openStar != nil { onPiece(r) }
         }
         // EVERY REGISTER LEAVES AS IT ARRIVED — see `SoundEngine.releaseRegisterLaws`.
         // Entering must not inherit the previous register's physics, and leaving must not
@@ -312,7 +327,7 @@ struct PointWorldView: View {
         }
         // Released on the way out, like the fall's four scoped paths: a register that is no
         // longer mounted must never still be holding the vertical.
-        .onDisappear { park(); onHold(false); PointYantra.shared.readingOpen = false; carryDone = false }
+        .onDisappear { park(); onHold(false); onPiece(nil); PointYantra.shared.readingOpen = false; carryDone = false }
         .onAppear {
             syncAxisLock()
             if let dim { PointJourney.enteredDims.append(dim.name) }
@@ -348,6 +363,7 @@ struct PointWorldView: View {
     /// `applyDrag`, so no call path can route around it. It only ever needed to be told.
     private func syncAxisLock() {
         onHold(openStar != nil || selectedUniverse != nil)
+        onPiece(openStar != nil ? revealed : nil)
         // The figure recedes under a READING specifically — not under the universe body,
         // where the nodes are standing on the figure and it is the thing being looked at.
         PointYantra.shared.readingOpen = openStar != nil

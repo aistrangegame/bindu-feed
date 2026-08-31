@@ -478,3 +478,128 @@ enum CarryVoicing {
     static func peak(step i: Int) -> Double { 0.034 / (Double(i) * 0.6 + 1) }
     static func delay(step i: Int) -> Double { Double(i) * 0.30 }
 }
+
+/// **HOW FAR INSIDE A PIECE HE IS.** `The Instrument v3.html:5493-5503` — the quantity four
+/// audit rows were multiplying against a constant zero.
+///
+/// `:5493-5495` names it: *"Not a state he is put into: a depth the piece draws him to, one
+/// section at a time, until the world has nothing left to show."* It is not a flag and not a
+/// mode. It is the **crossfade weight between the world and the piece** — one scalar the whole
+/// instrument reads to decide how much of the world is still there. Every consumer is a
+/// multiplication by `immA` or by `1 − immA`; there are fifteen and **every one of them is
+/// CPU**. The design's shader uniforms (`:1912-1915`) and `Field.draw` (`:2124-2145`) carry no
+/// immersion term, and neither does `InstrumentField.metal:184-188`. Nothing to add there:
+///
+/// > `immA` must never be folded into `uReveal`, into `Axis.weight`, into `Axis.rim`, into the
+/// > tone-map, or into the fragment's returned alpha. The design takes the field away from
+/// > OUTSIDE it — `gl.style.opacity` at `:5614` — because the canvas is opaque
+/// > (`alpha:false`, `:2085`). In SwiftUI that is `.opacity()` on the view, not in the shader.
+///
+/// That is the same boundary `Spine.weight` teaches from the other side, running the other
+/// way: there, three terms of the field's depth dressing looked like part of the CPU law and
+/// were the shader's. Here a CPU law looks like it wants to be in the shader and must not go.
+enum Immersion {
+
+    /// `:5498` — `tgt = max(pc.d*0.5, given(pc.m)/4) * IMMCAP`. Two channels, whichever is
+    /// deeper; zero when no piece is open, so letting go targets zero on the same frame.
+    ///
+    /// **THE HALVED-DEPTH CHANNEL IS INERT FOR EVERY PIECE THIS APP CAN REACH**, and that is
+    /// measured rather than assumed. For d1/d2/d3/d4 `displaced()` IS `given/4` (`:2478`,
+    /// `:2705`, `:2964`, `:3233`), so `d*0.5 = given/8` and the `max` always takes the section
+    /// count; for d7 `d = min(1, caught/4)` halves the same way; for the fall word
+    /// `FALLPIECE={given:4}` with `d:1` gives `0.5` against `1`. It bites in exactly one place
+    /// — the Light, where `piece()` hands up `d: LT.arrive*2` so that `d*0.5` is `arrive`
+    /// exactly, which is `:5297-5299`'s sentence: *"the world withdraws by exactly as much as
+    /// the arrival has completed."* The Light is a route push in this app, not an in-axis
+    /// register, so that channel has nowhere to arrive from yet — see C4.7.
+    ///
+    /// `IMMCAP` (`:4927`) is a ceiling, never a rate, and is only ever written by
+    /// `applyTweaks` (`:4950`) from `TWK_IN={stays:0.44,withdraws:0.80,goes:1}` (`:4926`).
+    /// The app has no tweak panel, so it is the declared default 1 — recorded, not invented.
+    /// Worth knowing what the panel does: `stays` = 0.44 puts the ceiling BELOW `onThreshold`,
+    /// so under that setting immersion can never become true at all.
+    static func target(displacement d: Double, given: Int, cap: Double = 1) -> Double {
+        max(d * 0.5, Double(min(4, max(0, given))) / 4) * cap
+    }
+
+    /// `:5501` — `immA += (tgt−immA) * min(1, dt*(tgt>immA ? 1.6 : 2.6))`.
+    ///
+    /// **LEAVING IS 1.625× FASTER THAN ARRIVING, AND THE ASYMMETRY IS THE SENTENCE.** Explicit
+    /// Euler on `ẋ = k·(tgt − x)` with the rate chosen per frame by direction: τ = 0.625 s
+    /// going in, 0.385 s coming out. A depth a piece *draws* him to has to be slower than his
+    /// own hand or it is a mode he was put into; a withdrawal has to be faster than the
+    /// arrival or the world feels like it is grudging him back. The full return — 1.0 down to
+    /// the 0.012 floor at `:5596` — is 1.70 s; at a symmetric 1.6 it would be 2.76 s.
+    ///
+    /// `min(1, dt*k)` is load-bearing, not decoration: it is the only thing preventing
+    /// overshoot on a long frame (it binds at dt ≥ 0.625 s in, 0.385 s out) and there becomes
+    /// a clean snap to target. This is why the port is arithmetic on a display link and NOT
+    /// `withAnimation` — a SwiftUI spring overshoots by design, and an `easeInOut` cannot
+    /// change rate by direction mid-flight.
+    static func step(_ immA: Double, toward tgt: Double, dt: Double) -> Double {
+        immA + (tgt - immA) * min(1, max(0, dt) * (tgt > immA ? 1.6 : 2.6))
+    }
+
+    /// `:5503` — `IMM.on = !!pc && immA > 0.55`. With the cap at 1 and the section channel
+    /// carrying every reachable piece, this is exactly **three of four sections admitted**.
+    ///
+    /// It is NOT `pointHolds`, which is this app's own front-layer-owns-the-hand flag and is
+    /// true from `revealed == 0`. Two different events; see `InstrumentView.immersed`.
+    static let onThreshold = 0.55
+
+    /// `:5596` — below this the piece's material is not painted at all, and it is also the
+    /// floor the withdrawal is measured down to (1.70 s from full, against 2.76 s if the
+    /// approach rate were used for both directions).
+    ///
+    /// UNWIRED(AUDIT C4.7, still OPEN — the gate belongs to `MAT.paint`, and the app has no
+    /// per-register material layer for it to gate. Recorded at the law rather than left to be
+    /// re-derived when that layer is built.)
+    static let floor = 0.012
+
+    /// `:5406` — the travel caption dies here, ~1.6 s BEFORE `onThreshold` is reached going
+    /// in. The redundancy in `IMM.on || immA > 0.2 || |Z| < 0.3` is deliberate: the caption
+    /// goes as the withdrawal starts, not at the depth crossing.
+    ///
+    /// UNWIRED(AUDIT C5.4, still OPEN — `#trav`'s `.from`/`.to` register pair was never built,
+    /// so there is no caption to hide. `TravOnce` is `#trav .once`, a different child.)
+    static let captionCeiling = 0.2
+
+    // MARK: - what the consumers are, as arithmetic
+    //
+    // Named here rather than written inline in the view bodies, for the reason every other
+    // formula in this file is: **an assertion about an expression that lives only in a view
+    // has to re-implement it, and a test that re-implements its subject cannot fail.** These
+    // are the same move as `FieldBlur`, `MembraneRing` and `BinduParticleRadius` — one design
+    // line each, callable, so `ImmersionTests` asserts what the app actually runs.
+
+    /// `:5737` — `cy = H/2*(1−imm) + H*0.132*imm`, as a fraction of height from the TOP.
+    ///
+    /// **THE PARTICLE DOES NOT ANSWER DEPTH.** On the bare axis it sits dead centre at every
+    /// register from the feed to the centre; it rises only as a piece takes him in. Rising
+    /// means this number FALLS, which is the direction a careless assertion gets backwards.
+    static func particleCentreY(immA: Double) -> Double { 0.5 * (1 - immA) + 0.132 * immA }
+
+    /// `:5598` — `(1−immA)*(1−PS.dom()*0.94)`, the alpha the whole world layer is drawn at.
+    /// The `0.94` is NOT the rail's `0.9`: at a full crossing this leaves 0.06 and the rail
+    /// leaves 0.10, two residues on two elements a reader would assume share a number.
+    static func worldLayer(immA: Double, dom: Double) -> Double { (1 - immA) * (1 - dom * 0.94) }
+
+    /// `:5644` — `(1−hush*0.85)*(1−immA)*(1−PS.dom()*0.9)`. Without the `0.9` the ladder
+    /// hard-zeroes at a full crossing, where the design leaves it faintly there: the rail is
+    /// the one thing that says where he is going while he is being carried there.
+    static func railOpacity(hush: Double, immA: Double, dom: Double) -> Double {
+        (1 - hush * 0.85) * (1 - immA) * (1 - dom * 0.9)
+    }
+
+    /// `:5645` — `(1−hush)*(1−immA)`. **NO BASE CONSTANT.** The `0.9` is `#pname`'s and had
+    /// been transposed onto this element; see `pnameOpacity`.
+    static func whereOpacity(hush: Double, immA: Double) -> Double { (1 - hush) * (1 - immA) }
+
+    /// `:5646` — `0.9*(1−hush)*(1−immA)`. The `0.9` belongs HERE. The port had it on `#where`
+    /// and gave this element `1.0`, so both siblings were wrong in opposite directions and
+    /// each read as a considered number because the other sat beside it. Both rows were
+    /// CLOSED (C5.2, C5.6) with the constant on the wrong one.
+    static func pnameOpacity(hush: Double, immA: Double) -> Double {
+        0.9 * (1 - hush) * (1 - immA)
+    }
+}

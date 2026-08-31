@@ -1517,10 +1517,20 @@ final class SoundEngine: ObservableObject {
         let v = AxisSurface.strain(f)
         strainVoice?.set(gain: v.gain, centre: v.centre)
     }
-    func axisGive(hz: Double) {                        // it breaks — noise + the destination threshold
+    /// C7.5 · **IT GIVES: THE STRAIN SNAPS AND THE FAR SIDE RINGS.**
+    /// `canon/spine-sound.js:87-96` — a bandpass noise burst at 1600/Q 0.8 from **0.055**,
+    /// and then, **inside the same call**, `this.threshold(hz)`.
+    ///
+    /// The app played the burst at 0.03 — 45% quiet — and **dropped the threshold entirely**,
+    /// so the snap had no far side. That is the whole sentence the mechanism makes: something
+    /// lets go, and the place you have arrived rings. A burst alone is a noise; the pair is a
+    /// crossing. The threshold is not a second event a caller may add — the design puts it in
+    /// `give`, so every giving rings by construction and no call site can forget it.
+    func axisGive(hz: Double) {
         playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
-                           peak: 0.03, attackSeconds: 0.02, releaseSeconds: 0.5,
+                           peak: 0.055, attackSeconds: 0.02, releaseSeconds: 0.5,
                            mode: .noise, noiseCentre: 1600), maxWait: 1)
+        spineThreshold(hz: hz)                          // `:95` — the far side, in the same call
     }
     /// C7.6 · **THE PASSAGE, SOUNDED.** `canon/spine-sound.js:110-127` — *"falling through a
     /// throat is not a threshold; it is a rush that builds, opens, and is swallowed by the

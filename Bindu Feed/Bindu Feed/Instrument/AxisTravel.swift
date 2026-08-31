@@ -42,6 +42,60 @@ final class AxisTravel: ObservableObject {
     @Published private(set) var passageDir: Double = 1   // +1 inward (wormhole) · −1 outward (whitehole)
     @Published private(set) var speed: Double = 0        // |velocity| — feeds the glide's level
 
+    /// `immA` — `The Instrument v3.html:5501`, integrated here because this object owns the
+    /// frame clock and the design integrates it in the same loop that advances Z.
+    ///
+    /// **IT LIVES ON THE CLOCK, NOT IN A VIEW.** A `@State` mutated per frame from inside a
+    /// `TimelineView` body is SwiftUI's "modifying state during view update" fault; and the
+    /// law is explicit Euler with a direction-dependent rate, which no `withAnimation` can
+    /// express. `Immersion.step` is the arithmetic; this is only where the seconds come from.
+    @Published private(set) var immA: Double = 0
+
+    /// `!!pc` — whether a piece is open at all. Separate from `immA` because `:5503` needs
+    /// BOTH: an immersion value that is still fading out after the piece is gone is not
+    /// immersion, it is the withdrawal.
+    @Published private(set) var pieceOpen = false
+    private var pieceGiven = 0
+    private var pieceDisplacement: Double = 0
+    private var pieceDimension = 0
+
+    /// `hush` — `:5642-5643`. `inWorld()` returns the live reading's own `displaced()`, and
+    /// `hush = withStar ? max(0.42, dspNow) : 0`. The chrome steps aside for a reading by at
+    /// LEAST 0.42 the moment one opens, and further as it is given.
+    ///
+    /// Its scope is NOT `piece()`'s. `inWorld` (`:5635-5640`) covers d1…d4 only — registers
+    /// 2, 3, 4, 5 — so in the Dance the chrome fades by `immA` alone and never by `hush`.
+    /// It also carries no `||IMM.on` latch, where `piece()` does: `hush` answers the live
+    /// gesture, not the state the gesture put him in.
+    var hush: Double {
+        guard pieceOpen, (1...4).contains(pieceDimension) else { return 0 }
+        return max(0.42, Double(min(4, max(0, pieceGiven))) / 4)
+    }
+
+    /// `IMM.on` — `:5503`. Not `pointHolds`: that is true from the moment a reading opens,
+    /// this is true only once three of its four sections have been admitted.
+    var immersed: Bool { pieceOpen && immA > Immersion.onThreshold }
+
+    /// `:5496-5500` — the app's reach of `piece()`. `given` is the reading's `revealed`.
+    ///
+    /// `displacement` defaults to 0 because the halved-depth channel cannot win for any piece
+    /// this app can reach (see `Immersion.target`); it is a parameter rather than a constant
+    /// so the Light can hand up `arrive*2` when C4.7 gives it somewhere to hand it from.
+    func setPiece(given: Int, dimension: Int = 0, displacement: Double = 0) {
+        pieceOpen = true; pieceGiven = given
+        pieceDimension = dimension; pieceDisplacement = displacement
+    }
+
+    /// `letGo()` (`:5346-5353`) — the identity and the count are dropped on the SAME frame the
+    /// piece closes, and every module's `reset` zeroes `given` (`:2441`, `:2653`, `:2903`,
+    /// `:3172`). Only `immA` is left to fall on its own. `:5505` is not this path: it is the
+    /// fallback for a piece that LAPSES without a `letGo`, and its job is to keep the piece's
+    /// material key alive through the fade — which for every key but the Far light scene is
+    /// the register's own key anyway.
+    func clearPiece() {
+        pieceOpen = false; pieceGiven = 0; pieceDimension = 0; pieceDisplacement = 0
+    }
+
     var onCross: ((AxisRegister) -> Void)?
 
     /// C7.11 · **A LANDING IS NOT A CROSSING, AND ONLY A LANDING SOUNDS.**
@@ -295,6 +349,18 @@ final class AxisTravel: ObservableObject {
     func advance(dt rawDt: CFTimeInterval) {
         // `:3604` — `if (this.after > 0) this.after = Math.max(0, this.after - dt/0.75)`.
         if after > 0 { after = max(0, after - min(0.05, rawDt) / 0.75) }
+
+        // `:5497-5501` — BEFORE the passage branch, because the design integrates immA in the
+        // main loop unconditionally. A withdrawal that paused for the 5.4s of a crossing would
+        // hold the world at whatever alpha it had when he left.
+        //
+        // The design's own `min(1, dt*k)` clamp is kept inside `Immersion.step` for fidelity
+        // and cannot bind here: `dt` is capped at 1/30 below, and 0.0333·2.6 = 0.087.
+        let tgt = pieceOpen
+            ? Immersion.target(displacement: pieceDisplacement, given: pieceGiven)
+            : 0
+        immA = Immersion.step(immA, toward: tgt, dt: min(rawDt, 1.0 / 30.0))
+
         var dt = rawDt
         guard dt > 0 else { return }
         dt = Swift.min(dt, 1.0 / 30.0)

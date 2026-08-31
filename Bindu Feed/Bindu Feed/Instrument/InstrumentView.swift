@@ -48,6 +48,32 @@ struct InstrumentView: View {
     private var dom: Double {
         Axis.dom(crossing: travel.crossing, passageT: travel.passageT, after: travel.after)
     }
+
+    /// `immA` (`:5501`) and `hush` (`:5643`) — the two quantities the chrome fades by, both
+    /// integrated on `AxisTravel` because that is where the frame clock is.
+    private var immA: Double { travel.immA }
+    private var hush: Double { travel.hush }
+
+    /// C4.7 · `:5598` — `fx.globalAlpha = (1−immA) * (1−PS.dom()*0.94)`, the alpha the whole
+    /// world layer is drawn at while a piece takes him in.
+    ///
+    /// **IT WRAPS THREE OF THIS ZSTACK'S LAYERS, NOT ONE.** The design draws six things inside
+    /// this one `save()` (`:5599-5606`): the weather, the Light side, the Universe side, the
+    /// Point side, `TR.drift`, and `TR.draw` — and `TR.draw` is the membrane ring AND the
+    /// stillness gate in a single call. This app renders those as separate top-level layers,
+    /// so putting the factor only on `content` would leave both rings at full brightness over
+    /// a world faded to nothing — and at full brightness through every crossing, where the
+    /// design has them at 0.06.
+    ///
+    /// `PointYantraView` is deliberately NOT included: it is app-own and has no counterpart
+    /// inside this block.
+    ///
+    /// **AND `PointRecede` IS NOT A SUBSTITUTE FOR THIS.** The design fades the worlds TWICE
+    /// on purpose — this containing layer, and each module's own `A = p·(1 − dsp·k)` inside it
+    /// (`:2484`, `:2711`, `:2980`, `:3240`). `PointReadings.worldAlpha` is a faithful port of
+    /// the inner half. The two COMPOSE in the design and must compose here; collapsing them is
+    /// the fold this boundary exists to prevent, running inward instead of outward.
+    private var worldLayer: Double { Immersion.worldLayer(immA: immA, dom: dom) }
     // Set true while a front layer (a Point world body, or a star reading ScrollView) is open,
     // so the axis drag stands down and the card's own scroll/pan works. Without this, the
     // outer `.highPriorityGesture` steals every drag from the presented card.
@@ -120,11 +146,18 @@ struct InstrumentView: View {
             // register forming ahead and the one receding behind are BOTH present as glow.
             // This is the rich "background" that was missing; the CPU shells below are now
             // only the interaction meniscus.
+            // `:5614` — `gl.style.opacity = 1 − immA`. **ON THE VIEW, NEVER IN THE SHADER.**
+            // The design's canvas is `alpha:false` and its fragment writes `vec4(...,1.)`: an
+            // OPAQUE layer taken away from outside. `InstrumentField.metal` has no immersion
+            // uniform and must not grow one — folding this into `uReveal` or the returned
+            // alpha would dim the field twice, once inside and once here.
             fieldBackground
+                .opacity(1 - immA)
 
             TimelineView(.animation) { _ in
                 shells
             }
+            .opacity(worldLayer)
 
             // THE YANTRA — one figure, behind the whole Point walk, and the camera is the
             // walk itself. Not nine backdrops: `The Point v9.html:923-937 camera()` drives ONE
@@ -143,7 +176,7 @@ struct InstrumentView: View {
             // (−4…−1) stays continuously present as one camera (fading only at its feed/light
             // edges) so the flowing camera doesn't pulse dim between the four registers.
             content
-                .opacity(contentOpacity)
+                .opacity(contentOpacity * worldLayer)
                 // No opacity threshold. `content` is a `switch` on `here.key`, so exactly ONE
                 // register is ever mounted and it is always the nearest — and with the floor
                 // above, a mounted register is never dimmer than 0.494. There is no state in
@@ -162,7 +195,8 @@ struct InstrumentView: View {
                 stillnessGate
             }
 
-            // The one particle — rides centre → crown, and blooms into the world at +9.
+            // The one particle — dead centre until a piece takes him in, and it blooms
+            // into the world at +9.
             particle
 
             // The particle's self-name at this scale (#pname), floated just beneath it.
@@ -308,9 +342,16 @@ struct InstrumentView: View {
             // arithmetic; the hue mixes between the two enclosures he is between.
             PointYantra.shared.setEnclosure(PointYantra.focus(forAxisZ: travel.z))
         }
-        .onChange(of: travel.crossing) { _, crossing in
-            if crossing { soundEngine.axisGive(hz: here.hz) }   // it breaks — the strain snaps
-        }
+        // C7.5 · **THE GIVE IS THE LANDING, NOT THE LEAVING.** `The Instrument v3.html:5452`
+        // — `if(ev==='land'){ Z=PS.z1; TR.s=-1; B.give(S.REG[PS.to].hz); }`. It fired here on
+        // `crossing == true`, the passage's START, with `here.hz` — the register he is
+        // LEAVING. So the snap sounded as he set off, pitched at the place he was leaving:
+        // the right sound, at the wrong end of the crossing, naming the wrong side of it.
+        //
+        // Moved to `onLand`, which needs no new plumbing: `AxisTravel` sets `z = glideTo`
+        // before calling it, so `Axis.nearest(z)` there already IS `PS.to`. (C2.4 and C7.7 do
+        // need the from/to pair published — this row does not, and waiting on them would have
+        // held a one-line move behind a precondition it does not share.)
         // C7.6 · `:5450` — `B.rush(PS.t, PS.dir)`, every frame of the crossing.
         .onChange(of: rushDrive) { _, t in soundEngine.setRush(t: t, dir: travel.passageDir) }
         // C7.4 · `:5474` — `B.strain(IMM.on ? 0 : TR.tension*(1 - TR.push*0.35))`.
@@ -362,6 +403,7 @@ struct InstrumentView: View {
                 soundEngine.axisTrail(hz: left.hz)             // what he left, still sounding
             }
             travel.onLand = { reg in
+                soundEngine.axisGive(hz: reg.hz)       // `:5452` — at the landing, the destination's pitch
                 if reg.key == "gate" {
                     soundEngine.axisGate(hz: reg.hz)
                     PointJourney.reachedGate = true
@@ -514,10 +556,16 @@ struct InstrumentView: View {
         // was IMPLEMENTED, not that it was POSITIONED, and there is nothing beside it for the
         // error to show against. See the frame-mismatch note in `RoomView`.
         .ignoresSafeArea()
-        // `:5646` shows it at `0.9*(1−hush)*(1−immA)`. The app has neither `hush` nor
-        // `immA`, so the base 0.9 is what survives the port — 1.0 was the app's, not the
-        // design's.
-        .opacity(hidden ? 0 : 0.9 * (1 - dom))   // C2.6 · the rail fades back over `after`
+        // **THE 0.9 WAS NEVER `#where`'s.** The note that stood here cited `:5646` — which is
+        // `#pname` — and carried its base constant onto this element. `:5645` is
+        // `(1−hush)*(1−immA)` with no 0.9 in it at all, and `#pname` at `:5646` is the one
+        // that opens `0.9*`. So the port had both elements' bases wrong in opposite
+        // directions, and each looked like a considered number sitting beside the other.
+        //
+        // `(1 − dom)` is the app's own (C2.6): the design hides `#where` outright on `PS.on`
+        // and gives it no afterglow. Kept, because a caption that snaps back on the landing
+        // frame is what C2.6 was opened for — recorded here rather than quietly retained.
+        .opacity(hidden ? 0 : Immersion.whereOpacity(hush: hush, immA: immA) * (1 - dom))
         .animation(.easeInOut(duration: 1.1), value: here.key)
         .animation(.easeInOut(duration: 1.1), value: hidden)
         .allowsHitTesting(false)
@@ -570,7 +618,11 @@ struct InstrumentView: View {
         }
         .allowsHitTesting(false)
         .ignoresSafeArea()
-        .opacity(1 - dom)          // C2.6 · it comes back over the afterglow, not at once
+        // `:5644` — `(1−hush*0.85)*(1−immA)*(1−PS.dom()*0.9)`. C2.6 · it comes back over the
+        // afterglow, not at once — and the `0.9` on `dom` is the design's: without it the rail
+        // hard-zeroes at a full crossing where the design leaves it at 0.1, so the ladder
+        // disappears entirely instead of staying faintly there while he crosses.
+        .opacity(Immersion.railOpacity(hush: hush, immA: immA, dom: dom))
         .animation(.easeInOut(duration: 0.5), value: here.i)
     }
 
@@ -625,7 +677,9 @@ struct InstrumentView: View {
                 .position(x: geo.size.width / 2, y: geo.size.height * 0.5 + 22)
         }
         .allowsHitTesting(false)
-        .opacity(hidden ? 0 : 1 - dom)     // C2.6 · `#pname` is one of `dom()`'s own subjects
+        // `:5646` — `0.9*(1−hush)*(1−immA)`. The 0.9 is this element's, and it had been
+        // transposed onto `#where`; see the note there. `(1 − dom)` is C2.6's, app-own.
+        .opacity(hidden ? 0 : Immersion.pnameOpacity(hush: hush, immA: immA) * (1 - dom))
         .animation(.easeInOut(duration: 1.0), value: hidden)
     }
 
@@ -700,7 +754,10 @@ struct InstrumentView: View {
                     // softening, and the cap at 8 keeps the fastest travel from erasing the
                     // atmosphere. Without it the field is equally sharp standing still and at
                     // full speed, and nothing in the frame says he is moving.
-                    .blur(radius: FieldBlur.radius(zv: travel.speed))
+                    // `:5612` — `bl = TR.blur(zv) + immA*11`. The addend stays OUTSIDE
+                    // `FieldBlur.radius`, exactly as the design keeps it outside `TR.blur`:
+                    // that function is `blur(zv)` verbatim and has its own contract.
+                    .blur(radius: FieldBlur.radius(zv: travel.speed) + immA * 11)
             }
         }
         .ignoresSafeArea()
@@ -739,7 +796,6 @@ struct InstrumentView: View {
         GeometryReader { geo in
             let R0 = min(geo.size.width, geo.size.height) * 0.5
             let still = travel.thin
-            let rim = R0 * (1.10 + still * 1.30)
             ZStack {
                 // C3.6 · the same ring, the opposite gesture. `:3511-3512` — *"the gate does
                 // not tighten as he nears it — it THINS as he stops."* Its wobble DIES into
@@ -754,6 +810,10 @@ struct InstrumentView: View {
                     }
                     .allowsHitTesting(false)
                 }
+                // C4.7 · the gate ring is half of `TR.draw` (`:5606`), which the design draws
+                // INSIDE `:5598`'s globalAlpha. The caption below is not — `#trav .once` is a
+                // separate element, so the fade is scoped to the ring rather than the block.
+                .opacity(worldLayer)
                 // C3.3 · **ONCE, EVER — and in the design's own medium.** This was shown on
                 // every visit, lowercase, at 12pt: a caption that reappears is a caption, and
                 // the design's is *"the one thing the surface is ever allowed to say, once,
@@ -771,15 +831,24 @@ struct InstrumentView: View {
         .allowsHitTesting(false)
     }
 
-    // MARK: - The one particle (rides centre → crown, blooms into the world at the centre)
+    // MARK: - The one particle (centre until immersed, blooms into the world at the centre)
 
     private var particle: some View {
-        let inward = max(0, min(1, z / 9))                    // 0 at feed, 1 at centre
         let fill = max(0, min(1, (z - 8.6) / 0.95))           // paints the whole frame red at the centre
-        let cy = 0.5 - 0.368 * inward                         // H/2 → H*0.132
+        // C5.8 · `:5737` — `cy = H/2*(1−imm) + H*0.132*imm`. **THE PARTICLE DOES NOT TRAVEL
+        // TO THE CROWN WITH DEPTH.** The app read `z/9` here, with the design's two endpoints
+        // copied exactly (0.5 − 0.368 = 0.132) — which is the tell that the numbers were taken
+        // from the design and the DRIVER was invented. On the bare axis the design's particle
+        // sits dead centre at every register, from the feed to the centre; it rises only as a
+        // piece takes him in, and comes back down as the piece lets go.
+        let cy = Immersion.particleCentreY(immA: immA)
         // C5.7 · `3.4 + br*0.9`, not `5.0 + 4.0*br`. The app's resting particle was twice the
         // design's diameter and breathed 4.4× as hard — see `BinduParticleRadius`.
-        let r = BinduParticleRadius.radius(z: z, breath: breath.value)
+        //
+        // `:5738` keeps `(1 − imm*0.30)` OUTSIDE `bd.r`, and so does this: `radius(z:breath:)`
+        // is `bd.r` verbatim and folding the shrink into it would double-apply it anywhere
+        // else the radius is read.
+        let r = BinduParticleRadius.radius(z: z, breath: breath.value) * (1 - immA * 0.30)
         return GeometryReader { geo in
             ZStack {
                 if fill > 0.001 {                             // it becomes the world
@@ -836,6 +905,15 @@ struct InstrumentView: View {
                            onHold: { held in
                                pointHolds = held
                                travel.handVerticalToRegister(held)
+                           },
+                           // `:5496-5498` — the piece and how much of it he has been given.
+                           // `travel` owns the integrator because it owns the frame clock.
+                           onPiece: { given in
+                               if let given {
+                                   travel.setPiece(given: given, dimension: here.z - 1)
+                               } else {
+                                   travel.clearPiece()
+                               }
                            })
         case "centre":
             PointRevealView(path: $path)
