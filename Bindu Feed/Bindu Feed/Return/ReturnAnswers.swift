@@ -110,6 +110,8 @@ enum ReturnTally {
     /// story — one on the story, "` and no longer matches the design at all: `check_rendered`
     /// flagged it UNTRIAGED, correctly, because an interpolation in the middle of an authored
     /// span is a string the design never wrote.
+    /// UNWIRED(no audit row names this — the third piece of the same unbuilt *where this lands*
+    /// panel as `standings` and `noneTwice`, `Claude Design Round 2/comps/The Return.html:273`.)
     static func line(_ s: Standing) -> String {
         let n = s.answering
         return String(s.total)

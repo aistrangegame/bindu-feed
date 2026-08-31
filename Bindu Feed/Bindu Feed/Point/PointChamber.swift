@@ -112,9 +112,14 @@ enum PointChamber {
 
     /// `reset()` — `world-four.js:76`. Everything the HAND was doing, and nothing the WALL
     /// now carries.
+    /// TEST-ONLY(a documented NO-OP — the point is what it does NOT clear. It exists so the
+    /// suite can assert that leaving the register leaves the wall inscribed, and there is
+    /// nothing for the app to call: the state it would clear is already the view's.)
     static func leaveRegister() { /* press, on, given, easing are view state; `struck` stays */ }
 
     /// A fresh walk, and the only thing that clears an inscription.
+    /// TEST-ONLY(`struck` outlives the register on purpose, so the suite needs a way to put
+    /// the wall back; the app never un-strikes an inscription — what was struck stays struck.)
     static func resetAll() { struck = [:] }
 
     /// `this.struck[this.on.id]=Math.max(this.struck[this.on.id]||0,this.given)` — an
@@ -124,6 +129,10 @@ enum PointChamber {
         struck[id] = max(struck[id] ?? 0, given)
     }
 
+    /// UNWIRED(AUDIT D5.5 — the last open BLOCKER. The press strikes an inscription and the
+    /// depth is recorded, and **nothing renders it**: the letterpress claim is that the harder
+    /// the press the deeper the strike, and with no reader the wall looks the same at every
+    /// depth. Part of the row's still-open remainder, with the three-surface geography.)
     static func depth(of id: String) -> Int { struck[id] ?? 0 }
 
     // ── the room under load ───────────────────────────────────────────

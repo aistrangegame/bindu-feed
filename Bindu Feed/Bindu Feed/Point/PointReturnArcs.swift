@@ -71,9 +71,13 @@ enum PointReturn {
 
     /// `reset()` — *"leaving the register closes the reading. It does not cancel a lap."*
     /// It clears what the HAND was doing and nothing that is in the air.
+    /// TEST-ONLY(a documented NO-OP, as in `PointChamber` — *leaving the register closes the
+    /// reading. It does not cancel a lap.* What it does not clear is the whole content.)
     static func leaveRegister() { /* holding, lift and reading are view state; arcs stay */ }
 
     /// Everything, for a fresh walk. Not called by leaving a register — only by starting over.
+    /// TEST-ONLY(a static registry that must outlive every view; the suite needs it emptied
+    /// between cases, and `.serialized` is why it can be. The app never resets the arcs.)
     static func resetAll() {
         arcs = []; trails = []; got = [:]; pending = []
         total = 0; deepSent = false; homeFlashAt = nil

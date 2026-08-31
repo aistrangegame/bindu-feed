@@ -39,6 +39,7 @@ enum PointPending {
     }
 
     /// A fresh walk. `PARK`/`PEND` are session state in the design and do not outlive it.
+    /// TEST-ONLY(shared static state under `.serialized`; the suite empties it between cases.)
     static func resetAll() { pend = [:] }
 
     // An accessor to look INSIDE the registry was written here and then deleted: `check_wired`

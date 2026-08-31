@@ -329,6 +329,12 @@ enum PointDance {
     ///
     /// What it does NOT clear is `danced` and `order` — *"it does not un-dance anybody."*
     /// A body that has danced has danced; only the holding is undone.
+    /// UNWIRED(no audit row names this, and it needs a ruling rather than a guess.
+    /// `PointDance.leaveRegister` (:345) does the same work and IS called, from the world's
+    /// `onDisappear`. So either `letGo` is residue of the offer model D5.8 retired and should
+    /// go, or the app is missing the MID-REGISTER release the design distinguishes — letting
+    /// go of the hand without leaving the room. The two are opposite conclusions from the same
+    /// evidence, so it is recorded rather than resolved. Found 2026-08-30 by `check_wired`.)
     static func letGo() {
         guard hand != nil else { return }
         hand = nil

@@ -16,12 +16,47 @@ import SwiftUI
         #expect(VoiceAvatarStack.overlapRatio < 0.55, "back to the clump")
     }
 
-    @Test("the ring is 2px on each side — 26 around a 22pt face")
-    func theRing() {
-        // `border: 2px solid var(--card)`, both sides, so 22 + 4. The app had `size + 3` = 25,
-        // which leaves the ring thinner on one edge than the design draws it.
-        #expect(VoiceAvatarStack.ringInset == 4)
-        #expect(22 + VoiceAvatarStack.ringInset == 26)
+    @Test("22 is the OUTER footprint, and the face inside it is 18")
+    func theRingIsInsideTheFootprint() {
+        // `Claude Design Round 1/Home Feed.html:14` — `box-sizing: border-box` on `*`; `:100` — `width:22 …
+        // border:'2px solid var(--card)'`. So the ring is drawn INSIDE the 22.
+        //
+        // **THE TEST THAT STOOD HERE ASSERTED `22 + ringInset == 26`** under the name *"26
+        // around a 22pt face"* — arithmetic that is true of any two numbers that add up, in
+        // the shape of a measurement. It encoded the same content-box misreading as the code
+        // it was guarding, so the suite was structurally unable to fail on this and a green
+        // run was never evidence. What is asserted now is the RELATIONSHIP: the ring is part
+        // of the footprint, not added to it.
+        let footprint: CGFloat = 22
+        let face = footprint - VoiceAvatarStack.ringInset
+        #expect(face == 18, "the coloured disc is 18 inside a 22pt footprint")
+        #expect(VoiceAvatarStack.ringInset == 4, "2px on each side")
+        #expect(face < footprint, "the ring was added outside the footprint again")
+    }
+
+    @Test("the occlusion is the design's, and it is what the row is actually about")
+    func theStackDoesNotClump() {
+        // The advance is `footprint − overlap` and stays 15 either way, so the ARITHMETIC of
+        // the offset never looked wrong. What moves is how much of each following face is
+        // covered — 32% at a 22pt footprint, 42% at 26. That is the *tight clump* the row
+        // names, and only a measure that divides by the footprint can see it.
+        // **I GOT THIS WRONG ON THE FIRST WRITING**, in the same breath as criticising a
+        // test whose arithmetic was vacuous: I compared `overlap / (footprint + inset)`,
+        // which is 7/26 = 27%, and asserted it exceeded 40%. The three runs failed
+        // identically and the failure was mine, not the code's. What actually differs
+        // between the two readings is the occlusion of the DRAWN circle at a FIXED advance —
+        // the advance never moved, which is the whole reason the fault survived.
+        let footprint: CGFloat = 22
+        let overlap = footprint * VoiceAvatarStack.overlapRatio
+        #expect(abs(overlap - 7) < 1e-9, "`marginLeft:-7`")
+        let advance = footprint - overlap                       // 15pt, in BOTH readings
+        func occlusion(drawn: CGFloat) -> CGFloat { (drawn - advance) / drawn }
+        #expect(abs(occlusion(drawn: 22) - 7.0 / 22.0) < 1e-9)
+        #expect(occlusion(drawn: 22) < 0.35, "the faces are clumping again")
+        // the content-box reading draws a 26pt circle across the same 15pt advance:
+        #expect(occlusion(drawn: 22 + VoiceAvatarStack.ringInset) > 0.40,
+                "the misreading no longer overlaps more — re-check this test")
+        #expect(occlusion(drawn: 22) < occlusion(drawn: 26), "the fix reduced nothing")
     }
 
     @Test("EVERY archetype is drawn — the count is not a substitute for the faces")

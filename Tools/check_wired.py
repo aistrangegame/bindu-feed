@@ -172,10 +172,24 @@ for p, raw in app_raw.items():
                 continue
         window = "\n".join(lines[max(0, i - 14):i + 1])
         candidates.append({"name": name, "kind": kind, "path": p, "line": i + 1,
+                           "static": bool(re.match(r"\s*(?:public |private |internal |nonisolated )*static\s", ln)),
                            "owner": owner_of(raw, i + 1), "span": span_of(raw, i + 1),
                            "marked": bool(MARKER.search(window))})
 
 def patterns_for(c):
+    if c["kind"] == "func" and c.get("static") and c["owner"]:
+        # **A STATIC FUNC IS CALLED BY ITS TYPE'S NAME, SO MATCH IT THAT WAY.** Bare-name
+        # matching masked an entire API: `PointChamber.place/load/depth/proj/bow/strike` all
+        # read as reached, because `place` is declared in four other files and `load` in six.
+        # Not one line of app code references `PointChamber` at all — the last open BLOCKER's
+        # whole geography is built, tested, and consumed by nothing — and the checker was
+        # silent because six common words appear elsewhere. Instance methods keep name
+        # matching: they are called on a value, not on the type, and requiring the owner
+        # there would report every correctly-wired method in the app.
+        own = re.escape(c["owner"]) + r"\s*\.\s*" + re.escape(c["name"])
+        return [re.compile(r"(?<!\w)" + own + r"\s*\("),
+                re.compile(r"[:,(]\s*" + own + r"(?![\w(:])")], re.compile(
+                    r"(?<![\w.])(?:Self\s*\.\s*)?" + re.escape(c["name"]) + r"\s*\(")
     if c["kind"] == "func":
         # **A METHOD REFERENCE IS A CALLER.** `Button(action: dismiss)` and `perform: handle`
         # pass the function without ever writing `(`, so matching only `name(` would report a

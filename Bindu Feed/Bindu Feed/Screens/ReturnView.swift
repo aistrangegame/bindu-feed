@@ -444,6 +444,13 @@ struct ReturnView: View {
                             Text(row.frag)
                                 .font(.lora(13)).lineSpacing(4)
                                 .foregroundStyle(BinduTheme.inkPrimary.opacity(ReturnRingRow.fragOpacity(rel: rel)))
+                                // `:1195` — `filter: saturate(1 − 0.35·(1−rel))`. **The old
+                                // rings go LOUDER AND GREYER AT ONCE**, which is what a kept
+                                // thing looks like; the opacity alone made them merely
+                                // brighter. Built and applied nowhere until now — the
+                                // function sat beside `fragOpacity` and `whenOpacity`, which
+                                // are both read on this very line.
+                                .saturation(ReturnRingRow.saturation(rel: rel))
                             Text(row.answerLine)
                                 .spaceMonoTracked(8, em: 0.1375)
                                 .foregroundStyle(BinduTheme.inkTertiary)
