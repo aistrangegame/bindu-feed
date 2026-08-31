@@ -28,6 +28,10 @@ enum ReturnRecord {
         /// The condensed line. ONE sentence-group, never the Rite's three.
         let line: String
         var id: String { key }
+        /// The voice's own colour. `towardGold` puts the Record's patina on it at the point of
+        /// use, never here — `ReturnPatina` owns that, and a pre-aged hex could not be reused
+        /// anywhere the voice appears unaged.
+        var color: Color { Color(hex: hex) }
     }
 
     /// `GATHERING[]` — ten, in the order the design lists them, which is the ladder's order
@@ -70,4 +74,30 @@ enum ReturnRecord {
     /// Record from `RiteVoices` would restore exactly the fault E3.3 names and would look
     /// like more content rather than less.
     static var isCondensed: Bool { gathering.allSatisfy { !$0.line.contains("\n") } }
+
+    /// E3.3 · **A RECORD RECALLS; IT DOES NOT RE-READ.** The corpus above was built, tested
+    /// and never wired — `ReturnCanon.record` was typed `[RiteVoice]` and filled from
+    /// `RiteVoices.all`, so the Record rendered each voice's FIRST SPOKEN LINE. That looks
+    /// like a Record and is a second reading of the same page, which is why the fault was
+    /// invisible: the surface is full, the type is right, and every line on it is authored.
+    ///
+    /// **The ten lines above cannot generalise.** *"The elevator moved. The forgetting came
+    /// and went"* condenses `C-1052`'s particular gathering; it is about that story and no
+    /// other. So the canon story gets the corpus, and every other story gets the voice's
+    /// **authored passing line** — generic by design, and the right shape for a Record of a
+    /// story that has no condensation: it recalls that this voice was here, rather than
+    /// re-reading what it said.
+    ///
+    /// **NOT the `RiteVoice.passing` the store synthesises.** `FeedStore.riteVoices` sets
+    /// `passing: lines.first` for a real voice, which is the very text this row exists to get
+    /// off the Record. The authored line comes from `RiteVoices.voice(key)`, and taking it
+    /// from the wrong one of two same-named fields would have restored the fault while
+    /// reading as the fix.
+    static func entries(codexId: String, voices: [RiteVoice]) -> [Entry] {
+        guard codexId != RiteCanon.codexId else { return gathering }
+        return voices.map { v in
+            Entry(key: v.key, name: v.name, hex: v.hex, glyph: v.glyph, role: v.role,
+                  line: RiteVoices.voice(v.key)?.passing ?? v.passing)
+        }
+    }
 }

@@ -186,3 +186,67 @@ struct ReturnRecordTests {
                 "and a border takes more of it than a name")
     }
 }
+
+// E3.3 · the Record's two branches — `The Return v2.html:966-978`.
+//
+// **THE CORPUS EXISTED, WAS TESTED, AND NOTHING READ IT.** The ten assertions above have
+// passed since the day `ReturnRecord` landed, and the Record on screen was still rendering
+// `RiteVoices.all`'s first-of-three line the whole time. A test that a value is CORRECT is
+// not a test that it is USED, and the checker that would have caught the gap keys on
+// `name(` — it only sees things that are called, never a value that is merely read.
+@Suite struct ReturnRecordWiringTests {
+
+    private func voice(_ key: String, first: String) -> RiteVoice {
+        RiteVoice(key: key, name: key.capitalized, hex: "#7A8899", glyph: "▽",
+                  role: "Root · what holds still", verb: "",
+                  lines: [first, "a second line", "a third"],
+                  passing: first,                       // what the store synthesises
+                  close: "·", hz: 220, answering: nil)
+    }
+
+    @Test("the canon story gets the condensed corpus")
+    func canonTakesTheGathering() {
+        // `C-1052`'s ten lines are ABOUT `C-1052` — *"The elevator moved. The forgetting came
+        // and went"* condenses that gathering and no other, which is the whole reason the
+        // second branch below cannot simply reuse them.
+        let e = ReturnRecord.entries(codexId: RiteCanon.codexId, voices: [voice("neev", first: "x")])
+        #expect(e.count == 10, "the canon story did not get the corpus")
+        #expect(e.map(\.key) == ReturnRecord.gathering.map(\.key))
+    }
+
+    @Test("every other story gets the AUTHORED passing line, not the first spoken one")
+    func othersTakeTheAuthoredPassing() {
+        // **THE TWO FIELDS ARE BOTH CALLED `passing` AND ONLY ONE IS RIGHT.**
+        // `FeedStore.riteVoices` sets `passing: lines.first` for a real voice, so reading the
+        // passed-in voice's own field would put the first spoken line back on the Record —
+        // the exact fault E3.3 names, restored by a change that reads as the fix.
+        let spoken = "The elevator moved, and I moved with it."
+        let e = ReturnRecord.entries(codexId: "C-2000", voices: [voice("neev", first: spoken)])
+        #expect(e.count == 1)
+        #expect(e[0].line != spoken, "the Record is re-reading the first spoken line again")
+        #expect(e[0].line == RiteVoices.voice("neev")?.passing,
+                "the Record did not take the voice's authored passing line")
+    }
+
+    @Test("a Record recalls in one line, in both branches")
+    func bothBranchesAreCondensed() {
+        // The property that makes it a Record rather than a second reading. Asserted across
+        // BOTH branches, because the canon one was already condensed and the other is the one
+        // that was wrong — a test of the corpus alone would have stayed green through the bug.
+        let canon = ReturnRecord.entries(codexId: RiteCanon.codexId, voices: [])
+        let other = ReturnRecord.entries(codexId: "C-2000",
+                                         voices: ["neev", "gaia", "sid"].map { voice($0, first: "a long first line") })
+        for e in canon + other {
+            #expect(!e.line.isEmpty, "\(e.key) has no Record line at all")
+            #expect(!e.line.contains("\n"), "\(e.key)'s Record line is more than one line")
+        }
+    }
+
+    @Test("a story with no voices records nothing, and does not fall back to the canon ten")
+    func greenOnAbsent() {
+        // Falling back to `C-1052`'s gathering for an empty story would put another story's
+        // condensation under this one's title — authored text in the wrong place, which no
+        // string checker can see.
+        #expect(ReturnRecord.entries(codexId: "C-2000", voices: []).isEmpty)
+    }
+}

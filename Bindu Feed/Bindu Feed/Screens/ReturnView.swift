@@ -29,7 +29,18 @@ struct ReturnView: View {
     @State private var ringAdded = false
     @State private var replyText = ""
     @State private var sealPhase = 0
-    @State private var fallStart: Double? = nil     // drives the four-layer descent d (0→~0.98)
+    // E3.5/E3.6/E3.7 · ONE CAMERA. `The Return v2.html:1045` — *"the strata canvas — one
+    // field, one camera, every movement."* `z` and `camNow` are that camera; the fall drives
+    // them and every other movement settles them. Nothing else draws a ring.
+    @State private var fallStart: Double? = nil
+    @State private var z: Double = 0
+    @State private var camNow: Double = 0.34
+    @State private var whispers = false
+    @State private var activeRing = -1
+    @State private var activeIn: Double = 1
+    @State private var activeTrue: Double = 1
+    @State private var ringBirth: Double? = nil
+    @State private var camera: Timer? = nil
 
     // The Audio Anchor — the kept voice of the sealed self, reached here (the descent grants
     // it). Raw, no chrome; the silence is held after it ends.
@@ -52,7 +63,10 @@ struct ReturnView: View {
             // outermost/newest sits last. `ringDays` is oldest-first, and the innermost ring is
             // `i == 1`, so it lines up with a single-slot offset.
             ReturnStrata(rings: storyData.returnCount, age: storyData.age,
-                         ringAges: [0] + storyData.ringDays.map { ReturnAge.of(days: $0).a })
+                         ringAges: [0] + storyData.ringDays.map { ReturnAge.of(days: $0).a },
+                         camY: camNow, z: z, whispers: whispers,
+                         ringWhens: ["the seed"] + storyData.ringRows.map(\.when),
+                         active: activeRing, activeIn: activeIn, activeTrue: activeTrue)
 
             content.transition(.opacity)
 
@@ -70,7 +84,8 @@ struct ReturnView: View {
         }
         .navigationBarBackButtonHidden(true)
         .sonicContext(.base)
-        .onDisappear { anchor.stop() }
+        .onAppear { runCamera() }
+        .onDisappear { anchor.stop(); camera?.invalidate(); camera = nil }
     }
 
     // The Audio Anchor affordance — quiet, never a loud play button; no scrubber, no timeline,
@@ -127,6 +142,49 @@ struct ReturnView: View {
         }
     }
 
+    /// `The Return v2.html:1275` — *"the camera settles at its own height per movement — the
+    /// strata sit clear of the words."* The Rings movement lifts it highest (0.255) because
+    /// that is the movement ABOUT the rings; during the fall nothing settles, because the
+    /// fall is driving the camera itself.
+    private var camTarget: Double? {
+        switch stage {
+        case .fall:    return nil
+        case .rings:   return 0.255
+        case .summons: return 0.34
+        default:       return 0.40
+        }
+    }
+
+    /// One loop for the whole register: the fall drives `z`/`camY` while it runs, and every
+    /// other movement lets the camera settle toward its own height. `:67` — it settles at
+    /// 0.018 a frame and never cuts.
+    private func runCamera() {
+        camera?.invalidate()
+        camera = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { _ in
+            if let t0 = fallStart {
+                let dur = ReturnDepth.duration(breathSeconds: Breath.period)
+                let p = min(1, (Date().timeIntervalSinceReferenceDate - t0) / dur)
+                z = ReturnDepth.z(atProgress: p)
+                camNow = ReturnDepth.camY(atProgress: p)
+                if p >= 1 {
+                    fallStart = nil; whispers = false
+                    soundEngine.riteBowl(hz: 168)              // `:1289` — the landing
+                    withAnimation(.easeInOut(duration: 1.2)) { stage = .room }
+                }
+            } else {
+                z = min(1, z + (1 - z) * 0.018 + 0.0004)
+                if let target = camTarget { camNow = ReturnDepth.settle(camNow, toward: target) }
+            }
+            // `:1291-1299` — the new ring grows over 2.6s and comes into true over 4s.
+            if let b0 = ringBirth {
+                let e = Date().timeIntervalSinceReferenceDate - b0
+                activeIn = min(1, e / 2.6)
+                activeTrue = min(1, e / 4.0)
+                if activeTrue >= 1 { ringBirth = nil }
+            }
+        }
+    }
+
     private func cross(_ hz: Double, _ next: ReturnStage) {
         soundEngine.fieldThreshold(hz: hz, dur: 7)   // `The Return v2.html:1314` — threshold(hz,7)
         withAnimation(.easeInOut(duration: 1.1)) { stage = next }
@@ -153,127 +211,24 @@ struct ReturnView: View {
         .onTapGesture { withAnimation(.easeInOut(duration: 1.2)) { stage = .fall } }
     }
 
-    // The fall — the sealed story's whole life opening in four descending layers (uni-fall.js,
-    // the same descent the Universe falls through): 3·strata (his own rings, aged, rising to
-    // meet him), 1·approach (the sun, its halo the Resonance Voice), 2·gathering (the aged
-    // company settles orbit→seats, drawn as their own glyph-presences), 4·mouth (the Return
-    // opening). Driven by d over 5.5s, then the aged room resolves.
+    // THE FALL — **one continuous camera move through the strata, not an animation.**
+    //
+    // `The Return v2.html:1278-1292`. This was a port of `UniverseView.drawFall` — the other
+    // ceremony's four-layer choreography, its captions and its 5.5s — running BESIDE a strata
+    // renderer that could only draw the arrived state. The design has no second renderer: the
+    // fall sets `z` and `camY` on the field already behind every movement, turns `whispers`
+    // on so each ring names itself as it sweeps past, and stops. See `ReturnDepth`.
     private var fall: some View {
-        ZStack {
-            TimelineView(.animation) { tl in
-                let t = tl.date.timeIntervalSinceReferenceDate
-                let d = fallStart.map { max(0.02, min(0.98, (t - $0) / 5.5)) } ?? 0.02
-                Canvas { ctx, size in drawReturnFall(ctx, size, t: t, d: d) }
+        Color.clear
+            .onAppear {
+                // `:1279` — the aged bed opens the fall. **The bowl lands at the END**
+                // (`:1289`, `else{ whispers=false; Sound.bowl(168); setStage('room'); }`).
+                // It was sounding at the start, so the arrival was announced before it
+                // happened — the register's one landing, played over the departure.
+                soundEngine.agedBed()
+                whispers = true
+                fallStart = Date().timeIntervalSinceReferenceDate
             }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .onAppear {
-            // F2 · `The Return v2.html:1273` — `Sound.agedBed(84,13); Sound.bowl(168);`
-            // The Return opened on the ORDINARY field bed. It opens on the aged one now:
-            // the same bed, older, and the bowl over it rather than instead of it.
-            soundEngine.agedBed()
-            soundEngine.riteBowl(hz: 168)                    // the Summons strike
-            fallStart = Date().timeIntervalSinceReferenceDate
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5.5) {
-                withAnimation(.easeInOut(duration: 1.2)) { stage = .room }
-            }
-        }
-    }
-
-    // Ported from UniverseView.drawFall (uni-fall.js), re-pointed to the Return's own data:
-    // depth = returnCount (his rings here), the company = storyData.record (the real aged
-    // gathering, kept), colour = roomRGB. Drawn back-to-front; d is the descent 0→1.
-    private func drawReturnFall(_ ctx: GraphicsContext, _ size: CGSize, t: Double, d: Double) {
-        let W = size.width, H = size.height
-        func seg(_ a: Double, _ b: Double) -> Double { max(0, min(1, (d - a) / (b - a))) }
-        let app = 1 - seg(0.16, 0.34), gath = seg(0.14, 0.30) * (1 - seg(0.52, 0.74))
-        let strat = seg(0.44, 0.66), mouth = seg(0.84, 0.96)
-        let col = storyData.roomRGB, br = UniGeo.breath(t), dep = max(0, storyData.returnCount)
-        let cx = W / 2, cy = H * (0.40 - 0.10 * gath + 0.05 * strat)
-        let enter = min(1, d / 0.3)
-
-        // the ground closes over
-        ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
-                 with: .color(Color(.sRGB, red: 4 / 255, green: 3 / 255, blue: 7 / 255, opacity: 0.80 * enter + 0.15 * strat)))
-
-        // ── 3 · the strata — his own rings, every return, aged ──
-        if strat > 0.004 {
-            for k in stride(from: dep, through: 0, by: -1) {
-                let age = dep > 0 ? Double(k) / Double(dep) : 0
-                let local = max(0, min(1, strat * Double(dep + 1) - Double(dep - k)))
-                let rr = (52 + Double(k) * 40) * (0.5 + strat * 0.5) * (1 + local * 1.7)
-                let a = (0.36 - age * 0.19) * strat * (1 - local * 0.82)
-                if a <= 0.004 { continue }
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - rr, y: cy - rr * 0.9, width: rr * 2, height: rr * 1.8)),
-                           with: .color(UniGeo.col(UniGeo.mix(col, UniGeo.BONE, age * 0.7), a)), lineWidth: (1.6 - age * 0.9) * (1 + local))
-                let ix = cx + rr * 0.72, iy = cy - rr * 0.30
-                ctx.fill(UniGeo.ringPath(ix, iy, 1.6 + (1 - age) * 1.6), with: .color(UniGeo.col(UniGeo.mix(col, UniGeo.BONE, age * 0.8), min(1, a * 1.8))))
-            }
-        }
-
-        // ── 1 · the approach — the sun, its halo the Resonance Voice (warmth, no body) ──
-        let Sr = (6 + br * 2.6) * enter * (1 + app * 3.4 + d * 2.0)
-        let hal = Sr * (7.4 + app * 2.2) * (0.94 + br * 0.10)
-        ctx.fill(UniGeo.ringPath(cx, cy, hal), with: .radialGradient(Gradient(stops: [
-            .init(color: UniGeo.col(UniGeo.mix(col, [255, 250, 242], 0.72), 0.80 * enter * (0.55 + app * 0.45)), location: 0),
-            .init(color: UniGeo.col(UniGeo.mix(col, [255, 242, 226], 0.34), 0.40 * enter), location: 0.16),
-            .init(color: UniGeo.col(col, 0.17 * enter * (0.6 + app * 0.4)), location: 0.46),
-            .init(color: UniGeo.col(col, 0), location: 1)]),
-            center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: hal))
-        ctx.fill(UniGeo.ringPath(cx, cy, Sr), with: .color(Color(.sRGB, red: 1, green: 253 / 255, blue: 250 / 255, opacity: 0.95 * enter)))
-
-        // ── 2 · the gathering — the aged company settles from orbit into its seats, + the story ──
-        if gath > 0.004 {
-            let set = max(0, min(1, (d - 0.17) / 0.16))
-            let S = min(W * 0.40, 158)
-            if set > 0.35 {
-                ctx.draw(Text.spaceMono(storyData.codexId, 9, .asWritten).foregroundStyle(BinduTheme.inkTertiary),
-                         at: CGPoint(x: cx, y: cy - hal * 0.42 - 18))
-                ctx.draw(Text(storyData.title).font(.lora(16, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
-                         at: CGPoint(x: cx, y: cy - hal * 0.42))
-            }
-            let voices = Array(storyData.record.prefix(6))
-            let m = max(1, voices.count)
-            for (i, v) in voices.enumerated() {
-                let isAsh = v.name.lowercased() == "ash"
-                let ang = Double(i) / Double(m) * UniGeo.TAU + t * (1 - set * 0.92) * 0.3
-                let orbX = cx + cos(ang) * Sr * 2.2, orbY = cy + sin(ang) * Sr * 2.2
-                let f = m < 2 ? 0.5 : (Double(i) + 0.5) / Double(m)
-                let seatAng = (0.11 + f * 0.78) * Double.pi
-                let seatX = isAsh ? cx - S * 0.24 : cx + cos(seatAng) * S * 1.06
-                let seatY = isAsh ? cy + S * 0.46 : cy + sin(seatAng) * S * 0.98
-                let px = orbX + (seatX - orbX) * set, py = orbY + (seatY - orbY) * set
-                let mc = v.color.opacity(1)
-                if set > 0.2 {
-                    var line = Path(); line.move(to: CGPoint(x: cx, y: cy)); line.addLine(to: CGPoint(x: px, y: py))
-                    ctx.stroke(line, with: .color(v.color.opacity(0.20 * gath)), lineWidth: 0.6)
-                }
-                let a = 0.66 * gath + set * 0.34
-                ctx.draw(Text(v.glyph).font(.lora(isAsh ? 19 : 17)).foregroundStyle(mc.opacity(a)),
-                         at: CGPoint(x: px, y: py))
-                if set > 0.6 {
-                    ctx.draw(Text.spaceMono(v.name, 8, .upper).foregroundStyle(mc.opacity(0.66 * (set - 0.6) / 0.4)),
-                             at: CGPoint(x: px, y: py + 15))
-                }
-            }
-        }
-
-        // ── 4 · the mouth — the deepest stratum opens the Return ──
-        if mouth > 0.01 {
-            let mr = (34 + br * 12) * mouth
-            ctx.fill(UniGeo.ringPath(cx, cy, mr * 3), with: .radialGradient(Gradient(stops: [
-                .init(color: UniGeo.col([255, 246, 230], 0.44 * mouth), location: 0),
-                .init(color: UniGeo.col(UniGeo.mix(col, [218, 182, 112], 0.7), 0.26 * mouth), location: 0.34),
-                .init(color: UniGeo.col(col, 0), location: 1)]),
-                center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: mr * 3))
-            ctx.stroke(UniGeo.ringPath(cx, cy, mr * (1.5 + br * 0.14)), with: .color(UniGeo.col(UniGeo.mix(col, [236, 206, 150], 0.8), 0.20 * mouth)), lineWidth: 1)
-        }
-
-        // the caption for the layer he is in (uni-fall.js phrases)
-        let caps = ["the story, close", "who sat with it", "what you left here", "the mouth of the return"]
-        let ci = d < 0.20 ? 0 : (d < 0.50 ? 1 : (d < 0.88 ? 2 : 3))
-        ctx.draw(Text(caps[ci]).font(.loraItalic(12)).foregroundStyle(BinduTheme.inkTertiary.opacity(0.8)),
-                 at: CGPoint(x: cx, y: H - 74))
     }
 
     // II · Aged Room
@@ -315,7 +270,7 @@ struct ReturnView: View {
                 ForEach(storyData.record) { v in
                     VStack(alignment: .leading, spacing: 3) {
                         Text("\(v.name) · \(v.role)").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(v.color.opacity(0.7))
-                        Text(v.lines.first ?? "").font(.lora(14)).lineSpacing(5).foregroundStyle(BinduTheme.inkSecondary)
+                        Text(v.line).font(.lora(14)).lineSpacing(5).foregroundStyle(BinduTheme.inkSecondary)
                     }
                     .saturation(0.5).brightness(-0.04)     // .pressed — the aged gathering
                 }
@@ -411,7 +366,6 @@ struct ReturnView: View {
     private var rings: some View {
         centered {
             Text(ReturnCanon.ringsTitle).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
-            ReturnRings(newRing: false, priorRings: storyData.returnCount).frame(height: 180)
             Text(ReturnCanon.ringsBody).font(.lora(14)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center)
             ringsList
@@ -480,6 +434,14 @@ struct ReturnView: View {
             let storyId = storyData.storyId
             Task { await store.sealReturn(storyId: storyId, text: text) }
         }
+        // E3.6 · `:1291-1299` — `addRing`. The ring is added to the ONE field: it grows over
+        // 2.6s and settles from eccentric into true over 4s, *"the visual twin of the sound
+        // entering 1.5% flat and coming into tune."* It used to appear in a separate 150pt
+        // diagram drawn over the strata, which aged its rings by INDEX and coloured them from
+        // a fixed amber — two representations of the same rings, agreeing about nothing.
+        activeRing = max(0, storyData.returnCount) + 1
+        activeIn = 0; activeTrue = 0
+        ringBirth = Date().timeIntervalSinceReferenceDate
         withAnimation(.easeInOut(duration: 1.0)) { stage = .sealed }
     }
 
@@ -520,7 +482,6 @@ struct ReturnView: View {
     private var sealing: some View {
         centered {
             Text("◉ you, now · today").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(ReturnCanon.ashColor)
-            ReturnRings(newRing: true, priorRings: storyData.returnCount).frame(height: 150)
             if sealPhase == 0 {
                 Text(ReturnCanon.sealPlain).font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary).multilineTextAlignment(.center)
             }
@@ -567,40 +528,3 @@ struct ReturnView: View {
 
 // The strata: a seed with a ring for EACH return he sealed here (not a fixed two), the
 // oldest dimmest; the new ring — the reply he adds today — is the plainest, growing.
-private struct ReturnRings: View {
-    let newRing: Bool
-    var priorRings: Int = 2
-    @State private var grow: CGFloat = 0
-
-    var body: some View {
-        Canvas { ctx, size in
-            let cx = size.width / 2, cy = size.height / 2
-            // ZERO IS A REAL ANSWER. `max(1, …)` drew a ring for a return that never
-            // happened — a story he has never come back to showed the same strata as one he
-            // had returned to once, so the first return changed nothing on screen. *"Around
-            // it, a ring for each time you returned."* None means none; the seed stands alone.
-            let n = max(0, priorRings)
-            // Keep the whole strata inside the frame however many rings there are.
-            let gap = min(size.width, size.height) * 0.45 / Double(n + 2)
-            // The seed.
-            ctx.fill(Path(ellipseIn: CGRect(x: cx - 4, y: cy - 4, width: 8, height: 8)),
-                     with: .color(Color(hex: "#E4DCC8")))
-            // Past rings — aged (amber), dimming outward toward the oldest.
-            for i in stride(from: 1, through: n, by: 1) {
-                let r = 8 + Double(i) * gap
-                let age = Double(i) / Double(n + 2)               // 0 newest-of-old … →1 oldest
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
-                           with: .color(Color(hex: "#D0A048").opacity(0.5 - age * 0.30)), lineWidth: 1)
-            }
-            // The new ring — today's reply, the plainest thing on the screen, growing.
-            if newRing {
-                let r = (8 + Double(n + 1) * gap) * grow
-                ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
-                           with: .color(Color(hex: "#E4DCC8").opacity(0.85 * grow)), lineWidth: 1.2)
-            }
-        }
-        .onAppear {
-            if newRing { withAnimation(.easeOut(duration: 2.6)) { grow = 1 } }
-        }
-    }
-}

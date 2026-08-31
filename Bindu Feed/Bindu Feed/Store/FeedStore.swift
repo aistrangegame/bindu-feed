@@ -749,7 +749,11 @@ final class FeedStore: ObservableObject {
             anew.append(ReturnCanon.AnewVoice(name: c.archetype, line: c.body))
             if anew.count >= 2 { break }
         }
-        let record = riteVoices(from: field)      // real aged gathering (canon only if empty)
+        // E3.3 · the Record is the gathering CONDENSED — the canon corpus for `C-1052`,
+        // whose ten lines are about that story, and each voice's authored passing line for
+        // every other. A Record recalls that a voice was here; it does not re-read it.
+        let record = ReturnRecord.entries(codexId: story.codexId,
+                                          voices: riteVoices(from: field))
         let room = room(named: story.room)
         let paras = story.body
             .components(separatedBy: "\n\n")

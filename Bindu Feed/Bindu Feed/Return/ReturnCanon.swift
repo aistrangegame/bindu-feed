@@ -189,7 +189,8 @@ struct ReturnStoryData {
     let sealedSelf: String
     let anew: [ReturnCanon.AnewVoice]
     let storyId: String            // where a new ring (the reply) is written; "" = canon demo, no target
-    let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
+    /// E3.3 · the aged gathering, CONDENSED — one line each, never the Rite's first-of-three.
+    let record: [ReturnRecord.Entry]
     var returnCount: Int = 0       // rings already sealed here; ZERO is real and common
     /// E3.2 · the prior returns, oldest first — each with the words it was sealed with.
     /// Empty is correct and common: a story returned to zero times has no rows.
@@ -210,5 +211,5 @@ struct ReturnStoryData {
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
         codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body,
         sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew,
-        storyId: "", record: RiteVoices.all, returnCount: 2, days: 420)
+        storyId: "", record: ReturnRecord.gathering, returnCount: 2, days: 420)
 }

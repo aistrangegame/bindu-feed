@@ -23,6 +23,28 @@ struct ReturnStrata: View {
     var ringAges: [Double] = []
     var camY: Double = 0.42
 
+    // ── E3.5/E3.6/E3.7 · THE CAMERA. See `ReturnDepth` for why these three rows are one. ──
+
+    /// `return-strata.js:66` — 0 far · 1 arrived. Everything below scales off it, which is
+    /// what makes the fall a camera move through THIS renderer rather than a second one.
+    var z: Double = 1
+    /// `:136` — the whisper branch lives inside the ring loop; the fall only switches it on.
+    var whispers: Bool = false
+    /// Index-aligned with the draw loop, `[0]` the seed. A ring names ITSELF as it passes, so
+    /// the label has to travel with the ring rather than being a caption on the fall.
+    var ringWhens: [String] = []
+    /// `:104` — which ring he just sealed. `-1` is the resting state and the common one.
+    ///
+    /// **Only one ring is ever arriving**, so `_in` and `_true` are carried as two scalars
+    /// here rather than the design's per-ring fields. Same behaviour, and it makes the
+    /// impossible state — two rings mid-birth — unrepresentable.
+    var active: Int = -1
+    /// `:1290-1299` — the new ring grows over 2.6s (`_in`) and settles from eccentric into
+    /// true over 4s (`_true`), *"the visual twin of the sound entering 1.5% flat and coming
+    /// into tune."*
+    var activeIn: Double = 1
+    var activeTrue: Double = 1
+
     private static let BONE: [Double] = [228, 220, 205]
     private static let AMBER: [Double] = [208, 158, 72]
     private static let DEEP: [Double] = [164, 112, 38]
@@ -87,7 +109,7 @@ struct ReturnStrata: View {
         // `[0] + ringDays` — seed-first, matching the design — and its last element was
         // provably never read, which is the same off-by-one seen from the other side.
         let n = max(0, rings) + 1
-        let s = 1.0                               // arrived (z = 1)
+        let s = ReturnDepth.scale(z: z)
         let cx = W / 2, cy = H * camY
         let bs = 9.0 * breathMul
         let b = (sin(t * 2 * .pi / bs) + 1) / 2
@@ -105,6 +127,14 @@ struct ReturnStrata: View {
         for i in Self.ringIndices(returns: rings) {
             let R = (8 + Double(i) * gap) * s
             if R < 0.6 { continue }
+            // `:105-106` — a ring whose radius has outgrown the frame is BEHIND him. This is
+            // what makes the fall a fall and not a zoom: the old selves sweep out past the
+            // camera one at a time, and the outermost goes first.
+            let pass = ReturnDepth.pass(radius: R, height: H)
+            if ReturnDepth.passed(radius: R, height: H) { continue }
+            let isActive = i == active
+            let grown = ReturnDepth.grown(isActive ? activeIn : nil)
+            let trueness = isActive ? activeTrue : 1
             // ORDER — where this ring sits in the strata. Never its age.
             let ord = n <= 2 ? 1.0 : max(0, min(1, Double(n - 1 - i) / Double(n - 2)))
             // AGE — what this ring has actually served. `rel` is the name the design gives the
@@ -112,23 +142,27 @@ struct ReturnStrata: View {
             let rel = i < ringAges.count ? ringAges[i] : ord
             let cc = mixc(Self.BONE, rel > 0.62 ? Self.DEEP : Self.AMBER, pow(rel, 0.72))
             let ph = (sin(t * 2 * .pi / (bs * (1 + rel * 0.5)) + Double(i) * 0.8) + 1) / 2
-            let rot = t * (0.004 + 0.026 * pow(1 - ord, 1.6))       // an orrery of selves, each its own rate
-            let al = 0.13 + rel * 0.30 + ph * 0.06
+            // `:112` — the new ring turns faster while it is arriving. **`ord`, not `rel`:
+            // rotation is a property of POSITION and the design's `rel` is rank; §10 records
+            // why this one term keeps the app's split.**
+            let rot = t * (0.004 + 0.026 * pow(1 - ord, 1.6)) * (isActive ? 1.6 : 1)
+            let al = ReturnDepth.alpha(rel: rel, active: isActive, phase: ph, grown: grown, pass: pass)
             let gapLen = rel > 0.35 && rnd(Double(i) * 17) > 0.62 ? 0.035 + rnd(Double(i) * 7) * 0.05 : 0
-            let wob = 0.35 + rel * 0.5 + 0.18 * sin(t * 0.21 + Double(i))
-            ctx.stroke(ringPath(cx, cy, R, wob, Double(i) * 3.7, rot, gapAt: rnd(Double(i) * 31) * 0.9, gapLen: gapLen),
-                       with: .color(col(cc, al)), lineWidth: 0.9 + rel * 1.5)
+            let wob = ReturnDepth.wobble(trueness: trueness, rel: rel, t: t, index: i)
+            ctx.stroke(ringPath(cx, cy, R * grown, wob, Double(i) * 3.7, rot, gapAt: rnd(Double(i) * 31) * 0.9, gapLen: gapLen),
+                       with: .color(col(cc, al)),
+                       lineWidth: ReturnDepth.lineWidth(rel: rel, active: isActive, scale: s))
             // bloom — only the aged glow; the new ring is the plainest thing on the screen
             // CRAQUELURE — `return-strata.js:50-60`, *"fine radial cracks earned by age, never
             // drawn on the new ring."* Never ported; the app's strata had no cracks at all.
             // Gated on AGE now that age is a real quantity: a ring one day old shows none, and
             // it cannot borrow them from an older neighbour's position.
-            if rel > 0.5 && R > 18 {
+            if rel > 0.5 && R * grown > 18 {
                 for k in 0..<7 {
                     let u = rnd(Double(i) * 13 + Double(k) * 7.7)
                     let ang = u * 2 * .pi
                     let len = 2 + rnd(Double(i) * 5 + Double(k)) * 5
-                    let r0 = R - len * 0.5, r1 = R + len * 0.5
+                    let r0 = R * grown - len * 0.5, r1 = R * grown + len * 0.5
                     var crack = Path()
                     crack.move(to: CGPoint(x: cx + cos(ang) * r0, y: cy + sin(ang) * r0))
                     crack.addLine(to: CGPoint(x: cx + cos(ang) * r1, y: cy + sin(ang) * r1))
@@ -139,27 +173,41 @@ struct ReturnStrata: View {
                 ctx.fill(Path(ellipseIn: CGRect(x: cx - R * 1.09, y: cy - R * 1.09, width: R * 2.18, height: R * 2.18)),
                          with: .radialGradient(Gradient(stops: [
                             .init(color: col(cc, 0), location: 0),
-                            .init(color: col(cc, 0.055 * rel), location: 0.5),
+                            .init(color: col(cc, 0.055 * rel * pass * grown), location: 0.5),
                             .init(color: col(cc, 0), location: 1)]),
                             center: CGPoint(x: cx, y: cy), startRadius: R * 0.93, endRadius: R * 1.09))
             }
             // the node — a self, standing at its own distance from the story
             if R > 7 {
                 let ang = -Double.pi / 2 + Double(i) * 0.9 + rot
-                let nx = cx + cos(ang) * R, ny = cy + sin(ang) * R
-                let nr = 2.8 + rel * 1.2
-                if rel > 0.3 {
+                let nx = cx + cos(ang) * R * grown, ny = cy + sin(ang) * R * grown
+                let nr = ReturnDepth.nodeRadius(rel: rel, active: isActive, scale: s)
+                if rel > 0.3 || isActive {
                     ctx.fill(Path(ellipseIn: CGRect(x: nx - nr * 5, y: ny - nr * 5, width: nr * 10, height: nr * 10)),
-                             with: .radialGradient(Gradient(colors: [col(cc, 0.24 + rel * 0.26), col(cc, 0)]),
+                             with: .radialGradient(Gradient(colors: [col(cc, (0.24 + rel * 0.26) * pass * grown), col(cc, 0)]),
                                                    center: CGPoint(x: nx, y: ny), startRadius: 0, endRadius: nr * 5))
                 }
                 ctx.fill(Path(ellipseIn: CGRect(x: nx - nr, y: ny - nr, width: nr * 2, height: nr * 2)),
-                         with: .color(col(mixc(cc, Self.CREAM, 0.25 + rel * 0.3), 0.5 + rel * 0.42)))
+                         with: .color(col(mixc(cc, Self.CREAM, 0.25 + rel * 0.3),
+                                          (0.5 + rel * 0.42 + (isActive ? 0.3 : 0)) * pass * grown)))
+            }
+            // `:136-140` · **THE WHISPER IS A BRANCH IN THIS LOOP, NOT A CAPTION LAYER.**
+            // *"falling inward through time: each ring names itself as it passes."* It is
+            // gated on the ring's own radius and `pass` as well as on the depth, so the names
+            // arrive one at a time, in the order the rings sweep by, and stop before he lands.
+            if ReturnDepth.whispers(on: whispers, z: z, radius: R, height: H, pass: pass),
+               i < ringWhens.count, !ringWhens[i].isEmpty {
+                ctx.draw(Text.spaceMono(ringWhens[i], 9, em: 1.6 / 9, .upper)
+                            .foregroundStyle(col(cc, 0.30 * pass)),
+                         at: CGPoint(x: min(max(cx, 44), W - 44), y: cy + sin(-Double.pi / 2 + Double(i) * 0.9 + rot) * R * grown - ReturnDepth.nodeRadius(rel: rel, active: isActive, scale: s) - 9),
+                         anchor: .center)
             }
         }
 
         // the seed — the story itself. It did not move.
-        let sr = 4.4 + b * 2.6
+        // `:145` — the seed shrinks with distance too, but never below a third: it is the
+        // one thing that must stay findable from the top of the fall.
+        let sr = (4.4 + b * 2.6) * min(1, 0.35 + s * 1.4)
         ctx.fill(Path(ellipseIn: CGRect(x: cx - sr * 11, y: cy - sr * 11, width: sr * 22, height: sr * 22)),
                  with: .radialGradient(Gradient(stops: [
                     .init(color: Color(.sRGB, red: 1, green: 246 / 255, blue: 222 / 255, opacity: 0.95), location: 0),
