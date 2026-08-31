@@ -141,6 +141,48 @@ import Foundation
                 "a ring already gone past still spoke")
     }
 
+    // MARK: - E3.7 · the crossing, the dust, the paper
+
+    @Test("a crossing leaves, rather than rippling")
+    func theWaveDeparts() {
+        // `:163-165`. It goes out fast and fades on a SQUARED curve, so it is nearly gone by
+        // the halfway point — a linear fade would leave a ring hanging in the field, which is
+        // a different event: a wave that arrives somewhere rather than one that leaves.
+        #expect(ReturnDepth.pulseAlpha(q: 0) == 0.20)
+        #expect(ReturnDepth.pulseAlpha(q: 0.5) == 0.05, "the wave lingered — the fade is not squared")
+        #expect(ReturnDepth.pulseAlpha(q: 1) == 0)
+        let early = ReturnDepth.pulseRadius(q: 0.25, W: 400, H: 800, scale: 1)
+        let late = ReturnDepth.pulseRadius(q: 0.75, W: 400, H: 800, scale: 1)
+        #expect(early > ReturnDepth.pulseRadius(q: 0, W: 400, H: 800, scale: 1))
+        #expect(late - early < early, "the wave did not slow — it is travelling at a constant rate")
+    }
+
+    @Test("a wave sent from far off is as small as the field it crosses")
+    func theWaveIsInTheCamera() {
+        // `·s`. Without it a crossing during the fall would throw a full-screen ring across a
+        // field drawn at 1.3% — the sound made visible at the wrong scale entirely.
+        #expect(ReturnDepth.pulseRadius(q: 0.5, W: 400, H: 800, scale: ReturnDepth.scale(z: 0))
+                < ReturnDepth.pulseRadius(q: 0.5, W: 400, H: 800, scale: 1))
+    }
+
+    @Test("the air thickens as he arrives")
+    func theDustIsDepth() {
+        // `:170`. A fixed count gave the same dust at the top of the fall as in the room, so
+        // nothing about the air said he had got closer.
+        #expect(ReturnDepth.moteCount(z: 0) == 16)
+        #expect(ReturnDepth.moteCount(z: 1) == 44)
+        #expect(ReturnDepth.moteCount(z: 0.51) > ReturnDepth.moteCount(z: 0.49))
+    }
+
+    @Test("an old story is on older paper")
+    func theGrainIsAge() {
+        // `:22` — *"a material, not an opacity."* The amount is age, and it is never zero:
+        // even a story sealed yesterday is on paper.
+        #expect(abs(ReturnDepth.grainAmount(age: 0) - 0.05) < 1e-9)
+        #expect(abs(ReturnDepth.grainAmount(age: 1) - 0.19) < 1e-9)
+        #expect(ReturnDepth.grainAmount(age: 0) > 0, "a new story has no surface at all")
+    }
+
     // MARK: - green on absent
 
     @Test("at rest the camera changes nothing about any ring")
@@ -150,5 +192,7 @@ import Foundation
         #expect(ReturnDepth.grown(nil) == 1)
         #expect(ReturnDepth.pass(radius: 10, height: 800) == 1)
         #expect(!ReturnDepth.whispers(on: false, z: 1, radius: 400, height: 800, pass: 1))
+        // and no crossing means no wave: the list is empty and nothing is drawn
+        #expect(ReturnDepth.pulseAlpha(q: 1) == 0)
     }
 }

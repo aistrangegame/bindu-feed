@@ -31,10 +31,8 @@ APP-OWN	... spoke here.	Bindu Feed/Bindu Feed/Universe/UniWords.swift:49
 APP-OWN	... visitors arrived that you did not choose.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:42
 APP-OWN	... · ... of ...	Bindu Feed/Bindu Feed/Rooms/RoomView.swift:635
 APP-OWN	... · ... of 7	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:44
-APP-OWN	... · now	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:346
 APP-OWN	... · sealed ...	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:143
 APP-OWN	\(Int(Date().timeIntervalSince1970))-...	Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:219
-APP-OWN	\(min(max(1, anewShown), storyData.anew.count)) / ... · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:351
 APP-OWN	a story is returning to you...	Bindu Feed/Bindu Feed/Screens/RootView.swift:300
 APP-OWN	a story returns once you have sealed your own words on it.	Bindu Feed/Bindu Feed/Screens/RootView.swift:285
 APP-OWN	All of ...'s words in the field	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:426
@@ -1010,3 +1008,4 @@ NON-UI	Stillness opened the Light.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:9
 NON-UI	The Light -- stood inside	Bindu Feed/Bindu Feed/Store/FeedStore.swift:945
 NON-UI	The Point -- walked to the centre	Bindu Feed/Bindu Feed/Store/FeedStore.swift:955
 NON-UI	The story was met in the Rite.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:606
+APP-OWN	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353

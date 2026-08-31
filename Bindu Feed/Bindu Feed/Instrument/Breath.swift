@@ -98,6 +98,23 @@ final class Breath: ObservableObject {
     /// Sample the eased breath at an arbitrary phase offset in [0, 1). Lets a
     /// surface breathe slightly ahead of or behind the master without running a
     /// second clock (e.g. a trailing ember).
+    /// **DELIVER ON THE EXHALE.** `The Return v2.html:1028-1037` — `useExhale`:
+    /// `wait = max(240, ((0.5 − p + 1) % 1) · breathMs)`.
+    ///
+    /// Two things in one line, and the second is easy to drop. It waits for the **start of
+    /// the exhale** (phase 0.5), and it never delivers in less than 240ms — so a voice asked
+    /// for exactly on the turn still gets a beat rather than arriving on the same frame as
+    /// the request. Without the floor the mechanism vanishes precisely when the timing is
+    /// perfect, which is the one case nobody tests.
+    ///
+    /// The Light's E1.7 gate is the same law expressed the other way — it latches per breath
+    /// cycle rather than scheduling once — because there the ask can arrive at any time and
+    /// must not give twice on one exhale.
+    nonisolated static func exhaleDelay(fromPhase p: Double, period: Double = Breath.period,
+                            floor: Double = 0.24) -> Double {
+        max(floor, ((0.5 - p + 1).truncatingRemainder(dividingBy: 1)) * period)
+    }
+
     func eased(offset: Double) -> Double {
         let p = (phase + offset).truncatingRemainder(dividingBy: 1)
         return (1 - cos(p * 2 * .pi)) / 2

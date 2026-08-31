@@ -746,7 +746,13 @@ final class FeedStore: ObservableObject {
             let k = c.archetype.lowercased()
             guard !k.isEmpty, k != "ash", !seen.contains(k), !c.body.isEmpty, !c.isBinduSilence else { continue }
             seen.insert(k)
-            anew.append(ReturnCanon.AnewVoice(name: c.archetype, line: c.body))
+            // E3.10 · the presence, not just the name — the disc, the glyph and the role all
+            // come from the archetype record, resolved by name here because that is what the
+            // comment carries. A voice with no archetype cannot be drawn as a presence, so it
+            // is skipped rather than drawn as a blank disc.
+            guard let a = archetype(named: c.archetype) else { continue }
+            anew.append(ReturnCanon.AnewVoice(key: k, name: a.name, hex: a.hexColor,
+                                              glyph: a.glyph, role: a.role, line: c.body))
             if anew.count >= 2 { break }
         }
         // E3.3 · the Record is the gathering CONDENSED — the canon corpus for `C-1052`,

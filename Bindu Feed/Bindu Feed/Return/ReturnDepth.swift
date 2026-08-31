@@ -103,6 +103,30 @@ enum ReturnDepth {
         on && z > 0.06 && z < 0.92 && R > H * 0.16 && pass > 0.12
     }
 
+    // MARK: - E3.7 · the three that were still absent
+
+    /// `:161` — a wave lives 3.2s. **Held as a list of timestamps, not a flag**: two crossings
+    /// close together are two waves, and each expires on its own clock.
+    static let pulseLife = 3.2
+
+    /// `:163` — `eo(q)·max(W,H)·0.62·s + 6`. It leaves fast and slows as it goes, and it
+    /// **scales with the camera** — a wave sent from the top of the fall is as small as the
+    /// field it is crossing.
+    static func pulseRadius(q: Double, W: Double, H: Double, scale s: Double) -> Double {
+        eo(clamp01(q)) * max(W, H) * 0.62 * s + 6
+    }
+    /// `:165` — `0.20·(1−q)²`. Squared, so it is nearly gone by the halfway point: the wave
+    /// is a departure, not a ripple that hangs about.
+    static func pulseAlpha(q: Double) -> Double { 0.20 * pow(1 - clamp01(q), 2) }
+
+    /// `:170` — 16 far off, 44 once he is inside it. **The air thickens as he arrives**, and a
+    /// fixed count gave the same dust at the top of the fall as in the room.
+    static func moteCount(z: Double) -> Int { z > 0.5 ? 44 : 16 }
+
+    /// `:22` — `grain = 0.05 + 0.14a`. *"a material, not an opacity"* — the amount is AGE, so
+    /// an old story is visibly on older paper.
+    static func grainAmount(age a: Double) -> Double { 0.05 + 0.14 * clamp01(a) }
+
     // MARK: -
 
     private static func clamp01(_ x: Double) -> Double { max(0, min(1, x)) }

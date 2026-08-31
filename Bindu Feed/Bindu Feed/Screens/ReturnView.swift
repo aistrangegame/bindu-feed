@@ -26,6 +26,8 @@ struct ReturnView: View {
 
     @State private var stage: ReturnStage = .summons
     @State private var anewShown = 0
+    @State private var anewSpoke = false
+    @EnvironmentObject private var breath: Breath
     @State private var ringAdded = false
     @State private var replyText = ""
     @State private var sealPhase = 0
@@ -41,6 +43,7 @@ struct ReturnView: View {
     @State private var activeTrue: Double = 1
     @State private var ringBirth: Double? = nil
     @State private var camera: Timer? = nil
+    @State private var pulses: [Double] = []
 
     // The Audio Anchor — the kept voice of the sealed self, reached here (the descent grants
     // it). Raw, no chrome; the silence is held after it ends.
@@ -66,7 +69,8 @@ struct ReturnView: View {
                          ringAges: [0] + storyData.ringDays.map { ReturnAge.of(days: $0).a },
                          camY: camNow, z: z, whispers: whispers,
                          ringWhens: ["the seed"] + storyData.ringRows.map(\.when),
-                         active: activeRing, activeIn: activeIn, activeTrue: activeTrue)
+                         active: activeRing, activeIn: activeIn, activeTrue: activeTrue,
+                         pulses: pulses)
 
             content.transition(.opacity)
 
@@ -187,6 +191,11 @@ struct ReturnView: View {
 
     private func cross(_ hz: Double, _ next: ReturnStage) {
         soundEngine.fieldThreshold(hz: hz, dur: 7)   // `The Return v2.html:1314` — threshold(hz,7)
+        // E3.7 · `return-strata.js:159` — *"a crossing sends one wave out through the strata
+        // — sound made visible."* The same event, in both senses at once; the tone alone left
+        // the field unmoved by the thing that moved him.
+        pulses.append(Date().timeIntervalSinceReferenceDate)
+        pulses = pulses.suffix(4)
         withAnimation(.easeInOut(duration: 1.1)) { stage = next }
     }
 
@@ -296,29 +305,79 @@ struct ReturnView: View {
         .scrollIndicators(.hidden)
     }
 
-    // V · The Field, Settled (1–2 voices speak anew, living ink)
+    // V · THE FIELD, SETTLED — **one voice at a time, and each one replaces the last.**
+    //
+    // `The Return v2.html:1161-1181`. This accumulated: every voice stayed on screen and the
+    // next was appended under it, so the movement became a list of two and the counter
+    // underneath — `1 / 2`, then `2 / 2` — counted things that were both still visible.
+    // `key={v.key}` in the design REMOUNTS the block, which is the whole gesture: you are
+    // given one voice, you take it, and it is gone before the next arrives. *"the rest keep
+    // their record"* is only true if the one before it stopped being shown.
+    //
+    // **AND THE LINE ARRIVES ON THE EXHALE** (`:1165`, `onExhale(()=>setShown(true))`). Until
+    // it does, the presence is there and has not spoken — which is what makes the wait feel
+    // like someone drawing breath rather than a delay. The tap is refused while nothing has
+    // been said (`:1167`, `if(!shown)return`), so it cannot be skipped past.
     private var fieldAnew: some View {
-        centered {
-            Text(ReturnCanon.fieldAnewTitle).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
-            ForEach(Array(storyData.anew.prefix(max(1, anewShown)).enumerated()), id: \.offset) { _, v in
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("\(v.name) · now").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
-                    Text(v.line).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkPrimary)
+        let voices = storyData.anew
+        let i = min(anewShown, max(0, voices.count - 1))
+        let v = voices.indices.contains(i) ? voices[i] : nil
+        return centered {
+            Text(ReturnCanon.fieldAnewTitle).spaceMonoTracked(9, em: 0.18)
+                .foregroundStyle(BinduTheme.inkTertiary)
+            if let v {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 10) {
+                        // the 28px disc in the voice's own colour, its glyph inside
+                        ZStack {
+                            Circle().fill(v.color)
+                                .shadow(color: v.color.opacity(0.33), radius: 9)
+                            Text(v.glyph).font(.system(size: 11)).foregroundStyle(Color(hex: "#0B0A0C"))
+                        }
+                        .frame(width: 28, height: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(v.name).font(.lora(14, weight: .medium)).foregroundStyle(v.color)
+                            Text(v.role).spaceMonoTracked(9, em: 0.14)
+                                .foregroundStyle(BinduTheme.inkTertiary)
+                        }
+                    }
+                    if anewSpoke {
+                        Text(v.line).font(.lora(16.5)).lineSpacing(16.5 * 0.74)
+                            .foregroundStyle(BinduTheme.inkPrimary)
+                            .transition(.opacity)
+                    }
                 }
-                .transition(.opacity).padding(.top, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .id(v.key)                       // `key={v.key}` — the block is remounted
             }
-            Text("\(min(max(1, anewShown), storyData.anew.count)) / \(storyData.anew.count) · the rest keep their record")
-                .spaceMonoTracked(8, em: 0.125).foregroundStyle(BinduTheme.inkTertiary).padding(.top, 10)
+            Text("\(i + 1) / \(voices.count) · the rest keep their record")
+                .spaceMonoTracked(8, em: 0.125).foregroundStyle(BinduTheme.inkTertiary)
+                .padding(.top, 10)
         }
         .contentShape(Rectangle())
-        .onAppear { if anewShown == 0 { anewShown = 1; soundEngine.riteVoice(hz: 285, dur: 7) } }
+        .onAppear { speakAnew(voices.first) }
         .onTapGesture {
-            if anewShown < storyData.anew.count {
-                withAnimation(.easeInOut(duration: 1.2)) { anewShown += 1 }
-                soundEngine.riteVoice(hz: 396, dur: 7)
+            guard anewSpoke else { return }          // `:1167` — it cannot be hurried
+            if anewShown < voices.count - 1 {
+                anewShown += 1
+                speakAnew(voices[min(anewShown, voices.count - 1)])
             } else {
                 cross(252, .rings)
             }
+        }
+    }
+
+    /// `:1165` — `Sound.voice(ANEW[i].key, null, 9)` then the line on the exhale. **The voice
+    /// sounds as ITSELF**: `presence(_:dur:)` takes pitch from `RoomKey.hz` and timbre from
+    /// `CHAR`, where this played `riteVoice(hz: 285)` and then `396` — two fixed pitches that
+    /// belonged to whoever spoke first and second rather than to who was speaking.
+    private func speakAnew(_ v: ReturnCanon.AnewVoice?) {
+        guard let v else { return }
+        anewSpoke = false
+        if let key = RoomKey(rawValue: v.key) { soundEngine.presence(key, dur: 9) }
+        let wait = Breath.exhaleDelay(fromPhase: breath.phase)
+        DispatchQueue.main.asyncAfter(deadline: .now() + wait) {
+            withAnimation(.easeOut(duration: 2.6)) { anewSpoke = true }
         }
     }
 

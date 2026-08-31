@@ -44,6 +44,10 @@ struct ReturnStrata: View {
     /// into tune."*
     var activeIn: Double = 1
     var activeTrue: Double = 1
+    /// E3.7 · `:160-166` — *"a crossing sends one wave out through the strata — sound made
+    /// visible."* Timestamps, not a flag: two crossings close together are two waves, and the
+    /// renderer drops each one 3.2s after it was sent.
+    var pulses: [Double] = []
 
     private static let BONE: [Double] = [228, 220, 205]
     private static let AMBER: [Double] = [208, 158, 72]
@@ -51,12 +55,51 @@ struct ReturnStrata: View {
     private static let CREAM: [Double] = [255, 248, 232]
 
     var body: some View {
-        TimelineView(.animation) { tl in
-            Canvas { ctx, size in draw(ctx, size, tl.date.timeIntervalSinceReferenceDate) }
+        ZStack {
+            TimelineView(.animation) { tl in
+                Canvas { ctx, size in draw(ctx, size, tl.date.timeIntervalSinceReferenceDate) }
+            }
+            // E3.7 · `return-strata.js:25-33` — *"paper grain, generated once — a material,
+            // not an opacity."* Its AMOUNT is age: `grain = 0.05 + 0.14a` (`:22`), so an old
+            // story is visibly on older paper. Generated once and tiled at its own 170px, in
+            // `.softLight` as the design blends it — a flat wash at the same opacity would
+            // dull the whole field instead of giving it a surface.
+            if let g = Self.grain {
+                Image(decorative: g, scale: 1)
+                    .resizable(resizingMode: .tile)
+                    .blendMode(.softLight)
+                    .opacity(ReturnDepth.grainAmount(age: age))
+                    .allowsHitTesting(false)
+            }
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
     }
+
+    /// The 170×170 grain tile, made once for the process. Warm-white noise with a random
+    /// alpha per pixel — `:31`, `v = 190 + rnd·65`, channels at `v · 1 / 0.93 / 0.77`.
+    private static let grain: CGImage? = {
+        let n = 170
+        var px = [UInt8](repeating: 0, count: n * n * 4)
+        var seed: UInt64 = 0x9E3779B97F4A7C15
+        func rnd() -> Double {
+            seed ^= seed << 13; seed ^= seed >> 7; seed ^= seed << 17
+            return Double(seed % 100_000) / 100_000
+        }
+        for i in stride(from: 0, to: px.count, by: 4) {
+            let v = 190 + rnd() * 65
+            px[i] = UInt8(min(255, v))
+            px[i + 1] = UInt8(min(255, v * 0.93))
+            px[i + 2] = UInt8(min(255, v * 0.77))
+            px[i + 3] = UInt8(rnd() * 52)
+        }
+        guard let provider = CGDataProvider(data: Data(px) as CFData) else { return nil }
+        return CGImage(width: n, height: n, bitsPerComponent: 8, bitsPerPixel: 32,
+                       bytesPerRow: n * 4, space: CGColorSpaceCreateDeviceRGB(),
+                       bitmapInfo: CGBitmapInfo(rawValue: CGImageAlphaInfo.last.rawValue),
+                       provider: provider, decode: nil, shouldInterpolate: false,
+                       intent: .defaultIntent)
+    }()
 
     /// E3.1 · WHICH RINGS GET DRAWN, and in what order.
     ///
@@ -81,7 +124,10 @@ struct ReturnStrata: View {
 
     // one hand-drawn ring — never a true circle; a gap may open where the arc is worn away
     private func ringPath(_ cx: Double, _ cy: Double, _ R: Double, _ wob: Double, _ seed: Double, _ rot: Double, gapAt: Double, gapLen: Double) -> Path {
-        var p = Path(); var open = false; let N = 120
+        // `return-strata.js:39` — 180, not 120. The wobble runs three harmonics; at 120 the
+        // fastest one is sampled barely twice a lobe and the hand-drawn edge reads as a
+        // polygon at the outer radii, which is where it is most visible.
+        var p = Path(); var open = false; let N = 180
         for k in 0...N {
             let u = Double(k) / Double(N), ang = u * .pi * 2 - .pi / 2 + rot
             if gapLen > 0 { let d = (u - gapAt + 1).truncatingRemainder(dividingBy: 1); if d < gapLen { open = false; continue } }
@@ -231,15 +277,32 @@ struct ReturnStrata: View {
             ctx.stroke(arc, with: .color(col(mixc(Self.CREAM, Self.AMBER, 0.5), (0.16 - Double(k) * 0.035) * (0.6 + 0.4 * b))), lineWidth: 0.8)
         }
 
-        // motes — the field's slow dust; with age it settles as sediment along the floor
-        for i in 0..<24 {
+        // `:160-166` · A CROSSING, MADE VISIBLE. Drawn over the seed and under the dust, so
+        // the wave leaves the story rather than passing across it.
+        for p0 in pulses where t - p0 < ReturnDepth.pulseLife {
+            let q = (t - p0) / ReturnDepth.pulseLife
+            let R = ReturnDepth.pulseRadius(q: q, W: W, H: H, scale: s)
+            ctx.stroke(Path(ellipseIn: CGRect(x: cx - R, y: cy - R, width: R * 2, height: R * 2)),
+                       with: .color(col(mixc(Self.CREAM, Self.AMBER, 0.6), ReturnDepth.pulseAlpha(q: q))),
+                       lineWidth: 1.1)
+        }
+
+        // motes — the field's slow dust; with age it settles as sediment along the floor.
+        // `:170` — **the COUNT is a function of depth**: 16 far off, 44 once he is inside it.
+        // A fixed 24 gave the same amount of dust at the top of the fall as in the room, so
+        // the air did not thicken as he arrived — and the whole point of the descent is that
+        // the field gets closer.
+        let mn = ReturnDepth.moteCount(z: z)
+        for i in 0..<mn {
             let dep = rnd(Double(i)), sp = (1.4 + dep * 4.6) / breathMul
             let settle = a * 0.55
             let xx = (rnd(Double(i) + 3) * W + sin(t * 0.17 + Double(i)) * 11 + W).truncatingRemainder(dividingBy: W)
             var yy = (rnd(Double(i) + 7) * H + t * sp).truncatingRemainder(dividingBy: H)
             let floor = H - 8 - rnd(Double(i) + 11) * 26
             if rnd(Double(i) + 19) > 0.55 { yy = yy + (floor - yy) * settle }
-            let al = (0.06 + dep * 0.34) * (0.55 + 0.45 * sin(t * 0.42 + Double(i)))
+            // `:176` — `… * z`. From the top of the fall there is no dust to see; it comes
+            // up to meet him as he arrives, which is the same thing the count is saying.
+            let al = (0.06 + dep * 0.34) * (0.55 + 0.45 * sin(t * 0.42 + Double(i))) * z
             let r = 0.5 + dep * 1.5
             ctx.fill(Path(ellipseIn: CGRect(x: xx - r, y: yy - r, width: r * 2, height: r * 2)),
                      with: .color(col(mixc([222, 206, 176], Self.AMBER, warm * 0.7), al)))

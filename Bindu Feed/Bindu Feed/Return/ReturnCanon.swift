@@ -15,10 +15,24 @@ enum ReturnCanon {
     static let sealedSelf = "I wrote it like a comfort — the forgetting is the mercy. But I don\u{2019}t think I believed it yet. I think I was arguing myself toward it. The crack in the metaphor is the part I keep touching. Ask me later if the mercy held."
 
     // The voices that kept sitting with it after he left (verbatim).
-    struct AnewVoice { let name: String; let line: String }
+    /// E3.10 · `The Return v2.html:983-988` — `ANEW`. **A voice speaking anew is a PRESENCE,
+    /// not a name and a line**: the movement shows a 28px disc in the voice's own colour with
+    /// its glyph inside, its name in that colour, and its role beneath. Carrying only
+    /// `(name, line)` is what made the surface a list.
+    struct AnewVoice {
+        let key: String
+        let name: String
+        let hex: String
+        let glyph: String
+        let role: String
+        let line: String
+        var color: Color { Color(hex: hex) }
+    }
     static let anew: [AnewVoice] = [
-        AnewVoice(name: "Sakshi", line: "I kept watching after you left. The crack you almost threw away — it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive."),
-        AnewVoice(name: "Lalita", line: "You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace."),
+        AnewVoice(key: "sakshi", name: "Sakshi", hex: "#7B82D4", glyph: "◇",
+                  role: "Witness · the one who stays", line: "I kept watching after you left. The crack you almost threw away — it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive."),
+        AnewVoice(key: "lalita", name: "Lalita", hex: "#9B6BD6", glyph: "∞",
+                  role: "Meta · the play, awake", line: "You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace."),
     ]
 
     // MARK: - Movement wording (verbatim)
