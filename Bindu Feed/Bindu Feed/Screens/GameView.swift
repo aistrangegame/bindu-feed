@@ -111,29 +111,46 @@ struct GameView: View {
     // MARK: - Floating nav bar
 
     private var floatingNavBar: some View {
+        // F4.1 · **THE CENTRE IS THE DOOR OUT, NOT A CAPTION.** `Game View.html:503-523`
+        // frames the room between two edge arrows and makes the middle column a control:
+        // `{idx+1} · 13 · all rooms` is where you leave from. The app put both arrows in one
+        // right-hand cluster and made the centre inert text reporting where you are — so the
+        // escape hatch was not restyled, it was **absent**, and stepping was the only way to
+        // move.
+        //
+        // **AND THE LINE WAS AUTHORED ALL ALONG, SILENTLY SHORTENED.** `:518` is
+        // `{idx+1} · 13 · all rooms`; the app rendered `\(roomIndex + 1) · 13` — the same
+        // string with its last two words missing, which every checker passes because a
+        // substring of an authored line matches the haystack. The label IS the affordance:
+        // without *all rooms* the counter is a position, and with it the counter is a way out.
         HStack(alignment: .center) {
             BackChevron { $path.popDissolve() }
 
             HubTrigger(open: $showHub)
                 .padding(.leading, 4)
 
-            Spacer(minLength: BinduTheme.space12)
-
-            VStack(spacing: 2) {
-                navBarRoomLabel
-                    .lineLimit(1)
-                Text("\(roomIndex + 1) · 13")
-                    .spaceMonoTracked(9)
-                    .tracking(1.4)
-                    .foregroundColor(BinduTheme.inkTertiary)
-            }
+            // `:507` — the arrows sit at the bar's OWN edges and the room is framed between
+            // them. Both in one right-hand cluster made them a pager control beside the
+            // title; at the edges they are the walls of the room he is standing in.
+            ArrowCircle(direction: .left) { stepRoom(by: -1) }
 
             Spacer(minLength: BinduTheme.space12)
 
-            HStack(spacing: 8) {
-                ArrowCircle(direction: .left) { stepRoom(by: -1) }
-                ArrowCircle(direction: .right) { stepRoom(by: +1) }
+            Button { $path.pushDissolve(FeedRoute.rooms) } label: {
+                VStack(spacing: 3) {
+                    navBarRoomLabel
+                        .lineLimit(1)
+                    Text("\(roomIndex + 1) · 13 · all rooms")
+                        .spaceMonoTracked(8, em: 0.175)
+                        .foregroundColor(BinduTheme.inkTertiary.opacity(0.55))
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: BinduTheme.space12)
+
+            ArrowCircle(direction: .right) { stepRoom(by: +1) }
         }
     }
 
@@ -227,12 +244,17 @@ struct GameView: View {
 
     private func statCell(value: String, label: String) -> some View {
         VStack(spacing: 4) {
+            // F4.2 · `:529,550` — `<GameStat stat={s} color={game.color} />`. **The stats bar
+            // was room-blind**: one fixed `#EDE8E3` for all thirteen rooms, so the one row of
+            // numbers that belongs to THIS room read as chrome belonging to the app.
             Text(value)
-                .font(.lora(18, weight: .medium))
-                .foregroundColor(BinduTheme.inkPrimary)
+                .font(.lora(17, weight: .medium)).tracking(-0.17)   // `:529` — 17, −0.01em
+                .foregroundColor(currentRoom.color)
+            // The tracking was chained OUTSIDE the helper, which applies its own
+            // `.tracking(em * size)` with `em` defaulting to 0 — so an inner `tracking(0)`
+            // sat under an outer `tracking(0.56)` on the same Text. One `em:` says it once.
             Text(label)
-                .spaceMonoTracked(8)
-                .tracking(0.56)     // 0.07em x 8 — Game View.html:526-533
+                .spaceMonoTracked(8, em: 0.07)      // `:526-533`
                 .foregroundColor(BinduTheme.inkTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -459,15 +481,19 @@ private struct ArrowCircle: View {
 
     var body: some View {
         Button(action: action) {
+            // `:512` — 48pt, a dark translucent disc rather than a system material, and a
+            // 1px white-0.10 rim. `.ultraThinMaterial` takes its colour from whatever is
+            // behind it, so the control changed character room by room; the comp's
+            // `rgba(14,12,18,0.60)` is the same disc in every one of the thirteen.
             Image(systemName: direction == .left ? "chevron.left" : "chevron.right")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(BinduTheme.inkPrimary)
-                .frame(width: 34, height: 34)
+                .font(.system(size: 20, weight: .light))
+                .foregroundColor(BinduTheme.inkSecondary)
+                .frame(width: 48, height: 48)
                 .background(
-                    Circle().fill(.ultraThinMaterial)
+                    Circle().fill(Color(hex: "#0E0C12").opacity(0.60))
                 )
                 .overlay(
-                    Circle().strokeBorder(BinduTheme.hairline, lineWidth: 0.5)
+                    Circle().strokeBorder(Color.white.opacity(0.10), lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)

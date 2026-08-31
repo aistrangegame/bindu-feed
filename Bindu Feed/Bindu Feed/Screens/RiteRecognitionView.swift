@@ -74,7 +74,15 @@ struct RiteRecognitionView: View {
                 Text(RiteWord.recogTouchSpeak)
                     .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(BinduTheme.inkTertiary)
-                // Leaving a word is a CHOICE, never a requirement — seal with nothing.
+                // E2.6 · **APP-OWN, AND IT BELONGS TO THE SAME DIVERGENCE AS THE UNGATED
+                // SEAL.** `nothing to leave · seal ›` is in no design source — the audit lists
+                // it as invented and a full-corpus grep across `canon/`, Round 1 and Round 2
+                // confirms it. **Kept deliberately** (ruled 2026-08-31): the design has no
+                // notion of a spoken anchor, so it has no notion of this exit either. Remove
+                // it and a rite cannot be declined — a man who has SPOKEN but written nothing
+                // is held on the Recognition with an orphaned recording. The design's own
+                // state machine never reaches that state; the app's does, because the app
+                // keeps the voice.
                 Button { onSealed("", recorder.keptFilename) } label: {
                     Text("nothing to leave · seal ›")
                         .spaceMonoTracked(8, em: 0.25)
