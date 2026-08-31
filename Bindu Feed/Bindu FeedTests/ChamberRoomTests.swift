@@ -467,14 +467,21 @@ import Foundation
         #expect(abs(PointChamber.rim(liveZ: z, base: base) - r1) < 1e-9)
     }
 
-    @Test("it is clamped, so a far register cannot make the room unusable")
-    func theClampHolds() {
-        // Four registers away is a sixteenth or sixteen times, and the world is only ever
-        // drawn inside its own band — but a clamp costs nothing and a NaN-sized room costs a
-        // frame. Bounded both ways at ±2 registers.
+    @Test("rim is a scale, not a cull — the window belongs to `weight`")
+    func rimDoesNotClamp() {
+        // **THIS TEST ASSERTED THE OPPOSITE AND WAS WRONG WITH IT.** It pinned a ±2-register
+        // clamp I had put inside `rim`, under the reasoning that a far register should not
+        // make the room unusable. `The Instrument v3.html:1041` is `R0·2^((Z+5)−i)` with
+        // nothing wrapped around the exponent, and the culling is a SEPARATE function —
+        // `Spine.weight` (`:1042-1046`), zero outside −2.7/+2.0 and smooth inside it.
+        //
+        // Folding the cull into the scale made `rim` answer two questions at once, and the
+        // test then held the conflation in place: a green run confirmed the bound, which was
+        // never the thing to confirm.
         let base = 200.0
-        #expect(PointChamber.rim(liveZ: 99, base: base) == base * 4)
-        #expect(PointChamber.rim(liveZ: -99, base: base) == base / 4)
+        #expect(PointChamber.rim(liveZ: PointChamber.z + 3, base: base) == base * 8,
+                "three registers in is eight times, not a clamped four")
+        #expect(PointChamber.rim(liveZ: PointChamber.z - 3, base: base) == base / 8)
     }
 
     // MARK: - the close threshold

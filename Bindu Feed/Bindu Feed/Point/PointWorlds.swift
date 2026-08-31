@@ -712,9 +712,11 @@ private struct WorldChamber: View {
         let n = niches[p.id] ?? PointChamber.Niche(id: p.id, uni: 2, wall: .back, d: 0.27, h: 0.16)
         // The vanishing point is the particle's — `:95`, *"never a niche."* The Canvas behind
         // draws its own vanishing line at `height * 0.42`, so the room and its contents agree.
+        // The `rim` batch wired `chamberPlace` and left THIS twin on the fixed radius, so
+        // one of the room's two placement paths still sized itself from the screen. Same
+        // function, same room, two different geometries depending on which caller you were.
         let cx = size.width / 2, cy = size.height * 0.42
-        let rim = min(size.width, size.height) * 0.46
-        let v = PointChamber.place(n, rim: rim, press: bearing)
+        let v = PointChamber.place(n, rim: rimOf(size), press: bearing)
         return CGPoint(x: cx + v.dx, y: cy + v.dy)
     }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# THE GATE — all six checkers, one exit code.
+# THE GATE — all seven checkers, one exit code.
 #
 # `428c4ca` was committed with `check_citations` RED. The output was printed, and read past.
 # **A gate that depends on someone noticing red is not a gate**, and this build's entire
@@ -9,12 +9,13 @@
 # So the check stops being observational. Non-zero here blocks the commit, via
 # `.git/hooks/pre-commit`, and no amount of confidence substitutes for the exit code.
 #
-#   ./Tools/verify.sh          run all six, exit non-zero if any fails
+#   ./Tools/verify.sh          run all seven, exit non-zero if any fails
 #   ./Tools/verify.sh --quiet  only print failures
 #
 # The unit suite is NOT here on purpose: it needs a simulator and takes minutes, and a gate
 # slow enough to be bypassed is a gate that will be. The three-run bar stays a deliberate act
-# before a claim of doneness; this guards the five that run in seconds.
+# before a claim of doneness; this guards the seven that run in seconds — ~36s on a quiet
+# machine, and `check_wired`'s reachability fixed point is 30 of them.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

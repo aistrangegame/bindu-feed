@@ -184,8 +184,23 @@ enum PointChamber {
     ///
     /// `base` is the room at its own register, so this is exactly neutral where he stands and
     /// only ever changes as he moves — which is the whole of what it says.
+    /// **THE CLAMP WAS MINE AND THE DESIGN DOES NOT HAVE ONE HERE.** This read
+    /// `pow(2, max(-2, min(2, liveZ − z)))` — a ±2-register bound I added under a comment
+    /// about a far register not making the room unusable. `The Instrument v3.html:1041` is
+    /// `R0·2^((Z+5)−i)` with **nothing** wrapped around the exponent; the culling is a
+    /// SEPARATE function, `Spine.weight` at `:1042-1046`, which returns 0 outside a −2.7/+2.0
+    /// window and falls off smoothly inside it.
+    ///
+    /// So the bound was real and belonged somewhere else, and putting it here made `rim`
+    /// answer two questions at once — *how big is this room from here* and *is this room on
+    /// screen at all*. Culling folded into a scale is invisible while everything is in band
+    /// and wrong at the edges, where the two laws disagree: the design fades a register out
+    /// across 1.35 registers, and a hard clamp holds it at a fixed size and then cuts.
+    ///
+    /// Unclamped now. The window belongs to `Axis.weight`, which **AUDIT C1.8 — still
+    /// OPEN** covers: `rim()`/`weight()` were never ported to the axis at all.
     static func rim(liveZ: Double, base: Double) -> Double {
-        base * pow(2, max(-2, min(2, liveZ - z)))
+        base * pow(2, liveZ - z)
     }
 
     static func bearing(z: Double, press: Double) -> Double {

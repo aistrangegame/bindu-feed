@@ -186,6 +186,13 @@ Open findings by severity:
 | C1.1 | none | none | names, z, order and Hz: MATCH | CLOSED | `AxisModel.swift:79-95` all 15 identical. |
 | C1.2 | MAJOR | DATA | `the centre` has no colour; renders error hue | CLOSED | `AxisModel.swift:65`. |
 | C1.3 | MAJOR | VISUAL | Feed / gate hues swapped | CLOSED | `AxisModel.swift:63-64`. |
+> **§C · THE 19 NO-APP-FILE ROWS ARE 4 ABSENT QUANTITIES AND THEIR CONSEQUENCES** (swept refute-first, 2026-08-31, design read before the rows).
+> · **`Spine.rim` + `Spine.weight`** (`The Instrument v3.html:1041-1046`, *the geometry every layer must agree on*) — C1.8 IS the pair; C4.7 blocked on it; C4.2 needs the isotropic rim to compute the space `uBack` lives in. No Swift `Axis.rim`/`weight` exists: the formula is prose in `AxisModel.swift:10`, the shader keeps a private copy at `InstrumentField.metal:196`, and the only executable Swift copy was one world's.
+> · **`immA`** (`:5497-5501`, asymmetric 1.6 in / 2.6 out) — C3.7, C5.4, C5.8, and C4.7's global alpha. **Every consumer today runs against a hardcoded 0**, which `InstrumentView.swift:517-518` already admits.
+> · **`PS.from` / `PS.to`** — C2.4, C5.4, C7.7. `AxisTravel` keeps `glideFrom`/`glideTo` as private Z doubles and publishes no from/to REGISTER, so consumers fall back to `here`. **C7.5 does NOT need it** — its `give` reads only `PS.to`, and `onLand?(Axis.nearest(z))` after `z = glideTo` already is `PS.to`.
+> · **`TR.setRoom` / the room hue** — C1.4, C4.4. `Axis.roomHue` is declared and written nowhere; `FIELD.setRoom → uH[15]` has no uniform in the stitched signature.
+> Buildable today with no precondition: **C2.7, C4.6, C5.9, C5.10, C5.11, C7.5, C7.10.**
+
 | C1.4 | MAJOR | DATA | four Universe registers collapsed to one grey | OPEN | `:61-62` region/world/fall share one resting hue; `Axis.roomHue` never assigned (3 hits, no writer). |
 | C1.5 | MAJOR | DATA | `sub`/`roman`/`dim` dropped from the model | CLOSED | `AxisModel.swift:28-32,42-47,80-94`. |
 | C1.6 | MAJOR | DATA | the three ceremony DOORS were never ported | OPEN | z:0 rite door, the table and the 0.42 proximity ramp absent (two doors hand-placed). |
