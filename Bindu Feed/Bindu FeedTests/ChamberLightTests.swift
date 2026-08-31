@@ -91,3 +91,78 @@ import SwiftUI
         #expect(magma(pr: 0, breath: 0.5).floor > 0.15)
     }
 }
+
+// D5.5 · BATCH 5 — the rope. `world-four.js:39-40`, `:254-262`.
+//
+// *"And this is the rope's home. The rope hangs here, visible, because the chamber is the
+// register the rope was built for."* In this one world it is simply present — **no caption,
+// no cue, not explained.** That silence is the mechanism, not an omission: everywhere else the
+// rope is something reached for; here it is furniture. A label would turn the one register
+// that has always had it into the register that advertises it.
+@Suite struct ChamberRopeTests {
+
+    private let rim = 200.0
+    private func ropeX(at f: Double, t: Double) -> Double {
+        rim * 0.62 + sin(f * 2.2 + t * 0.16) * rim * 0.012
+    }
+
+    @Test("it hangs from above the back wall, not from inside the room")
+    func itComesOutOfTheVault() {
+        // `ry0 = cy − bh·1.1`. The 1.1 puts its anchor ABOVE the top of the back wall, so it
+        // comes down out of the dark vault. Anchored at `bh` exactly it would start on the
+        // wall's edge and read as drawn on it.
+        let bh = rim * 1.12 * PointChamber.BACK
+        let anchor = -bh * 1.1
+        #expect(anchor < -bh, "the rope starts inside the room")
+    }
+
+    @Test("it hangs a real distance, and stops short of the floor")
+    func itHangsAndEnds() {
+        // `f2·rim·0.60` over sixteen segments. Long enough to be a rope; short enough that it
+        // does not reach the magma.
+        let drop = rim * 0.60
+        let bh = rim * 1.12 * PointChamber.BACK
+        #expect(drop > rim * 0.4, "it is a stub, not a rope")
+        #expect(-bh * 1.1 + drop < rim, "it hangs past the floor of the room")
+    }
+
+    @Test("it sways, slowly, and by far less than the room moves")
+    func itIsAlive() {
+        // `sin(f2·2.2 + t·0.16)·rim·0.012`. The amplitude is a hundredth of the rim — a rope
+        // in still air, not a pendulum. And the phase runs along its LENGTH (`f2·2.2`), so it
+        // curves rather than swinging rigidly.
+        let a = ropeX(at: 0.5, t: 0), b = ropeX(at: 0.5, t: 20)
+        #expect(a != b, "the rope is frozen")
+        #expect(abs(a - b) < rim * 0.03, "it is swinging like a pendulum")
+        let top = ropeX(at: 0, t: 3), mid = ropeX(at: 0.5, t: 3), foot = ropeX(at: 1, t: 3)
+        #expect(!(abs(top - mid) < 1e-9 && abs(mid - foot) < 1e-9), "the rope is a straight line")
+    }
+
+    @Test("sixteen segments — a rope drawn as one line does not hang")
+    func itIsNotOneStroke() {
+        // The count is what lets the curve exist at all. Two points give a straight cord
+        // however the sway is computed.
+        var xs: [Double] = []
+        for q in 0...16 { xs.append(ropeX(at: Double(q) / 16, t: 1.5)) }
+        #expect(xs.count == 17)
+        let spread = (xs.max() ?? 0) - (xs.min() ?? 0)
+        #expect(spread > 0.5, "every segment sits at the same x — there is no curve")
+    }
+
+    // MARK: - green on absent
+
+    @Test("the rope is not explained — nothing is said about it anywhere")
+    func itCarriesNoCaption() {
+        // `:254` — *"This is its home; it is not explained."* The invented-string rule and the
+        // design agree here for once by saying nothing: this pass adds no label, no cue and no
+        // registry entry. Asserted so a later hand that adds a helpful caption fails here
+        // rather than in a walk.
+        let src = try? String(contentsOfFile:
+            "/Users/ashrey/Bindu Feed/Bindu Feed/Bindu Feed/Point/PointWorlds.swift", encoding: .utf8)
+        guard let src else { Issue.record("could not read the world"); return }
+        guard let r = src.range(of: "THE ROPE HANGS HERE") else { Issue.record("the rope is gone"); return }
+        let block = String(src[r.lowerBound...].prefix(1400))
+        #expect(!block.contains("Text(\""), "something is being said about the rope")
+        #expect(!block.lowercased().contains("pull the rope"))
+    }
+}

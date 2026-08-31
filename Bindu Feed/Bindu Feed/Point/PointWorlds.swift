@@ -730,6 +730,7 @@ private struct WorldChamber: View {
                 // was changing — elapsed time — is not something it can notice.
                 TimelineView(.animation) { tl in
                   let pr = bearing
+                  let t = tl.date.timeIntervalSinceReferenceDate
                   Canvas { ctx, size in
                     // D5.5 · BATCH 2 · **THE ROOM IS DRAWN FROM THE PROJECTION IT ALREADY HAD.**
                     //
@@ -913,6 +914,30 @@ private struct WorldChamber: View {
                                     .foregroundStyle(UniGeo.col(UniGeo.mix([255, 238, 220], hueRGB, 0.18), ta * 0.94)),
                                  at: CGPoint(x: x0, y: ty), anchor: .center)
                     }
+
+                    // `:254-262` · **THE ROPE HANGS HERE. THIS IS ITS HOME; IT IS NOT
+                    // EXPLAINED.** *"The chamber is the register the rope was built for"* —
+                    // so in this one world the rope is simply present, on the wall, with no
+                    // caption and no cue. That silence is the mechanism: everywhere else the
+                    // rope is reached for; here it is furniture, and a label would turn the
+                    // one register that has always had it into a register that advertises it.
+                    // (It is also why nothing is added to the string registries by this pass.)
+                    //
+                    // It hangs from ABOVE the back wall's top — `ry0 = cy − bh·1.1` — so it
+                    // comes down out of the dark vault rather than starting inside the room,
+                    // and it sways on its own slow clock, one twelfth of the amplitude the
+                    // room's own movement has. Sixteen segments, because a rope drawn as one
+                    // line does not hang.
+                    let ropeX = cx + rim * 0.62, ropeY0 = cy - bh * 1.1
+                    var rope = Path()
+                    for q in 0...16 {
+                        let f2 = Double(q) / 16
+                        let yy = ropeY0 + f2 * rim * 0.60
+                        let xx = ropeX + sin(f2 * 2.2 + t * 0.16) * rim * 0.012 + panX
+                        if q == 0 { rope.move(to: CGPoint(x: xx, y: yy)) } else { rope.addLine(to: CGPoint(x: xx, y: yy)) }
+                    }
+                    ctx.stroke(rope, with: .color(UniGeo.col(UniGeo.mix(hueRGB, [232, 214, 194], 0.5), 0.24)),
+                               lineWidth: 1.1)
 
                     // ember from below-left
                     ctx.fill(Path(ellipseIn: CGRect(x: -80, y: size.height - 60, width: 260, height: 260)),
