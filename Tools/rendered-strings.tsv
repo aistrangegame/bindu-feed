@@ -984,7 +984,6 @@ AUTHORED	·signal	Bindu Feed/Bindu Feed/Screens/SignalView.swift:238
 AUTHORED	‹ ascend	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:393
 AUTHORED	‹ the enclosure	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:113
 AUTHORED	◉ you, now · today	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:438
-DIVERGENCE	You walked straight through, gate to centre. Some days that is the whole practice.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:45
 NON-UI	... -- met in the Rite	Bindu Feed/Bindu Feed/Store/FeedStore.swift:605
 NON-UI	<no body>	Bindu Feed/Bindu Feed/Services/AirtableService.swift:806
 NON-UI	Airtable HTTP ...: ...	Bindu Feed/Bindu Feed/Services/AirtableService.swift:25

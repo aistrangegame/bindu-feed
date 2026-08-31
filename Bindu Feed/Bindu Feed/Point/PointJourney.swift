@@ -11,6 +11,10 @@ enum PointJourney {
     /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
     static var reachedGate = false
     static var enteredDims: [String] = []
+    /// D2.6 · **THE ROPE. `The Point v9.html:873` — `Journey = {…, rope:false}`.** It was the
+    /// one field the walk had no record of: the rope is fully built and reachable, and the
+    /// reveal could not say it had happened.
+    static var rope = false
     static var universes: [String] = []       // the named universes he entered (middle tier)
     static var openedStars: [String] = []
     static var descended: [String] = []
@@ -37,6 +41,8 @@ enum PointJourney {
     static func reset() {
         reachedGate = false
         enteredDims = []
+        universes = []
+        rope = false
         openedStars = []
         descended = []
         visitors = 0
@@ -56,7 +62,23 @@ enum PointJourney {
         var out: [String] = []
         out.append(reachedGate ? "You pressed me at the gate."
                                : "You slipped past the gate — I came along anyway.")
-        if !enteredDims.isEmpty { out.append("You entered " + nameList(enteredDims, 3) + ".") }
+        // D2.6 · `point-levels.js:289`, and the design places it SECOND — between the gate
+        // and what he entered. `openRope()` sets it (`:261`), so a rope reached for and
+        // dismissed still counts: reaching is the act, not staying.
+        if rope { out.append("You reached for the rope. I was the dot you breathed with.") }
+        // D2.6 · **TRANSIT AND CHOICE ARE TWO DIFFERENT CLAIMS AND THE APP MADE ONE OF THEM
+        // TWICE.** `point-levels.js:290` narrates `Journey.universes` — pushed at `:149`
+        // inside `openUniverse`, a deliberate tap on a NAMED UNIVERSE. The app narrated
+        // `enteredDims`, appended in `PointWorldView.onAppear` — and that view is mounted by
+        // `Axis.nearest(z)`, so **merely passing a register appended its name**. A walk with
+        // no taps at all reported *"You entered The Point · The Turn · The Veil · and 4
+        // more."* The array the design narrates was written at the right site and read by
+        // nothing.
+        if !universes.isEmpty { out.append("You entered " + nameList(universes, 3) + ".") }
+        // The transit log gets its own true sentence rather than being deleted or left to
+        // impersonate choice — `The Instrument v3.html:5769`, the higher-precedence source,
+        // which narrates passage as passage and caps at FOUR where choice caps at three.
+        if !enteredDims.isEmpty { out.append("You passed through " + nameList(enteredDims, 4) + ".") }
         if !openedStars.isEmpty { out.append("You opened " + nameList(openedStars, 3) + ".") }
         if !descended.isEmpty { out.append("You descended onto " + nameList(descended, 2) + " — and came back up.") }
         if visitors > 0 {
@@ -69,8 +91,17 @@ enum PointJourney {
             out.append("You carried " + nameList(carriedTitles, 2)
                        + " up with you. What you carry is not a list. It is a change in what you notice.")
         }
-        if enteredDims.isEmpty && openedStars.isEmpty {
-            out.append("You walked straight through, gate to centre. Some days that is the whole practice.")
+        // D2.6 · `point-levels.js:294` guards this on `universes` — **the same array `:290`
+        // narrates.** Guarded on `enteredDims` it was unreachable by construction: transit
+        // filled the array, and transit is exactly what this line exists to describe. The
+        // authored straight-through sentence could never appear on a straight-through walk.
+        //
+        // D2.9 · and it is `center`. The app had naturalised one letter into the file's own
+        // British spelling — the string is canon (`PointContent.swift:385` already carries the
+        // American form byte-exact), so this was the one site of two that disagreed with
+        // itself. A registry row called it a DIVERGENCE; it was a typo with a verdict on it.
+        if universes.isEmpty && openedStars.isEmpty {
+            out.append("You walked straight through, gate to center. Some days that is the whole practice.")
         }
         return out
     }

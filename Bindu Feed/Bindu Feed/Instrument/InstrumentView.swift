@@ -279,6 +279,9 @@ struct InstrumentView: View {
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
                 guard !showRope, !PressClaim.isClaimed else { return }
                 withAnimation(.easeInOut(duration: 0.8)) { showRope = true }
+                // D2.6 · `point-levels.js:261` sets it inside `openRope()` — where the rope
+                // OPENS, not where it is dismissed, so reaching for it is what counts.
+                PointJourney.rope = true
             }
         )
         .overlay {
