@@ -13,7 +13,22 @@ struct LightNave: View {
     var flooding: Bool       // once the aperture opens, the interior floods dark → lit over 3s
 
     @State private var floodStart: Double?
+    /// E1.13 · `calm += (target − calm) * 0.03` — a slow approach, so the warmth LAGS the
+    /// stillness. The app set `calm = still`, making them one quantity under two names and
+    /// losing the lag, which is the register's temperament: slower to warm than he is to be
+    /// still.
+    @State private var easedCalm: Double = 0
+    @State private var calmTick: Timer?
     @StateObject private var floor = NaveFloor()
+
+    /// The design's per-frame approach, at its own rate. 0.03 per 60fps frame is a ≈0.55s
+    /// time constant — slow enough to be felt as lag rather than read as a delay.
+    private func startCalmEasing() {
+        calmTick?.invalidate()
+        calmTick = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { _ in
+            easedCalm += (still - easedCalm) * 0.03
+        }
+    }
 
     private let SW = 390.0, SH = 844.0
     private let apexX = 195.0, apexY = 150.0, floorY = 706.0
@@ -34,12 +49,23 @@ struct LightNave: View {
         .onChange(of: flooding) { _, f in
             floodStart = f ? Date().timeIntervalSinceReferenceDate : nil
         }
-        .onAppear { if flooding { floodStart = Date().timeIntervalSinceReferenceDate } }
+        .onAppear {
+            if flooding { floodStart = Date().timeIntervalSinceReferenceDate }
+            startCalmEasing()
+        }
+        .onDisappear { calmTick?.invalidate(); calmTick = nil }
     }
 
     private func draw(_ base: GraphicsContext, _ size: CGSize, _ t: Double) {
         let e = breath.value                          // eased 0…1
-        let cam = still, calm = still
+        // E1.13 · **`calm` IS EASED, AND `cam` IS NOT.** `The Light v2.html` runs
+        // `calm += (target − calm) * 0.03` — a slow approach, so the warmth lags the stillness
+        // and keeps arriving after he has settled. Setting `calm = still` makes the two the
+        // same quantity under two names, and the lag IS the register's temperament: it is
+        // slower to warm than he is to be still. **This one is genuinely a THIRD defect** —
+        // the other two are the missing procession, seen twice.
+        let cam = still
+        let calm = easedCalm
         let lit = floodStart.map { min(1, (t - $0) / 3) } ?? 0   // the flood, timed in-canvas
         let ink: (Double, Double, Double) = lit > 0.5 ? (22, 19, 27) : (246, 243, 237)
         let lgt: (Double, Double, Double) = lit > 0.5 ? (255, 253, 248) : (246, 243, 237)
@@ -84,15 +110,31 @@ struct LightNave: View {
 
         // ── the conducting Bindu at the shaft's head — present throughout, never stops; it
         // warms with calm and breathes (The Light v2 · "THE BINDU CONDUCTS") ──
+        // E1.13 · **THE BINDU WAS DRAWN OUTSIDE THE PROCESSION, AND THAT IS WHY ITS SIZES
+        // WERE CONSTANTS.** `k` and `A` are computed above and applied to the shaft and the
+        // floor; this block used neither. `The Light v2.html:476-477` — *"the procession:
+        // everything scales about the standing point"* — wraps the whole nave in
+        // `ctx.scale(k,k)` with `k = 0.30 + cam*0.70`, and `:478`'s `A = 0.42 + cam*0.58`
+        // multiplies every alpha.
+        //
+        // Outside it, the Bindu could not answer the camera — so its radii were hand-tuned
+        // until they looked right at one distance and frozen there. **That is one decision
+        // with two symptoms**, which is why `:542-546`'s `58+e*54` and `120−e*58` had become
+        // `26` and `10`: not merely smaller, but no longer FUNCTIONS — the breath term went
+        // with the camera term, because a number picked by eye has neither.
         let warm = 0.30 + calm * 0.30 + e * 0.35
-        ctx.fill(Path(ellipseIn: CGRect(x: apexX - 26, y: apexY - 26, width: 52, height: 52)),
-                 with: .radialGradient(Gradient(colors: [c(255, 244, 224, 0.45 * warm), c(255, 244, 224, 0)]),
-                                       center: CGPoint(x: apexX, y: apexY), startRadius: 0, endRadius: 26))
-        ctx.stroke(Path(ellipseIn: CGRect(x: apexX - 10, y: apexY - 10, width: 20, height: 20)),
-                   with: .color(c(255, 240, 216, 0.28 * warm)), lineWidth: 0.8)
-        let cr = 3 + e * 1.2
+        let halo = (58 + e * 54) * k
+        ctx.fill(Path(ellipseIn: CGRect(x: apexX - halo, y: apexY - halo,
+                                        width: halo * 2, height: halo * 2)),
+                 with: .radialGradient(Gradient(colors: [c(255, 244, 224, 0.45 * warm * A), c(255, 244, 224, 0)]),
+                                       center: CGPoint(x: apexX, y: apexY), startRadius: 0, endRadius: halo))
+        let guide = (120 - e * 58) * k
+        ctx.stroke(Path(ellipseIn: CGRect(x: apexX - guide, y: apexY - guide,
+                                          width: guide * 2, height: guide * 2)),
+                   with: .color(c(255, 240, 216, 0.28 * warm * A)), lineWidth: 0.8)
+        let cr = (6 + e * 8) * k
         ctx.fill(Path(ellipseIn: CGRect(x: apexX - cr, y: apexY - cr, width: cr * 2, height: cr * 2)),
-                 with: .color(c(255, 250, 240, 0.9 * warm)))
+                 with: .color(c(255, 250, 240, 0.9 * warm * A)))
 
         // ── rings worn into the floor: EVERY BREATH HE HAS TAKEN HERE ──
         //

@@ -128,7 +128,7 @@ struct DoorView: View {
                     .font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary)
                     .padding(.top, 6)
                 Spacer()
-                Text("touch to receive")
+                Text("touch to receive".uppercased())
                     .font(.spaceMono(9)).tracking(2)
                     .foregroundStyle(room.opacity(0.62))
                     .modifier(RiteBreathe())

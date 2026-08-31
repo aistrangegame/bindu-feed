@@ -60,6 +60,9 @@ CITE = re.compile(r'`([A-Za-z0-9 _./-]+\.(?:html|js|swift|md)):(\d+)(?:-\d+)?`')
 # verbatim by construction — those are skipped rather than reported.
 QUOTE = re.compile(r'\*"([^"]{8,240})"\*')
 
+# ``EX:`` inside a backtick — an example of the syntax, not a use of it.
+EXAMPLE = re.compile(r"`EX:[^`]*`")
+
 def resolve(name):
     """Every file the citation could mean. A BARE name that means more than one is an error.
 
@@ -98,7 +101,18 @@ def main():
         if not doc.exists(): continue
         lines = doc.read_text(encoding="utf-8").splitlines()
         for i, line in enumerate(lines, 1):
-            cites = CITE.findall(line)
+            # **THE ESCAPE, AND WHY §10 NEEDS ONE.** CLAUDE.md is the one document whose
+            # SUBJECT is the syntax these checkers parse, so an example of a citation IS a
+            # citation and an example of a calibration plant IS a plant. Three instances in
+            # one section, none of them errors — and the alternative is rephrasing an example
+            # until a parser ignores it, which degrades the explanation to protect the tool.
+            #
+            # `EX:` immediately inside the backtick marks ONE citation as an example.
+            # Deliberately per-citation rather than per-block: a real citation elsewhere on
+            # the same line still flags, so the escape cannot be used to silence a genuine one
+            # by fencing the region around it.
+            line_for_cites = EXAMPLE.sub("`", line)
+            cites = CITE.findall(line_for_cites)
             # ONE citation and ONE quotation on a line, or the pairing is a guess. A line
             # that cites two sources and quotes one of them cannot be resolved by position,
             # and guessing produced a false OK for the second citation on the first run.
@@ -125,6 +139,24 @@ def main():
                         print(f"                {f.relative_to(ROOT)}")
                     print(f"              qualify it — a bare filename is not a citation when")
                     print(f"              more than one file has that name.")
+                    missing += 1
+                    continue
+                # **A CITATION WHOSE LINE EXCEEDS ITS FILE IS NOT A CITATION.** Cheap, and
+                # it catches the one shape ambiguity cannot: a name that resolves to a REAL
+                # file, at a line that file does not have. Added 2026-08-30 after a bulk
+                # qualification of `AUDIT.md` redirected `spine-axis.js:1084` to a 143-line
+                # file and `spine-field.js:2112` to a 241-line one — `AUDIT.md:238` declares
+                # those names as LINE RANGES WITHIN `The Instrument v3.html`, section labels
+                # rather than files. All three redirects were entirely plausible on their
+                # face; what exposed them was `spine-passage.js`, which resolves to nothing
+                # at all. **An unresolvable reference announces itself; a resolvable-but-wrong
+                # one does not** — so the impossible one is worth a check of its whole class.
+                nlines = len(files[0].read_text(errors="ignore").split("\n"))
+                if ln > nlines:
+                    print(f"  PAST-EOF    {doc.name}:{i}  {name}:{ln} — that file has {nlines} lines")
+                    print(f"              a citation whose line exceeds its file is not a citation:")
+                    print(f"              either the path is wrong, or the name is a SECTION LABEL")
+                    print(f"              rather than a file (see AUDIT.md:238).")
                     missing += 1
                     continue
                 # a quote on the same line or the next one belongs to this citation

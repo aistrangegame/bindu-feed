@@ -641,10 +641,10 @@ struct LightView: View {
             Spacer()
             HStack(spacing: 26) {
                 Button { restart() } label: {
-                    Text("again ›").font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
+                    Text("again ›".uppercased()).font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
                 }
                 Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                    Text("the archive waits ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
+                    Text("the archive waits ›".uppercased()).font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }
             }
             .padding(.bottom, 44)

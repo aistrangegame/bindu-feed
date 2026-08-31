@@ -90,7 +90,7 @@ struct TurnOverlay: View {
                 .padding(.horizontal, 30)
 
                 Spacer()
-                Text("tap anywhere to stay")
+                Text("tap anywhere to stay".uppercased())
                     .font(.spaceMono(9)).tracking(2)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.4 * breath.value))
                     .padding(.bottom, 40)

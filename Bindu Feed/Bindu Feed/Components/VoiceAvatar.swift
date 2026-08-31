@@ -31,29 +31,33 @@ struct VoiceAvatar: View {
 struct VoiceAvatarStack: View {
     let archetypes: [Archetype]
     var size: CGFloat = 22
-    var maxVisible: Int = 4
     var ringColor: Color = BinduTheme.bgCard
 
+    /// F2.5 · `Claude Design Round 1/Home Feed.html:100` — `marginLeft: i > 0 ? -7 : 0` on a **22pt** circle, so the
+    /// overlap is `7/22`. The app used `size * 0.55` = 12.1pt, **1.7× the design**, and the
+    /// stack read as a tight clump rather than a row of faces standing slightly in front of
+    /// one another.
+    static let overlapRatio: CGFloat = 7.0 / 22.0
+    /// `border: 2px` on each side of a 22pt circle = 26, not 25.
+    static let ringInset: CGFloat = 4
+
     var body: some View {
-        let visible = Array(archetypes.prefix(maxVisible))
-        let overlap = size * 0.55
+        // **EVERY ARCHETYPE, AS THE DESIGN RENDERS THEM.** This capped at four and added
+        // `Text("+\(count - maxVisible)")` — **an invented affordance**, and one no checker
+        // could see: it is INTERPOLATED, and `check_rendered` extracts literals. The
+        // gathering's size became a number in a chip instead of a row of faces, which is a
+        // different claim about what a gathering is.
+        let overlap = size * Self.overlapRatio
 
         HStack(spacing: -overlap) {
-            ForEach(Array(visible.enumerated()), id: \.offset) { index, archetype in
+            ForEach(Array(archetypes.enumerated()), id: \.offset) { index, archetype in
                 VoiceAvatar(archetype: archetype, size: size)
                     .background(
                         Circle()
                             .fill(ringColor)
-                            .frame(width: size + 3, height: size + 3)
+                            .frame(width: size + Self.ringInset, height: size + Self.ringInset)
                     )
-                    .zIndex(Double(visible.count - index))
-            }
-
-            if archetypes.count > maxVisible {
-                Text("+\(archetypes.count - maxVisible)")
-                    .font(.spaceMono(9))
-                    .foregroundColor(BinduTheme.inkTertiary)
-                    .padding(.leading, overlap + 4)
+                    .zIndex(Double(archetypes.count - index))
             }
         }
     }
