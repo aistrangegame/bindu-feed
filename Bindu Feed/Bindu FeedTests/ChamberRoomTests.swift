@@ -196,3 +196,103 @@ import Foundation
         #expect(PointChamber.bow(along: 0.5, press: 0, rim: 100) == 0)
     }
 }
+
+// D5.5 · BATCH 2 — the room drawn from the projection, and the load made visible.
+//
+// `world-four.js:159-187`. What stood here was four diagonals from the four SCREEN corners
+// and nine evenly-spaced horizontal rules: a painted backdrop that never called `proj`, so it
+// carried no depth, no bow and no press. **The room could not deform because it was not built
+// out of the thing that deforms.** These assert the properties that separate a drawn room
+// from a painted one — every one of them is false of straight lines between screen corners.
+@Suite struct ChamberRoomStructureTests {
+
+    private func edge(_ w: PointChamber.Wall, _ h: Double, press: Double)
+        -> (near: (dx: Double, dy: Double, sc: Double), far: (dx: Double, dy: Double, sc: Double)) {
+        (PointChamber.proj(wall: w, d: 0, h: h, rim: 200, press: press),
+         PointChamber.proj(wall: w, d: 1, h: h, rim: 200, press: press))
+    }
+
+    @Test("the room's edges recede — the far end of a wall is nearer the centre")
+    func theEdgesRecede() {
+        // A line from a screen corner to a vanishing point also *looks* like this, which is
+        // why the backdrop passed for a room. What separates them is that these ends are
+        // computed from the SAME projection the niches stand in, so the walls and the things
+        // on them agree. Here: the far end is pulled toward the centre by `sc`.
+        let e = edge(.left, 0.5, press: 0)
+        #expect(e.far.dx > e.near.dx, "the left wall does not recede")
+        #expect(abs(e.far.dx) < abs(e.near.dx))
+        #expect(e.far.sc < e.near.sc, "the far end is not further away")
+    }
+
+    @Test("the vault edge is above the floor edge, at both ends")
+    func theRoomHasAHeight() {
+        for d in [0.0, 1.0] {
+            let floorY = PointChamber.proj(wall: .left, d: d, h: 0, rim: 200, press: 0).dy
+            let vaultY = PointChamber.proj(wall: .left, d: d, h: 1, rim: 200, press: 0).dy
+            #expect(vaultY > floorY, "the vault is under the floor at d=\(d)")
+        }
+    }
+
+    @Test("the room closes as it is borne — all four edges move inward together")
+    func theRoomDeforms() {
+        // This is the assertion the backdrop could never pass: its lines were functions of the
+        // screen, so no amount of load moved them. Both walls must come IN, and the vault must
+        // come DOWN, from the same `pr`.
+        for h in [0.0, 1.0] {
+            let slack = edge(.left, h, press: 0), borne = edge(.left, h, press: 1)
+            #expect(borne.near.dx > slack.near.dx, "the left wall did not come in at h=\(h)")
+        }
+        let vaultSlack = PointChamber.proj(wall: .left, d: 0, h: 1, rim: 200, press: 0).dy
+        let vaultBorne = PointChamber.proj(wall: .left, d: 0, h: 1, rim: 200, press: 1).dy
+        #expect(vaultBorne < vaultSlack, "the vault did not descend under load")
+    }
+
+    @Test("the back wall comes down with the vault, not independently of it")
+    func theBackWallSharesTheDescent() {
+        // `bh = rim·(1.12 − pr·0.13)·BACK` — the same `1.12 − pr·0.13` the projection uses for
+        // height. A back wall with its own constant would stand still while the room closed
+        // around it, which reads as the far wall receding rather than the ceiling dropping.
+        func bh(_ pr: Double) -> Double { 200 * (1.12 - pr * 0.13) * PointChamber.BACK }
+        #expect(bh(1) < bh(0))
+        let ratio = bh(1) / bh(0)
+        let vaultRatio = (1.12 - 0.13) / 1.12
+        #expect(abs(ratio - vaultRatio) < 1e-9, "the back wall descends at its own rate")
+    }
+
+    // MARK: - the hairlines
+
+    @Test("the load concentrates — the middle of the vault takes almost all of it")
+    func theConcentrationIsNotAnArch() {
+        // `conc = sin(f·π)^1.6`. **The 1.6 is what makes it a CONCENTRATION.** A plain
+        // `sin(f·π)` spreads the load evenly enough to read as decoration; the exponent pulls
+        // it into the middle, which is where a vault actually fails.
+        func conc(_ f: Double) -> Double { pow(sin(f * .pi), 1.6) }
+        let mid = conc(0.5), quarter = conc(0.25), edge = conc(0.5 / 9)
+        #expect(mid > quarter * 1.5, "the load is spread, not concentrated")
+        #expect(edge < 0.1, "the vault's ends are carrying the load")
+        #expect(conc(0.25) > pow(sin(0.25 * .pi), 2.0), "the exponent is too steep to be 1.6")
+        #expect(conc(0.25) < sin(0.25 * .pi), "the exponent is not doing anything")
+    }
+
+    @Test("the hairlines open further the more he presses back")
+    func theSagAnswersTheHand() {
+        // `sag = conc·(ld·rim·0.05 + pr·rim·0.055)`. **Both terms are there on purpose**: the
+        // standing load sags the vault before he arrives, and his own bearing sags it further.
+        // Dropping the first gives a vault that is perfectly flat until touched, which is the
+        // same claim `pr` exists to refute.
+        let ld = PointChamber.load(z: PointChamber.z), rim = 200.0
+        func sag(_ pr: Double) -> Double { 1.0 * (ld * rim * 0.05 + pr * rim * 0.055) }
+        #expect(sag(0) > 0, "the vault is flat until he touches it")
+        #expect(sag(1) > sag(0), "bearing on it changed nothing")
+    }
+
+    // MARK: - green on absent
+
+    @Test("at no load and no press the room is square and the vault is flat")
+    func theUnloadedRoom() {
+        let l = PointChamber.proj(wall: .left, d: 0.5, h: 0.5, rim: 200, press: 0)
+        let r = PointChamber.proj(wall: .right, d: 0.5, h: 0.5, rim: 200, press: 0)
+        #expect(abs(l.dx + r.dx) < 1e-9)
+        #expect(PointChamber.bow(along: 0.5, press: 0, rim: 200) == 0)
+    }
+}

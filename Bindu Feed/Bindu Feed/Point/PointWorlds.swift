@@ -713,19 +713,70 @@ private struct WorldChamber: View {
                 TimelineView(.animation) { tl in
                   let pr = bearing
                   Canvas { ctx, size in
-                    let vpx = size.width / 2, vpy = size.height * 0.42
-                    // the courses, tapering inward toward the vanishing line — the interior recedes
-                    for c in 0..<9 {
-                        let y = size.height * (0.10 + Double(c) / 8 * 0.82)
-                        let inset = (1 - abs(y - vpy) / size.height) * size.width * 0.08
-                        ctx.stroke(Path { $0.move(to: CGPoint(x: inset, y: y)); $0.addLine(to: CGPoint(x: size.width - inset, y: y)) },
-                                   with: .color(hue.opacity(0.10)), lineWidth: 0.6)
+                    // D5.5 · BATCH 2 · **THE ROOM IS DRAWN FROM THE PROJECTION IT ALREADY HAD.**
+                    //
+                    // What stood here was four diagonals from the four SCREEN CORNERS to a
+                    // point, plus nine horizontal "courses" — a painted backdrop. It never
+                    // called `proj`, so it carried no depth scale, no bow and no press: the
+                    // room could not deform because it was not built out of the thing that
+                    // deforms. `world-four.js:159-187` draws the same room from `proj` alone.
+                    //
+                    // The centre and the rim are the ones `chamberPoint` uses, so the room and
+                    // the niches standing in it agree about where the walls are.
+                    let cx = size.width / 2, cy = size.height * 0.42
+                    let rim = min(size.width, size.height) * 0.46
+                    func P(_ w: PointChamber.Wall, _ d: Double, _ h: Double) -> CGPoint {
+                        let v = PointChamber.proj(wall: w, d: d, h: h, rim: rim, press: pr)
+                        return CGPoint(x: cx + v.dx, y: cy + v.dy)
                     }
-                    // the side walls — the enclosure closing toward the vanishing point
-                    ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: 0)); $0.addLine(to: CGPoint(x: vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
-                    ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: size.height)); $0.addLine(to: CGPoint(x: vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
-                    ctx.stroke(Path { $0.move(to: CGPoint(x: size.width, y: 0)); $0.addLine(to: CGPoint(x: size.width - vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
-                    ctx.stroke(Path { $0.move(to: CGPoint(x: size.width, y: size.height)); $0.addLine(to: CGPoint(x: size.width - vpx * 0.62, y: vpy)) }, with: .color(hue.opacity(0.07)), lineWidth: 0.5)
+
+                    // `:161-167` — the room's edges, receding to the particle. Four lines:
+                    // both side walls, at the floor and at the vault.
+                    for hh in [0.0, 1.0] {
+                        for w in [PointChamber.Wall.left, .right] {
+                            ctx.stroke(Path { $0.move(to: P(w, 0, hh)); $0.addLine(to: P(w, 1, hh)) },
+                                       with: .color(hue.opacity(0.20)), lineWidth: 0.8)
+                        }
+                    }
+
+                    // `:169-172` — *"the back wall: the one he cannot walk around."* Its half
+                    // height carries the same `1.12 − pr·0.13` the projection does, so it
+                    // comes down with the vault instead of standing still while the room
+                    // closes around it.
+                    let bl = P(.back, 0, 0.5), brt = P(.back, 1, 0.5)
+                    let bh = rim * (1.12 - pr * 0.13) * PointChamber.BACK
+                    ctx.stroke(Path(CGRect(x: bl.x, y: cy - bh, width: brt.x - bl.x, height: bh * 2)),
+                               with: .color(hue.opacity(0.26)), lineWidth: 1)
+
+                    // `:174-187` · **THE LOAD, MADE VISIBLE.** Nine stress hairlines open in
+                    // the vault *"where it concentrates, and they open further the more he
+                    // presses back."* `conc = sin(f·π)^1.6` — the 1.6 is what makes it a
+                    // concentration rather than a gentle arch: the middle of the span takes
+                    // almost all of it and the ends take nearly none. Each line SAGS toward
+                    // the back wall by `conc·(ld·rim·0.05 + pr·rim·0.055)`, so the vault
+                    // visibly gives where the weight is. This replaces nine evenly-spaced
+                    // horizontal rules that were the same at every load.
+                    // `:185` — the hairline warms toward `#FFE2C4` where the load
+                    // concentrates: the vault is not merely thinner in the middle, it is
+                    // brighter there, which is what stress looks like in stone.
+                    let hueRGB = UniGeo.hx(PointContent.hues["m4"] ?? "#E0713F")
+                    let ld = PointChamber.load(z: PointChamber.z)
+                    let a0 = P(.left, 0, 1), a1 = P(.right, 0, 1)
+                    for v in 0..<9 {
+                        let f = (Double(v) + 0.5) / 9
+                        let conc = pow(sin(f * .pi), 1.6)
+                        let sx = a0.x + (a1.x - a0.x) * f
+                        let sag = conc * (ld * rim * 0.05 + pr * rim * 0.055)
+                        var hair = Path()
+                        hair.move(to: CGPoint(x: sx, y: a0.y))
+                        hair.addQuadCurve(to: CGPoint(x: cx + (sx - cx) * PointChamber.BACK, y: cy - bh + sag * 0.5),
+                                          control: CGPoint(x: sx, y: a0.y + sag * 1.6))
+                        ctx.stroke(hair,
+                                   with: .color(UniGeo.col(UniGeo.mix(hueRGB, [255, 226, 196], conc * 0.5),
+                                                          0.06 + conc * (0.10 + pr * 0.20))),
+                                   lineWidth: 0.6 + conc * pr * 1.0)
+                    }
+
                     // ember from below-left
                     ctx.fill(Path(ellipseIn: CGRect(x: -80, y: size.height - 60, width: 260, height: 260)),
                              with: .radialGradient(.init(colors: [hue.opacity(0.14), .clear]),
@@ -736,13 +787,6 @@ private struct WorldChamber: View {
                         let gy = (sin(Double(g) * 78.233) * 0.5 + 0.5) * size.height
                         ctx.fill(Path(ellipseIn: CGRect(x: gx, y: gy, width: 1.1, height: 1.1)), with: .color(hue.opacity(0.045)))
                     }
-                    // BATCH 1 · the bearing has REACHED the room. What it deforms is batch 2;
-                    // that it arrives, moves, and is never zero is this batch's whole claim.
-                    // Drawn as the vault's own line so the value is visible on screen rather
-                    // than merely threaded — it descends as `pr` rises.
-                    let vy = size.height * (0.10 - 0.045 * pr)
-                    ctx.stroke(Path { $0.move(to: CGPoint(x: 0, y: vy)); $0.addLine(to: CGPoint(x: size.width, y: vy)) },
-                               with: .color(hue.opacity(0.10 + 0.16 * pr)), lineWidth: 0.8)
                   }
                   .onChange(of: tl.date) { _, now in advancePress(to: now) }
                 }
