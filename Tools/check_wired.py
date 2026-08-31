@@ -38,6 +38,34 @@ is not special because of what it is called — it is a requirement of `AVAudioP
 invoked by the framework. Excluding it by name would also excuse an app method that happened
 to be named similarly, so the exclusion keys on the enclosing type's conformance list.
 
+── THE SCOPE THIS CHECKER DOES NOT COVER, STATED SO NOBODY ASSUMES IT DOES ───────────────
+
+**THIS CHECKER CANNOT SEE A DECLARATION THAT NOTHING READS AND NOTHING TESTS.** The final
+filter is `c["tests"] > 0` (see `found`, below). A symbol with zero app references AND zero
+test references passes silently — and that is the STRICTER case: nothing runs it and nothing
+even checks that it computes.
+
+**That is deliberate, and here is why.** This tool is named for one shape — *built, asserted,
+and driven by nothing; it renders as TESTED* — and `tests > 0` is that shape's defining
+condition. The danger it exists for is a symbol that LOOKS alive, to a grep, to a reviewer,
+to a coverage report. A symbol nothing references at all does not look alive; it is ordinary
+dead code, and it does not carry a test's false assurance.
+
+**And widening it would land in the fourth quadrant — red on good.** This build deliberately
+records design constants ahead of their consumers: a number read off the design at the moment
+you are looking at it is worth more than one re-derived a stage later, and several such
+constants are sitting in `AxisModel.swift` right now with markers naming the OPEN row whose
+surface does not exist yet (`Immersion.floor` → C4.7, `Immersion.captionCeiling` → C5.4). A
+checker that reds on those would teach its user to stop recording them, which costs more than
+the gap.
+
+**SO THE COVERAGE IS: everything the tests touch, the app reaches — and nothing else.** That
+is exactly what the closing line claims and exactly what is verified. The hand-check this
+leaves owed: **when a pass adds a constant its consumer cannot yet read, mark it at the
+declaration, because no gate will ask.** Measured, not assumed — `Immersion.floor` and
+`Immersion.captionCeiling` were added with zero readers anywhere and all seven checkers went
+green; their markers were written by hand.
+
 A MARKER EXEMPTS THE SYMBOL IT SITS ON, NOT WHAT THAT SYMBOL READS. Marking something
 `UNWIRED` says *the app does not reach this yet*, so anything reached only through it is not
 reached either, and it is reported the moment its own reader is exempted. That cascade is the
@@ -265,6 +293,9 @@ while changed:
 
 funcs = [c for c in candidates if c["kind"] == "func"]
 values = [c for c in candidates if c["kind"] == "value"]
+# `tests > 0` IS THE SCOPE, NOT AN OVERSIGHT — see "THE SCOPE THIS CHECKER DOES NOT
+# COVER" in the header before removing it. Dropping it flags every design constant
+# recorded ahead of its consumer, which this build does deliberately.
 found = [c for c in candidates if id(c) in unwired and not c["marked"] and c["tests"] > 0]
 
 print(f"  check_wired: {len(funcs)} app functions · {len(values)} static values considered")
@@ -280,4 +311,5 @@ if found:
     print("  Wire it, or mark the declaration WIRED-BY / UNWIRED / E-BLOCKED / TEST-ONLY.")
     sys.exit(1)
 print("  check_wired: none — everything the tests touch, the app reaches")
+print("             (scope: a declaration nothing reads AND nothing tests is not seen — see header)")
 sys.exit(0)
