@@ -21,10 +21,6 @@ enum ReturnPatina {
     /// `#C09550`, and nothing else is gold.
     static let gold = (r: 192.0, g: 149.0, b: 80.0)
 
-    /// UNWIRED(E3.8 — REOPENED 2026-08-30. The gold amounts below are built, tested and
-    /// applied to nothing: `grep ReturnPatina. "Bindu Feed"` returns zero app reads. The row
-    /// was closed 2026-08-29 on the evidence that `towardGold` EXISTS, which is not the
-    /// claim it makes. Found by `check_wired`'s value pass.)
     static let border = 0.50
     static let glyph  = 0.45
     static let name   = 0.42
@@ -35,6 +31,11 @@ enum ReturnPatina {
     /// `towardGold(STORY.roomHex, 0.2)` — `The Return v2.html:1198`, the seed's own label,
     /// the least gold thing on the surface because the seed is the story itself.
     static let seed = 0.20
+    /// `The Return v2.html:1093` — the Aged Room's own line, and `:1121` the walk-on button:
+    /// the two amounts the first table missed, which is how a *0.3–0.4 band* was recorded for
+    /// a set that actually runs 0.2 … 0.5.
+    static let roomLine = 0.35
+    static let walkOn = 0.25
 
     /// `mixc(a, b, t)` on the raw components, exactly as the design mixes them.
     /// One channel of gold, by index — so a test can state the mix in the same terms.
@@ -51,6 +52,17 @@ enum ReturnPatina {
     static func color(_ rgb: [Double], _ t: Double) -> Color {
         let c = mix(rgb, t)
         return Color(.sRGB, red: c[0] / 255, green: c[1] / 255, blue: c[2] / 255, opacity: 1)
+    }
+
+    /// E3.8 · `towardGold(hex, t)` — `The Return v2.html:1040`, by its own name, taking the
+    /// hex the rest of the app carries.
+    ///
+    /// **THE PATINA IS COLOUR, NEVER OPACITY** (§11). A voice at 42% gold is a voice that has
+    /// aged; the same voice at 42% opacity is a voice that is faint, and the surface says two
+    /// different things. This row was closed once on the evidence that the MIX existed —
+    /// which it did, applied to nothing, while the Record wore a flat saturate.
+    static func towardGold(_ hex: String, _ t: Double) -> Color {
+        color(UniGeo.hx(hex), t)
     }
 }
 

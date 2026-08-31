@@ -243,7 +243,9 @@ struct ReturnView: View {
     // II · Aged Room
     private var room: some View {
         centered {
-            Text(ReturnCanon.roomRemembers(room: storyData.roomName)).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
+            // `:1093` — the room's own line, in the room's own colour, aged.
+            Text(ReturnCanon.roomRemembers(room: storyData.roomName)).spaceMonoTracked(9, em: 0.18)
+                .foregroundStyle(ReturnPatina.color(storyData.roomRGB, ReturnPatina.roomLine))
             Text(ReturnCanon.roomLine(when: storyData.sealedWhen)).font(.lora(16)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center).padding(.top, 10)
             hint(ReturnCanon.roomHint)
@@ -261,8 +263,12 @@ struct ReturnView: View {
                 ForEach(Array(storyData.body.enumerated()), id: \.offset) { _, p in
                     Text(p).font(.lora(16)).lineSpacing(7).foregroundStyle(BinduTheme.inkPrimary)
                 }
+                // `:1121` — the walk-on is the ROOM's, not Ash's: it leads further into the
+                // story's own room rather than toward the self who sealed it.
                 Button { cross(168, .record) } label: {
-                    Text(ReturnCanon.storyButton).font(.loraItalic(14)).foregroundStyle(ReturnCanon.ashColor).padding(.vertical, 20)
+                    Text(ReturnCanon.storyButton).font(.loraItalic(14))
+                        .foregroundStyle(ReturnPatina.color(storyData.roomRGB, ReturnPatina.walkOn))
+                        .padding(.vertical, 20)
                 }
                 Color.clear.frame(height: 60)
             }
@@ -276,12 +282,41 @@ struct ReturnView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text(ReturnCanon.recordIntro).font(.lora(15)).italic().foregroundStyle(BinduTheme.inkSecondary).padding(.top, 56)
+                // E3.8 · **THE PATINA, AS A MATERIAL.** `:1136-1141` — each voice keeps its
+                // own hue and is carried toward `#C09550` by an amount that says how much of
+                // its identity the thing still is: the rule at the head of `ReturnPatina` is
+                // that a border belongs to the room and a name still belongs to the person,
+                // so the border takes the most gold and the name the least. The app had a
+                // flat `.saturation(0.5).brightness(-0.04)` over the block — one treatment
+                // for six materials, and age read as *dimmer* rather than as *older*.
                 ForEach(storyData.record) { v in
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("\(v.name) · \(v.role)").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(v.color.opacity(0.7))
-                        Text(v.line).font(.lora(14)).lineSpacing(5).foregroundStyle(BinduTheme.inkSecondary)
+                    HStack(alignment: .top, spacing: 0) {
+                        Rectangle()
+                            .fill(ReturnPatina.towardGold(v.hex, ReturnPatina.border))
+                            .frame(width: 1)
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(spacing: 8) {
+                                ZStack {
+                                    Circle().strokeBorder(
+                                        ReturnPatina.towardGold(v.hex, ReturnPatina.glyph), lineWidth: 1)
+                                    Text(v.glyph).font(.system(size: 8))
+                                        .foregroundStyle(ReturnPatina.towardGold(v.hex, ReturnPatina.labelDeep))
+                                }
+                                .frame(width: 15, height: 15)
+                                Text(v.name).font(.lora(12.5, weight: .medium))
+                                    .foregroundStyle(ReturnPatina.towardGold(v.hex, ReturnPatina.name))
+                                Text(v.role).spaceMonoTracked(8, em: 0.14)
+                                    .foregroundStyle(Color(hex: "#EDE8E3").opacity(0.22))
+                            }
+                            // `:1142` — the line itself is not room-coloured at all: it has
+                            // gone to paper, and only the identities keep a hue.
+                            Text(v.line).font(.lora(14)).lineSpacing(14 * 0.68)
+                                .foregroundStyle(Color(.sRGB, red: 214 / 255, green: 196 / 255,
+                                                       blue: 168 / 255, opacity: 0.56))
+                        }
+                        .padding(.leading, 14)
                     }
-                    .saturation(0.5).brightness(-0.04)     // .pressed — the aged gathering
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 Text(ReturnCanon.recordSealedYou(when: storyData.sealedWhen)).spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
                 Text(storyData.sealedSelf)
@@ -415,6 +450,20 @@ struct ReturnView: View {
                         }
                     }
                 }
+                // E3.8 · `:1197-1199` — **the list ends with the thing the rings are rings
+                // AROUND.** Without it the movement lists every return and never shows the
+                // seed they were made on, and `the seed` is the least gold label on the
+                // surface (0.20) because the seed is the story itself and has aged least.
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text("the seed")
+                        .spaceMonoTracked(8, em: 0.15)
+                        .foregroundStyle(ReturnPatina.color(storyData.roomRGB, ReturnPatina.seed))
+                        .frame(width: 74, alignment: .leading)
+                    Text(storyData.sealedSelf)
+                        .font(.lora(13)).lineSpacing(13 * 0.5)
+                        .foregroundStyle(Color(hex: "#EDE8E3").opacity(0.8))
+                }
+                .padding(.top, 4)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 4)
@@ -424,7 +473,9 @@ struct ReturnView: View {
     // VI · The Rings
     private var rings: some View {
         centered {
-            Text(ReturnCanon.ringsTitle).spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(BinduTheme.inkTertiary)
+            // `:1188` — *one story · every self who met it*, at the light end of the band.
+            Text(ReturnCanon.ringsTitle).spaceMonoTracked(9, em: 1.5 / 9)
+                .foregroundStyle(ReturnPatina.color(storyData.roomRGB, ReturnPatina.labelLight))
             Text(ReturnCanon.ringsBody).font(.lora(14)).lineSpacing(6).foregroundStyle(BinduTheme.inkSecondary)
                 .multilineTextAlignment(.center)
             ringsList

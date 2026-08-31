@@ -250,3 +250,69 @@ struct ReturnRecordTests {
         #expect(ReturnRecord.entries(codexId: "C-2000", voices: []).isEmpty)
     }
 }
+
+// E3.8 · the patina — `The Return v2.html:1040`, `:1093-1198`, `ReturnPatina`'s own head.
+//
+// **THE ROW WAS CLOSED ONCE ON THE EVIDENCE THAT THE MIX EXISTS.** It did exist, and it was
+// applied to nothing: `ReturnPatina` had zero app reads while the Record wore a flat
+// `.saturation(0.5).brightness(-0.04)`. So what is asserted here is the RELATIONSHIP the
+// amounts encode — the ordering, and that it is colour rather than opacity — because "the
+// gold constants are correct" was true all along and told nobody anything.
+@Suite struct ReturnPatinaOrderTests {
+
+    @Test("the more of a voice's own identity a thing is, the less gold it takes")
+    func theOrderIsTheArgument() {
+        // `ReturnPatina`'s own rule: *a border belongs to the room, a name still belongs to
+        // the person.* Every amount in the table is a position in that ordering, and a table
+        // of six plausible constants would pass any check that did not state it.
+        #expect(ReturnPatina.border > ReturnPatina.glyph, "a border is less the voice's than its mark")
+        #expect(ReturnPatina.glyph > ReturnPatina.name, "a mark is less the voice's than its name")
+        #expect(ReturnPatina.name > ReturnPatina.seed, "nothing may be less gold than the seed")
+        // and the band the row describes actually runs 0.2 … 0.5, not 0.3 … 0.4
+        let all = [ReturnPatina.border, ReturnPatina.glyph, ReturnPatina.name,
+                   ReturnPatina.labelDeep, ReturnPatina.roomLine, ReturnPatina.labelLight,
+                   ReturnPatina.walkOn, ReturnPatina.seed]
+        #expect(all.min() == ReturnPatina.seed && all.max() == ReturnPatina.border)
+    }
+
+    @Test("the patina is colour, never opacity")
+    func itAgesRatherThanFades() {
+        // §11. A voice at 42% gold has AGED; the same voice at 42% opacity is FAINT, and the
+        // two say different things about what happened to it. Measured: the mix must move the
+        // hue toward `#C09550` while staying fully opaque.
+        let voice: [Double] = [122, 130, 212]                 // sakshi's blue
+        let aged = ReturnPatina.mix(voice, ReturnPatina.name)
+        #expect(aged[0] > voice[0], "the red channel did not warm")
+        #expect(aged[2] < voice[2], "the blue channel did not fall away")
+        // and it lands proportionally between the voice and the gold, never past either
+        for i in 0..<3 {
+            let lo = min(voice[i], ReturnPatina.goldChannel(i))
+            let hi = max(voice[i], ReturnPatina.goldChannel(i))
+            #expect(aged[i] >= lo && aged[i] <= hi, "channel \(i) left the range entirely")
+        }
+    }
+
+    @Test("nothing is aged all the way to gold, and nothing is left untouched")
+    func theEndsAreNeverReached() {
+        // A `t` of 1 would erase the voice's identity — every presence the same colour, which
+        // is the state the flat saturate produced by another route. A `t` of 0 would say the
+        // Record is not aged at all.
+        let voice: [Double] = [122, 130, 212]
+        for t in [ReturnPatina.border, ReturnPatina.glyph, ReturnPatina.name,
+                  ReturnPatina.labelLight, ReturnPatina.seed, ReturnPatina.walkOn] {
+            #expect(t > 0 && t < 1, "an amount of \(t) is not a patina, it is a replacement")
+            let c = ReturnPatina.mix(voice, t)
+            #expect(c != voice, "t=\(t) changed nothing")
+            #expect(c != [ReturnPatina.goldChannel(0), ReturnPatina.goldChannel(1),
+                          ReturnPatina.goldChannel(2)], "t=\(t) took the voice all the way to gold")
+        }
+    }
+
+    @Test("green on absent — a story with no rings still has a seed")
+    func theSeedIsNotAConsequenceOfReturns() {
+        // The seed row is drawn from `sealedSelf`, not from the ring list, so a story returned
+        // to zero times still shows the thing the rings would have been made on.
+        #expect(!ReturnStoryData.canon.sealedSelf.isEmpty)
+        #expect(ReturnPatina.seed == 0.20)
+    }
+}
