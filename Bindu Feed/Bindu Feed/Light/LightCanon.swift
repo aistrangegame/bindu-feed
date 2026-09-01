@@ -22,11 +22,99 @@ struct LightScene: Identifiable {
 }
 
 enum LightCanon {
+
+    /// `canon/spine-light.js:100` — `hex:'#EDE3CE', pool:'#FBF9F4'`.
+    ///
+    /// **THE LIGHT HAS TWO MATERIALS AND THE DISTINCTION IS THE REGISTER'S SUBJECT.** `hex` is
+    /// the dawn — what the five futures are made of. `pool` is the stone — what the nave and
+    /// the Far scene are made of. `draw()` (`:186-204`) selects between them on one line,
+    /// `far ? pc : c`, and the Far one is additionally drawn smaller, dimmer and struck
+    /// through with a seam, because it is *"a seam, not a star — stone, below."*
+    static let hex  = "#EDE3CE"
+    static let pool = "#FBF9F4"
     // Verbatim once-ever line the gate speaks — the inversion of a normal surface's
     // "It holds until you mean it."
     static let gateLine = "It holds until you stop meaning it."
-    static let touchOnce = "touch once, then do nothing"
+    // Canon is exactly this — The Light v2.html:688. The longer form ("touch once, then do
+    // nothing") is the review-bench caption at :914, OUTSIDE the phone frame. The design
+    // deliberately says nothing more after the touch: "it never tells him to be still; he
+    // discovers it by stopping" (:685-686).
+    static let touchOnce = "touch once"
     static let approachSubtitle = "Not to be wanted. To be stood inside."
+    /// E1.5 + E1.6 · **THE ARRIVAL IS A GATE BEFORE THE READING, NOT A MEASURE OF IT.**
+    /// `canon/spine-light.js:136-148` — one `tick`, two branches, and the app had inverted
+    /// both in the same way.
+    ///
+    /// ```js
+    /// if (this.arrive < 1) {
+    ///   if (this.scene.id === 'release') this.arrive = Math.min(1, this.ungrips / 3);
+    ///   else this.arrive = Math.min(1, this.arrive + dt * (down ? 0.10 : 0.62));
+    /// }
+    /// if (this.arrive >= 1 && this.stage === 0) { this.stage = 1; … }
+    /// ```
+    ///
+    /// **THE APP MADE `arrive` A CONSEQUENCE OF READING PROGRESS IN BOTH BRANCHES.** For
+    /// `release` each ungrip revealed an anchor AND counted toward the gate, so *"the dawn
+    /// does not assemble until the hand has opened three times, then the scene begins"*
+    /// became *"each lift reveals a line"* — and with five anchors against three counted
+    /// ungrips the arrival saturated at anchor 3. For every other scene it was
+    /// `shownAnchors / anchors.count` — literally how much has been read. **That is why they
+    /// are one row: the same inversion, twice, and fixing either alone leaves the other's
+    /// sentence half-true.**
+    ///
+    /// `advance()` is blocked while `arrive < 1` (`:169`), so nothing is readable until the
+    /// gate completes — and then the whole is delivered BY the arrival itself, not asked for.
+    enum LightArrival {
+        /// `dt * (down ? 0.10 : 0.62)` — the dawn assembles over ≈1.6s of NOT touching, and a
+        /// hand on the glass slows it **6×**. It never stops: *"force is absorbed, not
+        /// blocked"* is the law, and a hand that halted it would be blocking.
+        static func step(_ current: Double, dt: Double, touching: Bool) -> Double {
+            min(1, current + dt * (touching ? 0.10 : 0.62))
+        }
+        /// `release` alone: *"it does not respond to his reaching. Nothing here does."*
+        /// Three opened hands, and the scene begins.
+        static func fromUngrips(_ n: Int) -> Double { min(1, Double(n) / 3) }
+        /// `advance()` — `:169`. Nothing is readable until the arrival is whole.
+        static func mayAdvance(arrive: Double) -> Bool { arrive >= 1 }
+    }
+
+    /// E1.3 + E1.4 · **THE BEAT IS ONE UNIT, AND THE CUE IS WHAT NAMES IT.** One row, because
+    /// the words and the gesture are the same claim — `canon/spine-light.js:149,174,177-180`.
+    ///
+    /// ```js
+    /// if (this.drew < 1 && this.at() === 'beat') this.drew = Math.min(1, this.drew + dt*0.85);
+    /// carve: function () {
+    ///   if (this.at() !== 'beat' || this.carved || this.drew < 0.9) return false;
+    ///   this.carved = true; …
+    /// }
+    /// ```
+    ///
+    /// **THE DECLARATION DRAWS ITSELF IN — `dt*0.85`, ≈1.18s, WITH NO PRESS.** Nothing is
+    /// asked of him while it arrives. Then **ONE** held press carves it, and only once
+    /// `drew >= 0.9`: he cannot mean it before it is there to be meant.
+    ///
+    /// The app made the beat **six presses**, one per line, each drawing its own line in over
+    /// `carveMs`. So the register whose sentence is *it is not asked for, it is MEANT* became
+    /// a thing you press repeatedly — and its authored cue, **`hold to mean it`**
+    /// (`The Instrument v3.html:5282`), sat declared and unused at `LightCanon.beatCue` while
+    /// the app invented `"press · draw it in"` and `"keep drawing it in"` to describe the six.
+    ///
+    /// **PORTING THE STRING ALONE WOULD HAVE BEEN WORSE THAN LEAVING IT.** *Hold to mean it*
+    /// over a six-press gesture is authored words on the wrong mechanism: it passes
+    /// `check_authored`, `check_rendered` and every other checker, and reads as fixed.
+    enum LightBeat {
+        /// `:149` — it draws itself in, unasked.
+        static func draw(_ current: Double, dt: Double) -> Double {
+            min(1, current + dt * 0.85)
+        }
+        /// `:178` — one press, and only once the Declaration is nearly whole.
+        static func mayCarve(drew: Double, carved: Bool) -> Bool {
+            !carved && drew >= 0.9
+        }
+        /// `:174` — advancing past a beat resets the draw for the next one.
+        static let drawnAtSeconds: Double = 1 / 0.85
+    }
+
     static let beatCue = "hold to mean it"          // the beat's one instruction (canonical)
     static let walkBackOut = "walk back out ›"
 
@@ -161,4 +249,53 @@ enum LightCanon {
             ungripOnly: false
         ),
     ]
+}
+
+
+// MARK: - the six, standing in the dawn · `canon/spine-light.js:104-121`
+
+/// WHERE THE SIX STAND, and how near a touch has to be. Both authored.
+///
+///   *"The five Future scenes drift in the open sky; the Far one waits low, where a floor
+///    would be."*
+///
+/// The GEOMETRY is canon — `place()` and `hit()`'s radius 30 and `ORDER` are verbatim.
+///
+/// **AND SO IS THE LOOK. THIS COMMENT USED TO SAY OTHERWISE AND IT WAS WRONG.** It read
+/// *"no comp renders these"*, and `canon/spine-light.js:186-204` — `L.draw`, extracted from
+/// `The Instrument v3.html:4074-4091` — renders all six: two materials (`far ? pool : hex`),
+/// alphas 0.40/0.62, halo radii 16/22 with the FAR one smaller, a core point at `rr + br*0.5`,
+/// and a stone seam struck through the Far one because it is *"a seam, not a star — stone,
+/// below."* The claim was true only of `The Light v2.html`, which does go straight to
+/// `SCENES[which]` — one file checked, and the conclusion written as though the corpus had
+/// been. Corrected 2026-08-31; `LightView.choosingBody` now draws `:186-204`.
+///
+/// **SEARCH THAT ESTABLISHES IT, so this can be re-run rather than believed** (§10 — a
+/// comment asserting the design is SILENT must cite its search, because nothing checks a
+/// negative claim about a source):
+///   · `grep -rn "L.draw\|drawLightSide\|pts\[i\]" canon/ "Claude Design Round 1" "Claude Design Round 2"`
+///   · all three corpora, not one file. `canon/spine-light.js` is where it lives.
+///
+/// APP-OWN AND STILL APP-OWN: the two-stage arm/name. The design places POINTS, and six
+/// two-line titles at 0.058·H spacing collide; the arm is how the app gets a name onto a
+/// point without inventing an instruction.
+enum LightPlaces {
+    /// `ORDER` — `spine-light.js:97`, and `LightCanon.scenes` is already in this order.
+    static func place(_ W: Double, _ H: Double, _ t: Double) -> [CGPoint] {
+        var out: [CGPoint] = []
+        for i in 0..<5 {
+            let a = t * 0.043 + Double(i) * 1.2566
+            out.append(CGPoint(x: W * (0.50 + cos(a) * 0.29),
+                               y: H * (0.245 + sin(a * 0.62 + Double(i) * 1.1) * 0.055 + Double(i) * 0.058)))
+        }
+        out.append(CGPoint(x: W * 0.5, y: H * 0.845))       // the Far one, where a floor would be
+        return out
+    }
+
+    /// `hit()` — within 30. Not derived from spacing: the design states it.
+    static func hit(_ p: CGPoint, _ W: Double, _ H: Double, _ t: Double) -> Int? {
+        let places = place(W, H, t)
+        for (i, h) in places.enumerated() where hypot(h.x - p.x, h.y - p.y) < 30 { return i }
+        return nil
+    }
 }

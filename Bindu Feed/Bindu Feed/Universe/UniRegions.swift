@@ -63,6 +63,11 @@ struct UniRoom {
     let x, y, r: Double
     let n: Int
     let civ: String
+    /// The room's own pitch — `uni-rooms.js:23,44,58,…` carries `hz:` on all thirteen and it
+    /// was dropped on the port. Seven call sites in the design consume it: entering a region,
+    /// the scale-change tone, `openFall`, the fall's descending ladder `[1, .84, .667, .5]`,
+    /// the door's crossing, the star tap, and `startBed` on the way back out.
+    let hz: Double
     var rgb: [Double] { UniGeo.hx(hex) }
 
     // world-space offset of star slot `i` from the region centre (uni-rooms.js place())
@@ -116,19 +121,19 @@ struct UniRoom {
 }
 
 let uniRooms: [UniRoom] = [
-    UniRoom(id: "The Forge",       hex: "#D4AE4A", x: -470, y: -1010, r: 150, n: 7,  civ: "furnaces"),
-    UniRoom(id: "The Signal",      hex: "#3AADA8", x: 470,  y: -980,  r: 160, n: 5,  civ: "arrays"),
-    UniRoom(id: "The Descent",     hex: "#E5533C", x: -90,  y: -880,  r: 250, n: 11, civ: "shafts"),
-    UniRoom(id: "The Garden",      hex: "#4A9E6B", x: 330,  y: -620,  r: 230, n: 10, civ: "terraces"),
-    UniRoom(id: "A Maya Game",     hex: "#D4AE4A", x: -420, y: -430,  r: 240, n: 9,  civ: "mirrorcities"),
-    UniRoom(id: "The Watcher",     hex: "#7B82D4", x: 110,  y: -230,  r: 190, n: 7,  civ: "towers"),
-    UniRoom(id: "The Field",       hex: "#9B6BD6", x: -200, y: 60,    r: 280, n: 12, civ: "weave"),
-    UniRoom(id: "The Thread",      hex: "#C4923A", x: 430,  y: 150,   r: 180, n: 6,  civ: "lines"),
-    UniRoom(id: "The Body",        hex: "#C45A50", x: -450, y: 330,   r: 200, n: 8,  civ: "districts"),
-    UniRoom(id: "The Forgetting",  hex: "#C4A882", x: 70,   y: 470,   r: 215, n: 8,  civ: "ruins"),
-    UniRoom(id: "The Remembering", hex: "#8AB5A0", x: 350,  y: 700,   r: 200, n: 7,  civ: "relight"),
-    UniRoom(id: "The Circle",      hex: "#D4607A", x: -330, y: 760,   r: 175, n: 6,  civ: "rings"),
-    UniRoom(id: "The Return",      hex: "#9B6BD6", x: 140,  y: 1020,  r: 165, n: 6,  civ: "ports"),
+    UniRoom(id: "The Forge",       hex: "#D4AE4A", x: -470, y: -1010, r: 150, n: 7,  civ: "furnaces", hz: 294),
+    UniRoom(id: "The Signal",      hex: "#3AADA8", x: 470,  y: -980,  r: 160, n: 5,  civ: "arrays", hz: 285),
+    UniRoom(id: "The Descent",     hex: "#E5533C", x: -90,  y: -880,  r: 250, n: 11, civ: "shafts", hz: 126),
+    UniRoom(id: "The Garden",      hex: "#4A9E6B", x: 330,  y: -620,  r: 230, n: 10, civ: "terraces", hz: 146),
+    UniRoom(id: "A Maya Game",     hex: "#D4AE4A", x: -420, y: -430,  r: 240, n: 9,  civ: "mirrorcities", hz: 168),
+    UniRoom(id: "The Watcher",     hex: "#7B82D4", x: 110,  y: -230,  r: 190, n: 7,  civ: "towers", hz: 189),
+    UniRoom(id: "The Field",       hex: "#9B6BD6", x: -200, y: 60,    r: 280, n: 12, civ: "weave", hz: 198),
+    UniRoom(id: "The Thread",      hex: "#C4923A", x: 430,  y: 150,   r: 180, n: 6,  civ: "lines", hz: 210),
+    UniRoom(id: "The Body",        hex: "#C45A50", x: -450, y: 330,   r: 200, n: 8,  civ: "districts", hz: 220),
+    UniRoom(id: "The Forgetting",  hex: "#C4A882", x: 70,   y: 470,   r: 215, n: 8,  civ: "ruins", hz: 231),
+    UniRoom(id: "The Remembering", hex: "#8AB5A0", x: 350,  y: 700,   r: 200, n: 7,  civ: "relight", hz: 252),
+    UniRoom(id: "The Circle",      hex: "#D4607A", x: -330, y: 760,   r: 175, n: 6,  civ: "rings", hz: 264),
+    UniRoom(id: "The Return",      hex: "#9B6BD6", x: 140,  y: 1020,  r: 165, n: 6,  civ: "ports", hz: 315),
 ]
 
 // ── the structure lens (uni-sky.js STRUCTURES / uni-rooms.js) ──
@@ -518,5 +523,78 @@ enum RegionForm {
                 dot(x, px - Double(k) * 7, py + Double(k) * 2, 1.4 * (1 - Double(k) / 10), col(mix(c, [240, 232, 255], 0.4), a * 0.5 * (1 - Double(k) / 10)))
             }
         }
+    }
+}
+
+
+// MARK: - the rooms' weather · `uni-deep.js:42-74`
+
+/// `WX` — turbulence · drift · grain, authored per room from what the room IS.
+///
+///   *"The Forge churns; the Signal is nearly still and dry; the Forgetting is all grain."*
+///
+/// This is the second of the two adds §7 sanctions on this file, and it has been absent since
+/// the port: `InstrumentView` fed the shader `(0.4, 0.02, 0.2)` — the design's FALLBACK
+/// literal from `uni-deep.js:91` — for every room, so the thirteen have never had their own
+/// weather. The fallback is kept, for the case the accessor is written to expect it.
+enum UniWeather {
+    static let wx: [String: [Double]] = [
+        "The Forge":       [0.92, 0.055, 0.30],
+        "The Signal":      [0.16, 0.012, 0.62],
+        "The Descent":     [0.74, 0.040, 0.16],
+        "The Garden":      [0.40, 0.020, 0.10],
+        "A Maya Game":     [0.30, 0.026, 0.44],
+        "The Watcher":     [0.12, 0.008, 0.06],
+        "The Field":       [0.55, 0.016, 0.22],
+        "The Thread":      [0.34, 0.030, 0.14],
+        "The Body":        [0.66, 0.034, 0.20],
+        "The Forgetting":  [0.48, 0.010, 0.86],
+        "The Remembering": [0.36, 0.018, 0.28],
+        "The Circle":      [0.26, 0.022, 0.12],
+        "The Return":      [0.44, 0.028, 0.18],
+    ]
+    /// `uni-deep.js:91` — `return w || [0.4,0.02,0.2]`.
+    static func of(_ roomId: String?) -> [Double] { wx[roomId ?? ""] ?? [0.4, 0.02, 0.2] }
+
+    /// `DENS` — `uni-deep.js:60-66`. DERIVED, never authored: *"how much of him each room
+    /// holds — from the record, not from a guess."* `d += 1 + depth*0.6` over that room's MET
+    /// stars, normalised by the largest. The shader had every room pinned at a flat 0.6.
+    static func density(metByRoom: [Int: [Int]]) -> [Double] {
+        var d = [Double](repeating: 0, count: uniRooms.count)
+        for (i, depths) in metByRoom { if i >= 0 && i < d.count {
+            d[i] = depths.reduce(0) { $0 + 1 + Double($1) * 0.6 }
+        } }
+        let maxD = max(1, d.max() ?? 1)
+        return d.map { $0 / maxD }
+    }
+
+    /// B0.6 · `lit = 0.44 + 0.56/(1 + dc*1.7)` — `The Instrument v3.html:1256`.
+    ///
+    /// **ONE SOURCE, AT THE CENTRE, AND IT IS THE PARTICLE.** `:1140-1146` — *"the point was
+    /// what had been holding the whole sky together"* — so the falloff is measured from where
+    /// the particle is, and the maximum is AT it rather than merely near it. `dc` is the
+    /// distance from that centre, normalised by the rim.
+    ///
+    /// The floor is the care: it bottoms at `0.44`, never zero. The far rooms are cooler, not
+    /// absent.
+    static func lit(dc: Double) -> Double { 0.44 + 0.56 / (1 + dc * 1.7) }
+
+    /// B3.3 · `0.30 + den*0.52` — the region's share of the pass alpha, `:1258`.
+    ///
+    /// `den` is `DENS`, *"how much of him each room holds — from the record, not from a
+    /// guess"*. **The floor matters as much as the slope:** an unvisited room draws at 0.30,
+    /// dim and present. A formula bottoming at zero would delete it from the sky, which is the
+    /// difference between *"nothing here yet"* and *"nothing here"*.
+    static func weight(den: Double) -> Double { 0.30 + den * 0.52 }
+
+    /// `SKY` — 39 floats, `[x/EXT*0.88, y/EXT*0.88, dens]` per room (`uni-deep.js:68-74`).
+    static func sky(density: [Double], ext: Double) -> [Float] {
+        var out = [Float](); out.reserveCapacity(39)
+        for (i, r) in uniRooms.enumerated() {
+            out.append(Float(r.x / ext * 0.88))
+            out.append(Float(r.y / ext * 0.88))
+            out.append(Float(i < density.count ? density[i] : 0.6))
+        }
+        return out
     }
 }

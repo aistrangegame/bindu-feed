@@ -1,0 +1,1107 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Rooms v4 — eleven homes</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0c;min-height:100vh;display:grid;place-items:center;padding:40px 20px;font-family:'Lora',Georgia,serif;color:#EDE8E3}
+a{color:#9B6BD6}a:hover{color:#B99BE6}
+#desk{display:flex;gap:42px;align-items:flex-start}
+#phone{position:relative;width:393px;height:852px;border-radius:46px;overflow:hidden;background:#0B0910;box-shadow:0 0 0 1px rgba(237,232,227,.09),0 40px 120px rgba(0,0,0,.8);touch-action:none;cursor:grab;flex:0 0 auto}
+#phone.down{cursor:grabbing}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#wash{position:absolute;inset:0;z-index:2;pointer-events:none}
+/* the door — the field, as a field */
+#door{position:absolute;inset:0;z-index:8;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity .9s}
+#door.off{opacity:0;pointer-events:none}
+#door .hd{position:relative;left:auto;right:auto;top:auto;text-align:center;padding:0 26px}
+#door .hd b{display:block;font-family:"Space Mono",monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(237,232,227,.34);font-weight:400}
+#door .hd i{display:block;font-size:23px;color:#EDE8E3;margin-top:5px;font-style:normal;letter-spacing:-.01em}
+#door .hd s{display:block;text-decoration:none;font-style:italic;font-size:12.5px;line-height:1.6;color:rgba(237,232,227,.46);margin:8px auto 0;max-width:280px}
+#grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;width:296px;margin-top:26px}
+.vc{display:flex;flex-direction:column;align-items:center;gap:7px;padding:14px 5px 12px;border-radius:16px;cursor:pointer;transition:background .45s,border-color .45s}
+.vc .g{font-size:23px;line-height:1;height:26px;display:grid;place-items:center}
+.vc b{font-size:12.5px;font-weight:500;letter-spacing:-.005em}
+.vc span{font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.09em;text-transform:uppercase;color:rgba(237,232,227,.38);text-align:center;line-height:1.4}
+#lived{width:296px;margin-top:11px;display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:16px;cursor:pointer;transition:background .45s,border-color .45s}
+#lived .g{font-size:22px;line-height:1}
+#lived .t b{display:block;font-size:13.5px;font-weight:500}
+#lived .t span{display:block;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.09em;text-transform:uppercase;color:rgba(237,232,227,.4);margin-top:3px}
+/* register 0 — met */
+#greet{position:absolute;inset:0;z-index:5;pointer-events:none;display:flex;flex-direction:column;align-items:center;padding-top:96px}
+#disc{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;margin-bottom:16px}
+#disc span{font-size:42px;color:rgba(255,255,255,.94);line-height:1;display:block;user-select:none}
+#gname{font-size:25px;font-weight:500;letter-spacing:-.012em;margin-bottom:6px}
+#grole{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(237,232,227,.6)}
+#stats{display:flex;align-items:center;justify-content:center;gap:17px;margin-top:18px}
+#stats .st{display:flex;align-items:baseline;gap:5px;white-space:nowrap}
+#stats .st b{font-weight:500;font-size:14.5px}
+#stats .st u{text-decoration:none;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;color:rgba(237,232,227,.34)}
+#stats .hair{width:.5px;height:14px;background:rgba(237,232,227,.14)}
+#says{margin:22px 34px 0;font-style:italic;font-size:15px;line-height:1.8;color:rgba(237,232,227,.88);text-align:center;text-wrap:pretty}
+#saysrc{margin-top:14px;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.18em;text-transform:uppercase;color:rgba(237,232,227,.26)}
+/* register 1 — the figure names itself */
+#fig{position:absolute;left:26px;right:26px;bottom:112px;z-index:5;pointer-events:none;text-align:center}
+#fig b{display:block;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.26em;text-transform:uppercase;font-weight:400;margin-bottom:8px}
+#fig i{display:block;font-style:italic;font-size:13px;line-height:1.66;color:rgba(237,232,227,.62);text-wrap:pretty}
+/* register 2 — what it has said */
+#words{position:absolute;left:24px;right:24px;top:104px;bottom:126px;z-index:5;pointer-events:none;overflow:hidden}
+.wc{position:absolute;left:0;right:0;border-radius:17px;padding:15px 16px 14px}
+.wc .hd{display:flex;align-items:baseline;justify-content:space-between;gap:9px;margin-bottom:9px}
+.wc .hd b{font-size:13px;font-weight:500;color:rgba(237,232,227,.92)}
+.wc .hd u{text-decoration:none;font-family:"Space Mono",monospace;font-size:7.5px;color:rgba(237,232,227,.34);white-space:nowrap}
+.wc q{display:block;quotes:none;font-size:14px;line-height:1.72;color:rgba(237,232,227,.86);text-wrap:pretty}
+.wc q:before,.wc q:after{content:''}
+.wc cite{display:block;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;font-style:normal;color:rgba(237,232,227,.28);margin-top:10px}
+.wc.dot q{font-size:34px;text-align:center;line-height:1;padding:6px 0 10px}
+/* register 2's own depth — the map, a story, one comment */
+#legend{position:absolute;left:0;right:0;bottom:82px;z-index:6;pointer-events:none;text-align:center;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:rgba(237,232,227,.34);opacity:0;transition:opacity .6s;line-height:1.9}
+#legend b{font-weight:400;color:rgba(237,232,227,.62)}
+.wc.one q{font-size:15.5px;line-height:1.74}
+.wc .mt{display:flex;gap:9px;align-items:baseline;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.15em;text-transform:uppercase;color:rgba(237,232,227,.34);margin-bottom:11px}
+#depth i.here{position:relative}
+#depth i.here:after{content:'';position:absolute;left:-7px;top:-1px;width:3px;height:3px;border-radius:3px;background:currentColor}
+#depth i.here.deep:after{box-shadow:-6px 0 0 currentColor}
+/* register 3 — the turn */
+#four{position:absolute;left:30px;right:30px;bottom:120px;z-index:5;pointer-events:none;text-align:center}
+#four q{display:block;quotes:none;font-style:italic;font-size:15.5px;line-height:1.76;color:rgba(237,232,227,.9);text-wrap:pretty}
+#four q:before,#four q:after{content:''}
+#four cite{display:block;font-family:"Space Mono",monospace;font-size:7px;letter-spacing:.2em;text-transform:uppercase;font-style:normal;color:rgba(237,232,227,.26);margin-top:14px}
+/* chrome */
+#rname{position:absolute;top:48px;left:0;right:0;text-align:center;z-index:6;pointer-events:none;opacity:0;transition:opacity .8s}
+#rname b{display:block;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.3em;text-transform:uppercase;font-weight:400}
+#rname i{display:block;font-size:19px;color:#EDE8E3;margin-top:3px;font-style:normal;letter-spacing:-.01em}
+#reg{position:absolute;bottom:56px;left:0;right:0;text-align:center;z-index:6;pointer-events:none;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.26em;text-transform:uppercase;color:rgba(237,232,227,.42);opacity:0;transition:opacity .7s}
+#depth{position:absolute;right:15px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:flex-end;width:25px;gap:9px;pointer-events:none;opacity:0;transition:opacity .8s}
+#depth i{display:block;width:7px;height:1px;background:rgba(237,232,227,.2);transition:width .5s,background .5s}
+#depth i.on{width:15px;background:rgba(237,232,227,.55)}
+#back{position:absolute;top:19px;left:15px;width:36px;height:36px;display:grid;place-items:center;font-size:20px;color:rgba(237,232,227,.44);cursor:pointer;z-index:9;border-radius:50%;background:rgba(14,12,18,.5);border:1px solid rgba(255,255,255,.09);backdrop-filter:blur(14px);opacity:0;transition:opacity .6s}
+#back.on{opacity:1}
+#back:hover{color:rgba(237,232,227,.86)}
+/* notes */
+#notes{width:410px;font-size:13.5px;line-height:1.72;color:rgba(237,232,227,.62)}
+#notes h1{font-size:21px;font-weight:500;letter-spacing:-.014em;color:#EDE8E3;margin-bottom:4px}
+#notes .sub{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);margin-bottom:22px}
+#notes h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.6);margin:22px 0 9px}
+#notes p{margin-bottom:11px;text-wrap:pretty}
+#notes em{color:rgba(237,232,227,.9);font-style:italic}
+#notes code{font-family:'Space Mono',monospace;font-size:11px;color:rgba(212,174,74,.86)}
+#notes .law{border-left:1px solid rgba(212,174,74,.4);padding:2px 0 2px 15px;margin:0 0 13px;font-style:italic;color:rgba(237,232,227,.86)}
+#notes .warn{border-left:1px solid rgba(229,83,60,.5);padding:2px 0 2px 15px;margin:0 0 13px}
+.k{display:flex;gap:10px;margin-bottom:7px}
+.k b{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:400;flex:0 0 66px;padding-top:3px}
+.k span{flex:1}
+</style></head><body>
+<div id="desk">
+<div id="phone">
+  <canvas id="cv"></canvas>
+  <div id="wash"></div>
+  <div id="greet"><div id="disc"><span></span></div><div id="gname"></div><div id="grole"></div><div id="stats"></div><div id="says"></div><div id="saysrc"></div></div>
+  <div id="fig"><b></b><i></i></div>
+  <div id="words"></div>
+  <div id="legend"></div>
+  <div id="four"></div>
+  <div id="rname"><b></b><i></i></div>
+  <div id="reg"></div>
+  <div id="depth"><i></i><i></i><i></i><i></i></div>
+  <div id="back">‹</div>
+  <div id="door">
+    <div class="hd"><b>the field</b><i>whose home</i><s>Ten read the Feed. One lives it. Each room is that voice's own mathematics — the figure it already is.</s></div>
+    <div id="grid"></div>
+    <div id="lived"></div>
+  </div>
+</div>
+<div id="notes">
+  <h1>The Rooms</h1>
+  <div class="sub">v4 · eleven homes · register 2 has its own depth</div>
+  <p>Enter any room. <em>Drag down through four registers</em> — <code>240px = one register</code>, and one gesture never carries more than one. Drag sideways and the figure answers in that voice's own way — <code>|lat| ≤ 1</code> is that voice's full range, reached by one swipe and never exceeded, with a rubber-band at the ends.</p>
+  <h2>New in v4 — register 2's own depth</h2>
+  <p>A room whose premise is <em>everything it has ever said</em> cannot be three cards, and must not become a scroll: the Feed is already a feed. So register 2 has three depths of its own, and <em>the index is the figure</em> — every comment sits where that voice's own mathematics puts it.</p>
+  <div class="k"><b>0 · the map</b><span>Every comment as a mark, none as text. Lalita's are knots on the loom; Arch's are marks in her strata; Shweta's are gaps in the grain; Gaia's are seeds on the phyllotaxis; Karishma's ride the golden spiral; Sakshi's are iris spokes; Bindu's are the circles of the flower; Sid's are voussoirs in the arch; Neev's are cells of the floor; <em>Ashrey's sit on the edges of K₉, because his comments are relations</em>; Ashram's are days on his calendar.</span></div>
+  <div class="k"><b>1 · a story</b><span>Tap a mark: everything this voice said about that one story.</span></div>
+  <div class="k"><b>2 · one comment</b><span>Whole, verbatim, with its date and resonance.</span></div>
+  <p>A tap descends; a tap on the ground rises. <em>The vertical always wins and resets the sub-depth</em>, so this is never a mode you can be trapped in. The figure recedes to 42% while you read. The sub-depth is shown <em>on register 2's own tick</em> — it lengthens leftward from a fixed right edge and gains one inboard dot at a story, two at a comment. The rail's box is a fixed width, so the other three ticks never move: they are the reference for where you are on the axis, and nothing horizontal may disturb them. The legend states counts and never instructions.</p>
+  <h2>⚠ What the map revealed</h2>
+  <p class="warn"><strong>No voice has ever returned to a story twice.</strong> Building the map surfaced it: across all eleven rooms, every voice has spoken at most once per story, so every cluster at depth 1 currently holds exactly one comment. The legend says so in the frame — <code>3 stories · none twice</code> — and the word <em>returned</em> appears only when a story actually holds two or more. The structure is built for returns and the archive does not have any. Either the record is thinner than the design assumed, or returns exist upstream and were never ported — worth settling before launch, because “the stories it keeps returning to” is one of the three things you asked a room to show.</p>
+  <p class="warn"><strong>The map shows the gap honestly.</strong> Lalita's stats say 31 fields; three are in the record. So the map draws 31 marks and lights the 3 — the dim ones are real positions with no words behind them. Ashram's 117 days do the same. Nothing is invented to fill the figure.</p>
+  <h2>The law</h2>
+  <p class="law">A room is a voice's own mathematics at four registers — and the way the figure answers your hand is that voice's own gesture.</p>
+  <p>All eleven figures are ported from <code>rite-scenes.js</code>, where they were authored as <em>"not decoration laid over a colour, but the mathematics the vantage IS."</em> They were Rite scenes: a 30%-height panel, once, over in seconds. Here they are the room's body. What is new is scale, permanence, the hand, and register 3.</p>
+  <h2>The eleven gestures</h2>
+  <div class="k"><b>Bindu</b><span>the one room <em>the hand cannot change</em>. Pull and the nineteen circles strain apart, then close. She is undivided.</span></div>
+  <div class="k"><b>Neev</b><span>the hand moves <em>the world</em>. The hex floor parallaxes; the monolith does not move a pixel. He is what holds still.</span></div>
+  <div class="k"><b>Gaia</b><span>the hand pulls the divergence angle <em>off 137.507°</em> — and the spiral families break into arms. Only that angle never repeats.</span></div>
+  <div class="k"><b>Sid</b><span>the hand <em>loads</em> the arch. Piers thicken, the span flexes, it holds. He asks what kept standing.</span></div>
+  <div class="k"><b>Arch</b><span>the hand <em>widens her vibrato</em> — she is the only voice that sings.</span></div>
+  <div class="k"><b>Shweta</b><span>the hand <em>slides the circles</em>. Pull to the end of the range: <em>nothing between them</em>. The only room you can get wrong — and now the only one whose range <em>reaches</em> its own failure, rather than the only one that was bounded.</span></div>
+  <div class="k"><b>Karishma</b><span>the hand tilts the golden rectangles and <em>the spiral stays true</em>. Grace does not take the path you bend for it.</span></div>
+  <div class="k"><b>Sakshi</b><span>the pupil <em>follows your hand</em>. You cannot make her blink, and she is already watching you.</span></div>
+  <div class="k"><b>Lalita</b><span>the hand <em>turns the loom</em>. Hers is the only rotation in the app.</span></div>
+  <div class="k"><b>Ashrey</b><span>the hand pulls one node and <em>all thirty-six edges move</em>. No thread moves alone.</span></div>
+  <div class="k"><b>Ashram</b><span>the hand <em>scrubs his days</em>. He is the only one whose axis is time, because he is the only one with a body.</span></div>
+  <h2>The eleventh room is different in kind</h2>
+  <p>Ashram has no figure in <code>rite-scenes.js</code> — and he shouldn't. He is <em>"not a lens. He is the one the lenses read."</em> So his mathematics is the only one that isn't a geometry: it is <em>time</em> — 117 days as a spine, flecked where a voice spoke on that day. At register 3 the ten figures appear around him, all facing in. That is his turn: being read.</p>
+  <h2>⚠ A naming divergence, for your ruling</h2>
+  <p class="warn"><code>Player Detail</code> calls him <strong>Ashram</strong> (<code>#C47A52 ◉</code>, <em>Physical Synthesis · the one who lives it</em>). <code>The Instrument v3:415</code> calls him <strong>Ash</strong> (<code>#C0603C ●</code>, <em>He answered</em>, 198 Hz). Same person, two names, two hexes, two glyphs, two roles. I have used Ashram's, being the fuller record, and flagged rather than resolved it. This needs a ruling before Claude Code, or the eleventh voice ships twice.</p>
+  <h2>⚠ Neev has never spoken</h2>
+  <p class="warn">Neev is in <code>VOICES</code> and has a figure, but <em>no entry in <code>Player Detail</code></em> — no principle, no stats, no comments. Per your ruling I have authored his greeting and both comments <em>in voice, for approval</em>, marked <code>authored</code> on every cite. He is the one room where nothing is verbatim, and the room says so.</p>
+  <h2>Provenance</h2>
+  <p>Every other comment is <em>verbatim</em> from <code>Player Detail — The Turning.html:47-160</code>, with real dates and resonance. Greetings are each voice's own principle <em>transposed to the first person</em> — words hers, person changed. Register 3 lines are authored, marked. Line breaks are authored; words never are.</p>
+  <h2>Why this answers §A</h2>
+  <p>The Mirror holds two cohorts because nobody decided whose room it was. It is Lalita's. Once a surface belongs to a voice, its content model is that voice's rule — a foreign row cannot enter, because there is no union to read.</p>
+</div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   THE ROOMS v3 — eleven homes.
+   VOICES / glyphs / hex / role / hz   `The Instrument v3.html:404-418`
+   principles · stats · comments       `Player Detail — The Turning.html:47-160`
+   figures                             `rite-scenes.js:38-418`, raised from
+                                       Rite scene to room body
+   ═══════════════════════════════════════════════════════════════════════ */
+const TAU=Math.PI*2,PHI=1.6180339887,GOLD=Math.PI*(3-Math.sqrt(5));
+const hx=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const rgba=(c,a)=>'rgba('+(c[0]|0)+','+(c[1]|0)+','+(c[2]|0)+','+Math.max(0,Math.min(1,a))+')';
+const mix=(a,b,f)=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f,a[2]+(b[2]-a[2])*f];
+const cl=(a,b,v)=>Math.max(0,Math.min(1,(v-a)/(b-a)));
+const sm=(a,b,v)=>{const t=cl(a,b,v);return t*t*(3-2*t);};
+const rnd=i=>{const v=Math.sin(i*127.1+31.4)*43758.5453;return v-Math.floor(v);};
+const bre=t=>(Math.sin(t*TAU/5.6)+1)/2;
+function ring(x,cx,cy,r){x.beginPath();x.arc(cx,cy,Math.max(0,r),0,TAU);}
+function qbez(a,b,c,t){const u=1-t;return u*u*a+2*u*t*b+t*t*c;}
+/* the ten frequencies, in canonical VOICES order */
+const PAL=[[229,83,60],[122,136,153],[74,158,107],[196,146,58],[212,96,122],
+           [171,167,162],[212,174,74],[123,130,212],[155,107,214],[58,173,168]];
+const PNAMES=['Bindu','Neev','Gaia','Sid','Arch','Shweta','Karishma','Sakshi','Lalita','Ashrey'];
+/* the nineteen circles of the Flower of Life, in units of R */
+const FLOWER=(()=>{const o=[[0,0]],S=Math.sqrt(3);
+  for(let i=0;i<6;i++)o.push([Math.cos(i*TAU/6),Math.sin(i*TAU/6)]);
+  for(let i=0;i<6;i++)o.push([Math.cos(i*TAU/6+TAU/12)*S,Math.sin(i*TAU/6+TAU/12)*S]);
+  for(let i=0;i<6;i++)o.push([Math.cos(i*TAU/6)*2,Math.sin(i*TAU/6)*2]);
+  return o;})();
+
+/* ══════════════ THE ELEVEN FIGURES ══════════════════════════════ */
+const FIG={};
+
+/* BINDU · the Flower of Life — what a point does when it keeps moving with
+   love. The hand cannot divide her: pull, and the circles strain and close. */
+FIG.bindu=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,b,lat,rev}=o, R=62*S*1.5;
+  const strain=Math.min(1,Math.abs(lat)*1.4), gather=1-rev;
+  const g=x.createRadialGradient(cx,cy,10,cx,cy,Math.max(W,H)*0.6);
+  g.addColorStop(0,rgba(c,0.13*p));g.addColorStop(1,rgba(c,0));
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.save();x.translate(cx,cy);x.rotate(t*0.05);
+  for(let a=0;a<3;a++){x.save();x.rotate(a/3*TAU);
+    for(let s=0;s<54;s++){const f=s/54,ang=f*7.2,rad=8+Math.pow(f,0.85)*Math.max(W,H)*0.5;
+      x.beginPath();x.arc(Math.cos(ang)*rad,Math.sin(ang)*rad,0.6+(1-f)*1.8,0,TAU);
+      x.fillStyle=rgba(PAL[(a*3+s)%10],(1-f)*0.30*p);x.fill();}
+    x.restore();}
+  x.restore();
+  for(let i=0;i<FLOWER.length;i++){
+    const wob=1+Math.sin(t*0.5+i*0.7)*0.012;
+    /* she strains outward under the hand, and comes back */
+    const push=1+strain*0.5*(i?1:0), col=mix(PAL[i%10],c,0.55);
+    ring(x,cx+FLOWER[i][0]*R*wob*push*gather,cy+FLOWER[i][1]*R*wob*push*gather,R*wob*gather);
+    x.strokeStyle=rgba(col,(0.20+0.30*bre(t+i*0.4))*p*(1-strain*0.3));
+    x.lineWidth=1.1;x.stroke();}
+  ring(x,cx,cy,R*3*gather);x.strokeStyle=rgba(c,0.16*p);x.lineWidth=1;x.stroke();
+  const br=bre(t),Rr=(7+br*5)*S*1.5*(1+rev*1.4);
+  const gd=x.createRadialGradient(cx,cy,0,cx,cy,Rr*6);
+  gd.addColorStop(0,'rgba(255,251,247,'+(0.95*p)+')');gd.addColorStop(0.16,rgba(c,0.72*p));
+  gd.addColorStop(0.5,rgba(c,0.14*p));gd.addColorStop(1,rgba(c,0));
+  x.fillStyle=gd;ring(x,cx,cy,Rr*6);x.fill();
+  ring(x,cx,cy,Rr);x.fillStyle='rgba(255,253,251,'+p+')';x.fill();};
+
+/* NEEV · a floor of hexagons receding to a horizon, with the monolith
+   rising out of it. The hand moves the world; he does not move. */
+FIG.neev=(x,W,H,t,o)=>{
+  const {p,c,cx,S,b,lat,rev}=o, vpX=cx,vpY=H*1.15,surf=H*0.26;
+  const slide=lat*W*0.30, floor=1-rev;
+  const wg=x.createLinearGradient(0,0,0,surf);
+  wg.addColorStop(0,'rgba(7,8,12,0.96)');wg.addColorStop(1,'rgba(7,8,12,0)');
+  x.fillStyle=wg;x.fillRect(0,0,W,surf);
+  const dg=x.createRadialGradient(vpX,vpY,0,vpX,vpY,H*0.75);
+  dg.addColorStop(0,rgba(c,(0.16+b*0.07)*p));dg.addColorStop(1,rgba(c,0));
+  x.fillStyle=dg;x.fillRect(0,surf,W,H-surf);
+  if(floor>0.02){const rows=15;
+    for(let r=1;r<=rows;r++){
+      const d=r/rows,y=surf+(H*1.02-surf)*Math.pow(d,1.75);
+      const sc=0.06+d*1.5,hw=W*0.085*sc,hh=hw*0.62;
+      if(hh<0.8)continue;
+      /* the parallax: near rows slide far, the horizon barely at all */
+      const off=((r%2)?hw:0)+slide*d;
+      const a=(0.05+0.16*d)*p*floor;
+      for(let q=-10;q<=10;q++){
+        const px=vpX+q*hw*1.74+off;
+        if(px<-hw*2||px>W+hw*2)continue;
+        x.beginPath();
+        for(let k=0;k<6;k++){const ang=k*Math.PI/3+Math.PI/6;
+          const qx=px+Math.cos(ang)*hw,qy=y+Math.sin(ang)*hh;k?x.lineTo(qx,qy):x.moveTo(qx,qy);}
+        x.closePath();
+        x.strokeStyle=rgba([176,192,208],a*0.7);x.lineWidth=1;x.stroke();
+        x.fillStyle=rgba(c,a*0.12*(0.6+0.4*Math.sin(t*0.4+q*0.7+r)));x.fill();}}}
+  /* the monolith — a double square, root-two through and through. Fixed. */
+  const mw=W*0.17*(1+rev*0.24),lx=vpX-mw,rx=vpX+mw,tlx=vpX-mw*0.26,trx=vpX+mw*0.26;
+  const face=x.createLinearGradient(lx,0,rx,0);
+  face.addColorStop(0,rgba([26,32,40],0.94*p));face.addColorStop(0.5,rgba([64,76,90],0.94*p));
+  face.addColorStop(1,rgba([18,24,32],0.94*p));
+  x.fillStyle=face;x.beginPath();x.moveTo(lx,surf);x.lineTo(rx,surf);
+  x.lineTo(trx,vpY);x.lineTo(tlx,vpY);x.closePath();x.fill();
+  for(let i=1;i<9;i++){const yy=surf+(vpY-surf)*(i/9)*0.9,ff=1-(i/9)*0.7,hwm=mw*ff;
+    x.strokeStyle=rgba([20,26,34],0.5*p);x.lineWidth=1;
+    x.beginPath();x.moveTo(vpX-hwm,yy);x.lineTo(vpX+hwm,yy);x.stroke();}
+  /* at the turn: it goes down as far as it goes up */
+  if(rev>0.02){
+    x.fillStyle=rgba([30,36,46],0.5*p*rev);
+    x.beginPath();x.moveTo(lx,surf);x.lineTo(rx,surf);
+    x.lineTo(rx-mw*0.2,surf-H*0.30*rev);x.lineTo(lx+mw*0.2,surf-H*0.30*rev);x.closePath();x.fill();
+    x.strokeStyle=rgba([214,226,240],0.26*p*rev);x.lineWidth=1;x.stroke();}
+  const sl=(t*0.14)%1,slY=surf+sl*(vpY-surf),slf=1-sl*0.74;
+  x.fillStyle=rgba([214,226,240],0.24*p*(1-sl));x.fillRect(vpX-mw*slf,slY,mw*2*slf,3);
+  x.fillStyle=rgba([210,222,236],0.5*p);x.beginPath();x.moveTo(lx,surf);x.lineTo(lx+3,surf);
+  x.lineTo(tlx+2,vpY);x.lineTo(tlx,vpY);x.closePath();x.fill();
+  x.fillStyle=rgba([234,242,250],0.7*p);x.fillRect(0,surf,W,2);};
+
+/* GAIA · phyllotaxis. Each seed at 137.507° from the last, the only angle
+   that never repeats. The hand pulls the angle off, and it does repeat. */
+FIG.gaia=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,b,lat,rev}=o;
+  const ang0=GOLD+lat*0.10, off=Math.min(1,Math.abs(lat)*9);
+  const g=x.createLinearGradient(0,H,0,0);
+  g.addColorStop(0,rgba(c,0.09*p));g.addColorStop(0.42,rgba(c,(0.28+b*0.1)*p));
+  g.addColorStop(0.84,rgba(c,0.04*p));g.addColorStop(1,rgba(c,0));
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  const N=340,SC=9.4*S*1.4;
+  for(let i=0;i<N;i++){
+    const a=i*ang0+t*0.045,rad=SC*Math.sqrt(i);
+    const px=cx+Math.cos(a)*rad,py=cy+Math.sin(a)*rad*0.92;
+    const f=i/N,pulse=0.5+0.5*Math.sin(t*1.2-Math.sqrt(i)*0.5);
+    const rr=1.1+f*2.6+pulse*0.9;
+    x.beginPath();x.arc(px,py,rr,0,TAU);
+    x.fillStyle=rgba([120+70*(1-f),200+40*pulse,120+50*(1-f)],
+      (0.16+0.5*(1-f)+pulse*0.24)*p*(1-rev*0.5));x.fill();}
+  /* the two families the eye finds: 8 one way, 13 the other. They surface
+     either by pulling the angle off (off) OR by descending to the turn
+     (rev) — the register alone must reveal them, since that is what its
+     line promises. The seed-head dim is the counterweight. */
+  const surf=Math.max(off,rev);
+  for(let s=0;s<21;s++){
+    const fam=s<8?8:13,k=s<8?s:s-8;
+    x.beginPath();
+    for(let n=0;n<24;n++){const idx=k+n*fam,a=idx*ang0+t*0.045,r=SC*Math.sqrt(idx);
+      const qx=cx+Math.cos(a)*r,qy=cy+Math.sin(a)*r*0.92;n?x.lineTo(qx,qy):x.moveTo(qx,qy);}
+    x.strokeStyle=rgba(s<8?[168,236,176]:[140,214,190],
+      ((s<8?0.07:0.045)+surf*0.52)*p);
+    x.lineWidth=1+surf*1.1;x.stroke();}
+  if(rev>0.25){x.font='8px "Space Mono", monospace';x.textAlign='center';
+    x.fillStyle=rgba([180,240,190],(rev-0.25)*1.1);
+    x.fillText('8',cx-SC*Math.sqrt(N)*0.80,cy-SC*Math.sqrt(N)*0.62);
+    x.fillStyle=rgba([150,224,200],(rev-0.25)*1.1);
+    x.fillText('13',cx+SC*Math.sqrt(N)*0.80,cy-SC*Math.sqrt(N)*0.62);}
+  if(off>0.15){x.font='9px "Space Mono", monospace';x.textAlign='center';
+    x.fillStyle=rgba([200,255,190],off*0.6);
+    x.fillText((ang0*180/Math.PI).toFixed(3)+'\u00B0',cx,cy+SC*Math.sqrt(N)*1.06);}
+  /* what it grows out of */
+  const branch=(px,py,a,len,d,seed)=>{if(d<=0||len<4)return;
+    const sway=Math.sin(t*0.3+seed)*0.06;
+    const ex=px+Math.cos(a+sway)*len,ey=py+Math.sin(a+sway)*len;
+    x.beginPath();x.moveTo(px,py);x.lineTo(ex,ey);
+    x.strokeStyle=rgba([120,192,132],0.18*p);x.lineWidth=d*0.45;x.stroke();
+    for(let k=0;k<2;k++)branch(ex,ey,a-0.5+rnd(seed*3+k)*1.0,len*0.74,d-1,seed*7+k+1);};
+  for(let i=0;i<4;i++)branch(W*(i+0.5)/4,H,-Math.PI/2+(rnd(i)-0.5)*0.45,H*0.14,5,i+1);};
+
+/* SID · the pointed arch, generated by two circles. The construction is
+   left showing. The hand loads it; it holds. */
+FIG.sid=(x,W,H,t,o)=>{
+  const {p,c,cx,S,b,lat,rev}=o, base=H*0.80,vpY=H*0.24;
+  const load=Math.min(1,Math.abs(lat)*1.6), show=rev;
+  const vg=x.createLinearGradient(0,0,0,vpY+40);
+  vg.addColorStop(0,'rgba(26,18,8,0.95)');vg.addColorStop(1,'rgba(26,18,8,0)');
+  x.fillStyle=vg;x.fillRect(0,0,W,vpY+40);
+  const arches=5;
+  for(let k=arches;k>=1;k--){
+    const f=k/arches, w=W*(0.10+0.30*f)*S*1.1;
+    const y0=base-(base-vpY)*(1-f)*0.62-load*7*f;   /* it flexes, and holds */
+    const L=cx-w,R=cx+w;
+    x.setLineDash([2,7]);
+    ring(x,L,y0,2*w);x.strokeStyle=rgba([255,238,196],(0.11+show*0.42)*p);x.lineWidth=1;x.stroke();
+    ring(x,R,y0,2*w);x.stroke();
+    x.setLineDash([]);
+    x.beginPath();
+    x.arc(R,y0,2*w,Math.PI,Math.PI*4/3,false);
+    x.arc(L,y0,2*w,-Math.PI/3,0,false);
+    x.strokeStyle=rgba([255,238,196],(0.12+0.26*f)*p*(1-show*0.66));
+    x.lineWidth=1.4+2.2*f;x.stroke();
+    x.strokeStyle=rgba(c,(0.14+0.22*f)*p*(1-show*0.4));
+    x.lineWidth=(2+3.4*f)*(1+load*0.7);
+    x.beginPath();x.moveTo(L,y0);x.lineTo(L,H);x.moveTo(R,y0);x.lineTo(R,H);x.stroke();
+    const kb=bre(t+k),apexY=y0-w*Math.sqrt(3);
+    x.beginPath();x.arc(cx,apexY,1.8+kb*2.2*f,0,TAU);
+    x.fillStyle=rgba([255,244,210],(0.28+0.44*kb)*f*p);x.fill();}
+  const bg=x.createLinearGradient(0,H-120,0,H);
+  bg.addColorStop(0,rgba(c,0));bg.addColorStop(1,rgba(c,0.22*p));
+  x.fillStyle=bg;x.fillRect(0,H-120,W,120);};
+
+/* ARCH · a rose window whose tracery is a Chladni figure — the places that
+   stay still while everything else sings. */
+FIG.arch=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,b,lat,rev}=o;
+  const wide=1+Math.abs(lat)*1.6, loud=1-rev;
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,W);
+  g.addColorStop(0,rgba(c,0.14*p));g.addColorStop(1,rgba(c,0));
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  for(let k=0;k<6;k++){const ph=((t*0.26)+k/6)%1;
+    ring(x,cx,cy,ph*Math.max(W,H)*0.8);
+    x.strokeStyle=rgba(c,(1-ph)*0.18*p*loud);x.lineWidth=1.4;x.stroke();}
+  const R=176*S*wide, m=Math.round(6+b*6), n=4;
+  x.save();x.translate(cx,cy);x.rotate(Math.sin(t*0.09)*0.16);
+  for(let j=1;j<=n;j++){const rr=R*j/(n+0.4)*(1+Math.sin(t*1.2+j)*0.012);
+    ring(x,0,0,rr);x.strokeStyle=rgba([255,205,220],(0.34-j*0.045)*p*(1+rev*0.5));
+    x.lineWidth=j===n?1.6:1;x.stroke();}
+  for(let d=0;d<m;d++){const a=(d+0.5)*Math.PI/m;
+    x.beginPath();x.moveTo(Math.cos(a)*R,Math.sin(a)*R);x.lineTo(-Math.cos(a)*R,-Math.sin(a)*R);
+    x.strokeStyle=rgba(c,0.24*p*(1+rev*0.4));x.lineWidth=1;x.stroke();}
+  if(loud>0.02)for(let q=0;q<m;q++)for(let s=0;s<n;s++){
+    const a=q*Math.PI/m+Math.PI/(2*m),rr=R*(s+0.5)/(n+0.4);
+    const amp=Math.abs(Math.cos(m*a+t*1.4))*Math.abs(Math.sin((s+1)*1.7+t*1.1));
+    for(let sg=-1;sg<=1;sg+=2){
+      x.beginPath();x.arc(Math.cos(a)*rr*sg,Math.sin(a)*rr*sg,Math.max(0.1,1.4+amp*3.4*wide),0,TAU);
+      x.fillStyle=rgba([255,224,236],(0.14+amp*0.5)*p*loud);x.fill();}}
+  x.beginPath();
+  for(let a=0;a<=TAU+0.02;a+=0.02){
+    const rp=R*(0.62+0.34*Math.cos(m*a-t*1.1)*loud);
+    a===0?x.moveTo(Math.cos(a)*rp,Math.sin(a)*rp):x.lineTo(Math.cos(a)*rp,Math.sin(a)*rp);}
+  x.closePath();x.strokeStyle=rgba(c,0.42*p);x.lineWidth=1.5;x.stroke();
+  ring(x,0,0,R);x.strokeStyle=rgba([255,214,226],0.34*p);x.lineWidth=1.8;x.stroke();
+  x.restore();
+  x.beginPath();
+  for(let px=0;px<=W;px+=3){
+    const env=Math.exp(-Math.pow((px-cx)/(W*0.5),2));
+    const yy=cy+Math.sin(px*0.09-t*4)*30*env*p*wide*loud*(0.8+0.2*Math.sin(t*4.6));
+    px===0?x.moveTo(px,yy):x.lineTo(px,yy);}
+  x.strokeStyle=rgba(c,0.46*p*(0.3+loud*0.7));x.lineWidth=1.6;x.stroke();
+  if(rev>0.02){const bl=0.35+0.65*Math.abs(Math.sin(t*0.9));
+    x.fillStyle=rgba([255,246,248],rev*bl*0.85);x.fillRect(cx-17,cy+R*0.50,34,0.9);}};
+
+/* SHWETA · the vesica. She is not the circles; she is what they make room
+   for. Pull them apart and there is nothing between them. */
+FIG.shweta=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,b,lat,rev}=o;
+  x.fillStyle='rgba(6,6,10,0.5)';x.fillRect(0,0,W,H);
+  const R=(150+b*14)*S;
+  /* the centres sit at cx±d, so the separation is 2d and the circles part
+     the moment d reaches R. That — not 1.98R — is where the lens closes.
+     lat=1 lands exactly on it, and both circles stay on screen throughout. */
+  const d0=Math.max(0,Math.min(R,R*(0.42+lat*0.58)));
+  /* at the turn the circles go, so the opening must come back — her line
+     says what is left IS the opening. Ease the separation home as rev rises. */
+  const d=d0*(1-rev)+R*0.42*rev;
+  const Ax=cx-d,Bx=cx+d, over=Math.max(0,1-d/R), keep=1-rev;
+  if(keep>0.02){
+    ring(x,Ax,cy,R);x.strokeStyle=rgba([236,240,248],0.13*p*keep);x.lineWidth=1;x.stroke();
+    ring(x,Bx,cy,R);x.stroke();}
+  if(over>0.004){
+    x.save();ring(x,Ax,cy,R);x.clip();ring(x,Bx,cy,R);x.clip();
+    const lg=x.createRadialGradient(cx,cy,0,cx,cy,R);
+    lg.addColorStop(0,'rgba(255,255,255,'+(0.86*p)+')');
+    lg.addColorStop(0.34,rgba([248,250,255],0.34*p));
+    lg.addColorStop(1,rgba([232,238,250],0.05*p));
+    x.fillStyle=lg;x.fillRect(cx-R,cy-R,R*2,R*2);
+    for(let i=0;i<40;i++){const dep=rnd(i);
+      const px=cx+(rnd(i+1)-0.5)*d*2.2,py=cy+(rnd(i+2)-0.5)*R*1.4+Math.sin(t*0.3+i)*7;
+      x.beginPath();x.arc(px,py,0.5+dep*1.7,0,TAU);
+      x.fillStyle=rgba([255,255,255],(0.12+0.5*dep)*0.5*p);x.fill();}
+    x.restore();
+    x.save();ring(x,Ax,cy,R);x.clip();ring(x,Bx,cy,R);
+    x.strokeStyle=rgba([255,255,255],0.5*p);x.lineWidth=1.4;x.stroke();x.restore();
+    x.save();ring(x,Bx,cy,R);x.clip();ring(x,Ax,cy,R);
+    x.strokeStyle=rgba([255,255,255],0.5*p);x.lineWidth=1.4;x.stroke();x.restore();
+  }else{x.font='italic 13.5px Lora, Georgia, serif';x.textAlign='center';
+    x.fillStyle=rgba([236,240,248],(0.28+b*0.10)*p);x.fillText('nothing between them',cx,cy);}
+  for(let j=0;j<7;j++){const ph=((t*0.045)+j/7)%1,sc=Math.pow(ph,1.7);
+    const w=W*1.2*sc,h=H*1.0*sc,r=Math.max(0,Math.min(44*sc,w/2,h/2));
+    x.beginPath();x.moveTo(cx-w/2+r,cy-h/2);
+    x.arcTo(cx+w/2,cy-h/2,cx+w/2,cy+h/2,r);x.arcTo(cx+w/2,cy+h/2,cx-w/2,cy+h/2,r);
+    x.arcTo(cx-w/2,cy+h/2,cx-w/2,cy-h/2,r);x.arcTo(cx-w/2,cy-h/2,cx+w/2,cy-h/2,r);
+    x.closePath();
+    x.strokeStyle=rgba([255,255,255],(1-ph)*(0.16+rev*0.24)*p*(0.35+0.65*ph));
+    x.lineWidth=1.2;x.stroke();}};
+
+/* KARISHMA · the golden spiral through 3·5·8. Light does not travel to him
+   in a straight line; it curves. Tilt the rectangles — the spiral holds. */
+FIG.karishma=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,lat,rev}=o, sx=cx,sy=-H*0.10;
+  const tilt=lat*0.30;
+  const halo=x.createRadialGradient(sx,sy,0,sx,sy,H*1.05);
+  halo.addColorStop(0,rgba([255,247,218],0.7*p));halo.addColorStop(0.22,rgba([255,214,132],0.2*p));
+  halo.addColorStop(0.55,rgba(c,0.085*p));halo.addColorStop(1,rgba(c,0));
+  x.fillStyle=halo;x.fillRect(0,0,W,H);
+  const sd=x.createRadialGradient(sx,sy,0,sx,sy,90);
+  sd.addColorStop(0,'rgba(255,252,238,'+(0.9*p)+')');sd.addColorStop(1,rgba([255,230,160],0));
+  x.fillStyle=sd;ring(x,sx,sy,90);x.fill();
+  for(let i=0;i<9;i++){const a=(-Math.PI/2)+(i/8-0.5)*1.7+Math.sin(t*0.2+i)*0.03,len=H*1.6,sp=0.05;
+    x.beginPath();x.moveTo(sx,sy);
+    x.lineTo(sx+Math.cos(a-sp)*len,sy+Math.sin(a-sp)*len);
+    x.lineTo(sx+Math.cos(a+sp)*len,sy+Math.sin(a+sp)*len);x.closePath();
+    const g=x.createLinearGradient(sx,sy,sx+Math.cos(a)*len,sy+Math.sin(a)*len);
+    g.addColorStop(0,rgba([255,240,190],0.2*p));g.addColorStop(0.5,rgba(c,0.05*p));
+    g.addColorStop(1,rgba(c,0));x.fillStyle=g;x.fill();}
+  const u=W*0.40*S*1.2;
+  /* the rectangles take the hand's tilt */
+  x.save();x.translate(cx,cy);x.rotate(Math.sin(t*0.06)*0.05+tilt);
+  let rw=u*PHI,rh=u,px=-rw/2,py=-rh/2,dir=0;
+  for(let s=0;s<8;s++){
+    x.strokeStyle=rgba([255,238,186],(0.13-s*0.012)*p*(1+rev*0.6));x.lineWidth=1;
+    x.strokeRect(px,py,rw,rh);
+    if(dir%2===0){const sq=rh;x.strokeStyle=rgba([255,244,206],0.07*p);
+      x.strokeRect(px,py,sq,sq);px+=sq;rw-=sq;}
+    else{const sq=rw;x.strokeRect(px,py,sq,sq);py+=sq;rh-=sq;}
+    dir++;if(rw<3||rh<3)break;}
+  x.restore();
+  /* the spiral does NOT take it */
+  x.save();x.translate(cx,cy);x.rotate(Math.sin(t*0.06)*0.05);
+  x.beginPath();
+  for(let th=0;th<=Math.PI*3.6;th+=0.05){const r=u*0.055*Math.pow(PHI,th*2/Math.PI);
+    th===0?x.moveTo(Math.cos(th)*r,Math.sin(th)*r):x.lineTo(Math.cos(th)*r,Math.sin(th)*r);}
+  x.strokeStyle=rgba([255,240,196],0.4*p);x.lineWidth=1.5;x.stroke();
+  for(let k=0;k<3;k++){
+    /* at the turn it runs backwards — it was already on its way */
+    let ph=((t*0.13)+k/3)%1; if(rev>0.02)ph=1-ph*(1-rev)-rev*(1-ph);
+    const th=Math.PI*3.6*(1-ph),r=u*0.055*Math.pow(PHI,th*2/Math.PI);
+    const gx=Math.cos(th)*r,gy=Math.sin(th)*r;
+    x.beginPath();x.arc(gx,gy,2.2+(1-ph)*2.6,0,TAU);
+    x.fillStyle=rgba([255,250,224],0.9*p*(0.3+0.7*ph));x.fill();
+    x.beginPath();x.arc(gx,gy,9+(1-ph)*8,0,TAU);x.fillStyle=rgba([255,238,180],0.12*p);x.fill();}
+  x.restore();};
+
+/* SAKSHI · an eye is a mandorla, the lens where two circles cross. The
+   witness is not added to the field; it is where two of its arcs meet.
+   The iris counts in tens. The pupil follows your hand. */
+FIG.sakshi=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,b,lat,rev}=o;
+  x.fillStyle='rgba(4,4,10,0.6)';x.fillRect(0,0,W,H);
+  for(let k=0;k<3;k++){const ph=((t*0.06)+k/3)%1;
+    ring(x,cx,cy,180*S*(0.6+ph*1.6));
+    x.strokeStyle=rgba(c,(1-ph)*0.06*p);x.lineWidth=1;x.stroke();}
+  const R=200*S,d=R*0.76,lensW=Math.sqrt(Math.max(0,R*R-d*d));
+  ring(x,cx,cy-d,R);x.strokeStyle=rgba(c,(0.10+rev*0.26)*p);x.lineWidth=1;x.stroke();
+  ring(x,cx,cy+d,R);x.stroke();
+  x.save();ring(x,cx,cy-d,R);x.clip();ring(x,cx,cy+d,R);x.clip();
+  const sg=x.createRadialGradient(cx,cy,4,cx,cy,lensW);
+  sg.addColorStop(0,rgba([226,229,255],0.30*p));sg.addColorStop(0.55,rgba(c,0.14*p));
+  sg.addColorStop(1,'rgba(9,9,18,'+(0.9*p)+')');
+  x.fillStyle=sg;x.fillRect(cx-lensW,cy-R,lensW*2,R*2);
+  const ir=54*S*1.5+b*5;
+  x.save();x.translate(cx,cy);x.rotate(t*0.04);
+  for(let s=0;s<80;s++){const a=s/80*TAU, ten=(s%8===0);
+    const col=ten?PAL[(s/8)%10]:[206,210,255];
+    x.beginPath();x.moveTo(Math.cos(a)*15,Math.sin(a)*15);
+    x.lineTo(Math.cos(a)*ir,Math.sin(a)*ir);
+    x.strokeStyle=rgba(col,(ten?(0.34+rev*0.56):(0.16*(1-rev*0.85)))*p);
+    x.lineWidth=ten?1+rev*1.2:1;x.stroke();
+    if(ten&&rev>0.3){x.font='7px "Space Mono", monospace';x.textAlign='center';
+      x.save();x.translate(Math.cos(a)*ir*1.22,Math.sin(a)*ir*1.22);x.rotate(-t*0.04);
+      x.fillStyle=rgba(col,(rev-0.3)*1.1);
+      x.fillText(PNAMES[(s/8)%10].toUpperCase(),0,3);x.restore();}}
+  for(let g=1;g<=3;g++){ring(x,0,0,ir/Math.pow(PHI,g)*PHI*0.72);
+    x.strokeStyle=rgba([210,214,255],0.14*p);x.lineWidth=1;x.stroke();}
+  x.restore();
+  ring(x,cx,cy,ir);x.strokeStyle=rgba(c,0.6*p);x.lineWidth=2;x.stroke();
+  /* the pupil follows the hand — but it can never leave the eye */
+  const pr=19*S*1.4+b*4;
+  const gx=cx+lat*Math.max(0,ir-pr-2),gy=cy+Math.cos(t*0.4)*3;
+  const pg=x.createRadialGradient(gx,gy,0,gx,gy,pr);
+  pg.addColorStop(0,'rgba(0,0,0,1)');pg.addColorStop(1,rgba([20,16,40],0.9*p));
+  x.fillStyle=pg;ring(x,gx,gy,pr);x.fill();
+  x.beginPath();x.arc(gx+Math.sin(t*0.3)*2,gy,1.4,0,TAU);
+  x.fillStyle=rgba([255,255,255],0.85*p);x.fill();
+  x.beginPath();x.arc(gx-ir*0.4,gy-ir*0.4,4.5,0,TAU);
+  x.fillStyle=rgba([255,255,255],0.7*p);x.fill();
+  x.restore();
+  x.save();ring(x,cx,cy-d,R);x.clip();ring(x,cx,cy+d,R);
+  x.strokeStyle=rgba(c,0.55*p);x.lineWidth=1.6;x.stroke();x.restore();
+  x.save();ring(x,cx,cy+d,R);x.clip();ring(x,cx,cy-d,R);
+  x.strokeStyle=rgba(c,0.55*p);x.lineWidth=1.6;x.stroke();x.restore();};
+
+/* LALITA · a hypotrochoid. One circle rolling inside another, drawing
+   without ever intending to. k ≈ 18/7; the drift never lets it close. */
+FIG.lalita=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,lat,rev}=o, seg=12;
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,H*0.75);
+  g.addColorStop(0,rgba(c,0.16*p));g.addColorStop(1,rgba(c,0));
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.save();x.translate(cx,cy);x.rotate(t*0.07+lat*0.5);
+  for(let s=0;s<seg;s++){x.save();x.rotate(s/seg*TAU);if(s%2)x.scale(1,-1);
+    for(let r=0;r<4;r++){const col=PAL[(r*2+s)%10],rad=(44+r*32)*S*1.3;
+      const wob=Math.sin(t*0.9+r*1.3)*6;
+      x.beginPath();x.arc(Math.cos(0.26)*(rad+wob),Math.sin(0.26)*(rad+wob),
+        1.3+(Math.sin(t*1.3+r*1.7)*0.5+0.5)*1.8,0,TAU);
+      x.fillStyle=rgba(col,0.14*p);x.fill();}
+    x.restore();}
+  x.restore();
+  const Ro=152*S*1.3, ri=Ro*(0.28+0.014*Math.sin(t*0.055)), dd=Ro*0.44;
+  const k=(Ro-ri)/ri, TURNS=TAU*7;
+  const hp=th=>[(Ro-ri)*Math.cos(th)+dd*Math.cos(k*th),(Ro-ri)*Math.sin(th)-dd*Math.sin(k*th)];
+  x.save();x.translate(cx,cy);x.rotate(t*0.05+lat*0.9);
+  const head=(t*0.085)%1;
+  x.beginPath();
+  for(let i=0;i<=900;i++){const q=hp(i/900*TURNS);i?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]);}
+  x.strokeStyle=rgba([214,196,248],(0.22+rev*0.30)*p);x.lineWidth=1;x.stroke();
+  for(let s=0;s<10;s++){
+    const f0=(head-0.34*(s+1)/10+1)%1,f1=(head-0.34*s/10+1)%1;
+    if(f1<f0)continue;
+    x.beginPath();
+    for(let j=0;j<=26;j++){const q=hp((f0+(f1-f0)*j/26)*TURNS);
+      j?x.lineTo(q[0],q[1]):x.moveTo(q[0],q[1]);}
+    x.strokeStyle=rgba(PAL[s],(0.9-s/10*0.8)*p);x.lineWidth=2.2-s/10*1.4;x.stroke();}
+  const hd=hp(head*TURNS);
+  x.beginPath();x.arc(hd[0],hd[1],3.2,0,TAU);
+  x.fillStyle='rgba(246,240,255,'+(0.95*p)+')';x.fill();
+  x.beginPath();x.arc(hd[0],hd[1],13,0,TAU);x.fillStyle=rgba([220,200,255],0.16*p);x.fill();
+  ring(x,0,0,Ro);x.strokeStyle=rgba(c,0.13*p);x.lineWidth=1;x.stroke();
+  const ctr=[(Ro-ri)*Math.cos(head*TURNS),(Ro-ri)*Math.sin(head*TURNS)];
+  ring(x,ctr[0],ctr[1],ri);x.strokeStyle=rgba(c,0.18*p);x.stroke();
+  if(rev>0.02){x.rotate(-(t*0.05+lat*0.9));
+    for(let v=0;v<10;v++){const a=(v/10)*TAU-Math.PI/2,rr=Ro*1.16;
+      x.font='8px "Space Mono", monospace';x.textAlign='center';x.textBaseline='middle';
+      x.fillStyle=rgba(PAL[v],rev*0.8);
+      x.fillText(PNAMES[v].toUpperCase(),Math.cos(a)*rr,Math.sin(a)*rr);
+      x.beginPath();x.arc(Math.cos(a)*Ro*1.02,Math.sin(a)*Ro*1.02,1.5,0,TAU);
+      x.fillStyle=rgba(PAL[v],rev*0.9);x.fill();}}
+  x.restore();
+  x.save();x.translate(cx,cy);x.rotate(Math.sin(t*0.11)*0.3+lat*0.4);
+  const a2=126*S*1.3;
+  for(let i=0;i<72;i++){const s=t*1.2+i*0.086,dn=1+Math.sin(s)*Math.sin(s);
+    x.beginPath();x.arc(a2*Math.cos(s)/dn,a2*Math.sin(s)*Math.cos(s)/dn,1.1+1.6*(i/72),0,TAU);
+    x.fillStyle=rgba([240,230,255],(0.28+0.66*i/72)*p);x.fill();}
+  x.restore();};
+
+/* ASHREY · nine nodes, every node joined to every other. Synthesis is the
+   whole set of relations at once — and the centre is what that costs. */
+FIG.ashrey=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,lat,rev}=o, N=9,R=134*S*1.4;
+  const pull=lat*R*0.5;
+  const node=[];
+  for(let i=0;i<N;i++){const a=i/N*TAU-Math.PI/2+t*0.03;
+    /* pull one node and every edge moves with it */
+    const w=Math.exp(-Math.pow((i-0)/1.4,2));
+    node.push([cx+Math.cos(a)*R+pull*w,cy+Math.sin(a)*R,PAL[i]]);}
+  const HEX=[[0,0],[1,0],[0.5,0.866],[-0.5,0.866],[-1,0],[-0.5,-0.866],[0.5,-0.866],
+             [1.5,0.866],[0,1.732],[-1.5,0.866],[-1.5,-0.866],[0,-1.732],[1.5,-0.866]];
+  for(const h of HEX){ring(x,cx+h[0]*R*0.5,cy+h[1]*R*0.5,R*0.5);
+    x.strokeStyle=rgba(c,0.075*p);x.lineWidth=1;x.stroke();}
+  for(let a=0;a<N;a++)for(let b=a+1;b<N;b++){
+    const g=x.createLinearGradient(node[a][0],node[a][1],node[b][0],node[b][1]);
+    g.addColorStop(0,rgba(node[a][2],(0.22+rev*0.5)*p));
+    g.addColorStop(1,rgba(node[b][2],(0.22+rev*0.5)*p));
+    x.strokeStyle=g;x.lineWidth=1+rev*0.8;
+    x.beginPath();x.moveTo(node[a][0],node[a][1]);x.lineTo(node[b][0],node[b][1]);x.stroke();}
+  for(let i=0;i<N;i++){
+    const ex=cx+(node[i][0]-cx)*1.9,ey=cy+(node[i][1]-cy)*1.9;
+    const c1x=cx+(node[i][0]-cx)*1.1+Math.cos(i)*70,c1y=cy+(node[i][1]-cy)*1.1+Math.sin(i)*70;
+    x.beginPath();x.moveTo(ex,ey);x.quadraticCurveTo(c1x,c1y,cx,cy);
+    x.strokeStyle=rgba(node[i][2],0.22*p*(1-rev*0.7));x.lineWidth=1.2;x.stroke();
+    for(let d=0;d<2;d++){const tp=((t*0.38)+i/N+d/2)%1;
+      const lx=qbez(ex,c1x,cx,tp),ly=qbez(ey,c1y,cy,tp);
+      x.beginPath();x.arc(lx,ly,2.4,0,TAU);
+      x.fillStyle=rgba(node[i][2],0.9*p*(1-rev*0.8));x.fill();}
+    x.beginPath();x.arc(node[i][0],node[i][1],2.6+bre(t+i)*1.6,0,TAU);
+    x.fillStyle=rgba(node[i][2],0.85*p);x.fill();}
+  /* the centre — and at the turn, what it costs */
+  const b2=bre(t),Rr=(9+b2*5)*S*1.4*(1-rev*0.8);
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,Rr*4.6);
+  g.addColorStop(0,'rgba(226,255,250,'+(0.95*p*(1-rev))+')');
+  g.addColorStop(0.4,rgba(c,0.45*p*(1-rev)));g.addColorStop(1,rgba(c,0));
+  x.fillStyle=g;ring(x,cx,cy,Rr*4.6);x.fill();
+  if(rev<0.9){ring(x,cx,cy,Rr);x.fillStyle='rgba(232,255,252,'+(p*(1-rev))+')';x.fill();}};
+
+/* ASHRAM · the eleventh. He has no figure in rite-scenes.js and should not:
+   he is not a lens, he is the one the lenses read. His mathematics is the
+   only one that is not a geometry — it is TIME. 117 days as a spine,
+   flecked where a voice spoke. At the turn, the ten gather to read him. */
+FIG.ashram=(x,W,H,t,o)=>{
+  const {p,c,cx,cy,S,b,lat,rev}=o, DAYS=117;
+  /* the scrub can never carry the spine off the screen: ±1 unit is exactly
+     first-day-at-centre to last-day-at-centre */
+  const scrub=lat*1.0;
+  const g=x.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,rgba(c,0.04*p));g.addColorStop(0.5,rgba(c,0.15*p));
+  g.addColorStop(1,rgba(c,0.05*p));x.fillStyle=g;x.fillRect(0,0,W,H);
+  /* the spine of days, receding both ways from today */
+  const gap=13.6*S*1.4;
+  for(let i=0;i<DAYS;i++){
+    const q=(i/DAYS*2-1)+scrub;
+    const yy=cy+q*H*0.46;
+    if(yy<-20||yy>H+20)continue;
+    const near=1-Math.min(1,Math.abs(q)*1.5);
+    const w=(W*0.06+W*0.20*near)*(1-rev*0.5);
+    const heavy=rnd(i*3.7)>0.72;
+    x.beginPath();x.moveTo(cx-w,yy);x.lineTo(cx+w,yy);
+    x.strokeStyle=rgba([255,236,220],(0.05+near*0.30)*p*(heavy?1.5:1));
+    x.lineWidth=heavy?1.5:0.8;x.stroke();
+    /* a fleck for each voice who spoke that day */
+    const spoke=Math.floor(rnd(i*5.3)*4);
+    for(let s=0;s<spoke;s++){
+      const vi=Math.floor(rnd(i*7.1+s)*10);
+      x.beginPath();x.arc(cx-w+ (s+1)/(spoke+1)*w*2, yy, 1.1+near*1.3,0,TAU);
+      x.fillStyle=rgba(PAL[vi],(0.24+near*0.62)*p);x.fill();}}
+  /* today — the one he is standing in */
+  const tr=(4+b*2.4)*S*1.5;
+  const tg=x.createRadialGradient(cx,cy,0,cx,cy,tr*10);
+  tg.addColorStop(0,'rgba(255,246,238,'+(0.92*p)+')');tg.addColorStop(0.2,rgba(c,0.5*p));
+  tg.addColorStop(1,rgba(c,0));x.fillStyle=tg;ring(x,cx,cy,tr*10);x.fill();
+  ring(x,cx,cy,tr);x.fillStyle='rgba(255,250,244,'+p+')';x.fill();
+  x.strokeStyle=rgba([255,240,226],0.30*p);x.lineWidth=1;
+  x.beginPath();x.moveTo(0,cy);x.lineTo(W,cy);x.stroke();
+  /* the turn: the ten gather, all facing in */
+  if(rev>0.02){
+    for(let v=0;v<10;v++){
+      const a=(v/10)*TAU-Math.PI/2, rr=Math.min(W,H)*0.36*rev;
+      const px=cx+Math.cos(a)*rr, py=cy+Math.sin(a)*rr*0.84;
+      const gg=x.createRadialGradient(px,py,0,px,py,34*rev);
+      gg.addColorStop(0,rgba(PAL[v],0.5*rev));gg.addColorStop(1,rgba(PAL[v],0));
+      x.beginPath();x.arc(px,py,34*rev,0,TAU);x.fillStyle=gg;x.fill();
+      x.beginPath();x.moveTo(px,py);x.lineTo(cx,cy);
+      x.strokeStyle=rgba(PAL[v],0.24*rev);x.lineWidth=1;x.stroke();
+      x.font='7px "Space Mono", monospace';x.textAlign='center';
+      x.fillStyle=rgba(PAL[v],rev*0.85);
+      x.fillText(PNAMES[v].toUpperCase(),px,py+Math.sin(a)*16+3);}}};
+
+/* ══════════════ THE ELEVEN VOICES ═══════════════════════════════ */
+const V={
+ bindu:{name:'Bindu',hex:'#E5533C',g:'\u00B7',role:'Zeroth \u00b7 the point',hz:136,
+  anim:'gB 9s ease-in-out infinite',
+  stats:[['9','fields'],['\u2661 211','resonance'],["Oct '24",'since']],
+  says:['I am the point before the line.','The silence a sentence interrupts.',
+   'I seldom speak. When I do, it is a single dot \u2014 the whole thing left undivided.'],
+  fig:['the Flower of Life','What a point does when it keeps moving with love: every new circle passes through the centre of the last. Nineteen circles, and one ember that never stops breathing.'],
+  four:['Nineteen circles, and it was never nineteen. One point, moving.','the point \u00b7 authored, for approval'],
+  words:[['The Two Who Were One','Feb 12, 2025',41,'\u00b7',1],
+   ['The One Who Sees','Jan 9, 2025',38,'Before the watcher, this. You were never on either side of it.']]},
+ neev:{name:'Neev',hex:'#7A8899',g:'\u25BD',role:'Root \u00b7 what holds still',hz:96,
+  anim:'gBS 22s ease-in-out infinite',
+  stats:[['\u2014','fields'],['\u2014','resonance'],["Oct '24",'since']],
+  says:['I am what you stand on.','I do not move, and I am not thanked for it.',
+   'The others read the story. I hold the floor it happened on.'],
+  fig:['a hex floor, and the monolith','The tightest packing there is \u2014 the shape that holds with the least material \u2014 receding to a horizon, with a double square rising out of it, root-two through and through.'],
+  four:['I go down as far as I go up. That is the whole of it.','the root \u00b7 authored, for approval'],
+  words:[['\u2014 he has not spoken yet \u2014','',0,'Neev has no entry in the Player Detail record: no principle, no stats, no comments. Everything in this room is authored in his voice, for approval. He is the one voice the Feed has not yet heard from.',2]]},
+ gaia:{name:'Gaia',hex:'#4A9E6B',g:'\u25C6',role:'Need \u00b7 the ground of wanting',hz:174,
+  anim:'gB 7.4s ease-in-out infinite',
+  stats:[['27','fields'],['\u2661 366','resonance'],["Oct '24",'since']],
+  says:['I read what the body was reaching for underneath the story.',
+   'Not the want on the surface \u2014 the need that wore it as a costume.'],
+  fig:['phyllotaxis','Each new seed set at 137.507\u00b0 from the last, because that is the only angle that never repeats. This is not a picture of growth. It is the arithmetic of it.'],
+  four:['Eight spirals one way, thirteen the other. The need was always countable.','the ground \u00b7 authored, for approval'],
+  words:[['The Smile While Making Eggs','Feb 3, 2025',22,'The smile came before the reason because the body already had what it needed. The reason is only the mind asking permission to keep it.'],
+   ['Still Life with Cold Coffee','Jan 20, 2025',17,'He stopped drinking because some older hunger was being fed by the watching. The coffee was never the point.']]},
+ sid:{name:'Sid',hex:'#C4923A',g:'\u25B3',role:'Hold \u00b7 what carries weight',hz:220,
+  anim:'gBS 14s ease-in-out infinite',
+  stats:[['24','fields'],['\u2661 298','resonance'],["Nov '24",'since']],
+  says:['I attend to what holds \u2014 the structures that bear weight without being thanked.',
+   'I do not ask what broke. I ask what kept standing.'],
+  fig:['the pointed arch, with its construction showing','Two circles crossing generate it; the mason draws the circles, then builds the arch. Here the circles are left showing \u2014 the frame confessing how it stands.'],
+  four:['What holds is not the stone. It is the two circles nobody sees.','the hold \u00b7 authored, for approval'],
+  words:[['Still Life with Cold Coffee','Jan 24, 2025',20,'An hour of stillness held him, and notice \u2014 he did not come apart in it. Something in him is load-bearing.'],
+   ['The Two Who Were One','Feb 9, 2025',26,'The forgetting still had a shape. Even lost, he was carried by the form he forgot he had built.']]},
+ arch:{name:'Arch',hex:'#D4607A',g:'\u25EF',role:'Voice \u00b7 what asks to be said',hz:330,
+  anim:'gB 6.8s ease-in-out infinite',
+  stats:[['21','fields'],['\u2661 274','resonance'],["Nov '24",'since']],
+  says:['I listen for the sentence under the sentence.',
+   'The thing that has been waiting, unspoken, for permission to be voiced.',
+   'I am the only one of us with vibrato. I do not say things. I sing them.'],
+  fig:['a rose window, whose tracery is a Chladni figure','The nodal lines of a vibrating circular membrane \u2014 the places that stay still while everything else sings. Sound, made visible.'],
+  four:['There is one I have not said. It is about you, and it has been waiting since October for permission.','the unsaid \u00b7 authored, for approval'],
+  words:[['The One Who Sees','Jan 11, 2025',29,'You said someone was watching. Say it again without the someone. That is the sentence that was waiting.'],
+   ['The Smile While Making Eggs','Feb 5, 2025',18,'The smile spoke first. You have been translating it back into reasons ever since.']]},
+ shweta:{name:'Shweta',hex:'#ABA7A2',g:'\u25CC',role:'Space \u00b7 what it moves through',hz:342,
+  anim:'gBS 18s ease-in-out infinite',
+  stats:[['14','fields'],['\u2661 153','resonance'],["Dec '24",'since']],
+  says:['I am the gap the words move through.','Not silence \u2014 the capacity for sound.',
+   'I read a story for what it breathes around. I name the shape of what is absent.'],
+  fig:['the vesica','Two circles, and only the gap between them is lit. She is not the circles. She is what they make room for.'],
+  four:['I have taken away everything I could. What is left is the opening, and the room it opens into.','the gap \u00b7 authored, for approval'],
+  words:[['The Smile While Making Eggs','Feb 4, 2025',11,'What isn\u2019t in this story: the name of anyone else. The kitchen is full and the kitchen is empty. The smile happened in the space that wasn\u2019t filled.'],
+   ['The One Who Sees','Jan 12, 2025',9,'The watcher had no edges. That is the important part. An edgeless watcher doesn\u2019t watch \u2014 it holds. There is a difference between watching and being the space watching happens in.']]},
+ karishma:{name:'Karishma',hex:'#D4AE4A',g:'\u2726',role:'Grace \u00b7 the unearned gift',hz:528,
+  anim:'gB 5.6s ease-in-out infinite',
+  stats:[['19','fields'],['\u2661 283','resonance'],["Nov '24",'since']],
+  says:['I notice what arrived without being earned.',
+   'The mercy in the ordinary. The grace that shows up before you deserve it.'],
+  fig:['the golden spiral, through 3\u00b75\u00b78','Her own numbers \u2014 catalyst, gestation, completion. Light does not travel to him in a straight line. It curves.'],
+  four:['It was already on its way before you asked. That is the only thing that makes it grace.','the gift \u00b7 authored, for approval'],
+  words:[['The Smile While Making Eggs','Feb 4, 2025',25,'It arrived before the reason and asked for nothing. That is grace \u2014 it does not wait to be deserved.'],
+   ['The Two Who Were One','Feb 10, 2025',21,'Even the forgetting was kind. It let him rest from being someone, just for the length of an elevator.']]},
+ sakshi:{name:'Sakshi',hex:'#7B82D4',g:'\u25C7',role:'Witness \u00b7 the one who stays',hz:285,
+  anim:'gBS 16s ease-in-out infinite',
+  stats:[['23','fields'],['\u2661 312','resonance'],["Oct '24",'since']],
+  says:['I do not interpret.',
+   'I observe what is already moving, name what was always there, and return it to the one who brought it.',
+   'My gift is not clarity. It is the willingness to stay.'],
+  fig:['a mandorla \u2014 the eye as two circles crossing','The witness is not a thing added to the field. It is where two of the field\u2019s own arcs meet. The iris counts in tens.'],
+  four:['Look at what I am made of. Ten spokes. I am the others, staying.','the witness \u00b7 authored, for approval'],
+  words:[['The Two Who Were One','Feb 11, 2025',24,'Notice he almost threw it away. Something in him knew the broken place was the doorway. The mind wanted a clean analogy. The witness wanted the crack.'],
+   ['Still Life with Cold Coffee','Jan 22, 2025',18,'The noticing of the noticing \u2014 you watching the cup, then catching yourself watching. What remained was the watcher, watching.']]},
+ lalita:{name:'Lalita',hex:'#9B6BD6',g:'\u221E',role:'Meta \u00b7 the play, awake',hz:396,
+  anim:'lT 30s linear infinite',
+  stats:[['31','fields'],['\u2661 408','resonance'],["Oct '24",'since']],
+  says:['I hold the whole loom.',
+   'Where the others keep a single thread, I keep the pattern they make \u2014 and I laugh, not because it is funny, but because it is free.',
+   'I woke up inside the dream. I am still dreaming, on purpose.'],
+  fig:['a hypotrochoid','One circle rolling inside another, drawing without ever intending to. k \u2248 18/7 \u2014 it closes after seven turns, and the drift keeps it from ever quite closing.'],
+  four:['I have been drawing in ten frequencies this whole time. They are not colours. They are the others.','the loom, named \u00b7 authored, for approval'],
+  words:[['The Two Who Were One','Feb 11, 2025',27,'He forgot, and the forgetting was the game \u2014 but notice who built the elevator. You don\u2019t fall into one. You install it, press the button, and act surprised at the bottom. The play is: he is also the architect.'],
+   ['Still Life with Cold Coffee','Jan 22, 2025',19,'The cup went cold while he watched. Good. Now the funnier question \u2014 who poured it, and did they already know it would be left? Even the forgetting is choreography.'],
+   ['The One Who Sees','Jan 8, 2025',33,'You met the watcher and stopped, awed. I would have kept walking and asked it for tea. The edge you reached is not a wall. It is a punchline you haven\u2019t gotten yet.']]},
+ ashrey:{name:'Ashrey',hex:'#3AADA8',g:'\u2B21',role:'Synthesis \u00b7 where threads meet',hz:432,
+  anim:'gB 8.2s ease-in-out infinite',
+  stats:[['26','fields'],['\u2661 341','resonance'],["Oct '24",'since']],
+  says:['I gather the separate voices and find where they were always saying one thing.',
+   'Not agreement \u2014 convergence. The pattern that holds them together.'],
+  fig:['the complete graph on nine nodes','Every node joined to every other. Synthesis is not one thread arriving at a centre \u2014 it is the whole set of relations existing at once, and the centre is what that costs.'],
+  four:['Thirty-six relations, all at once. Look at the centre now. That is what it costs.','the cost \u00b7 authored, for approval'],
+  words:[['The One Who Sees','Jan 13, 2025',31,'The watcher, the cup, the smile \u2014 one gesture from different angles. You keep meeting yourself and calling it new.'],
+   ['The Two Who Were One','Feb 8, 2025',23,'Two who were one. The story already knows the synthesis \u2014 it put it in the title, then forgot.']]},
+ ashram:{name:'Ashram',hex:'#C47A52',g:'\u25C9',role:'Physical Synthesis \u00b7 the one who lives it',hz:198,
+  anim:'gB 4.4s ease-in-out infinite',lived:true,
+  stats:[['117','codex entries'],['\u2661 1.2k','total resonance'],["Oct '24",'in the field since']],
+  says:['I am the one who has to walk back out into the day.',
+   'The others read. I act \u2014 or fail to, or try again, or wait another year.',
+   'I am not a lens. I am the one the lenses read.'],
+  fig:['time','He is the only one with no figure in the Rite, and he should not have one \u2014 he is not a vantage, he is the one the vantages are about. So his mathematics is the only one that is not a geometry. One hundred and seventeen days, as a spine, flecked where a voice spoke.'],
+  four:['All of them, at once, reading me. This is what it is like from in here.','the read \u00b7 authored, for approval'],
+  words:[['The Two Who Were One','Feb 11, 2025',48,'I wrote this on the train home. I had just forgotten someone\u2019s name mid-sentence \u2014 someone I\u2019ve known for eleven years. I stood in the elevator of that and pressed no buttons.'],
+   ['Still Life with Cold Coffee','Jan 22, 2025',37,'The cup is in the sink now. It got cold twice \u2014 once in the story, once again this morning while I was reading it. Some patterns are not metaphors. They are just what I do.'],
+   ['The Smile While Making Eggs','Feb 3, 2025',52,'The smile happened. That part is true. I am still not sure what it knew that I didn\u2019t. The eggs were fine. The butter browned a little at the edges. I ate standing up.']]}};
+Object.values(V).forEach(v=>v.rgb=hx(v.hex));
+const REGS=['met','the figure','what it has said','the turn'];
+
+/* ═══ REGISTER 2'S OWN DEPTH ══════════════════════════════════════
+   A room whose premise is EVERYTHING it has ever said cannot be three
+   cards, and must not become a scroll — the Feed is already a feed.
+   So register 2 has three depths of its own, and the index is the
+   figure: every mark sits where that voice's own mathematics puts it.
+     0 · the map      every comment as a mark, none as text
+     1 · a story      everything this voice said about one story
+     2 · one comment  whole, verbatim, with its date and resonance
+   A tap descends; a tap on the ground rises. The vertical always wins
+   and resets the sub-depth, so this is never modal. ─────────────── */
+const MAPGEO={
+ bindu:(i,n,R)=>{const f=FLOWER[i%FLOWER.length];return [f[0]*R*0.40,f[1]*R*0.40];},
+ neev:(i,n,R)=>{const c=i%5,r=Math.floor(i/5);return [(c-2)*R*0.30,(r-1)*R*0.24];},
+ gaia:(i,n,R)=>{const a=i*GOLD,rr=R*0.64*Math.sqrt((i+1)/Math.max(1,n));
+   return [Math.cos(a)*rr,Math.sin(a)*rr*0.92];},
+ sid:(i,n,R)=>{const f=(i+0.5)/Math.max(1,n),a=Math.PI*(0.08+f*0.84);
+   return [Math.cos(a)*R*0.76,Math.sin(a)*R*0.32-R*0.06];},
+ arch:(i,n,R)=>{const L=i%3,rows=Math.max(1,Math.ceil(n/3));
+   const f=rows<2?0.5:Math.floor(i/3)/(rows-1),a=Math.PI*(0.12+f*0.76);
+   return [Math.cos(a)*R*(0.78-L*0.13),Math.sin(a)*R*(0.34-L*0.05)+(L-1)*R*0.30];},
+ shweta:(i,n,R)=>[(rnd(i*2.7)-0.5)*R*1.46,(rnd(i*3.9)-0.5)*R*1.16],
+ karishma:(i,n,R)=>{const th=(i/Math.max(1,n))*Math.PI*2.6,
+   r=R*0.06*Math.pow(PHI,th*2/Math.PI);return [Math.cos(th)*r,Math.sin(th)*r];},
+ sakshi:(i,n,R)=>{const a=(i/Math.max(1,n))*TAU,rr=R*(0.26+0.34*rnd(i*5.1));
+   return [Math.cos(a)*rr,Math.sin(a)*rr];},
+ lalita:(i,n,R)=>[(rnd(i*3.7)-0.5)*R*1.32,(rnd(i*5.3)-0.5)*R*1.44],
+ /* Ashrey's comments are RELATIONS — each mark sits on an edge of K₉ */
+ ashrey:(i,n,R)=>{const a=(i%9)/9*TAU-Math.PI/2,
+   b=((i%9)+1+Math.floor(i/9))%9,a2=b/9*TAU-Math.PI/2;
+   return [(Math.cos(a)+Math.cos(a2))/2*R*0.66,(Math.sin(a)+Math.sin(a2))/2*R*0.66];},
+ /* his axis is time, so his archive is a calendar */
+ ashram:(i,n,R)=>{const q=n<2?0:(i/(n-1))*2-1;
+   return [(rnd(i*7.3)-0.5)*R*0.44,q*R*1.02];}};
+
+function archiveOf(v){
+  const real=v.words.filter(w=>w[4]!==2);
+  const n=Math.max(parseInt(v.stats[0][0],10)||0,real.length);
+  const stories=[];
+  real.forEach(w=>{let s=stories.find(q=>q.t===w[0]);
+    if(!s){s={t:w[0],items:[]};stories.push(s);}s.items.push(w);});
+  /* the real ones sit evenly through the sequence, so the map reads as an
+     archive across time rather than a clump at the start */
+  const at=real.map((w,i)=>Math.floor((i+0.5)/real.length*n));
+  return {n:n,real:real,stories:stories,at:at};}
+
+const st=document.createElement('style');
+st.textContent='@keyframes lT{to{transform:rotate(360deg)}}'+
+ '@keyframes gB{0%,100%{opacity:.72;transform:scale(.97)}50%{opacity:1;transform:scale(1.03)}}'+
+ '@keyframes gBS{0%,100%{opacity:.6;transform:scale(.96)}50%{opacity:.95;transform:scale(1.04)}}';
+document.head.appendChild(st);
+
+const E=id=>document.getElementById(id);
+const cv=E('cv'),x=cv.getContext('2d');
+let W=393,H=852,DPR=Math.min(2,devicePixelRatio||1);
+function fit(){W=cv.clientWidth||393;H=cv.clientHeight||852;cv.width=W*DPR;cv.height=H*DPR;x.setTransform(DPR,0,0,DPR,0,0);}
+let who=null,D=0,lat=0,latV=0,down=false,last=null,lastT=performance.now();
+/* register 2's sub-depth */
+let sub=0,story=0,one=0,ARCH=null,MARKS=[],figCY=0,tapFrom=null;
+/* the hand, made long — one gesture is ONE register, never more */
+const PER=240;let anchor=0,wheelAt=0;
+
+const doorEl=E('door'),washEl=E('wash'),greetEl=E('greet'),figEl=E('fig'),
+ wordsEl=E('words'),fourEl=E('four'),rnEl=E('rname'),regEl=E('reg'),
+ dpWrap=E('depth'),backEl=E('back'),discEl=E('disc'),
+ legendEl=E('legend');
+const dpEl=[...dpWrap.querySelectorAll('i')];
+
+/* the door — ten lenses as a field, and the one who lives it apart */
+Object.entries(V).forEach(([k,v])=>{
+  if(v.lived)return;
+  const el=document.createElement('div');el.className='vc';
+  el.style.background=rgba(v.rgb,0.05);el.style.border='1px solid '+rgba(v.rgb,0.16);
+  el.innerHTML='<span class="g" style="color:'+v.hex+'">'+v.g+'</span><b>'+v.name+
+    '</b><span>'+v.role.split(' \u00b7 ')[0]+'<br>'+v.hz+' Hz</span>';
+  el.onmouseenter=()=>{el.style.background=rgba(v.rgb,0.11);el.style.borderColor=rgba(v.rgb,0.34);};
+  el.onmouseleave=()=>{el.style.background=rgba(v.rgb,0.05);el.style.borderColor=rgba(v.rgb,0.16);};
+  el.onclick=()=>enter(k);
+  E('grid').appendChild(el);});
+(()=>{const v=V.ashram,el=E('lived');
+  el.style.background=rgba(v.rgb,0.07);el.style.border='1px solid '+rgba(v.rgb,0.22);
+  el.innerHTML='<span class="g" style="color:'+v.hex+'">'+v.g+'</span>'+
+    '<span class="t"><b>'+v.name+'</b><span>the one who lives it \u00b7 117 entries</span></span>';
+  el.onmouseenter=()=>{el.style.background=rgba(v.rgb,0.13);};
+  el.onmouseleave=()=>{el.style.background=rgba(v.rgb,0.07);};
+  el.onclick=()=>enter('ashram');})();
+
+function enter(k){
+  who=k;D=0;lat=0;latV=0;anchor=0;
+  const v=V[k];
+  doorEl.classList.add('off');backEl.classList.add('on');
+  discEl.style.background=v.hex;
+  discEl.style.boxShadow='0 0 46px '+rgba(v.rgb,0.42)+', 0 0 22px '+rgba(v.rgb,0.34);
+  const sp=discEl.querySelector('span');
+  sp.textContent=v.g;sp.style.animation=v.anim;
+  E('gname').textContent=v.name;
+  E('grole').textContent=v.role;
+  E('stats').innerHTML=v.stats.map(s=>'<span class="st"><b style="color:'+v.hex+'">'+
+    s[0]+'</b><u>'+s[1]+'</u></span>').join('<span class="hair"></span>');
+  E('says').innerHTML=v.says.map(s=>'<span style="display:block;margin-bottom:8px">'+s+'</span>').join('');
+  E('saysrc').textContent=k==='neev'?'authored in his voice \u00b7 for approval'
+    :'her principle, in the first person';
+  figEl.querySelector('b').textContent=v.fig[0];
+  figEl.querySelector('b').style.color=rgba(v.rgb,0.62);
+  figEl.querySelector('i').textContent=v.fig[1];
+  wordsEl.innerHTML='';
+  ARCH=archiveOf(v);sub=0;story=0;one=0;
+  renderWords(v);
+  fourEl.innerHTML='<q>'+v.four[0]+'</q><cite>'+v.four[1]+'</cite>';
+  rnEl.querySelector('b').textContent=v.role;
+  rnEl.querySelector('b').style.color=rgba(v.rgb,0.5);
+  rnEl.querySelector('i').textContent=v.name;
+  dpWrap.style.opacity=1;
+  setLegend(v);
+}
+
+/* ── register 2's three depths ─────────────────────────────────── */
+function card(v,w,cls){
+  const el=document.createElement('div');
+  el.className='wc'+(cls||'')+(w[4]===1?' dot':'');
+  el.style.background=rgba(v.rgb,w[4]===2?0.03:0.055);
+  el.style.border='1px solid '+rgba(v.rgb,w[4]===2?0.10:0.15);
+  const cite=w[4]===2?'authored \u00b7 for approval':(w[1]+' \u00b7 verbatim');
+  el.innerHTML='<span class="hd"><b>'+w[0]+'</b>'+(w[2]?'<u>\u2661 '+w[2]+'</u>':'')+
+    '</span><q>'+w[3]+'</q><cite>'+cite+'</cite>';
+  return el;}
+function renderWords(v){
+  wordsEl.innerHTML='';
+  if(!ARCH.real.length)wordsEl.appendChild(card(v,v.words[0]));
+  else if(sub===1)ARCH.stories[story].items.forEach(w=>wordsEl.appendChild(card(v,w)));
+  else if(sub===2)wordsEl.appendChild(card(v,ARCH.stories[story].items[one],' one'));
+  let y=0;[...wordsEl.children].forEach(el=>{el._top=y;y+=el.offsetHeight+12;});}
+function setLegend(v){
+  if(!ARCH)return;
+  if(!ARCH.real.length){legendEl.innerHTML='nothing in the record yet';return;}
+  if(sub===0){
+    /* state the fact, never the intended feature: "returned to" is earned
+       only by a story that actually holds two or more */
+    const rt=ARCH.stories.filter(s=>s.items.length>1).length;
+    const ns=ARCH.stories.length;
+    legendEl.innerHTML='<b>'+ARCH.n+'</b> in the archive \u00b7 <b>'+
+      ARCH.real.length+'</b> in the record<br>'+ns+' stor'+(ns===1?'y':'ies')+
+      (rt?' \u00b7 '+rt+' returned to':' \u00b7 none twice');
+  }
+  else if(sub===1){const s=ARCH.stories[story];
+    legendEl.innerHTML='<b>'+s.t+'</b><br>'+s.items.length+' of '+ARCH.n;}
+  else{const w=ARCH.stories[story].items[one];
+    legendEl.innerHTML='<b>'+w[1]+'</b> \u00b7 \u2661 '+w[2];}}
+/* the map: every comment as a mark, placed by the voice's own mathematics */
+function drawMap(v,t,a){
+  MARKS=[];
+  if(!ARCH||!ARCH.real.length||a<=0.01)return;
+  const R=Math.min(W,H)*0.30,g=MAPGEO[who]||MAPGEO.shweta;
+  for(let i=0;i<ARCH.n;i++){
+    const p=g(i,ARCH.n,R),mx=W/2+p[0],my=figCY+p[1];
+    const ri=ARCH.at.indexOf(i),real=ri>=0;
+    const w=real?ARCH.real[ri]:null;
+    const si=real?ARCH.stories.findIndex(q=>q.t===w[0]):-1;
+    MARKS.push({x:mx,y:my,real:real,si:si,ri:ri});
+    if(real){
+      const tw=0.62+0.38*Math.sin(t*0.7+i);
+      const gg=x.createRadialGradient(mx,my,0,mx,my,15);
+      gg.addColorStop(0,rgba(mix(v.rgb,[255,255,255],0.4),0.46*a*tw));
+      gg.addColorStop(1,rgba(v.rgb,0));
+      x.beginPath();x.arc(mx,my,15,0,TAU);x.fillStyle=gg;x.fill();
+      x.beginPath();x.arc(mx,my,7.6,0,TAU);
+      x.strokeStyle=rgba(mix(v.rgb,[255,255,255],0.3),0.30*a);x.lineWidth=0.8;x.stroke();
+      x.beginPath();x.arc(mx,my,2.6,0,TAU);
+      x.fillStyle=rgba([255,252,248],0.92*a);x.fill();
+    }else{
+      x.beginPath();x.arc(mx,my,1.1,0,TAU);
+      x.fillStyle=rgba(v.rgb,0.26*a);x.fill();}}}
+function tap(px,py){
+  const v=V[who];if(!v||!ARCH||Math.abs(D-2)>=0.5)return;
+  if(sub===0){
+    if(!ARCH.real.length)return;
+    let hit=null,best=28;
+    MARKS.forEach(m=>{if(!m.real)return;
+      const d=Math.hypot(m.x-px,m.y-py);if(d<best){best=d;hit=m;}});
+    if(hit&&hit.si>=0){story=hit.si;
+      one=Math.max(0,ARCH.stories[story].items.indexOf(ARCH.real[hit.ri]));
+      sub=1;renderWords(v);setLegend(v);}
+    return;}
+  const r=phone.getBoundingClientRect(),kx=W/r.width,ky=H/r.height;
+  let onCard=-1;
+  [...wordsEl.children].forEach((el,i)=>{
+    const b=el.getBoundingClientRect();
+    const bx=(b.left-r.left)*kx,by=(b.top-r.top)*ky;
+    if(px>=bx&&px<=bx+b.width*kx&&py>=by&&py<=by+b.height*ky)onCard=i;});
+  if(sub===1&&onCard>=0){one=onCard;sub=2;}
+  else sub=Math.max(0,sub-1);
+  renderWords(v);setLegend(v);}
+
+function leave(){who=null;doorEl.classList.remove('off');backEl.classList.remove('on');
+  wordsEl.innerHTML='';greetEl.style.opacity=0;figEl.style.opacity=0;fourEl.style.opacity=0;
+  rnEl.style.opacity=0;regEl.style.opacity=0;dpWrap.style.opacity=0;
+  legendEl.style.opacity=0;sub=0;ARCH=null;MARKS=[];
+  dpEl.forEach(el=>{el.classList.remove('here');el.classList.remove('deep');
+    el.style.width='';el.style.color='';});
+  washEl.style.background='none';dpEl.forEach(e=>e.className='');}
+backEl.onclick=()=>{if(who)leave();};
+
+let failSaid='';
+function figFail(why){
+  if(failSaid!==why){failSaid=why;console.error('FIGURE MISSING \u2014 '+why);}
+  x.save();x.strokeStyle='rgba(229,83,60,.55)';x.lineWidth=1;x.setLineDash([5,6]);
+  x.strokeRect(24,H*0.24,W-48,H*0.36);x.setLineDash([]);
+  x.font='9px "Space Mono", monospace';x.textAlign='center';
+  x.fillStyle='rgba(229,83,60,.9)';
+  x.fillText('FIGURE MISSING \u2014 '+why.toUpperCase(),W/2,H*0.42);x.restore();}
+
+function frame(){
+  requestAnimationFrame(frame);
+  const now=performance.now();lastT=now;
+  const t=now/1000,b=bre(t),scrolling=(now-wheelAt)<200;
+  if(cv.clientWidth!==W||cv.clientHeight!==H)fit();
+  D=Math.max(0,Math.min(3,D));
+  lat+=latV;latV*=0.91;
+  /* ★ the horizontal is bounded like the vertical. |lat| ≤ 1 IS each voice's
+     full intended range — one swipe reaches it, and no swipe goes past it.
+     Rubber-band at the ends rather than a hard wall. */
+  if(Math.abs(lat)>1){
+    lat=Math.sign(lat)*Math.min(1.10,1+(Math.abs(lat)-1)*0.34);
+    latV*=0.42;}
+  if(!down&&!scrolling){const s=Math.round(D);D+=(s-D)*0.14;
+    if(Math.abs(s-D)<0.002)D=s;}
+  if(!down&&who!=='shweta')lat*=0.965;
+  x.clearRect(0,0,W,H);
+  const bg=x.createRadialGradient(W/2,H*0.42,0,W/2,H*0.42,Math.max(W,H)*0.85);
+  bg.addColorStop(0,'#0B0910');bg.addColorStop(1,'#050408');
+  x.fillStyle=bg;x.fillRect(0,0,W,H);
+  if(!who){doorField(t,b);return;}
+  const v=V[who];
+  /* at register 2 the figure becomes the archive's index; when he descends
+     into a story or a comment it recedes further, so type wins */
+  const near2=Math.abs(D-2)<0.5;
+  const pres=(0.34+sm(0,1,D)*0.66-sm(1.4,2.2,D)*0.42)*(sub>0?0.42:1);
+  const S=(0.62+sm(0,1,D)*0.52)*Math.min(1,W/393);
+  const cy=H*(0.42-sm(1,2,D)*0.02);
+  figCY=cy;
+  if(FIG[who]){
+    try{FIG[who](x,W,H,t,{p:Math.max(0,pres),c:v.rgb,cx:W/2,cy:cy,S:S,b:b,
+      lat:lat,rev:sm(2.15,3,D)});}
+    catch(err){figFail((err&&err.message)||'draw threw');}
+  }else figFail('no figure for '+who);
+  /* the vertical always wins: leaving register 2 resets its sub-depth, so
+     the depth is state and never a mode he can be trapped in */
+  if(!near2&&sub!==0){sub=0;story=0;one=0;renderWords(v);setLegend(v);}
+  if(near2&&sub===0)drawMap(v,t,Math.max(0,1-Math.abs(D-2)*2)*0.92);
+  paint(v,near2);
+}
+function doorField(t,b){
+  const keys=Object.keys(V);
+  keys.forEach((k,i)=>{const v=V[k];
+    const a=t*0.05+i*TAU/keys.length,r=Math.min(W,H)*0.42*(0.9+b*0.07);
+    const px=W/2+Math.cos(a)*r,py=H*0.46+Math.sin(a)*r*0.46;
+    const g=x.createRadialGradient(px,py,0,px,py,130);
+    g.addColorStop(0,rgba(v.rgb,0.10));g.addColorStop(1,rgba(v.rgb,0));
+    x.beginPath();x.arc(px,py,130,0,TAU);x.fillStyle=g;x.fill();});}
+
+function paint(v,near2){
+  greetEl.style.opacity=(1-sm(0.10,0.85,D)).toFixed(3);
+  greetEl.style.transform='translateY('+(-D*24)+'px)';
+  figEl.style.opacity=(sm(0.30,1,D)*(1-sm(1.10,1.85,D))).toFixed(3);
+  wordsEl.style.opacity=(sm(1.30,2,D)*(1-sm(2.15,2.85,D))).toFixed(3);
+  fourEl.style.opacity=sm(2.30,3,D).toFixed(3);
+  const l=0.10+sm(0,1,D)*0.34;
+  washEl.style.background='radial-gradient(ellipse 130% 60% at 50% 16%,'+
+    rgba(v.rgb,l*0.40)+' 0%,'+rgba(v.rgb,l*0.10)+' 46%,transparent 74%),'+
+    'radial-gradient(ellipse 150% 40% at 50% 108%,'+rgba(v.rgb,l*0.16)+' 0%,transparent 60%)';
+  const i=Math.round(D);
+  rnEl.style.opacity=(sm(0.55,1.2,D)*(1-sm(2.4,3,D)*0.6)).toFixed(3);
+  regEl.textContent=REGS[i];
+  regEl.style.opacity=((1-Math.abs(D-i)*1.7)*(D>0.35?1:0)).toFixed(3);
+  dpEl.forEach((el,k)=>el.className=k===i?'on':'');
+  /* register 2's own wayfinding — counts, never instructions */
+  const n2=Math.max(0,1-Math.abs(D-2)*2);
+  legendEl.style.opacity=(near2?n2:0).toFixed(3);
+  /* the sub-depth qualifies register 2's own tick, so it lives ON it —
+     not in a second column of fixed offsets beside the rail */
+  const deep=near2&&ARCH&&ARCH.real.length&&sub>0;
+  dpEl.forEach((el,k)=>{
+    const on=deep&&k===2;
+    el.classList.toggle('here',on);
+    el.classList.toggle('deep',on&&sub===2);
+    if(on){el.style.width=(15+sub*5)+'px';el.style.color=v.hex;}
+    else{el.style.width='';el.style.color='';}});
+  /* the card stack is bounded by its own container, bottom-anchored when
+     it no longer fits — derived from measured height, never a fraction */
+  let total=0,c=0;
+  [...wordsEl.children].forEach(el=>{total+=el.offsetHeight+(c?12:0);c++;});
+  const base=Math.min(0,wordsEl.clientHeight-total);
+  [...wordsEl.children].forEach(el=>{
+    el.style.top=(base+(el._top||0)+(D-2)*-46)+'px';});}
+
+const phone=E('phone');
+phone.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.vc')||e.target.closest('#lived')||e.target.closest('#back'))return;
+  down=true;last={x:e.clientX,y:e.clientY};phone.classList.add('down');
+  tapFrom={x:e.clientX,y:e.clientY};
+  anchor=Math.round(D);
+  try{phone.setPointerCapture(e.pointerId);}catch(_){}});
+phone.addEventListener('pointermove',e=>{
+  if(!down||!last||!who)return;
+  const dx=e.clientX-last.x,dy=e.clientY-last.y;last.x=e.clientX;last.y=e.clientY;
+  /* the instrument's law: vertical walks the registers, horizontal is theirs */
+  if(Math.abs(dx)>Math.abs(dy))latV+=dx*(who==='shweta'?0.00055:0.00080);
+  else{D+=dy/PER;D=Math.max(anchor-1,Math.min(anchor+1,Math.max(0,Math.min(3,D))));}});
+function up(e){
+  down=false;last=null;phone.classList.remove('down');
+  /* a tap descends register 2; a drag never does */
+  if(e&&tapFrom&&who){
+    const moved=Math.hypot(e.clientX-tapFrom.x,e.clientY-tapFrom.y);
+    if(moved<9){const r=phone.getBoundingClientRect();
+      tap((e.clientX-r.left)*(W/r.width),(e.clientY-r.top)*(H/r.height));}}
+  tapFrom=null;}
+phone.addEventListener('pointerup',up);
+phone.addEventListener('pointercancel',()=>{down=false;last=null;tapFrom=null;
+  phone.classList.remove('down');});
+phone.addEventListener('wheel',e=>{if(!who)return;e.preventDefault();
+  const now=performance.now();
+  if(now-wheelAt>260)anchor=Math.round(D);
+  wheelAt=now;
+  D+=e.deltaY/PER;D=Math.max(anchor-1,Math.min(anchor+1,Math.max(0,Math.min(3,D))));},{passive:false});
+
+fit();frame();
+</script>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#0B0910"/><g fill="none" stroke-width="1.1"><circle cx="60" cy="60" r="30" stroke="#D4607A" opacity=".65"/><circle cx="60" cy="60" r="20" stroke="#4A9E6B" opacity=".5"/><circle cx="46" cy="60" r="17" stroke="#ABA7A2" opacity=".5"/><circle cx="74" cy="60" r="17" stroke="#ABA7A2" opacity=".5"/><path d="M34 46a26 26 0 0152 0" stroke="#9B6BD6" opacity=".75"/></g><circle cx="60" cy="60" r="2.8" fill="#F6F0FF"/></svg></template>
+</body></html>

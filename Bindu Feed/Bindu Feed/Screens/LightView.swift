@@ -12,10 +12,19 @@ import SwiftUI
 //     debossed, and writes the Vow → landing.
 //   out → "walk back out".
 //
-// One scene per visit, chosen by date-hash (like the Mirror). Two materials tell
-// you where you are with the words covered: the dawn (Near) vs the nave (Far).
+// One scene per visit, and HE chooses it — six presences stand in the dawn after the
+// gate and he walks toward one (E1.1). It is NOT a date-hash: this is the one register
+// whose subject is what has not happened yet, and a hash choosing his future for him is
+// the wrong gesture in it. Two materials tell you where you are with the words covered:
+// the dawn (Near) vs the nave (Far).
 
-private enum LightStage { case approach, hold, scene, out }
+private enum LightStage {
+    /// `.choosing` — E1.1. The six stand in the dawn and HE picks. It sits after the gate,
+    /// never inside it: the stillness gate is the designed exception (accumulate and keep,
+    /// force only pauses, *"this is not a test he can fail"*) and the choosing must not touch
+    /// it. The way opens by stillness; what he walks toward is then his.
+    case approach, hold, choosing, scene, out
+}
 
 struct LightView: View {
     @Binding var path: [FeedRoute]
@@ -25,6 +34,8 @@ struct LightView: View {
 
     @State private var stage: LightStage = .approach
     @State private var sceneIndex = 0
+    /// Which of the six is under the hand, named but not yet entered.
+    @State private var armed: Int?
 
     // Stillness gate
     @State private var stillMs: Double = 0
@@ -35,7 +46,22 @@ struct LightView: View {
     // Scene
     @State private var shownAnchors = 0
     @State private var ungrips = 0
-    @State private var pendingAnchor = false      // a touch asked; the next exhale answers
+    /// E1.5+E1.6 · the arrival, as real state rather than a reading of how much has been read.
+    @State private var arrive: Double = 0
+    @State private var sceneTick: Timer?
+    @State private var wholeDelivered = false
+    /// E1.3 · the Declaration drawing itself in, unasked — `spine-light.js:149`.
+    @State private var drew: Double = 0
+    @State private var carved = false
+    /// E1.7 · **UP TO TWO ASKS MAY BE QUEUED, AND THE EXHALE ANSWERS ONE PER BREATH.**
+    /// `Claude Design Round 1/comps/The Light v2.html:759` — `wants = min(2, wants+1)`. A
+    /// `Bool` could hold only one, so a second touch during a breath was simply lost: the
+    /// register's law is *a touch asks and the next exhale answers*, and dropping the ask
+    /// makes it *a touch asks unless you already asked*.
+    @State private var wants = 0
+    /// The cycle the last delivery went out on — `:763`'s `last`. Delivery needs a NEW
+    /// breath, not merely an exhaling one, or one long exhale delivers everything.
+    @State private var lastDelivered = -1
 
     // The Declaration — drawn in one line at a time, each over ~4.2s of held breath
     // (comp The Light v2 · LitSpace). Never delivered whole.
@@ -62,9 +88,7 @@ struct LightView: View {
     // the others fill as the anchors surface, then hold at 1 once the Declaration is being drawn.
     private var arrivalProgress: Double {
         guard stage == .scene else { return 0 }
-        if scene.ungripOnly { return min(1, Double(ungrips) / 3) }
-        let a = scene.anchors.isEmpty ? 1 : Double(shownAnchors) / Double(scene.anchors.count)
-        return beatLine >= 0 ? 1 : a
+        return arrive
     }
 
     // In the nave the floor floods to LIT cream stone, so the words are DARK ink cut into it
@@ -75,6 +99,8 @@ struct LightView: View {
     private func anchorInk(_ newest: Bool) -> Color { isNave ? Color(hex: newest ? "#16131B" : "#625849") : BinduTheme.inkSecondary }
     private var carveInk: Color { isNave ? Color(hex: "#16131B") : Color(hex: "#F5E8DE") }
     private var carveShadow: Color { isNave ? Color.white.opacity(0.92) : Color.black.opacity(0.72) }
+    /// `:30` — `0 -0.5px 0.5px rgba(22,19,27,0.22)`, the dark lip above the cut.
+    private var carveRim: Color { isNave ? Color(hex: "#16131B").opacity(0.22) : Color.white.opacity(0.16) }
 
     var body: some View {
         ZStack {
@@ -82,14 +108,19 @@ struct LightView: View {
             switch stage {
             case .approach: approach
             case .hold:     holdBody
+            case .choosing: choosingBody
             case .scene:    sceneBody
+                    // `lightBed` — *"the bare light: almost nothing. A single high room-tone,
+                    // barely there, so the silence has an edge to it. The breath cues ride on
+                    // this."* 528 + 792, six seconds to reach 0.012.
+                    .onAppear { soundEngine.lightRoomTone() }
             case .out:      backOut
             }
             // Always a quiet way out — never trapped in the Light.
             VStack {
                 HStack {
                     Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                        Text("‹ leave").font(.spaceMono(9)).tracking(2)
+                        Text("‹ leave").spaceMonoTracked(9, em: 2 / 9)
                             .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.4)).padding(16)
                     }
                     Spacer()
@@ -99,7 +130,7 @@ struct LightView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear(perform: begin)
-        .onDisappear { gate?.invalidate(); carveTimer?.invalidate() }
+        .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate() }
         .sonicContext(.base)
     }
 
@@ -148,10 +179,13 @@ struct LightView: View {
 
             VStack {
                 Spacer().frame(height: 90)
-                // the scene's name, fading as stillness deepens (comp The Light v2 approach)
+                // `The Light v2.html:680-681` — `opacity: 1 - prog*0.55`. **THE PLACE'S NAME
+                // STAYS.** It fades to a FLOOR of 0.45, never to nothing: he is going still in
+                // front of a named thing, and the name is the last thing to go because it is
+                // the only thing on the screen that says where he is.
                 Text(scene.title)
                     .font(.lora(20)).italic()
-                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.75 * (1 - still)))
+                    .foregroundStyle(BinduTheme.inkSecondary.opacity(1 - still * 0.55))
                     .multilineTextAlignment(.center).padding(.horizontal, 40)
                 Spacer()
                 if still > 0.18 {
@@ -163,11 +197,16 @@ struct LightView: View {
                 }
                 Spacer()
                 Text(LightCanon.touchOnce)
-                    .font(.spaceMono(9)).tracking(2)
+                    .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6 * (1 - still)))
+                // `:682-683` — `opacity: 1 - prog`. **THE SENTENCE GOES.** It is the
+                // invitation, and an invitation still on screen once he has accepted it is
+                // nagging. Held at a flat 0.4 the app had these two exactly INVERTED — the
+                // name faded to nothing and the sentence stood forever — so going still left
+                // the wrong line up.
                 Text(LightCanon.approachSubtitle)
                     .font(.lora(12)).italic()
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4))
+                    .foregroundStyle(BinduTheme.inkTertiary.opacity(1 - still))
                     .padding(.top, 6).padding(.bottom, 44)
             }
         }
@@ -180,11 +219,121 @@ struct LightView: View {
 
     // MARK: - The Hold (standing in the shaft, before the aperture opens)
 
+    // E1.1 · THE SIX, STANDING IN THE DAWN — and he chooses.
+    //
+    // Geometry is canon (`LightPlaces`, `spine-light.js:104-121`): five drifting in the open
+    // sky, the Far one low where a floor would be, hit radius 30.
+    //
+    // **THE LOOK IS CANON TOO, AND THE COMMENT THAT USED TO STAND HERE SAID OTHERWISE.** It
+    // read *"no comp draws these — so it is the register's own idiom"*, and `spine-light.js:186-204`
+    // (extracted from `The Instrument v3.html:4074-4091`) draws all six, term by term. A false
+    // statement about the corpus is what licensed the invention: nobody looked again, because
+    // the file said there was nothing to look at.
+    //
+    // What the design actually says, and the app had inverted:
+    //
+    //   · TWO MATERIALS, NOT ONE. `far ? pc : c` — the Far one is `pool` #FBF9F4, the stone;
+    //     the five futures are `hex` #EDE3CE, the dawn. The app drew all six in one invented
+    //     #F5F0E8, so the Light's two materials became one.
+    //   · THE FAR ONE IS DIMMEST. `far ? 0.40 : 0.62`. The app had `far ? 0.55 : 0.85`.
+    //   · **THE FAR ONE IS SMALLEST** — `far ? 16 : 22` — and the app drew it BIGGEST, at
+    //     `far ? 17 : 13`. The relation was reversed, so the floor read as the brightest, most
+    //     present thing in the dawn.
+    //   · IT IS NOT A STAR. `:200-202` strokes a horizontal seam ±W·0.13 through it in stone
+    //     at `al*0.30`, under the design's own words: *"the Far one is a seam, not a star —
+    //     stone, below."* Absent entirely.
+    //
+    // Together the app made the floor the most prominent of the six futures, in the wrong
+    // material, as a star. The one thing that is NOT a future to be chosen was presented as
+    // the most choosable.
+    //
+    // KEPT, and app-own: the two-stage arm/name. The design places POINTS and the app must
+    // place titles too — see the note at the `VStack` below.
+    private var choosingBody: some View {
+        GeometryReader { geo in
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                let W = Double(geo.size.width), H = Double(geo.size.height)
+                let places = LightPlaces.place(W, H, t)
+                ZStack(alignment: .topLeading) {
+                    Color.clear
+                    ForEach(Array(LightCanon.scenes.enumerated()), id: \.offset) { i, sc in
+                        let p = i < places.count ? places[i] : .zero
+                        let far = sc.material == .nave
+                        let br = 0.72 + 0.28 * RoomGeo.breath(t + Double(i) * 1.7)
+                        // ONE NAME AT A TIME. The design places POINTS — `place()` spaces the
+                        // six by 0.058·H, which is ample for a light and nowhere near enough
+                        // for a two-line title. Hanging all six titles under them was my
+                        // addition and it collided three of them into one another.
+                        //
+                        // So the same two stages the Rooms' marks use: the first touch arms
+                        // and NAMES, the second enters. It fits this register especially —
+                        // he approaches one of six futures and it tells him what it is before
+                        // he commits to it — and it adds no instruction, only a name.
+                        // `:193` — `al = a*(far?0.40:0.62)`; the arm factor is the app's.
+                        let material = Color(hex: far ? LightCanon.pool : LightCanon.hex)
+                        let al = (far ? 0.40 : 0.62) * br * (armed == i ? 1.25 : 1)
+                        let halo = far ? 16.0 : 22.0            // `:195` — the Far one SMALLER
+                        VStack(spacing: 9) {
+                            ZStack {
+                                // `:196` — the wash, `al*0.55` at the centre to nothing.
+                                Circle()
+                                    .fill(RadialGradient(
+                                        colors: [material.opacity(al * 0.55), material.opacity(0)],
+                                        center: .center, startRadius: 0, endRadius: halo))
+                                    .frame(width: halo * 2, height: halo * 2)
+                                // `:198-199` — the point itself, `rr + br*0.5`, at full `al`.
+                                Circle()
+                                    .fill(material.opacity(al))
+                                    .frame(width: ((far ? 2.0 : 2.6) + br * 0.5) * 2,
+                                           height: ((far ? 2.0 : 2.6) + br * 0.5) * 2)
+                                // `:200-202` — *"the Far one is a seam, not a star — stone,
+                                // below."* A horizontal rule through it, and the only thing
+                                // in the dawn that is not a point of light.
+                                if far {
+                                    Rectangle()
+                                        .fill(Color(hex: LightCanon.pool).opacity(al * 0.30))
+                                        .frame(width: W * 0.26, height: 0.7)
+                                }
+                            }
+                            .frame(width: halo * 2, height: halo * 2)
+                            if armed == i {
+                                Text(sc.title)
+                                    .font(.loraItalic(12.5))
+                                    .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.78))
+                                    .multilineTextAlignment(.center)
+                                    .frame(maxWidth: 150)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .transition(.opacity)
+                            }
+                        }
+                        .position(x: p.x, y: p.y)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { loc in
+                    // `The Instrument v3.html:5872` — `if(k && LT.select(k)) { liteRender(); B.blip(174); }`
+                    guard let k = LightPlaces.hit(loc, W, H, t) else {
+                        withAnimation(.easeInOut(duration: 0.6)) { armed = nil }; return
+                    }
+                    if armed == k {
+                        sceneIndex = k
+                        soundEngine.blip(hz: 174)          // `:5873` — `B.blip(174)`, and now actually a blip
+                        withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.7)) { armed = k }
+                    }
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+
     private var holdBody: some View {
         VStack {
             Spacer()
             Text("hold")
-                .font(.spaceMono(9)).tracking(3)
+                .spaceMonoTracked(9, em: 3 / 9)
                 .foregroundStyle(BinduTheme.inkTertiary.opacity(holdDimmed ? 0 : 0.6))
                 .padding(.bottom, 56)
         }
@@ -196,8 +345,12 @@ struct LightView: View {
             // on a torn-down view (the comp clears both timers on unmount).
             let dim = DispatchWorkItem { withAnimation(.easeInOut(duration: 1.6)) { holdDimmed = true } }
             let open = DispatchWorkItem {
+                // `:739` — `Sound.veilLift(3); Sound.bowl(174);` The veil is drawn away and
+                // everything drains downward and out; the bowl strikes once into the space
+                // it leaves. Subtraction, then a single arrival.
+                soundEngine.lightVeilLift(dur: 3)
                 soundEngine.riteBowl(hz: 174)                 // the aperture opens; light floods down
-                withAnimation(.easeInOut(duration: 1.6)) { stage = .scene }
+                withAnimation(.easeInOut(duration: 1.6)) { stage = .choosing }
             }
             holdWork = [dim, open]
             DispatchQueue.main.asyncAfter(deadline: .now() + holdMs / 1000 * 0.45, execute: dim)
@@ -208,20 +361,57 @@ struct LightView: View {
 
     // MARK: - Scene
 
+    // E1.2 · THE COLUMN LIFTS AND MASKS.
+    //
+    // A five-anchor scene grew downward from the vertical centre and ran off the lit area onto
+    // dim stone — the words kept going where the light stopped. Two different things: it LIFTS
+    // (the column rises as it fills, so its foot stays inside the light) and it MASKS (what
+    // passes the boundary FADES rather than being cut, because a hard edge on stone reads as a
+    // crop and a fade reads as the edge of the light).
+    //
+    // The lift is driven by how much has surfaced — the same quantity the rest of the register
+    // reads — not by a measured height, so it cannot fight the layout.
+    private var columnLift: Double {
+        let filled = scene.anchors.isEmpty ? 0 : Double(shownAnchors) / Double(scene.anchors.count)
+        return -filled * 96 - (beatActive ? 42 : 0)
+    }
+
+    // E1.17 · **THE TYPE IS THE REGISTER'S ONLY VOICE HERE, SO ITS SIZES ARE THE CONTENT.**
+    // `The Light v2.html:826-853`. Every number below is that block's, and three of them are
+    // not decoration:
+    //
+    //  · **the whole SHRINKS, 21 → 15, over 2.6s** as the first anchor lands (`:827-828`
+    //    transitions `font-size`, `color` and `line-height` together). It arrives at the size
+    //    of the only thing on the floor and demotes itself to a heading once it has been
+    //    received. The app held it at a fixed 19 — between the two, so it was never either.
+    //  · **the Declaration is 21, not 17, and carries NO extra weight** (`:841`). The app made
+    //    it `.semibold` to read as cut; the comp cuts it with the shadow pair, not the face.
+    //  · **the deboss is TWO shadows** (`:30`) — white below AND a dark hairline above. One
+    //    shadow is a drop shadow; the pair is a groove.
+    private var wholeIsAlone: Bool { shownAnchors == 0 }
+    private var settledInk: Color { anchorInk(false) }
+
     private var sceneBody: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: 0) {
             Spacer()
-            // The whole — arrives with the light.
+            // The whole — arrives with the light, then settles as the anchors take over.
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(scene.whole, id: \.self) { line in
-                    Text(line).font(.lora(19, weight: .medium)).foregroundStyle(wholeInk)
+                    Text(line)
+                        .loraSize(LightType.wholeSize(alone: wholeIsAlone))
+                        .tracking(LightType.wholeTracking(alone: wholeIsAlone))
+                        .lineSpacing(LightType.wholeLeading(alone: wholeIsAlone))
+                        .foregroundStyle(wholeInk)
                 }
             }
+            .padding(.bottom, LightType.wholeGap(alone: wholeIsAlone))
+            .animation(.easeInOut(duration: 2.6), value: wholeIsAlone)
 
             // The anchors — one at a time, on a touch (release answers the ungrip).
             ForEach(Array(scene.anchors.prefix(shownAnchors).enumerated()), id: \.offset) { i, line in
-                Text(line).font(.lora(15)).lineSpacing(6)
+                Text(line).font(.lora(LightType.anchorSize)).lineSpacing(LightType.anchorLeading)
                     .foregroundStyle(anchorInk(i == shownAnchors - 1))   // only the newest is living
+                    .padding(.bottom, LightType.anchorGap)
                     .transition(.opacity)
             }
 
@@ -229,20 +419,23 @@ struct LightView: View {
             // over ~4.2s of held breath (never delivered whole); it locks when he has taken
             // the whole of it. The turn to first person happens in his body first.
             if shownAnchors >= scene.anchors.count {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: LightType.beatGap) {
                     // the locked lines — debossed into the floor, they never settle
                     ForEach(0..<max(0, beatLine + 1), id: \.self) { i in
                         Text(scene.beat[i])
-                            .font(.lora(17, weight: .semibold))
+                            .font(.lora(LightType.beatSize)).tracking(LightType.beatTracking).lineSpacing(LightType.beatLeading)
                             .foregroundStyle(carveInk)
                             .shadow(color: carveShadow, radius: 0, x: 0, y: 1)
+                            .shadow(color: carveRim, radius: 0.5, x: 0, y: -0.5)
                     }
                     // the line surfacing out of the stone right now, as he draws it in
                     if moreBeat, drawing > 0 {
                         Text(scene.beat[beatLine + 1])
-                            .font(.lora(17, weight: .semibold))
+                            .font(.lora(LightType.beatSize)).tracking(LightType.beatTracking).lineSpacing(LightType.beatLeading)
                             .foregroundStyle(carveInk.opacity(0.06 + drawing * 0.94))
-                            .shadow(color: carveShadow.opacity(drawing), radius: 0, x: 0, y: 1)
+                            // `:848` — the highlight RISES with the draw (`0 ${drawing}px`), so
+                            // the groove deepens as the line surfaces rather than arriving cut.
+                            .shadow(color: carveShadow.opacity(drawing * 0.95), radius: 0, x: 0, y: drawing)
                             .offset(y: (1 - drawing) * 10)
                             .blur(radius: (1 - drawing) * 3.4)
                     }
@@ -252,17 +445,42 @@ struct LightView: View {
                 if landed {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(scene.landing)
-                            .font(.loraItalic(13)).foregroundStyle(BinduTheme.inkTertiary)
-                        Button { withAnimation(.easeInOut(duration: 1.0)) { stage = .out } } label: {
+                            .font(.loraItalic(LightType.landingSize)).lineSpacing(LightType.landingLeading)
+                            .foregroundStyle(settledInk)
+                        Button {
+                            // `The Light v2.html:801` — `const leave = () => {
+                            // Sound.closeTheRoom(6); Sound.darkReturns(); onLeave(); }`.
+                            // This called no sound at all, so the bed `lightVeilLift`
+                            // drained never came back. *AUDIT E4.1 / G3.1.*
+                            //
+                            // `closeTheRoom(6)` is the FIRST half and was still missing after
+                            // that fix: the room tone kept sounding for its own 40s release
+                            // wherever he went next. It is the same mechanism as
+                            // `field-sound.js:307 lightOff(dur)` under a second name — both
+                            // cancel the schedule and ramp the room's gain to zero — and the
+                            // two files carry different defaults (6 and 5), so the Light's own
+                            // number is passed explicitly rather than left to either default.
+                            soundEngine.lightOff(dur: 6)
+                            soundEngine.darkReturns()
+                            withAnimation(.easeInOut(duration: 1.0)) { stage = .out }
+                        } label: {
                             Text(LightCanon.walkBackOut)
-                                .font(.spaceMono(10)).tracking(2)
+                                .spaceMonoTracked(10, em: 0.2)
                                 .foregroundStyle(Color(hex: "#EDE3CE"))
                         }
                     }
                     .transition(.opacity).padding(.top, 12)
                 } else if moreBeat {
-                    Text(drawing > 0 ? "keep drawing it in" : "press · draw it in")
-                        .font(.spaceMono(9)).tracking(2)
+                    // E1.4 · **THE AUTHORED CUE, AT LAST** — `The Instrument v3.html:5282`
+                    // `if(!LT.carved) h += '<div class="hold">hold to mean it</div>'`, named as
+                    // canon at `REVIEW-AND-WIRING.md:48` and sitting declared-and-unused at
+                    // `LightCanon.beatCue` for the whole build while the app invented
+                    // `"press · draw it in"` / `"keep drawing it in"` to describe six presses.
+                    // **The words could not be ported before the gesture was**: `hold to mean
+                    // it` over a six-press beat is authored copy on the wrong mechanism, which
+                    // passes every checker and reads as fixed.
+                    Text(LightCanon.beatCue)
+                        .spaceMonoTracked(9, em: 2 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary)
                         .modifier(RiteBreathe())
                         .padding(.top, 8)
@@ -272,6 +490,16 @@ struct LightView: View {
         }
         .padding(.horizontal, 38)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .offset(y: columnLift)
+        .animation(.easeInOut(duration: 1.2), value: columnLift)
+        .mask(
+            LinearGradient(stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black, location: 0.10),
+                .init(color: .black, location: 0.88),
+                .init(color: .clear, location: 1.0),
+            ], startPoint: .top, endPoint: .bottom)
+        )
         .contentShape(Rectangle())
         .gesture(sceneGesture)
         .onChange(of: breath.value) { deliverOnExhale() }
@@ -281,7 +509,7 @@ struct LightView: View {
         .overlay(alignment: .bottom) {
             if stage == .scene, !beatActive, !breathCue.isEmpty {
                 Text(breathCue)
-                    .font(.spaceMono(9)).tracking(3)
+                    .spaceMonoTracked(9, em: 3 / 9)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.55))
                     .padding(.bottom, 26)
             }
@@ -307,7 +535,12 @@ struct LightView: View {
             .onChanged { _ in
                 guard !pressing else { return }
                 pressing = true
-                if beatActive && moreBeat && !landed { beginCarve() }
+                // E1.3 · **ONE HELD PRESS CARVES, and only once `drew >= 0.9`** (`:178`):
+                // he cannot mean it before it is there to be meant. This called `beginCarve`,
+                // which drew ONE LINE in over `carveMs` per press — six presses for six lines,
+                // in the register whose sentence is *it is not asked for, it is MEANT*.
+                if beatActive && moreBeat && !landed,
+                   LightCanon.LightBeat.mayCarve(drew: drew, carved: carved) { beginCarve() }
                 // A press ASKS for the next anchor (the exhale answers) — but the `release`
                 // scene answers ONLY the hand opening, so it waits for .onEnded below.
                 else if !beatActive && !scene.ungripOnly { advanceAnchor() }
@@ -323,12 +556,13 @@ struct LightView: View {
     // MARK: - Flow
 
     private func begin() {
-        // One scene per visit, deterministic by local-day hash.
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        let key = fmt.string(from: Date())
-        var h: UInt32 = 2166136261
-        for b in key.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
-        sceneIndex = Int(h % UInt32(LightCanon.scenes.count))
+        // E1.1 · NO DAY-HASH. It read: "One scene per visit, deterministic by local-day hash",
+        // and a date chose his future for him in the one register whose whole subject is what
+        // has not happened yet. The six stand in the dawn and he picks — `spine-light.js:104`,
+        // and `The Instrument v3.html:5872` selects on a touch, not on a clock.
+        //
+        // A ruling from the conflict document that never reached a pass plan, which is exactly
+        // how an item survives seven passes: nothing disagreed with it, because nothing asked.
 
         // The stillness gate — accumulates only while the hand is off the glass and
         // no input for 340ms. It NEVER resets; a touch only pauses the fill.
@@ -339,11 +573,58 @@ struct LightView: View {
                 stillMs = min(gateMs, stillMs + 50)
                 if stillMs >= gateMs { openTheLight() }
             }
+            // E4.2 · **THE GATE MADE AUDIBLE, IN THE ONE REGISTER THAT IS ABOUT WAITING.**
+            //
+            // `setStillness` existed and had exactly ONE caller, `InstrumentView:290`. The
+            // Light — the register whose entire approach IS a 4600ms accumulation — never
+            // called it, so the gate ran in silence and the only sign of progress was
+            // visual. §10 names why that matters: this drone does not accompany the
+            // accumulator, **it IS the accumulator, audible.**
+            //
+            // Called every tick rather than on a threshold, and OUTSIDE the idle branch, so
+            // it follows the fill in both directions: a touch must be heard cutting it, not
+            // just heard failing to advance it. `still` is the same 0…1 the visuals ride, so
+            // the two cannot drift apart.
+            soundEngine.setStillness(fill: still, touching: touching)
+        }
+    }
+
+    /// E1.5+E1.6 · `canon/spine-light.js:136-148`'s `tick`, in the app's idiom. The arrival
+    /// runs on its OWN clock and the reading waits for it — the inversion this pair fixes is
+    /// that the app had the reading drive the arrival instead.
+    private func startSceneTick() {
+        sceneTick?.invalidate()
+        var last = Date()
+        sceneTick = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+            guard case .scene = stage else { return }
+            let now = Date(); let dt = now.timeIntervalSince(last); last = now
+            if arrive < 1 {
+                arrive = scene.ungripOnly
+                    ? LightCanon.LightArrival.fromUngrips(ungrips)
+                    : LightCanon.LightArrival.step(arrive, dt: dt, touching: touching)
+            }
+            // *"the arrival IS the delivery: when the dawn has assembled, the whole is simply
+            // there. He never has to ask for the first thing."* `:147-148`
+            // E1.3 · `:149` — while the beat is up it draws ITSELF in, `dt*0.85`, ≈1.18s,
+            // **with no press**. Nothing is asked of him while the Declaration arrives; the
+            // app required a held press per line to draw each one.
+            if arrive >= 1 && beatActive && moreBeat && !carved {
+                drew = LightCanon.LightBeat.draw(drew, dt: dt)
+            }
+            if arrive >= 1 && !wholeDelivered {
+                wholeDelivered = true
+                withAnimation(.easeInOut(duration: 1.2)) { }
+            }
         }
     }
 
     private func openTheLight() {
+        // `The Light v2.html:637` — `Sound.openTheRoom(8.5); Sound.breathIn(6);`
+        // The room is heard before it is seen, and the breath draws in and HOLDS.
+        soundEngine.lightOpenTheRoom(dur: 8.5)
+        soundEngine.lightBreathIn(dur: 6)
         gate?.invalidate()
+        startSceneTick()
         Task { await store.logVeilLifted() }
         // Stand in the shaft first (the Hold), then the aperture opens into the scene.
         withAnimation(.easeInOut(duration: 1.0)) { stage = .hold }
@@ -352,13 +633,23 @@ struct LightView: View {
     // A touch ASKS; the next exhale answers (the interior's core law). Except `release`,
     // which answers only the hand leaving the glass — each ungrip advances it directly.
     private func advanceAnchor() {
+        // `advance()` — `:169` — is blocked while `arrive < 1`. Nothing is readable until
+        // the gate completes; the whole arrives by itself and is never asked for.
         guard stage == .scene, shownAnchors < scene.anchors.count else { return }
-        if scene.ungripOnly {
+        guard LightCanon.LightArrival.mayAdvance(arrive: arrive) || (scene.ungripOnly && arrive < 1)
+        else { return }
+        // E1.5 · **THE UNGRIP GATES THE ARRIVAL; IT DOES NOT REVEAL A LINE.**
+        // `:152-155` — `ungripped()` counts only while `arrive < 1`, and once the scene has
+        // assembled, release's anchors advance on touch *like every other scene* (`:139-142`
+        // is explicit that only the ARRIVAL is different). This did both at once, so five
+        // anchors against three counted ungrips saturated the gate at anchor 3, and canon's
+        // *"the dawn does not assemble until the hand has opened three times, then the scene
+        // begins"* became *"each lift reveals a line."*
+        if scene.ungripOnly && arrive < 1 {
             ungrips += 1
             soundEngine.axisUngrip()              // the field answers the opened hand
-            revealAnchor()                        // the dawn brightens each time the hand lifts
         } else {
-            pendingAnchor = true                  // wait for the breath to turn
+            wants = min(2, wants + 1)             // `:759` — a second ask is kept
         }
     }
 
@@ -370,9 +661,18 @@ struct LightView: View {
     }
 
     // The exhale answers what the touch asked (delivered near the breath's turn).
+    /// E1.7 · `:764-765` — fires only on a NEW breath cycle whose phase is `'out'`.
+    ///
+    /// This read `breath.value > 0.9`, and on an eased 0→1→0 curve that is **the peak of the
+    /// INHALE** — so the register's one law, *a touch asks and the next exhale answers*,
+    /// delivered on the wrong half of the breath. The value alone cannot tell the two halves
+    /// apart: 0.9 rising and 0.9 falling are the same number. The linear `phase` can —
+    /// `0.5 … 1.0` is the falling half.
     private func deliverOnExhale() {
-        guard pendingAnchor, breath.value > 0.9 else { return }
-        pendingAnchor = false
+        guard wants > 0 else { return }
+        guard breath.phase >= 0.5, breath.cycle != lastDelivered else { return }
+        lastDelivered = breath.cycle
+        wants -= 1
         revealAnchor()
     }
 
@@ -380,6 +680,9 @@ struct LightView: View {
     // back (comp `release`). It locks only when he has taken the whole of it.
     private func beginCarve() {
         guard stage == .scene, beatActive, moreBeat, carveTimer == nil else { return }
+        // `:786` — `Sound.breathIn(4.2)` on the draw-in. The same gesture as the opening,
+        // shorter: he is holding the line rather than entering the room.
+        soundEngine.lightBreathIn(dur: 4.2)
         soundEngine.inkOn(hz: 196)                    // the field leans in while he draws breath
         let start = Date()
         carveTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { _ in
@@ -399,17 +702,29 @@ struct LightView: View {
     private func lockCarveLine() {
         carveTimer?.invalidate(); carveTimer = nil
         soundEngine.inkOff()
-        soundEngine.axisUngrip()                       // the line locks — a small confirming rise
+        // C7.8 · `The Instrument v3.html:5374` — `if(held0>=900&&LT.carve()){ …; B.carry(174); }`.
+        // **CARRY IS THE VOICE FOR A LINE HE MEANT**, and this played `ungrip` — which is the
+        // design's answer to an OPENED hand at `:5368`, the opposite gesture. Three rising
+        // steps at 174 · 261 · 348 that stay in the room for 6.5s, against a 1.2s rise that
+        // goes away: *"a perspective taken up… no list, no collection, nothing counted."*
+        soundEngine.carryTone(hz: 174)
         withAnimation(.easeInOut(duration: 0.6)) {
             beatLine += 1
             drawing = 0
+            drew = 0; carved = false          // `:174` — the next beat draws itself in afresh
         }
         // The last line locked — crystallize the whole Declaration into the Vow (it returns
         // via the Mirror), then the landing arrives a breath and a half later (comp).
         if beatLine >= scene.beat.count - 1 {
             let declaration = scene.beat.joined(separator: " ")
             Task { await store.writeVow(text: declaration) }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+            // E1.8 · `Claude Design Round 1/comps/The Light v2.html:792` —
+            // `setTimeout(…, breathMs*1.6)`, and `breathMs` is the true breath: **16 000ms**,
+            // not 1.6 seconds. The comment said *"a breath and a half later"* and the number
+            // said a breath and a half of nothing — a tenth of the wait, so the landing
+            // arrived while the last line was still settling instead of after it had been sat
+            // with. The unit was dropped, and the prose kept describing the intent.
+            DispatchQueue.main.asyncAfter(deadline: .now() + Breath.period * 1.6) {
                 withAnimation(.easeInOut(duration: 1.0)) { landed = true }
             }
         }
@@ -428,10 +743,10 @@ struct LightView: View {
             Spacer()
             HStack(spacing: 26) {
                 Button { restart() } label: {
-                    Text("again ›").font(.spaceMono(10)).tracking(2).foregroundStyle(BinduTheme.inkTertiary)
+                    Text("again ›").spaceMonoTracked(10, em: 0.2).foregroundStyle(BinduTheme.inkTertiary)
                 }
                 Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
-                    Text("the archive waits ›").font(.spaceMono(10)).tracking(2).foregroundStyle(Color(hex: "#EDE3CE"))
+                    Text("the archive waits ›").spaceMonoTracked(10, em: 0.2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }
             }
             .padding(.bottom, 44)
@@ -443,9 +758,10 @@ struct LightView: View {
     private func restart() {
         carveTimer?.invalidate(); carveTimer = nil
         holdWork.forEach { $0.cancel() }
-        stillMs = 0; shownAnchors = 0; ungrips = 0
+        stillMs = 0; shownAnchors = 0; ungrips = 0; arrive = 0; wholeDelivered = false
+        drew = 0; carved = false
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
-        pendingAnchor = false; touching = false; lastInput = Date()
+        wants = 0; lastDelivered = -1; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }
         begin()
     }
@@ -542,4 +858,20 @@ private struct LightStars: View {
         let x = sin(i * 127.1 + 31.4) * 43758.5453
         return x - floor(x)
     }
+}
+
+// E1.17 · SwiftUI will not interpolate a `.font`, so a size that is meant to TRAVEL needs its
+// own animatable channel — otherwise `21 → 15` snaps and the 2.6s settle is not on screen.
+private struct LoraSize: ViewModifier, Animatable {
+    var size: CGFloat
+    var animatableData: CGFloat {
+        get { size }
+        set { size = newValue }
+    }
+    func body(content: Content) -> some View { content.font(.lora(size)) }
+}
+
+extension View {
+    /// The Lora face at a size that can be animated between two values.
+    func loraSize(_ size: CGFloat) -> some View { modifier(LoraSize(size: size)) }
 }

@@ -68,7 +68,7 @@ struct DoorView: View {
             if weather == .loading {
                 // Unmet only if today is NOT met AND the Rite hasn't been dismissed today —
                 // once you skip it, the Door stops forcing it (the Rite stays in the turn).
-                let met = await store.checkTodayMet()
+                let met = await store.checkTodayMet()   // also publishes `store.todayMet`
                 let dismissed = store.isRiteDismissedToday()
                 let isUnmet = !(met || dismissed)
                 if isUnmet {
@@ -123,13 +123,13 @@ struct DoorView: View {
                     .font(.lora(24, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary)
                     .multilineTextAlignment(.center)
                 Text(storyData.roomName)
-                    .font(.spaceMono(9)).tracking(1.5).foregroundStyle(room.opacity(0.85))
+                    .spaceMonoTracked(9, em: 1.5 / 9).foregroundStyle(room.opacity(0.85))
                 Text(RiteWord.arrivalNotDone)
                     .font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary)
                     .padding(.top, 6)
                 Spacer()
                 Text("touch to receive")
-                    .font(.spaceMono(9)).tracking(2)
+                    .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(room.opacity(0.62))
                     .modifier(RiteBreathe())
                 Button {
@@ -137,7 +137,7 @@ struct DoorView: View {
                     onComplete()
                 } label: {
                     Text("not today · enter the field ›")
-                        .font(.spaceMono(8)).tracking(2)
+                        .spaceMonoTracked(8, em: 0.25)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
                 }
                 .padding(.top, 14).padding(.bottom, 40)
@@ -181,7 +181,7 @@ struct DoorView: View {
         DragGesture(minimumDistance: 14)
             .onChanged { v in
                 guard !showTurn, !showRope, v.translation.height > 84 else { return }
-                soundEngine.riteThreshold(hz: 146, dur: 4)
+                soundEngine.spineThreshold(hz: 146)   // `openTurn(){B.threshold(146)}` — Instrument v3:5082
                 withAnimation(.easeInOut(duration: 0.5)) { showTurn = true }
             }
     }
@@ -190,7 +190,7 @@ struct DoorView: View {
 
     private func receiveTheRite() {
         guard !showTurn, !showRope else { return }
-        soundEngine.riteThreshold(hz: 220, dur: 5)
+        soundEngine.spineThreshold(hz: 220)   // `crossDoor(){B.threshold(...)}` — Instrument v3:5022
         withAnimation(.easeInOut(duration: 0.8)) { enteringRite = true }
     }
 
@@ -265,11 +265,11 @@ struct DoorRopeOverlay: View {
                             .transition(.opacity)
                         VStack(spacing: 18) {
                             Button { onExit(.point) } label: {
-                                Text("WALK THE POINT").font(.spaceMono(11)).tracking(2)
+                                Text("WALK THE POINT").spaceMonoTracked(11, em: 2 / 11)
                                     .foregroundStyle(Color(hex: "#C0392B").opacity(0.9))
                             }
                             Button { onExit(.day) } label: {
-                                Text("RETURN TO THE DAY").font(.spaceMono(11)).tracking(2)
+                                Text("RETURN TO THE DAY").spaceMonoTracked(11, em: 2 / 11)
                                     .foregroundStyle(BinduTheme.inkSecondary)
                             }
                         }

@@ -11,9 +11,6 @@ struct StoryCard: View {
 
     @EnvironmentObject private var store: FeedStore
     @State private var pulseGlow: Double = 0
-    @State private var resonanceBoost: Int = 0
-    @State private var resonancePressed: Bool = false
-    @State private var resonanceInFlight: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: BinduTheme.space12) {
@@ -27,7 +24,9 @@ struct StoryCard: View {
         .overlay(
             // Single soft luminance pulse on appear when recent.
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(BinduTheme.accent.opacity(pulseGlow), lineWidth: 0.5)
+                // `border-color` AND `box-shadow` — the glow is the half that carries.
+                .stroke(BinduTheme.accent.opacity(0.26 * pulseGlow), lineWidth: 0.5)
+                .shadow(color: BinduTheme.accent.opacity(0.13 * pulseGlow), radius: 14)
                 .allowsHitTesting(false)
         )
         .onAppear { firePulseIfRecent() }
@@ -42,7 +41,7 @@ struct StoryCard: View {
             }
             Spacer(minLength: BinduTheme.space12)
             Text(story.codexId)
-                .font(.spaceMono(10))
+                .spaceMonoTracked(10)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .tracking(0.5)
         }
@@ -66,34 +65,29 @@ struct StoryCard: View {
         }
     }
 
+    // F2.4 + F2.7 · **THE COUNTS ARE INERT TEXT, AND THE WHOLE CARD IS THE TAP TARGET.**
+    // `Claude Design Round 1/Home Feed.html:118-121` — `gap:16`, both `♡ n` and `↳ n` in
+    // Space Mono 10 at `--ink35`, each **a single text run**.
+    //
+    // **F2.7 · THE ♡ WAS A BUTTON THAT PATCHED AIRTABLE, AND THE DESIGN NEVER PUT A WRITE
+    // HERE.** `:119` is a `<span>` inside one `<a href>`: the card is a link into the story,
+    // and the counts report what the field has done. An invented write is bad twice over —
+    // it puts a base mutation behind a glyph nobody was told was a control, and it competes
+    // with the card's own tap target, so a thumb aiming at the story sometimes resonated it.
+    // **The capability is not lost**: `StoryDetailView` resonates, which is where the design
+    // places it — you go in, and then you answer.
+    //
+    // F2.4 · both runs at 10pt in `inkTertiary`. The app had 11pt numerals one ink tier
+    // brighter, and glyphs in the SYSTEM font beside Space Mono numerals — so `♡ 89` was two
+    // typefaces at two weights pretending to be one label.
     private var bottomRow: some View {
-        HStack(alignment: .center, spacing: BinduTheme.space12) {
-            Button(action: handleResonate) {
-                Label {
-                    Text("\(story.resonance + resonanceBoost)")
-                        .font(.spaceMono(11))
-                        .foregroundColor(BinduTheme.inkSecondary)
-                } icon: {
-                    Text("\u{2661}")                        // ♡ — the resonance glyph, one across the app
-                        .font(.system(size: 11))
-                        .foregroundColor(BinduTheme.inkTertiary)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .scaleEffect(resonancePressed ? 0.85 : 1.0)
-            .animation(.spring(response: 0.32, dampingFraction: 0.55), value: resonancePressed)
-            .disabled(resonanceInFlight)
-
-            Label {
-                Text("\(stats.commentCount)")
-                    .font(.spaceMono(11))
-                    .foregroundColor(BinduTheme.inkSecondary)
-            } icon: {
-                Text("\u{21B3}")                            // ↳ — comments, the comp's own mark
-                    .font(.system(size: 11))
-                    .foregroundColor(BinduTheme.inkTertiary)
-            }
+        HStack(alignment: .center, spacing: 16) {
+            Text("\u{2661} \(story.resonance)")
+                .spaceMonoTracked(10)
+                .foregroundColor(BinduTheme.inkTertiary)
+            Text("\u{21B3} \(stats.commentCount)")
+                .spaceMonoTracked(10)
+                .foregroundColor(BinduTheme.inkTertiary)
 
             Spacer(minLength: BinduTheme.space8)
 
@@ -105,43 +99,40 @@ struct StoryCard: View {
 
     // MARK: - Pulse
 
+    /// F2.6 · `Home Feed.html:30-34,110` — `livePulse 4.5s ease-in-out 1.2s 1 forwards`,
+    /// peaking at **45%**: `border-color → rgba(155,107,214,0.26)` **and**
+    /// `box-shadow: 0 0 28px rgba(155,107,214,0.13)`.
+    ///
+    /// Three things were wrong and one of them is not fixable here. The app ran 2.4s against
+    /// 4.5s, started immediately where the design waits **1.2s** — the lead-in is what makes
+    /// it read as the card noticing something rather than the card appearing — and drew only a
+    /// border stroke with **no outer glow**, which is the half that carries at arm's length.
+    ///
+    /// **THE TRIGGER STAYS DIVERGENT AND IT IS RECORDED RATHER THAN INVENTED.** The design
+    /// pulses on an **authored per-story `pulse:true`** (`:70-82`, demo data in the comp); the
+    /// base carries no such field, and adding one would be inventing content the design never
+    /// asks for — the same ruling as the Record's condensed line. So the app keeps its derived
+    /// 7-day window and the RENDER is made faithful. What is authored and what is derived are
+    /// different claims, and only one of them is ours to fix.
     private func firePulseIfRecent() {
         guard isRecent else { return }
-        // Run once: fade in over 0.6s, hold briefly, fade out over 1.6s.
-        withAnimation(.easeOut(duration: 0.6)) { pulseGlow = 0.35 }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            withAnimation(.easeIn(duration: 1.6)) { pulseGlow = 0 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {          // `1.2s` lead-in
+            withAnimation(.easeInOut(duration: 4.5 * 0.45)) { pulseGlow = 1 }   // to the 45% peak
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4.5 * 0.45) {
+                withAnimation(.easeInOut(duration: 4.5 * 0.55)) { pulseGlow = 0 }
+            }
         }
     }
 
-    // MARK: - Resonance
-
-    private func handleResonate() {
-        guard !resonanceInFlight else { return }
-        let current = story.resonance + resonanceBoost
-        resonanceBoost += 1
-        resonanceInFlight = true
-        resonancePressed = true
-
-        Task { @MainActor in
-            await store.incrementResonance(
-                recordId: story.id,
-                current: current,
-                storyContext: ResonanceStoryContext(title: story.title, excerpt: story.excerpt)
-            )
-            resonanceInFlight = false
-        }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
-            resonancePressed = false
-        }
-    }
+    // F2.7 · `handleResonate` and its three `@State` flags are DELETED, not merely unwired.
+    // It held a live `store.incrementResonance` — a PATCH to the base — and dead code with a
+    // base write in it is what a later hand rewires without ever learning that the design put
+    // no write on this card. The capability lives in `StoryDetailView`, where the design
+    // places it. `git log` is the record; the file is not the place to keep a removed action.
 
     private var isRecent: Bool {
         guard !story.lastActivityDate.isEmpty else { return false }
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")
+        let f = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let date = f.date(from: story.lastActivityDate) else { return false }
         return Date().timeIntervalSince(date) < 7 * 24 * 3600
     }

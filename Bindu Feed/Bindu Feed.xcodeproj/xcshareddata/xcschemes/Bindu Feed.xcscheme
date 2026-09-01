@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  THE SHARED SCHEME. Committed deliberately, and NOT because a fresh clone cannot build
+  without one — it can. Measured: cloned to a clean directory with no .xcscheme anywhere,
+  `xcodebuild -list` reports the scheme and `xcodebuild build -scheme "Bindu Feed"` returns
+  ** BUILD SUCCEEDED **, because Xcode autocreates a scheme per target on demand.
+
+  It is here for the two things autocreation does NOT give:
+
+  1 · THE TEST ACTION'S MEMBERSHIP IS PINNED. An autocreated scheme's test action is
+      implicit, so which targets the bar counts is decided by Xcode's defaults rather than by
+      this file. That is exactly how the bar came to report 516 in some runs and 533 in
+      another for one suite. Both targets are named below, so the count is a property of the
+      repository.
+  2 · THE ARCHIVE ACTION EXISTS AND IS RELEASE. Autocreation gives a usable build and test
+      action; archiving for validation needs the configuration stated.
+
+  `parallelizable = "NO"` on both test targets is the same decision as Tools/bar.sh's
+  `-parallel-testing-enabled NO`, recorded in the scheme so it holds in Xcode too: a
+  simulator clone that fails to launch marks every test on it FAILED at 0.000 seconds, which
+  reads as a regression across unrelated subsystems. Clones buy wall-clock and cost the one
+  property the bar exists to have.
+-->
+<Scheme
+   LastUpgradeVersion = "2600"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A6971DB32FBFC75A003549BD"
+               BuildableName = "Bindu Feed.app"
+               BlueprintName = "Bindu Feed"
+               ReferencedContainer = "container:Bindu Feed.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A6971DC02FBFC75C003549BD"
+               BuildableName = "Bindu FeedTests.xctest"
+               BlueprintName = "Bindu FeedTests"
+               ReferencedContainer = "container:Bindu Feed.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A6971DCA2FBFC75C003549BD"
+               BuildableName = "Bindu FeedUITests.xctest"
+               BlueprintName = "Bindu FeedUITests"
+               ReferencedContainer = "container:Bindu Feed.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "A6971DB32FBFC75A003549BD"
+            BuildableName = "Bindu Feed.app"
+            BlueprintName = "Bindu Feed"
+            ReferencedContainer = "container:Bindu Feed.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "A6971DB32FBFC75A003549BD"
+            BuildableName = "Bindu Feed.app"
+            BlueprintName = "Bindu Feed"
+            ReferencedContainer = "container:Bindu Feed.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

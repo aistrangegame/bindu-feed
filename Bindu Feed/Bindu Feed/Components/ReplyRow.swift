@@ -17,10 +17,16 @@ struct ReplyRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
             // Spine
+            // F5.2 · **INDENT IS HIERARCHY.** `Claude Design Round 1/comps/Story Detail.html:544-549`
+            // — `marginLeft: 42`, `paddingLeft: 12`, `borderLeft: 1.5px solid ${parentColor}38`.
+            // The app's spine sat at 20, so a reply read as another voice at the same level
+            // rather than as an answer to the one above it. The audit named the consequence
+            // exactly — *"replies read as barely-indented siblings rather than a clear
+            // thread"* — and then filed it MINOR, because the delta is 22 points.
             Rectangle()
                 .fill(parentColor.opacity(0.38))
                 .frame(width: 1.5)
-                .padding(.leading, 20)
+                .padding(.leading, 42)
 
             content
                 .padding(.leading, 12)
@@ -41,7 +47,7 @@ struct ReplyRow: View {
                     if displayResonance > 0 {
                         Button(action: handleResonate) {
                             Text("♡ \(displayResonance)")
-                                .font(.spaceMono(10))
+                                .spaceMonoTracked(10)
                                 .foregroundColor(BinduTheme.inkTertiary)
                                 .contentShape(Rectangle())
                         }
@@ -54,7 +60,7 @@ struct ReplyRow: View {
 
                 if let role = archetype?.role, !role.isEmpty {
                     Text(role.uppercased())
-                        .font(.spaceMono(10))
+                        .spaceMonoTracked(10)
                         .tracking(0.6)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

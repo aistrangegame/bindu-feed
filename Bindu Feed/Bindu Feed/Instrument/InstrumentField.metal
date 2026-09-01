@@ -27,9 +27,11 @@ constant float3 HUES[15] = {
     float3(0.898, 0.325, 0.235),  //  9 particle #E5533C
 };
 
-// the thirteen rooms at their (approx) normalised coordinates + a default density — the sky's
-// light-wells (a live-data refinement can replace these once the shader path is confirmed)
-constant float3 ROOMS[13] = {
+// FALLBACK ONLY. The thirteen rooms' light-wells are now fed live as `uRm` (39 floats:
+// x, y, density per room) from `UniWeather.sky(...)`, so the density channel is DERIVED from
+// how much of him each room actually holds — `uni-deep.js:60-66` — instead of the flat 0.6
+// every entry below carries. These values stand in only if the array arrives empty.
+constant float3 ROOMS_FALLBACK[13] = {
     float3(-0.94, -0.96, 0.6), float3(0.94, -0.93, 0.6), float3(-0.18, -0.84, 0.6),
     float3(0.66, -0.59, 0.6),  float3(-0.84, -0.41, 0.6), float3(0.22, -0.22, 0.6),
     float3(-0.40, 0.06, 0.6),  float3(0.86, 0.14, 0.6),   float3(-0.90, 0.31, 0.6),
@@ -48,10 +50,13 @@ static float irim(float r, float w) { return smoothstep(w, 0.0, abs(r - 1.0)); }
 static float gmod(float x, float y) { return x - y * floor(x / y); }  // GLSL mod (fmod differs on negatives)
 
 // ── the Universe side ──
-static float mSky(float2 q, float t, float2 sweep, float dwell) {
+static float mSky(float2 q, float t, float2 sweep, float dwell,
+                  device const float *rm, int rmCount) {
     float v = 0.0;
+    bool live = (rmCount >= 39);
     for (int i = 0; i < 13; i++) {
-        float2 c = ROOMS[i].xy; float den = ROOMS[i].z;
+        float2 c = live ? float2(rm[i * 3], rm[i * 3 + 1]) : ROOMS_FALLBACK[i].xy;
+        float den = live ? rm[i * 3 + 2] : ROOMS_FALLBACK[i].z;
         float d = length(q - c);
         float lit = 0.44 + 0.56 / (1.0 + length(c) * 1.7);
         v += (0.0007 + den * 0.0021) * lit / (d * d + 0.0026);
@@ -157,9 +162,10 @@ static float mLight(float2 q, float t, float br) {
         f += exp(-abs(q.y - hy - ph * 0.62) * 15.0) * 0.09 * (1.0 - ph); }
     return horizon + e + f;
 }
-static float motif(int i, float2 q, float t, float br, float sync, float3 wx, float3 hand, float2 sweep, float dwell) {
+static float motif(int i, float2 q, float t, float br, float sync, float3 wx, float3 hand, float2 sweep, float dwell,
+                   device const float *rm, int rmCount) {
     if (i == 0)  return mLight(q, t, br);
-    if (i == 1)  return mSky(q, t, sweep, dwell);
+    if (i == 1)  return mSky(q, t, sweep, dwell, rm, rmCount);
     if (i == 2)  return mRegion(q, t, wx, dwell);
     if (i == 3)  return mWorld(q, t, wx);
     if (i == 4)  return mFall(q, t, br);
@@ -178,7 +184,8 @@ static float motif(int i, float2 q, float t, float br, float sync, float3 wx, fl
 [[ stitchable ]] half4 instrumentField(float2 pos, half4 color,
                                        float2 uRes, float uT, float uZ, float uBr, float uSync,
                                        float uSpin, float uReveal, float uDwell,
-                                       float2 uSweep, float3 uWx, float3 uHand) {
+                                       float2 uSweep, float3 uWx, float3 uHand,
+                                       device const float *uRm, int uRmCount) {
     float2 uv = (pos - 0.5 * uRes) / (0.5 * min(uRes.x, uRes.y));
     uv.y = -uv.y;                                        // SwiftUI y-down → the shader's y-up
     float ca = cos(uSpin), sa = sin(uSpin);
@@ -195,7 +202,7 @@ static float motif(int i, float2 q, float t, float br, float sync, float3 wx, fl
         w *= 0.30 + 0.70 * ahead;
         w *= 1.0 - 0.48 * smoothstep(0.0, 1.1, rel);     // the passed shells recede into atmosphere
         float2 q = uv * exp2(float(i) - zi);
-        float m = motif(i, q, uT, uBr, uSync, uWx, uHand, uSweep, uDwell);
+        float m = motif(i, q, uT, uBr, uSync, uWx, uHand, uSweep, uDwell, uRm, uRmCount);
         float rr = length(q);
         m += irim(rr, 0.012 + 0.02 * (1.0 - ahead)) * (0.30 + uBr * 0.10);
         col += HUES[i] * m * w;

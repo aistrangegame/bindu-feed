@@ -30,6 +30,7 @@ struct PointRevealView: View {
         ZStack {
             Color.black.ignoresSafeArea()
 
+
             // The split-into-three, then the collapse to one.
             Canvas { ctx, size in
                 let cx = size.width / 2, cy = size.height * 0.32
@@ -70,14 +71,14 @@ struct PointRevealView: View {
                     }
                     if line >= lines.count - 1 {
                         Button { $path.popToRootDissolve() } label: {
-                            Text("OM · 136.1").font(.spaceMono(10)).tracking(3).foregroundStyle(Color(hex: "#D4A94B"))
+                            Text("OM · 136.1").spaceMonoTracked(10, em: 0.3).foregroundStyle(Color(hex: "#D4A94B"))
                         }
                         .padding(.top, 12).transition(.opacity)
                     }
                 }
                 Spacer()
                 if collapsed && line < lines.count - 1 {
-                    Text("touch").font(.spaceMono(8)).tracking(2).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.3 * breath.value))
+                    Text("touch").spaceMonoTracked(8, em: 0.25).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.3 * breath.value))
                         .padding(.bottom, 30)
                 }
             }
@@ -99,7 +100,13 @@ struct PointRevealView: View {
         PointJourney.reset()                            // captured; the next walk is fresh
 
         // One tone fanning into three, then collapsing to the one point.
-        soundEngine.riteBowl(hz: 136.1)                 // the year-octave / OM
+        // `The Point v9.html:1341` — `Snd.shimmer(); Snd.om(); YANTRA.flare();`, fired as
+        // `.encl[9]` goes bare: enclosure 9 is 136.1, the landing home an octave down. The
+        // app played the OM and not the shimmer beside it. Found while reading the corpus to
+        // settle where `resolve` belongs; the reveal is one of the two moments that ARE
+        // marked, and it was marked incompletely.
+        soundEngine.shimmer()                           // five solfeggio tones, an octave up
+        soundEngine.om()                                // `Claude Design Round 2/design-source/spine-sound.js:374` — three tones, not one
         withAnimation(.easeInOut(duration: 2.0)) { split = 1 }        // fan apart
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
             withAnimation(.easeInOut(duration: 2.0)) { split = 0; collapsed = true }   // collapse to one

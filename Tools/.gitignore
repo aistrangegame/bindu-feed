@@ -1,0 +1,8 @@
+# regenerable intermediates — the .tsv registries and .py tools ARE tracked
+audit-findings.json
+design-mechanisms.json
+app-citations.json
+mech-inscope.json
+mech-state.json
+authored-candidates.json
+rendered-candidates.json

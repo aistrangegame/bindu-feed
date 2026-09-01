@@ -32,6 +32,13 @@ final class Breath: ObservableObject {
     // • The AUDIO medium renders that phase through the device-verified ±12% sine
     //   (see `BreathVoice`'s LFO). The Gathering choir's voices all read the same
     //   phase and all use the AUDIO curve — no voice invents a third curve.
+    // • BOTH MEDIA CREST AT MID-CYCLE. Ruled 2026-08-29, when the coupling was first
+    //   measured rather than assumed: the audio sine was `1 + sin φ · 0.12`, which
+    //   peaks at phase 0.25 against the visual's 0.50 — 2.5s apart on a ten-second
+    //   breath. It is now `1 − cos φ · 0.12`, the same sinusoid a quarter turn over,
+    //   with the same depth and the same [0.88, 1.12] range. This is NOT the two
+    //   curves unified: the visual still travels a full 0 → 1 and the audio still
+    //   moves ±12% about unity. Only the peak moved. See `Coverage/10-OWED.md` §9.
     // • Do NOT unify the two curves into one function. They are the same breath
     //   seen through two materials; forcing identical math would make them
     //   measurably equal but perceptually mismatched (equal-brightness ≠ equal-
@@ -72,16 +79,42 @@ final class Breath: ObservableObject {
         link = l
     }
 
+    /// Which breath this is, counted from the launch origin — `The Light v2.html:415`'s
+    /// `cyc = Math.floor((now-t0)/ms)`. It exists so a surface can act ONCE PER BREATH rather
+    /// than on a clock of its own: the Light's nave sends one ring down the shaft per exhale,
+    /// and without a cycle to key on it fell continuously at a fixed rate instead, unrelated
+    /// to the breathing it was supposed to be made of.
+    @Published private(set) var cycle: Int = 0
+
     @objc private func tick() {
         let elapsed = CACurrentMediaTime() - startTime
         let p = elapsed.truncatingRemainder(dividingBy: Self.period) / Self.period
         phase = p
         value = (1 - cos(p * 2 * .pi)) / 2
+        let c = Int(elapsed / Self.period)
+        if c != cycle { cycle = c }
     }
 
     /// Sample the eased breath at an arbitrary phase offset in [0, 1). Lets a
     /// surface breathe slightly ahead of or behind the master without running a
     /// second clock (e.g. a trailing ember).
+    /// **DELIVER ON THE EXHALE.** `The Return v2.html:1028-1037` — `useExhale`:
+    /// `wait = max(240, ((0.5 − p + 1) % 1) · breathMs)`.
+    ///
+    /// Two things in one line, and the second is easy to drop. It waits for the **start of
+    /// the exhale** (phase 0.5), and it never delivers in less than 240ms — so a voice asked
+    /// for exactly on the turn still gets a beat rather than arriving on the same frame as
+    /// the request. Without the floor the mechanism vanishes precisely when the timing is
+    /// perfect, which is the one case nobody tests.
+    ///
+    /// The Light's E1.7 gate is the same law expressed the other way — it latches per breath
+    /// cycle rather than scheduling once — because there the ask can arrive at any time and
+    /// must not give twice on one exhale.
+    nonisolated static func exhaleDelay(fromPhase p: Double, period: Double = Breath.period,
+                            floor: Double = 0.24) -> Double {
+        max(floor, ((0.5 - p + 1).truncatingRemainder(dividingBy: 1)) * period)
+    }
+
     func eased(offset: Double) -> Double {
         let p = (phase + offset).truncatingRemainder(dividingBy: 1)
         return (1 - cos(p * 2 * .pi)) / 2

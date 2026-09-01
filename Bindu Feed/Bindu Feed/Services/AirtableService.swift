@@ -54,6 +54,27 @@ final class AirtableService {
     /// device's own timezone (CLAUDE.md §9: the user's day is the day their phone shows
     /// them). Every date the app WRITES and every day-key it COMPARES flows through this,
     /// so writes and reads can never disagree on which day it is.
+    /// **THE PARSER HALF OF THE SAME CONTRACT.** `localDayString` above claims *"every date
+    /// the app WRITES and every day-key it COMPARES flows through this"* — and that was NOT
+    /// true: eight sites built their own `yyyy-MM-dd` `DateFormatter` with **no locale and no
+    /// calendar**, so on a Buddhist or Japanese device calendar `date(from: "2026-08-30")`
+    /// resolves centuries away. `days(since:)` is §10's *age comes from days, never from rank*
+    /// mechanism, and it was one of them.
+    ///
+    /// Fourth instance of a documented contract duplicated until a copy disagrees, after
+    /// `Axis.clampZ`, the four `"Ash"` literals and D5.8's two models — and the first where
+    /// the duplicate was *silently wrong for a subset of users* rather than wrong for everyone.
+    /// The timezone stays a parameter because it genuinely differs by site: a day-KEY is local
+    /// (§9), an Airtable date-only field is read as UTC.
+    static func dayFormatter(timeZone: TimeZone) -> DateFormatter {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.calendar = Calendar(identifier: .gregorian)
+        f.timeZone = timeZone
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }
+
     static func localDayString(_ date: Date = Date()) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
@@ -193,6 +214,17 @@ final class AirtableService {
         return records.map(Signal.init(from:))
     }
 
+    /// The Gaia seed's own pool. Until 2026-08-27 the Door borrowed `fetchSignals()`,
+    /// which is how twelve Codex/business-ontology rows reached the threshold — roughly
+    /// one app open in seven. Its own Type closes that at the source.
+    func fetchGaiaSeeds() async throws -> [GaiaSeed] {
+        let records = try await fetch(
+            filter: "AND({Type}='Gaia Seed',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(GaiaSeed.init(from:))
+    }
+
     func fetchPracticeInvitations() async throws -> [PracticeInvitation] {
         let records = try await fetch(
             filter: "AND({Type}='Practice Invitation',{Status}='Live')",
@@ -235,14 +267,14 @@ final class AirtableService {
     func fetchFieldComments(storyId: String) async throws -> [FieldComment] {
         let all = try await fetchAllFieldComments()
         return all
-            .filter { $0.linkedStoryId == storyId }
+            .filter { $0.belongs(to: storyId) }
             .sorted { $0.commentOrder < $1.commentOrder }
     }
 
     func fetchAshComments(storyId: String) async throws -> [FieldComment] {
         let all = try await fetchAllAshComments()
         return all
-            .filter { $0.linkedStoryId == storyId }
+            .filter { $0.belongs(to: storyId) }
             .sorted { $0.commentOrder < $1.commentOrder }
     }
 
@@ -251,7 +283,7 @@ final class AirtableService {
     // record ID, so we pull all Resonance Voices and filter in Swift.
     func fetchResonanceVoice(storyId: String) async throws -> FieldComment? {
         let all = try await fetchAllResonanceVoices()
-        return all.first { $0.linkedStoryId == storyId }
+        return all.first { $0.belongs(to: storyId) }
     }
 
     private func fetchAllResonanceVoices() async throws -> [FieldComment] {
@@ -269,20 +301,118 @@ final class AirtableService {
         return records.map(FieldComment.init(from:))
     }
 
+    /// Ash's words across the whole feed — his comments AND his return answers. The story
+    /// stats count these, which is how the company rule at `uni-field.js:58` earns Ash a seat
+    /// in the fan: `cmts > spoke.length + 1`. A return raises `cmts` and never `spoke` (he is
+    /// excluded from the lenses), so the standard four-voice ensemble seats him at the SECOND
+    /// return on one story, and never at the first. That is the rule doing its own work —
+    /// nothing here counts returns toward anything.
     func fetchAllAshComments() async throws -> [FieldComment] {
         let records = try await fetch(
-            filter: "AND({Type}='Ash Comment',{Status}='Live')",
+            filter: "AND(OR({Type}='Ash Comment',{Type}='Return Answer'),{Status}='Live')",
             sort: [(field: "Source Date", direction: "desc")]
         )
         return records.map(FieldComment.init(from:))
     }
 
-    func fetchArchetypeComments(archetypeName: String) async throws -> [FieldComment] {
+    // MARK: - THE RETURN's write-back
+
+    /// One ring. `Type='Return'` carries the RECORD of a return — its position and its date —
+    /// and holds no words; the words are its `Return Answer` child. Two rows because they are
+    /// two things: the ring is what the strata draw, the answer is what register 2 reads.
+    ///
+    /// `Sealed At` takes the DATE and only the date. Everything about how old this is gets
+    /// computed at read time from it.
+    func writeReturn(storyId: String, ringIndex: Int, archetypeName: String,
+                     sortOrder: Int) async throws -> AirtableRecord {
+        try await createRecord(fields: [
+            "Name": "return-\(Self.localDayString())-\(ringIndex)",
+            "Type": "Return",
+            "Status": "Live",                     // or it writes into the void the gate excludes
+            "Archetype": archetypeName,
+            "Linked Story": [storyId],
+            "Ring Index": ringIndex,              // POSITION ONLY. Never an age.
+            "Sealed At": Self.localDayString(),
+            "Sort Order": sortOrder,
+        ])
+    }
+
+    /// The words he answered his past self with, parented to the ring by `Parent Comment`.
+    func writeReturnAnswer(storyId: String, ringId: String, body: String,
+                           archetypeName: String, sortOrder: Int) async throws -> AirtableRecord {
+        try await createRecord(fields: [
+            "Name": "return-answer-\(Self.localDayString())",
+            "Type": "Return Answer",
+            "Status": "Live",
+            "Archetype": archetypeName,
+            "Comment Body": body,                 // §6: comments use `Comment Body`, never `Body`
+            "Linked Story": [storyId],
+            "Parent Comment": [ringId],
+            "Sort Order": sortOrder,
+        ])
+    }
+
+    /// Every ring in the base. Grouped by story on the store side — §6's linked-record caveat
+    /// means `Linked Story` cannot be filtered server-side by record id.
+    /// F1 · every `Return Answer` in the base, `Status='Live'`. The store groups them by
+    /// their `Parent Comment`, which is the ring they answer.
+    ///
+    /// **THE FILTER IS ON TYPE, NEVER ON WHO.** §10 — *"a filter's SHAPE is decided by a
+    /// record id or an explicit flag; never by a display value."* Ash's own words are
+    /// `Return Answer` too (they are the ring's `frag`), so the split between *his words* and
+    /// *an answer to him* is made by the caller against `rec9BUbHMuylYiVwH`, not by asking
+    /// Airtable for rows whose Archetype is not "Ash".
+    func fetchReturnAnswers() async throws -> [ReturnAnswer] {
+        let records = try await fetch(
+            filter: "AND({Type}='Return Answer',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.compactMap(ReturnAnswer.init(from:))
+    }
+
+    func fetchReturns() async throws -> [ReturnRing] {
+        let records = try await fetch(filter: "AND({Type}='Return',{Status}='Live')",
+                                      sort: [(field: "Sort Order", direction: "asc")])
+        return records.compactMap(ReturnRing.init(from:))
+    }
+
+    /// The one POST both writers share, so the payload shape is stated once.
+    private func createRecord(fields: [String: Any]) async throws -> AirtableRecord {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
+        let payload: [String: Any] = [["fields": fields]].isEmpty ? [:] : [
+            "records": [["fields": fields]],
+            "typecast": true,      // resolves `Type` and `Sealed At` by value, not by option id
+        ]
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
+        let result = try decoder.decode(AirtableCreateResponse.self, from: data)
+        guard let first = result.records.first else { throw AirtableError.badURL }
+        return first
+    }
+
+    /// `isAsh` is decided by the CALLER, from the record `rec9BUbHMuylYiVwH` — not from the
+    /// name. It used to be `archetypeName == "Ash"`, so the identity of the voice chose which
+    /// `Type` was queried: rename the row in the base and this silently reads the wrong kind.
+    func fetchArchetypeComments(archetypeName: String, isAsh: Bool = false) async throws -> [FieldComment] {
         let escaped = archetypeName.replacingOccurrences(of: "'", with: "\\'")
         // Ash's own words are Type='Ash Comment', not 'Field Comment' — filtering on
         // Field Comment made Ash's Turning render permanently empty ("No words yet.").
-        let commentType = archetypeName == "Ash" ? "Ash Comment" : "Field Comment"
-        let filter = "AND({Type}='\(commentType)',{Status}='Live',{Archetype}='\(escaped)')"
+        //
+        // AND 'Return Answer' is one of Ash's words. A return is not a second archive kept
+        // beside the first; it is another thing he said on a story he had already spoken on.
+        // Reading it here — rather than through a parallel query — is what makes register 2's
+        // sub-depth real and what turns the legend's `none twice` by itself: `RoomStoryGroup`
+        // simply finds two items where it has only ever found one.
+        let typeClause = isAsh
+            ? "OR({Type}='Ash Comment',{Type}='Return Answer')"
+            : "{Type}='Field Comment'"
+        let filter = "AND(\(typeClause),{Status}='Live',{Archetype}='\(escaped)')"
         let records = try await fetch(
             filter: filter,
             sort: [(field: "Comment Order", direction: "desc")]
@@ -444,7 +574,7 @@ final class AirtableService {
     /// Reflection/Flairs tracking (CLAUDE.md §10). First-person, authored as Ash.
     /// `typecast: true` is harmless here (all options already exist). Best-effort.
     @discardableResult
-    func writeVow(text: String) async throws -> AirtableRecord {
+    func writeVow(text: String, archetypeName: String, sortOrder: Int) async throws -> AirtableRecord {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: baseURLString) else { throw AirtableError.badURL }
 
@@ -454,8 +584,12 @@ final class AirtableService {
             "Type": "Mirror Card",
             "Status": "Live",
             "Body": text,
-            "Archetype": "Ash",
+            "Archetype": archetypeName,
             "Card Register": "Vow",
+            // The 900 band. Runtime-written rows sort AFTER every authored one; without
+            // this the vow lands at the front (Airtable sorts empty first on asc) and
+            // shifts the Mirror's day-hash index for every past and future day.
+            "Sort Order": sortOrder,
         ]
         let payload: [String: Any] = [
             "records": [["fields": fields]],
@@ -537,6 +671,45 @@ final class AirtableService {
         }
     }
 
+    /// WHICH WORLDS HE HAS MET. `A4.1`.
+    ///
+    /// Brief §8.5 is explicit — *"Met-ness and depth derive from App Activity (`Story Met`
+    /// events)"* — and the wiring table says the same. The Universe was instead deriving it
+    /// from `commentCount > 0 || resonance > 0`, and because the field gathers on essentially
+    /// every story that lit almost the whole sky, which is the one distinction the sky exists
+    /// to make. §8.6: *"Unmet stars have no attendants — they wait faint and alone."*
+    ///
+    /// Returns the set of Feed record ids carrying a `Story Met`. Fail-safe: an error returns
+    /// an empty set, so the sky reads unmet rather than inventing a life.
+    func fetchMetStoryIDs() async -> Set<String> {
+        guard !token.isEmpty else { return [] }
+        var comps = URLComponents(string: appActivityURLString)
+        comps?.queryItems = [
+            URLQueryItem(name: "filterByFormula", value: "{Activity Type}='Story Met'"),
+            URLQueryItem(name: "pageSize", value: "100"),
+            URLQueryItem(name: "fields[]", value: "Activity Type"),
+            URLQueryItem(name: "fields[]", value: "Link to Feed"),
+        ]
+        guard let url = comps?.url else { return [] }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, response) = try await session.data(for: req)
+            try Self.validate(response: response, data: data)
+            let page = try decoder.decode(ActivityMetPage.self, from: data)
+            var out = Set<String>()
+            for r in page.records where r.fields.type == "Story Met" {
+                for id in r.fields.link ?? [] { out.insert(id) }
+            }
+            return out
+        } catch {
+            #if DEBUG
+            print("[AirtableService] fetchMetStoryIDs failed (sky reads unmet): \(error)")
+            #endif
+            return []
+        }
+    }
+
     /// Is today "met"? A day is met when a `Story Met` activity record exists
     /// dated today — a derived read of lived activity, never a stored local flag
     /// (Law 2). Fail-safe: any error returns `false` (unmet), so the Door offers
@@ -597,9 +770,11 @@ final class AirtableService {
         struct Fields: Decodable {
             let type: String?
             let date: String?
+            let link: [String]?
             enum CodingKeys: String, CodingKey {
                 case type = "Activity Type"
                 case date = "Activity Date"
+                case link = "Link to Feed"
             }
         }
     }

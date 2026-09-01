@@ -28,6 +28,8 @@ struct RecordFields: Codable {
     var resonance: Int?
 
     var commentBody: String?
+
+    var practiceSubLine: String?
     var archetype: String?
     var linkedStory: [String]?
     var parentComment: [String]?
@@ -48,6 +50,8 @@ struct RecordFields: Codable {
     var closingLine: String?
     var sourceType: String?
     var cardRegister: String?
+    let ringIndex: Int?
+    let sealedAt: String?
 
     // Sound Layer (post-Phase-9). Sparse — empty on every non-sound
     // record (the ~900 stories/comments). Optional by design; the
@@ -75,6 +79,7 @@ struct RecordFields: Codable {
         case lastActivityDate  = "Last Activity Date"
         case resonance         = "Resonance"
         case commentBody       = "Comment Body"
+        case practiceSubLine   = "Practice Sub-line"
         case archetype         = "Archetype"
         case linkedStory       = "Linked Story"
         case parentComment     = "Parent Comment"
@@ -92,6 +97,13 @@ struct RecordFields: Codable {
         case closingLine       = "Closing Line"
         case sourceType        = "Source Type"
         case cardRegister      = "Card Register"
+
+        // THE RETURN's write-back (Pass 6). `Sealed At` stores the DATE and nothing else —
+        // `days` is computed at read time, every read. A stored `days` integer is stale the
+        // next morning, and `Ring Index` is POSITION ONLY: deriving age from it is the fault
+        // that made a story sealed three years ago with one return read brand new.
+        case ringIndex         = "Ring Index"
+        case sealedAt          = "Sealed At"
 
         // Sound Layer — exact field names from the live schema.
         // Parentheticals and spaces matter; decode is by name (the
@@ -142,6 +154,20 @@ struct FieldComment: Identifiable, Hashable {
     let id: String
     let body: String
     let archetype: String
+    /// EVERY id in `Linked Story`. Not one — `Parent Comment` and `Linked Story` are a
+    /// symmetric pair on this table, so a threaded reply puts its own record id into the
+    /// parent's `Linked Story`. Roughly 100 Live field comments — one per story carrying a
+    /// Lalita reply — have held two values since June: `recbtjuoymm4Ot8L1` (S15-Sakshi) reads
+    /// `[The Mirror Doesn't Hallucinate, S15-Lalita-reply]`, and `recupjXrwd55KG0ge` the same.
+    ///
+    /// Nothing broke because Airtable preserves link order and the story was written first,
+    /// so `.first` happened to return it. **That is position-dependence, it is load-bearing,
+    /// and it has been working by luck for two months.** Neither reply drops out of the Live
+    /// filter — they are `Status = Live` — so the counts matched for the wrong reason.
+    let linkedStoryIds: [String]
+    /// The FIRST link, kept only for the paths that have no story set to resolve against.
+    /// Prefer `belongs(to:)` for membership and `storyId(in:)` for grouping — those are
+    /// order-independent and this is not.
     let linkedStoryId: String?
     let parentCommentId: String?
     let commentOrder: Int
@@ -156,13 +182,16 @@ struct FieldComment: Identifiable, Hashable {
         body.trimmingCharacters(in: .whitespacesAndNewlines) == "·"
     }
 
-    var isAsh: Bool { type == "Ash Comment" || archetype == "Ash" }
+    /// His words are identified by the ACT that produced them, not by a name. `Return Answer`
+    /// is one of Ash's kinds — see §10's Type-encodes-the-act rule.
+    var isAsh: Bool { type == "Ash Comment" || type == "Return Answer" }
 
     init(from record: AirtableRecord) {
         let f = record.fields
         self.id = record.id
         self.body = f.commentBody ?? ""
         self.archetype = f.archetype ?? ""
+        self.linkedStoryIds = f.linkedStory ?? []
         self.linkedStoryId = f.linkedStory?.first
         self.parentCommentId = f.parentComment?.first
         self.commentOrder = f.commentOrder ?? 0
@@ -172,6 +201,34 @@ struct FieldComment: Identifiable, Hashable {
         self.audioReference = f.audioReference?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             ? f.audioReference : nil
     }
+    // TWO DIFFERENT QUESTIONS HIDE BEHIND `linkedStoryId`, and only one of them needs to know
+    // what a story is.
+    //
+    //   "does this comment belong to story X?"  → MEMBERSHIP. Order-independent, needs
+    //                                             nothing but the id being asked about.
+    //   "which story does this comment belong to?" → RESOLUTION. Needs the set of real story
+    //                                             ids, because the extra link is a comment.
+    //
+    // Both were answered with `.first` and an `==`. Membership is the one that could silently
+    // drop a comment off its own story if the link order ever differed.
+
+    /// Membership. Use wherever the story is already known.
+    func belongs(to storyId: String) -> Bool { linkedStoryIds.contains(storyId) }
+
+    /// Resolution against a story map — the map's keys ARE the set of real story ids.
+    func story(in byId: [String: Story]) -> Story? {
+        linkedStoryIds.lazy.compactMap { byId[$0] }.first
+    }
+
+    /// Resolution. `known` is the set of real story record ids; the id that is in it is the
+    /// story, and any other id in the field is a threaded reply's back-link.
+    func storyId(in known: Set<String>) -> String? {
+        if let hit = linkedStoryIds.first(where: { known.contains($0) }) { return hit }
+        // Nothing matched — the story may simply not be loaded. Fall back to the first link
+        // rather than dropping the comment, and never pretend this is a resolution.
+        return linkedStoryId
+    }
+
 }
 
 struct Room: Identifiable, Hashable {
@@ -252,7 +309,11 @@ struct ThresholdSentence: Identifiable, Hashable {
     init(from record: AirtableRecord) {
         let f = record.fields
         self.id = record.id
-        self.text = f.name ?? ""
+        // `Name` is singleLineText and silently strips \n — the canon threshold
+        // ("You are not late. / The field kept your place.") loses its break there.
+        // `Body` is multiline and is populated on the canon rows. Same defensive
+        // shape Signal / MirrorCard / PracticeInvitation already use.
+        self.text = f.body ?? f.name ?? ""
         self.weight = f.sentenceWeight ?? 1
         self.source = f.sentenceSource ?? ""
     }
@@ -309,6 +370,9 @@ struct PracticeInvitation: Identifiable, Hashable {
     let body: String
     let sourceType: String
     let sortOrder: Int
+    /// `Practice Sub-line` (fldWcHyZDGcytIdJg). Rendered under the body per
+    /// Practice Door.html:155-159. Blank -> render nothing, never a substitute.
+    let subLine: String?
 
     init(from record: AirtableRecord) {
         let f = record.fields
@@ -318,6 +382,26 @@ struct PracticeInvitation: Identifiable, Hashable {
         // under either "Comment Body" or "Body" depending on field name.
         self.body = f.commentBody ?? f.body ?? ""
         self.sourceType = f.sourceType ?? ""
+        self.sortOrder = f.sortOrder ?? 0
+        let sl = f.practiceSubLine?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.subLine = (sl?.isEmpty == false) ? sl : nil
+    }
+}
+
+/// The field's second-person voice at the threshold. Its own Type since 2026-08-27 —
+/// it used to borrow the Signal pool, which is how twelve Codex/business-ontology rows
+/// reached the Practice Door. Same shape as `Signal`; a different door.
+struct GaiaSeed: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let body: String
+    let sortOrder: Int
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        self.id = record.id
+        self.name = f.name ?? ""
+        self.body = f.commentBody ?? f.body ?? ""
         self.sortOrder = f.sortOrder ?? 0
     }
 }
@@ -361,7 +445,7 @@ enum PracticeDoorKind: String, CaseIterable {
 enum PracticeDoorContent {
     case threshold(ThresholdSentence)
     case practice(PracticeInvitation)
-    case gaiaSeed(Signal)
+    case gaiaSeed(GaiaSeed)
     case story(Story)
     case binduDot(ThresholdSentence)
 
@@ -470,4 +554,71 @@ struct FieldSound: Identifiable, Hashable {
         attackSeconds: 12,
         releaseSeconds: 8
     )
+}
+
+// MARK: - THE RETURN · one ring
+
+/// A single sealed return. It carries a POSITION (`Ring Index`) and a DATE (`Sealed At`) and
+/// nothing else — the words live on its `Return Answer` child.
+///
+/// The two must never be confused. §10: *age comes from days, never from rank.* Before this
+/// pass the strata took `age = returnCount / 5`, so a story sealed three years ago and
+/// returned to once read as brand new, and a story returned to five times in a week read as
+/// ancient. `Ring Index` orders the rings; `Sealed At` is the only thing that can say how old
+/// anything is, and it says it through a subtraction done at read time.
+struct ReturnRing: Identifiable, Equatable {
+    let id: String
+    /// EVERY id in `Linked Story`, unresolved. NOT `.first`.
+    ///
+    /// `Parent Comment` and `Linked Story` are a SYMMETRIC PAIR on this table, so writing
+    /// `Parent Comment: [ringId]` on the answer makes Airtable add the answer to the ring's
+    /// `Linked Story` — the app writes one link and the base stores two. Verified in the base:
+    /// the ring's `Linked Story` held the story AND the answer record.
+    ///
+    /// So `Linked Story` is not guaranteed to hold one thing, and `.first` here would return
+    /// whichever Airtable ordered first — possibly the ANSWER, giving the ring the wrong
+    /// story. That is the Codex ID fault again in a third place: a lookup keyed on a field
+    /// that does not promise to be singular. The store resolves which of these is actually a
+    /// story; nothing takes it by position.
+    let linkedIds: [String]
+    /// Resolved by the store against the loaded stories. Empty until then.
+    var storyId: String = ""
+    let ringIndex: Int
+    /// `yyyy-MM-dd`, local. Stored; never a duration.
+    let sealedAt: String
+
+    /// A ring is a value; `init?(from:)` suppresses the memberwise init Swift would give it,
+    /// so it is written out. Used to build rings the base has not yet handed back — and by
+    /// the tests, which must be able to state a ring without a network.
+    init(id: String, linkedIds: [String], ringIndex: Int, sealedAt: String, storyId: String = "") {
+        self.id = id
+        self.linkedIds = linkedIds
+        self.ringIndex = ringIndex
+        self.sealedAt = sealedAt
+        self.storyId = storyId
+    }
+
+    init?(from record: AirtableRecord) {
+        let ids = record.fields.linkedStory ?? []
+        guard !ids.isEmpty else { return nil }
+        self.id = record.id
+        self.linkedIds = ids
+        self.ringIndex = record.fields.ringIndex ?? 0
+        self.sealedAt = String((record.fields.sealedAt ?? "").prefix(10))
+    }
+
+    /// Days from this ring's seal to today, LOCAL, computed now and never stored.
+    var days: Int { ReturnRing.days(since: sealedAt) }
+
+    static func days(since day: String) -> Int {
+        guard !day.isEmpty else { return 0 }
+        // §9: the user's day is the day their phone shows. POSIX/Gregorian-fixed via the
+        // one factory — this used a bare formatter and is §10's age-from-days mechanism.
+        let f = AirtableService.dayFormatter(timeZone: .current)
+        guard let then = f.date(from: String(day.prefix(10))) else { return 0 }
+        let cal = Calendar.current
+        let d = cal.dateComponents([.day], from: cal.startOfDay(for: then),
+                                   to: cal.startOfDay(for: Date())).day ?? 0
+        return max(0, d)
+    }
 }

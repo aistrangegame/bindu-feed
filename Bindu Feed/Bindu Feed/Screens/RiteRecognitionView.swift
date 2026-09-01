@@ -27,23 +27,43 @@ struct RiteRecognitionView: View {
     @StateObject private var recorder = RiteRecorder()
     @FocusState private var editing: Bool
 
-    private var mmss: String { String(format: "%02d:%02d", seconds / 60, seconds % 60) }
+    /// E2.6 · `The Rite v3.html:1495` — `{mm}:{ss}`, and the minutes are NOT zero-padded:
+    /// seven seconds of speech reads `0:07`, not `00:07`. A leading zero on the minutes makes
+    /// a two-digit field out of a number that is almost always one digit, and a field is what
+    /// a stopwatch has. This is the length of something he said.
+    private var mmss: String { String(format: "%d:%02d", seconds / 60, seconds % 60) }
 
     var body: some View {
         VStack(spacing: 22) {
             Spacer()
-            HStack(spacing: 8) {
-                Text(RiteAsh.glyph).foregroundStyle(RiteAsh.color)
-                Text(RiteWord.recogKeptLabel)
-                    .font(.spaceMono(9)).tracking(1.5)
-                    .foregroundStyle(BinduTheme.inkTertiary)
-            }
+            // E2.5 · **THE TWO LINES WERE IN EACH OTHER'S SLOTS, AND THE SWAP IS THE WHOLE
+            // FAULT.** `The Rite v3.html:1473-1477` opens its wrapper BEFORE any stage guard,
+            // so the avatar and the QUESTION are what stand through the ceremony —
+            // *"What arrived for you?"* is the thing Ash is asking, present while he answers
+            // it. The app made the persistent line *"spoken · kept in your voice"*, which is
+            // the mechanic's disclosure — a note about how the recording is stored — and put
+            // the question inside `case .prompt`, where it vanishes the moment he starts
+            // speaking.
+            //
+            // So the screen held its own footnote up for the length of the rite and showed
+            // the question only before it began. **Nothing is deleted here; the two authored
+            // strings trade places**, and neither an outcome check nor a string checker can
+            // see it: both render, both are authored, both are correct copy in the wrong slot.
+            //
+            // The design also STACKS them (`:1474` then `:1475`), where the app set the glyph
+            // beside its text — a row reads as a label, a column reads as someone speaking.
+            Text(RiteAsh.glyph).foregroundStyle(RiteAsh.color)
+            Text(RiteWord.recogPrompt)
+                .font(.loraItalic(17))                       // `:1475` — 17, not 20
+                .foregroundStyle(RiteAsh.color.opacity(0.9)) // in ASH's colour, not inkPrimary
 
             switch stage {
             case .prompt:
-                Text(RiteWord.recogPrompt)
-                    .font(.lora(20)).italic()
-                    .foregroundStyle(BinduTheme.inkPrimary)
+                // The disclosure belongs to the moment before he speaks — it tells him what
+                // will happen to what he says, which is only news while he has not said it.
+                Text(RiteWord.recogKeptLabel)
+                    .spaceMonoTracked(9, em: 1.5 / 9)
+                    .foregroundStyle(BinduTheme.inkTertiary)
                 Button(action: startListening) {
                     Text("◉")
                         .font(.system(size: 34))
@@ -52,23 +72,32 @@ struct RiteRecognitionView: View {
                         .background(Circle().stroke(RiteAsh.color.opacity(0.4), lineWidth: 1))
                 }
                 Text(RiteWord.recogTouchSpeak)
-                    .font(.spaceMono(9)).tracking(2)
+                    .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(BinduTheme.inkTertiary)
-                // Leaving a word is a CHOICE, never a requirement — seal with nothing.
+                // E2.6 · **APP-OWN, AND IT BELONGS TO THE SAME DIVERGENCE AS THE UNGATED
+                // SEAL.** `nothing to leave · seal ›` is in no design source — the audit lists
+                // it as invented and a full-corpus grep across `canon/`, Round 1 and Round 2
+                // confirms it. **Kept deliberately** (ruled 2026-08-31): the design has no
+                // notion of a spoken anchor, so it has no notion of this exit either. Remove
+                // it and a rite cannot be declined — a man who has SPOKEN but written nothing
+                // is held on the Recognition with an orphaned recording. The design's own
+                // state machine never reaches that state; the app's does, because the app
+                // keeps the voice.
                 Button { onSealed("", recorder.keptFilename) } label: {
                     Text("nothing to leave · seal ›")
-                        .font(.spaceMono(8)).tracking(2)
+                        .spaceMonoTracked(8, em: 0.25)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
                 }
                 .padding(.top, 10)
 
             case .listening:
-                Text(mmss)
-                    .font(.spaceMono(22)).foregroundStyle(BinduTheme.inkPrimary)
+                // E2.6 · the design puts the WORD first and the count under the control, and
+                // strips the word of Ash's colour and its breathing: *listening* is the state,
+                // not a presence — colouring and breathing it makes the label the thing that
+                // is alive, when the thing that is alive is him.
                 Text(RiteWord.recogListening)
-                    .font(.spaceMono(9)).tracking(2)
-                    .foregroundStyle(RiteAsh.color)
-                    .modifier(RiteBreathe())
+                    .spaceMonoTracked(9, em: 2 / 9)
+                    .foregroundStyle(BinduTheme.inkTertiary)
                 Button(action: stopListening) {
                     RoundedRectangle(cornerRadius: 3)
                         .fill(RiteAsh.color)
@@ -76,18 +105,27 @@ struct RiteRecognitionView: View {
                         .padding(18)
                         .background(Circle().stroke(RiteAsh.color.opacity(0.4), lineWidth: 1))
                 }
+                Text(mmss)
+                    .spaceMonoTracked(11)
+                    .foregroundStyle(RiteAsh.color)
 
             case .settling:
                 Text(RiteWord.recogSettling)
-                    .font(.lora(15)).italic()
-                    .foregroundStyle(BinduTheme.inkSecondary)
+                    .font(.lora(13)).italic()
+                    .foregroundStyle(BinduTheme.inkTertiary)
+                    .modifier(RiteBreathe())
 
             case .words:
                 VStack(spacing: 14) {
                     Text(RiteWord.recogTranscript)
-                        .font(.spaceMono(9)).tracking(1.5)
+                        .spaceMonoTracked(9, em: 1.5 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary)
                     TextEditor(text: $text)
+                        // `inkTouch()` — `field-sound.js:203-209`. The field leans in on each
+                        // keystroke and settles back over 1.1s. This is the ONLY writing
+                        // surface the ink runs under (`:123` turns it on), so it is the only
+                        // place the design's call has a caller.
+                        .onChange(of: text) { soundEngine.inkTouch() }
                         .focused($editing)
                         .font(.lora(16))
                         .foregroundStyle(BinduTheme.inkPrimary)
@@ -98,14 +136,26 @@ struct RiteRecognitionView: View {
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.03)))
                     HStack {
                         Text("voice kept · \(mmss)")
-                            .font(.spaceMono(9)).tracking(1)
+                            .spaceMonoTracked(9, em: 1 / 9)
                             .foregroundStyle(BinduTheme.inkTertiary)
                         Spacer()
                         Button(RiteWord.recogKeepIt) {
                             onSealed(text.trimmingCharacters(in: .whitespacesAndNewlines), recorder.keptFilename)
                         }
-                        .font(.lora(15))
-                        .foregroundStyle(RiteAsh.color)   // always sealable — empty is allowed
+                        .font(.lora(14)).tracking(0.03 * 14)
+                        // E2.6 · `:1496` — `color: text.trim() ? ASH.color : var(--ink35)`.
+                        // **The helper for this was written and never called** — it sat at the
+                        // foot of the file dimming nothing, which is the same built-and-unread
+                        // shape `check_wired` was extended for.
+                        .foregroundStyle(t: text, color: RiteAsh.color)
+                        // **DIVERGENCE — THE ACTION STAYS UNGATED, AND THAT IS DELIBERATE.**
+                        // `:1496` also gates the CLICK on `text.trim()`. The app keeps the
+                        // spoken audio (Movement IV's anchor), which the design has no notion
+                        // of — so a man who SPEAKS and types nothing would have no exit from
+                        // the Recognition and his recording would be stranded behind a dead
+                        // button. The colour gate carries the design's claim (there is nothing
+                        // to keep yet); the ungated action answers a state the design cannot
+                        // have. Recorded rather than silently keeping both halves.
                     }
                 }
                 .padding(.horizontal, 6)

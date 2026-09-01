@@ -28,7 +28,7 @@ private struct AllChip: View {
     var body: some View {
         Button(action: action) {
             Text("All")
-                .font(.spaceMono(10))
+                .spaceMonoTracked(10)
                 .tracking(1)
                 .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkSecondary)
                 .padding(.horizontal, 12)
@@ -55,45 +55,63 @@ private struct RoomChip: View {
     let action: () -> Void
 
     var body: some View {
+        // F2.1 · **ROOM COLOUR *IS* THE SELECTION — IT IS NOT A TINT LAID OVER IT.**
+        // `Home Feed.html:128-133`: an inactive chip has **no room colour at any element** —
+        // grey glyph, grey name, no fill, transparent border, no glow. The app gave every
+        // chip its room's colour always and turned the brightness up ~2.5× on the active one,
+        // so **the inactive state was inverted**: thirteen coloured pills, one slightly
+        // brighter. That is a legend of the rooms with a highlight on it, where the design is
+        // a row of names with exactly one room present in it.
+        //
+        // The difference is not a delta anyone can see in a still of the ACTIVE chip — it is
+        // visible only in what the other twelve are doing, which is why a screenshot review
+        // passes it.
+        //
+        // The border stays PRESENT and transparent when inactive rather than being removed,
+        // so the pill does not change width on selection.
         Button(action: action) {
-            HStack(spacing: 5) {
+            HStack(spacing: 6) {
                 Text(room.glyph)
                     .font(.system(size: 11))
-                    .foregroundColor(room.color)
+                    .foregroundColor(active ? room.color : BinduTheme.inkTertiary)
 
-                Text(room.name)
-                    .font(nameFont)
-                    .foregroundColor(room.color.opacity(active ? 1.0 : 0.85))
-                    .tracking(room.name == "The Watcher" ? 1.0 : 0)
+                roomName(13)
+                    .tracking(0.13)                                  // 0.01em × 13
+                    .foregroundColor(active ? room.color : BinduTheme.inkTertiary.opacity(0.55))
                     .lineLimit(1)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
             .background(
                 Capsule()
-                    .fill(room.color.opacity(active ? 0.20 : 0.08))
+                    .fill(active ? room.color.opacity(0.086) : Color.clear)   // `16`₁₆
             )
             .overlay(
                 Capsule()
-                    .strokeBorder(room.color.opacity(active ? 0.55 : 0.20), lineWidth: 0.5)
+                    .strokeBorder(active ? room.color.opacity(0.22) : Color.clear, lineWidth: 1)
             )
             .shadow(
-                color: room.color.opacity(active ? 0.35 : 0),
-                radius: active ? 8 : 0
+                color: active ? room.color.opacity(0.094) : .clear,           // `18`₁₆
+                radius: active ? 7 : 0
             )
         }
         .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.35), value: active)
     }
 
-    private var nameFont: Font {
-        let size: CGFloat = 10
+    // E1.18 · **THE FACE AND ITS CASE ARE ONE DECISION, SO THE SWITCH RETURNS A VIEW, NOT A
+    // `Font`.** This was a `Font`-valued switch with the mono branch's tracking spelled out
+    // at the call site (`room.name == "The Watcher" ? 1.0 : 0`) — the face handed over bare
+    // and its two companions left to whoever drew it. Nothing enforced that pairing, which
+    // is the shape the whole row is about.
+    @ViewBuilder private func roomName(_ size: CGFloat) -> some View {
         switch room.name {
         case "The Descent", "The Return", "The Field":
-            return .loraItalic(size)
+            Text(room.name).font(.loraItalic(size))
         case "The Watcher":
-            return .spaceMono(size)
+            Text(room.name).spaceMonoTracked(size, em: 1 / size)
         default:
-            return .lora(size, weight: .medium)
+            Text(room.name).font(.lora(size, weight: .medium))
         }
     }
 }
@@ -105,7 +123,7 @@ struct FeedSortToggle: View {
         HStack(spacing: 10) {
             sortLabel("MOST ACTIVE", value: .mostActive)
             Text("·")
-                .font(.spaceMono(9))
+                .spaceMonoTracked(9)
                 .foregroundColor(BinduTheme.inkTertiary)
             sortLabel("MOST RECENT", value: .mostRecent)
         }
@@ -118,7 +136,7 @@ struct FeedSortToggle: View {
             sort = value
         } label: {
             Text(text)
-                .font(.spaceMono(9))
+                .spaceMonoTracked(9)
                 .tracking(1.2)
                 .foregroundColor(active ? BinduTheme.inkPrimary : BinduTheme.inkTertiary)
         }

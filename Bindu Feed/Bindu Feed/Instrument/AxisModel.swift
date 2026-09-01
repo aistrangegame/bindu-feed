@@ -9,20 +9,60 @@ import SwiftUI
 //   register is at a given Z (full at its exact scale, gone at ±1 unit).
 //   rim(i, Z) = R0 · 2^((Z+5) − i)                          — its drawn radius.
 
+/// What `#where` shows: at most a `top` line, the register's name in its own casing,
+/// and at most a `sub`. `spine-axis.js:118-122` composes exactly two shapes and no
+/// others — a Point register carries the roman and its `n of 7`, everything else
+/// carries its sub-line. `dim` is NEVER rendered bare; only ever as "N of 7".
+struct AxisWhere {
+    let top: String?
+    let name: String
+    let sub: String?
+}
+
 struct AxisRegister: Identifiable {
     let i: Int          // index = Z + 5
     let z: Int
     let key: String
     let name: String
     let hz: Double
+    /// The canon sub-line. Universe / Feed / gate / centre only — nil on the Point side.
+    let sub: String?
+    /// I…VII, and 1…7. Point side only — nil everywhere else. Mutually exclusive with `sub`.
+    let roman: String?
+    let dim: Int?
     var id: Int { i }
+
+    init(i: Int, z: Int, key: String, name: String, hz: Double,
+         sub: String? = nil, roman: String? = nil, dim: Int? = nil) {
+        self.i = i; self.z = z; self.key = key; self.name = name; self.hz = hz
+        self.sub = sub; self.roman = roman; self.dim = dim
+    }
+
+    /// `spine-axis.js:118-122` — two shapes, never a third.
+    var whereBlock: AxisWhere {
+        if let roman, let dim {
+            return AxisWhere(top: "\(roman) · \(dim) of 7", name: name, sub: nil)
+        }
+        return AxisWhere(top: nil, name: name, sub: sub)
+    }
+
+    /// The chrome hue — the rail, the particle, the register tint. This is the canvas
+    /// `HUE[]` at The Instrument v3.html:3423-3424, NOT the shader's `base[]`
+    /// (spine-field.js:204-206), which colours the atmosphere shells and lives verbatim
+    /// in InstrumentField.metal. Two palettes, two jobs; do not reconcile them.
+    ///
+    /// `region`/`world`/`fall` are overwritten at runtime with the room he is actually
+    /// in — see `Axis.roomHue`. The value here is only the resting colour before a room
+    /// is known. "The Universe side is never generic."
     var color: Color {
-        // Point registers wear their dimension hue; the rest a neutral ink.
         switch key {
         case "light":  return Color(hex: "#EDE3CE")
-        case "sky", "region", "world", "fall": return Color(hex: "#9FB2C4")
-        case "feed":   return Color(hex: "#E5533C")
-        case "gate":   return Color(hex: "#C9A07A")
+        case "sky":    return Color(hex: "#7C8698")
+        case "region", "world", "fall":
+            return Color(hex: Axis.roomHue ?? "#8A93A6")
+        case "feed":   return Color(hex: "#C9A07A")
+        case "gate":   return Color(hex: "#C0392B")
+        case "centre": return Color(hex: "#E5533C")   // the particle; BinduParticle agrees
         default:
             // +2…+8 → the seven Point dimensions m1…m7.
             let m = "m\(z - 1)"
@@ -32,29 +72,121 @@ struct AxisRegister: Identifiable {
 }
 
 enum Axis {
+    /// Sub-lines and romans verbatim from The Chrome.html:134-148, cross-checked against
+    /// spine-axis.js:40-55. NOTE spine-axis.js is the pre-Light 14-register extraction
+    /// (Z0=−4, NSHELL=14) — its STRINGS are canon, its INDEXING is not. This table is
+    /// fifteen, i = Z + 5, matching InstrumentField.metal:195 `float zi = uZ + 5.0`.
     static let registers: [AxisRegister] = [
-        .init(i: 0,  z: -5, key: "light",  name: "the Light",  hz: 174),
-        .init(i: 1,  z: -4, key: "sky",    name: "the sky",    hz: 110),
-        .init(i: 2,  z: -3, key: "region", name: "a region",   hz: 174),
-        .init(i: 3,  z: -2, key: "world",  name: "a world",    hz: 198),
-        .init(i: 4,  z: -1, key: "fall",   name: "the fall",   hz: 84),
-        .init(i: 5,  z: 0,  key: "feed",   name: "the Feed",   hz: 136.1),
-        .init(i: 6,  z: 1,  key: "gate",   name: "the gate",   hz: 174),
-        .init(i: 7,  z: 2,  key: "d1",     name: "The Point",  hz: 285),
-        .init(i: 8,  z: 3,  key: "d2",     name: "The Turn",   hz: 396),
-        .init(i: 9,  z: 4,  key: "d3",     name: "The Veil",   hz: 417),
-        .init(i: 10, z: 5,  key: "d4",     name: "The Chamber", hz: 528),
-        .init(i: 11, z: 6,  key: "d5",     name: "The Mirrors", hz: 639),
-        .init(i: 12, z: 7,  key: "d6",     name: "The Return",  hz: 741),
-        .init(i: 13, z: 8,  key: "d7",     name: "The Dance",   hz: 852),
-        .init(i: 14, z: 9,  key: "centre", name: "the centre",  hz: 963),
+        .init(i: 0,  z: -5, key: "light",  name: "the Light",   hz: 174,   sub: "what has not yet been"),
+        .init(i: 1,  z: -4, key: "sky",    name: "the sky",     hz: 110,   sub: "everything you have lived"),
+        .init(i: 2,  z: -3, key: "region", name: "a region",    hz: 174,   sub: "one room of the Feed"),
+        .init(i: 3,  z: -2, key: "world",  name: "a world",     hz: 198,   sub: "one story, close"),
+        .init(i: 4,  z: -1, key: "fall",   name: "the fall",    hz: 84,    sub: "who sat with it · what you left here"),
+        .init(i: 5,  z: 0,  key: "feed",   name: "the Feed",    hz: 136.1, sub: "the turn"),
+        .init(i: 6,  z: 1,  key: "gate",   name: "the gate",    hz: 174,   sub: "the deal"),
+        .init(i: 7,  z: 2,  key: "d1",     name: "The Point",   hz: 285,   roman: "I",   dim: 1),
+        .init(i: 8,  z: 3,  key: "d2",     name: "The Turn",    hz: 396,   roman: "II",  dim: 2),
+        .init(i: 9,  z: 4,  key: "d3",     name: "The Veil",    hz: 417,   roman: "III", dim: 3),
+        .init(i: 10, z: 5,  key: "d4",     name: "The Chamber", hz: 528,   roman: "IV",  dim: 4),
+        .init(i: 11, z: 6,  key: "d5",     name: "The Mirrors", hz: 639,   roman: "V",   dim: 5),
+        .init(i: 12, z: 7,  key: "d6",     name: "The Return",  hz: 741,   roman: "VI",  dim: 6),
+        .init(i: 13, z: 8,  key: "d7",     name: "The Dance",   hz: 852,   roman: "VII", dim: 7),
+        .init(i: 14, z: 9,  key: "centre", name: "the centre",  hz: 963,   sub: "the point, at last"),
     ]
 
-    static let minZ: Double = -5
-    static let maxZ: Double = 9.0
+    /// The room he is actually in, as a hex. `spine-field.js:211-216 setRoom()` overwrites
+    /// the region/world/fall slots with it on every room change — "so the Universe side is
+    /// never generic". nil until a room is known.
+    /// **SHARED STATIC · any test suite touching this is `.serialized`** (§10 TENTH SHAPE).
+    /// The rule is *at creation, not at flake* — `PointReturn` and `PointDance` cost a pass to
+    /// learn it. Nothing tests this yet; the first suite that does inherits the trap.
+    static var roomHue: String?
 
+    static let minZ: Double = -5
+    /// ZN + 0.62. The overshoot past the centre is where `bindu.fill()` completes and the
+    /// centre blooms — `spine-axis.js:87` `clamp: max(Z0, min(ZN+0.62, Z))`. A clamp at 9.0
+    /// makes the centre unreachable.
+    static let maxZ: Double = 9.62
+
+    // ── C1.8 · THE GEOMETRY EVERY LAYER MUST AGREE ON ────────────────────────────────
+    //
+    // `The Instrument v3.html:1040-1046` gives these two under that exact header, and the app
+    // had **neither in Swift** — the law was prose in the comment at the top of this file, the
+    // shader kept a private copy at `InstrumentField.metal:195-199`, and the only executable
+    // Swift copy was one Point world's. So no CPU layer could agree with the shader about
+    // which shells exist, and every world that needed a radius invented `min(w,h)·k`.
+    //
+    // **THE TWO ARE A PAIR AND THEY DIVIDE THE WORK.** `rim` answers *how big is register i
+    // from here* and NOTHING ELSE. `weight` answers *does register i exist this frame, and
+    // how strongly*. Folding the second into the first is how `PointChamber.rim` came to
+    // carry a ±2 clamp the design does not have: with no `weight` to cull, the culling went
+    // into the scale, and the two laws disagree exactly at the edges — the design fades a
+    // register out across 1.35 registers, a clamp holds it at fixed size and then cuts.
+
+    /// `:1041` — `rim(i,Z,R0) = R0·2^((Z+5)−i)`. **A SCALE, NOT A CULL**: nothing is wrapped
+    /// around the exponent, and nothing should be. One register nearer is twice the size,
+    /// which is what makes every register exist at every moment at its own scale rather than
+    /// being created and destroyed as he moves.
+    static func rim(_ i: Int, _ z: Double, R0: Double) -> Double {
+        R0 * pow(2, (z + 5) - Double(i))
+    }
+
+    /// `:1042-1046` — the culling window and its two fades. **This is where the bound lives.**
+    ///
+    ///     if (rel < -2.7 || rel > 2.0) return 0
+    ///     return sm(-2.7, -1.35, rel) * (1 - sm(0.80, 1.95, rel))
+    ///
+    /// The window is **asymmetric on purpose**: 2.7 registers of reach outward against 2.0
+    /// inward, because what is ahead of him is further away than what he has passed. The
+    /// fade-in takes 1.35 registers; the fade-out begins 0.8 PAST standing in a register, so
+    /// `rel = 0` — standing in it — is still full weight.
+    ///
+    /// **IT STOPS HERE, AND THAT BOUNDARY IS THE POINT.** The shader multiplies three more
+    /// terms onto its own `w` (`InstrumentField.metal:200-203`: the `0.002` cutoff, the
+    /// `0.30 + 0.70·ahead` lean, and `1 − 0.48·smoothstep(0, 1.1, rel)` — *the passed shells
+    /// recede into atmosphere*). Those are the FIELD's depth dressing and the design keeps
+    /// them in the field: `Claude Design Round 2/design-source/spine-field.js:152-153`, inside
+    /// the shader string, not in the `Spine` object. Fold them in here and every CPU consumer
+    /// double-applies them, so a CPU-drawn ring sits at a different opacity from the shell it
+    /// is the rim of.
+    /// UNWIRED(AUDIT C4.7 and C4.2, both OPEN — `weight` is ported and correct and **nothing
+    /// in the app reads it yet**, because the layer that would is the presence-weighted CPU
+    /// layer C4.7 covers and the `uBack` normalisation C4.2 covers. `check_wired` caught this
+    /// in the same batch that built it, which is the point of the pass: C1.8 stays PARTIAL
+    /// rather than closing on a declaration, exactly as E3.8 was reopened for.)
+    static func weight(_ i: Int, _ z: Double) -> Double {
+        let rel = (z + 5) - Double(i)
+        if rel < -2.7 || rel > 2.0 { return 0 }
+        return smoothstep(-2.7, -1.35, rel) * (1 - smoothstep(0.80, 1.95, rel))
+    }
+
+    /// `:1101` — `sm(a,b,x)`. The Hermite curve, bit-for-bit what Metal's `smoothstep` is, so
+    /// the CPU and the shader ramp identically. A linear ramp here would agree at the ends and
+    /// differ everywhere between them, which is the whole span that matters.
+    /// UNWIRED(AUDIT C4.7, still OPEN — reached only through `weight`, so it waits on the
+    /// same consumer.)
+    static func smoothstep(_ a: Double, _ b: Double, _ x: Double) -> Double {
+        let t = max(0, min(1, (x - a) / (b - a)))
+        return t * t * (3 - 2 * t)
+    }
+
+    /// `:1047-1051` — **a different law from `weight`, and not a substitute for it.**
+    /// `presence` is a symmetric linear triangle, zero at |rel| ≥ 1: it gates whether CONTENT
+    /// speaks. `weight` gates whether the SHELL is drawn, is asymmetric, and reaches 2.7
+    /// registers out. Both are called in the same frame.
     static func presence(_ i: Int, _ z: Double) -> Double {
         max(0, min(1, 1.30 - abs((z + 5) - Double(i)) * 1.30))
+    }
+
+    /// C2.6 · `dom()` — `The Instrument v3.html:3616`:
+    /// `on ? min(1, t*2.0 + 0.12) : after*0.7`.
+    ///
+    /// How much the passage owns the surface. It drives the fade of the rail, `#where`, the
+    /// shells and the delivery bloom — so it is not one element's opacity but the chrome's
+    /// whole relationship to a crossing. **The app had no afterglow at all**: `crossing`
+    /// flipped false at the landing and everything returned in the same frame.
+    static func dom(crossing: Bool, passageT: Double, after: Double) -> Double {
+        crossing ? min(1, passageT * 2.0 + 0.12) : after * 0.7
     }
 
     /// The register nearest a given Z.
@@ -62,5 +194,450 @@ enum Axis {
         registers[max(0, min(14, Int((z + 5).rounded())))]
     }
 
+    /// C7.3 · the register at an index — `was`, the one he has just left. Bounds-checked
+    /// rather than trapping, because the index it is given is a REMEMBERED one and a
+    /// remembered index outliving its table is a crash at the moment of a crossing.
+    static func register(at i: Int) -> AxisRegister? {
+        registers.indices.contains(i) ? registers[i] : nil
+    }
+
+    /// The axis depth of a Point world, by its dimension number. **The register table is the
+    /// only place a register's depth is stated**, and anything that computes from depth — a
+    /// world's load, its press rate, the size of its room — must read it from here rather
+    /// than carry its own copy.
+    static func z(ofDimension n: Int) -> Double? {
+        registers.first { $0.dim == n }.map { Double($0.z) }
+    }
+
     static func clampZ(_ z: Double) -> Double { max(minZ, min(maxZ, z)) }
+}
+
+/// The shader's own driven quantities, as functions rather than literals.
+///
+/// C4.5 · six of eight were `.float(0)` with a *"Phase 2"* comment. They are not phase-two
+/// features: the shader computes with every one of them and has been multiplying by zero.
+enum InstrumentField {
+    /// `The Instrument v3.html:5589` — `reveal: Math.max(0, (Z - 8.6) / 0.9)`.
+    ///
+    /// **Nothing until the last 0.4 of the axis, then a ramp to 1 exactly at the centre.**
+    /// `z 9` is *the point, at last*, and `(9 − 8.6)/0.9 = 0.444`… which does NOT reach 1 —
+    /// the ramp is written to keep climbing past the register, to `z 9.5`, and the axis clamps
+    /// at `9.62`. So the bloom is still opening as he arrives and is at its fullest just past
+    /// it: the design does not put the maximum on the register, it puts it beyond.
+    static func reveal(z: Double) -> Double { max(0, (z - 8.6) / 0.9) }
+}
+
+/// C5.6 · the particle's own name at a point on the axis, and the ground band.
+///
+/// Lifted out of `InstrumentView` so the DOMAIN can be walked. `check_authored` proves the
+/// nine literals exist; nothing could ask **which z reaches one** — and four of them were
+/// reachable by no state at all, fenced behind a Universe-wide guard. A string that exists
+/// and cannot be reached passes every checker in this build.
+enum InstrumentNames {
+
+    /// B0.5 · `The Instrument v3.html:1302` — the recognition at the sky, said once and only
+    /// when he has held still past `dwell > 0.62`. Held here rather than at the call site so
+    /// it sits with the other authored strings the axis speaks, and so the domain that
+    /// reaches it can be walked the way the nine particle names are.
+    static let dwellRecognition = "This is what you look like from outside."
+
+    /// `The Instrument v3.html:1070-1080` — nine names, thresholds
+    /// `−4.4, −3.4, −2.4, −1.4, −0.4, 0.6, 1.6, 8.6`.
+    static func particle(_ z: Double) -> String {
+        switch z {
+        case ..<(-4.4): return "a light that has not yet risen"
+        case ..<(-3.4): return "a dot in the sky"
+        case ..<(-2.4): return "a light in the room"
+        case ..<(-1.4): return "the story, close"
+        case ..<(-0.4): return "the seed of the well"
+        case ..<0.6:    return "the dot in the post"
+        case ..<1.6:    return "the dot at the gate"
+        case ..<8.6:    return "the point at the centre of the enclosure"
+        default:        return "the point"
+        }
+    }
+
+    /// `:5646` — `onGround(|Z| < 0.42)`. The app had `0.4`.
+    static func onGround(z: Double) -> Bool { abs(z) < 0.42 }
+}
+
+/// C5.7 · the particle's screen radius — `The Instrument v3.html:1062-1066`.
+///
+///     base = 3.4 + br*0.9
+///     grow = max(0, (Z - 8.4)/1.1)
+///     r    = base * (1 + grow*grow*9)
+///
+/// **THE SMALLNESS IS THE ARGUMENT.** `:1056-1058` — *"Its screen radius is fixed across the
+/// whole axis — that is what makes it the only fixed thing — except at the centre, where it
+/// stops being a dot in a world and becomes the world."* The app had `5.0 + 4.0*br`: **twice
+/// the resting diameter and 4.4× the breath depth.** A particle that breathes visibly is not
+/// a fixed thing; it is another moving element in an instrument where everything else moves,
+/// and the one point that was supposed to hold still stops holding.
+///
+/// The `grow` term was already right. What was wrong is the base — the part that never
+/// changes and therefore never draws attention to itself unless it is too big.
+enum BinduParticleRadius {
+    static func base(breath: Double) -> Double { 3.4 + breath * 0.9 }
+    static func grow(z: Double) -> Double { max(0, (z - 8.4) / 1.1) }
+    static func radius(z: Double, breath: Double) -> Double {
+        let g = grow(z: z)
+        return base(breath: breath) * (1 + g * g * 9)
+    }
+}
+
+/// C3.5 + C3.6 · the membrane's body and the gate's rim — `The Instrument v3.html:3505-3535`.
+///
+/// **ONE `draw` SERVES BOTH, and the branch is the whole point.** `:3511-3512`: *"the gate
+/// does not tighten as he nears it — it THINS as he stops. Its radius opens with his stillness
+/// instead of closing with his force."* Two opposite gestures rendered by one ring, which is
+/// why they were filed as two audit rows (C3.5 MAJOR, C3.6 MINOR) and are one mechanism.
+///
+/// The app drew both as plain stroked ellipses: no wobble, no beads, no radial fill. A ring
+/// that does not wobble has no surface — it reads as a drawn circle rather than a membrane
+/// being leaned into, which is the entire sensation the register boundary exists to give.
+enum MembraneRing {
+    /// `:3516` — the radius. Membrane closes with tension; gate OPENS with stillness.
+    static func radius(R0: Double, tension: Double, gate: Bool, still: Double) -> Double {
+        gate ? R0 * (1.10 + still * 1.30) : R0 * (1.62 - 0.92 * tension)
+    }
+
+    /// `:3517` — wobble depth. The gate's wobble DIES as he stills (`0.030*(1−st)`); the
+    /// membrane's GROWS as he pushes (`0.014 + push*0.055`). Opposite again, and the reason
+    /// one constant could not serve both.
+    static func wobble(gate: Bool, still: Double, push: Double) -> Double {
+        gate ? 0.030 * (1 - still) : 0.014 + push * 0.055
+    }
+
+    /// `:3519-3521` — the ring's own outline, 132 segments.
+    /// `rr = r·(1 + wob·sin(7a + 1.9t)·sin(3a − 1.1t))` — two incommensurate frequencies, so
+    /// the surface never repeats within a turn.
+    static func segments(r: Double, wobble w: Double, t: Double, count: Int = 132) -> [Double] {
+        (0...count).map { k in
+            let a = Double(k) / Double(count) * 2 * Double.pi
+            return r * (1 + w * sin(a * 7 + t * 1.9) * sin(a * 3 - t * 1.1))
+        }
+    }
+
+    /// `:3524` — stroke alpha. The membrane carries a `push` term the app dropped entirely.
+    static func strokeAlpha(gate: Bool, tension: Double, still: Double, push: Double) -> Double {
+        gate ? 0.06 + still * 0.40 : 0.10 + tension * 0.44 + push * 0.30
+    }
+    /// `:3525` — `0.7 + push*1.5`. The app used `tension`, so leaning changed nothing.
+    static func lineWidth(push: Double) -> Double { 0.7 + push * 1.5 }
+
+    /// `:3530-3532` — nine beads riding the wobble at `t*0.5 + b/9·TAU`.
+    static func beadAngles(t: Double, count: Int = 9) -> [Double] {
+        (0..<count).map { t * 0.5 + Double($0) / Double(count) * 2 * Double.pi }
+    }
+    static func beadRadius(r: Double, wobble w: Double, angle: Double, t: Double) -> Double {
+        r * (1 + w * 0.6 * sin(angle * 7 + t * 1.9))
+    }
+    static func beadSize(push: Double) -> Double { 0.9 + push * 1.9 }
+    static func beadAlpha(gate: Bool, still: Double, push: Double) -> Double {
+        gate ? 0.10 + still * 0.55 : 0.15 + push * 0.6
+    }
+
+    /// The whole ring, in one place, so the membrane and the gate cannot drift apart.
+    @MainActor
+    static func draw(_ ctx: GraphicsContext, cx: Double, cy: Double, R0: Double, t: Double,
+                     color: Color, tension: Double, push: Double, gate: Bool, still: Double) {
+        let r = radius(R0: R0, tension: tension, gate: gate, still: still)
+        let w = wobble(gate: gate, still: still, push: push)
+        let rs = segments(r: r, wobble: w, t: t)
+
+        var ring = Path()
+        for (k, rr) in rs.enumerated() {
+            let a = Double(k) / Double(rs.count - 1) * 2 * Double.pi
+            let p = CGPoint(x: cx + cos(a) * rr, y: cy + sin(a) * rr)
+            k == 0 ? ring.move(to: p) : ring.addLine(to: p)
+        }
+        ring.closeSubpath()
+        ctx.stroke(ring,
+                   with: .color(color.opacity(strokeAlpha(gate: gate, tension: tension,
+                                                          still: still, push: push))),
+                   lineWidth: lineWidth(push: push))
+
+        // `:3527-3529` — zero at the centre, so it is a RIM GLOW and the inside stays empty.
+        ctx.fill(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
+                 with: .radialGradient(
+                    Gradient(stops: [
+                        .init(color: color.opacity(0), location: 0.35),
+                        .init(color: color.opacity(tension * 0.05), location: 0.86),
+                        .init(color: color.opacity(fillOuterAlpha(gate: gate, tension: tension,
+                                                                  still: still)), location: 1)]),
+                    center: CGPoint(x: cx, y: cy), startRadius: r * 0.35, endRadius: r))
+
+        // `:3530-3532` — nine beads riding the same wobble, one turn every 4π seconds.
+        let bs = beadSize(push: push)
+        let ba = beadAlpha(gate: gate, still: still, push: push)
+        for angle in beadAngles(t: t) {
+            let rb = beadRadius(r: r, wobble: w, angle: angle, t: t)
+            let x = cx + cos(angle) * rb, y = cy + sin(angle) * rb
+            ctx.fill(Path(ellipseIn: CGRect(x: x - bs, y: y - bs, width: bs * 2, height: bs * 2)),
+                     with: .color(color.opacity(ba)))
+        }
+    }
+
+    /// `:3527-3529` — the fill's outer stop. Zero at the centre, so it is a rim glow rather
+    /// than a disc: the ring has an inside that stays empty.
+    static func fillOuterAlpha(gate: Bool, tension: Double, still: Double) -> Double {
+        gate ? still * 0.13 : tension * 0.16
+    }
+}
+
+/// B7.5 · **LEAVING, ONE SCALE AT A TIME** — `The Universe v3.html:1701-1710`.
+///
+///     if (mode !== 'sky') { back to the sky }
+///     if (cam.z > 3.2)    { cam.z = 1.3 }
+///     if (cam.z > 0.55)   { cam.z = 0.30 }
+///     else                  leave
+///
+/// Four presses walk him all the way out. **One press dumped him to the Feed from anywhere**,
+/// so the Universe's whole depth — sky, region, world, fall — collapsed to a single exit and
+/// the way back out did not retrace the way in.
+///
+/// **THE PORT IS BY REGISTER, NOT BY `cam.z`, AND THAT IS NOT A COMPROMISE.** In the standalone
+/// page `cam.z` is free state and the ladder steps it directly. Here the Universe's zoom is
+/// DERIVED from the axis (`UniverseCamera:132-137` log-interpolates ZMIN…ZMAX across the four
+/// registers), so stepping the axis back one register IS stepping the scale out one — the same
+/// four stops, expressed in the quantity this app actually owns. Porting `cam.z = 1.3` literally
+/// would set a value nothing reads.
+///
+/// The audit cites `The Instrument v3.html:1702-1710` for this; the ladder is in **The Universe
+/// v3.html** at those lines, and `:1702` of the Instrument is an audio `_voice`. Recorded so
+/// the next reader does not go looking in the wrong file.
+enum UniverseBack {
+    /// The four Universe registers, outermost first.
+    static let ladder: [Double] = [-4, -3, -2, -1]      // sky · region · world · fall
+
+    /// Where one press takes him from `z`, or `nil` when the next press should leave.
+    ///
+    /// **The sky does not step to itself.** At the outermost register there is nothing further
+    /// out, and the press leaves — which is the design's final `window.location.href`.
+    static func step(from z: Double) -> Double? {
+        // Anywhere deeper than the fall is not the Universe's business.
+        guard z <= -0.5 else { return nil }
+        // The next register OUT is the largest ladder value strictly less than where he is,
+        // with a tolerance so sitting just past a register still steps to the one beyond it.
+        let out = ladder.filter { $0 < z - 0.15 }.max()
+        return out
+    }
+}
+
+/// C3.8 · **THE WORLD HE IS LEAVING GOES SOFT BEFORE IT GOES AWAY.**
+/// `The Instrument v3.html:3480` — `blur(zv) = min(8, |zv|·300)`, applied to the field at
+/// `:5612`.
+///
+/// The `300` is the whole character. Axis speeds are small — a firm drag is around `0.02` —
+/// so the multiplier turns a number that looks like nothing into 6px of softening, and the
+/// cap at 8 keeps the fastest travel from erasing the field entirely. Without it the
+/// atmosphere is equally sharp standing still and at full speed, and nothing in the frame
+/// says he is moving except the numbers.
+enum FieldBlur {
+    static func radius(zv: Double) -> Double { min(8, abs(zv) * 300) }
+}
+
+/// C7.4 + C7.6 · **THE SURFACE AND THE THROAT.** The two continuous travel voices, as
+/// arithmetic — so the relationships can be asserted without a running audio engine.
+///
+/// `canon/spine-sound.js:70-85` and `:110-127`, driven from `The Instrument v3.html:5450`,
+/// `:5472` and `:5474`.
+enum AxisSurface {
+
+    /// What the design hands to `B.strain` every frame — `:5474`.
+    ///
+    /// Two things live in this one line. `reading` (the design's `IMM.on`) silences it
+    /// outright: inside a piece the axis is locked and the surface has nothing to say. And
+    /// **the push term runs the other way from the intuition** — the surface complains while
+    /// it is HOLDING and eases as it begins to give, so leaning through quietens it.
+    static func load(tension: Double, push: Double, reading: Bool) -> Double {
+        reading ? 0 : tension * (1 - push * 0.35)
+    }
+
+    /// `:80-83` — `gain = f²·0.030`, `centre = 300 + f·1500`, both clamped through `f∈[0,1]`.
+    /// Squared, so a light touch is nearly silent and the band only opens under real load.
+    static func strain(_ f: Double) -> (gain: Double, centre: Double) {
+        let c = max(0, min(1, f))
+        return (c * c * 0.030, 300 + c * 1500)
+    }
+
+    /// `:122-125` — `env = f<=0 ? 0 : sin(min(1,f)·π)`, `gain = env·0.042`, and the centre
+    /// sweeping `260 → 2860` inward or `2600 → 400` outward.
+    ///
+    /// **THE ENVELOPE IS AN ARCH, AND THAT IS THE WHOLE MECHANISM:** *"a rush that builds,
+    /// opens, and is swallowed by the arrival."* Nothing at the mouth, most at the middle,
+    /// nothing at the far side — so the passage ends in the arrival's own sound rather than
+    /// in a tail running underneath it.
+    static func rush(t: Double, dir: Double) -> (gain: Double, centre: Double) {
+        let f = max(0, t)
+        let env = f <= 0 ? 0 : sin(min(1, f) * .pi)
+        return (env * 0.042, dir > 0 ? 260 + f * 2600 : 2600 - f * 2200)
+    }
+}
+
+/// C7.8 · **A PERSPECTIVE TAKEN UP.** `canon/spine-sound.js:97-109` — three sines at
+/// `hz × [1, 1.5, 2]`, entering 0.30s apart, each quieter than the last and each holding for
+/// 6.5s: *"three steps, and they stay in the room."*
+enum CarryVoicing {
+    static let ratios: [Double] = [1, 1.5, 2]
+    /// `0.034/(i·0.6 + 1)` — a DECAYING ladder. Flat peaks make three equal tones, which is a
+    /// chord; the taper is what makes it a sequence of steps with the first one meant.
+    static func peak(step i: Int) -> Double { 0.034 / (Double(i) * 0.6 + 1) }
+    static func delay(step i: Int) -> Double { Double(i) * 0.30 }
+}
+
+/// **HOW FAR INSIDE A PIECE HE IS.** `The Instrument v3.html:5493-5503` — the quantity four
+/// audit rows were multiplying against a constant zero.
+///
+/// `:5493-5495` names it: *"Not a state he is put into: a depth the piece draws him to, one
+/// section at a time, until the world has nothing left to show."* It is not a flag and not a
+/// mode. It is the **crossfade weight between the world and the piece** — one scalar the whole
+/// instrument reads to decide how much of the world is still there. Every consumer is a
+/// multiplication by `immA` or by `1 − immA`; there are fifteen and **every one of them is
+/// CPU**. The design's shader uniforms (`:1912-1915`) and `Field.draw` (`:2124-2145`) carry no
+/// immersion term, and neither does `InstrumentField.metal:184-188`. Nothing to add there:
+///
+/// > `immA` must never be folded into `uReveal`, into `Axis.weight`, into `Axis.rim`, into the
+/// > tone-map, or into the fragment's returned alpha. The design takes the field away from
+/// > OUTSIDE it — `gl.style.opacity` at `:5614` — because the canvas is opaque
+/// > (`alpha:false`, `:2085`). In SwiftUI that is `.opacity()` on the view, not in the shader.
+///
+/// That is the same boundary `Spine.weight` teaches from the other side, running the other
+/// way: there, three terms of the field's depth dressing looked like part of the CPU law and
+/// were the shader's. Here a CPU law looks like it wants to be in the shader and must not go.
+enum Immersion {
+
+    /// `:5498` — `tgt = max(pc.d*0.5, given(pc.m)/4) * IMMCAP`. Two channels, whichever is
+    /// deeper; zero when no piece is open, so letting go targets zero on the same frame.
+    ///
+    /// **THE HALVED-DEPTH CHANNEL IS INERT FOR EVERY PIECE THIS APP CAN REACH**, and that is
+    /// measured rather than assumed. For d1/d2/d3/d4 `displaced()` IS `given/4` (`:2478`,
+    /// `:2705`, `:2964`, `:3233`), so `d*0.5 = given/8` and the `max` always takes the section
+    /// count; for d7 `d = min(1, caught/4)` halves the same way; for the fall word
+    /// `FALLPIECE={given:4}` with `d:1` gives `0.5` against `1`. It bites in exactly one place
+    /// — the Light, where `piece()` hands up `d: LT.arrive*2` so that `d*0.5` is `arrive`
+    /// exactly, which is `:5297-5299`'s sentence: *"the world withdraws by exactly as much as
+    /// the arrival has completed."* The Light is a route push in this app, not an in-axis
+    /// register, so that channel has nowhere to arrive from yet — see C4.7.
+    ///
+    /// `IMMCAP` (`:4927`) is a ceiling, never a rate, and is only ever written by
+    /// `applyTweaks` (`:4950`) from `TWK_IN={stays:0.44,withdraws:0.80,goes:1}` (`:4926`).
+    /// The app has no tweak panel, so it is the declared default 1 — recorded, not invented.
+    /// Worth knowing what the panel does: `stays` = 0.44 puts the ceiling BELOW `onThreshold`,
+    /// so under that setting immersion can never become true at all.
+    static func target(displacement d: Double, given: Int, cap: Double = 1) -> Double {
+        max(d * 0.5, Double(min(4, max(0, given))) / 4) * cap
+    }
+
+    /// `:5501` — `immA += (tgt−immA) * min(1, dt*(tgt>immA ? 1.6 : 2.6))`.
+    ///
+    /// **LEAVING IS 1.625× FASTER THAN ARRIVING, AND THE ASYMMETRY IS THE SENTENCE.** Explicit
+    /// Euler on `ẋ = k·(tgt − x)` with the rate chosen per frame by direction: τ = 0.625 s
+    /// going in, 0.385 s coming out. A depth a piece *draws* him to has to be slower than his
+    /// own hand or it is a mode he was put into; a withdrawal has to be faster than the
+    /// arrival or the world feels like it is grudging him back. The full return — 1.0 down to
+    /// the 0.012 floor at `:5596` — is 1.70 s; at a symmetric 1.6 it would be 2.76 s.
+    ///
+    /// `min(1, dt*k)` is load-bearing, not decoration: it is the only thing preventing
+    /// overshoot on a long frame (it binds at dt ≥ 0.625 s in, 0.385 s out) and there becomes
+    /// a clean snap to target. This is why the port is arithmetic on a display link and NOT
+    /// `withAnimation` — a SwiftUI spring overshoots by design, and an `easeInOut` cannot
+    /// change rate by direction mid-flight.
+    static func step(_ immA: Double, toward tgt: Double, dt: Double) -> Double {
+        immA + (tgt - immA) * min(1, max(0, dt) * (tgt > immA ? 1.6 : 2.6))
+    }
+
+    /// `:5503` — `IMM.on = !!pc && immA > 0.55`. With the cap at 1 and the section channel
+    /// carrying every reachable piece, this is exactly **three of four sections admitted**.
+    ///
+    /// It is NOT `pointHolds`, which is this app's own front-layer-owns-the-hand flag and is
+    /// true from `revealed == 0`. Two different events; see `InstrumentView.immersed`.
+    static let onThreshold = 0.55
+
+    /// `:5596` — below this the piece's material is not painted at all, and it is also the
+    /// floor the withdrawal is measured down to (1.70 s from full, against 2.76 s if the
+    /// approach rate were used for both directions).
+    ///
+    /// UNWIRED(AUDIT C4.7, still OPEN — the gate belongs to `MAT.paint`, and the app has no
+    /// per-register material layer for it to gate. Recorded at the law rather than left to be
+    /// re-derived when that layer is built.)
+    static let floor = 0.012
+
+    /// `:5406` — the travel caption dies here, ~1.6 s BEFORE `onThreshold` is reached going
+    /// in. The redundancy in `IMM.on || immA > 0.2 || |Z| < 0.3` is deliberate: the caption
+    /// goes as the withdrawal starts, not at the depth crossing.
+    ///
+    /// UNWIRED(AUDIT C5.4, still OPEN — `#trav`'s `.from`/`.to` register pair was never built,
+    /// so there is no caption to hide. `TravOnce` is `#trav .once`, a different child.)
+    static let captionCeiling = 0.2
+
+    // MARK: - what the consumers are, as arithmetic
+    //
+    // Named here rather than written inline in the view bodies, for the reason every other
+    // formula in this file is: **an assertion about an expression that lives only in a view
+    // has to re-implement it, and a test that re-implements its subject cannot fail.** These
+    // are the same move as `FieldBlur`, `MembraneRing` and `BinduParticleRadius` — one design
+    // line each, callable, so `ImmersionTests` asserts what the app actually runs.
+
+    /// `:5737` — `cy = H/2*(1−imm) + H*0.132*imm`, as a fraction of height from the TOP.
+    ///
+    /// **THE PARTICLE DOES NOT ANSWER DEPTH.** On the bare axis it sits dead centre at every
+    /// register from the feed to the centre; it rises only as a piece takes him in. Rising
+    /// means this number FALLS, which is the direction a careless assertion gets backwards.
+    static func particleCentreY(immA: Double) -> Double { 0.5 * (1 - immA) + 0.132 * immA }
+
+    /// `:5598` — `(1−immA)*(1−PS.dom()*0.94)`, the alpha the whole world layer is drawn at.
+    /// The `0.94` is NOT the rail's `0.9`: at a full crossing this leaves 0.06 and the rail
+    /// leaves 0.10, two residues on two elements a reader would assume share a number.
+    static func worldLayer(immA: Double, dom: Double) -> Double { (1 - immA) * (1 - dom * 0.94) }
+
+    /// C5.10 · `The Instrument v3.html:5647` — `if(Z>9.5&&!splitDone)doSplit();`, and
+    /// `doSplit` (`:5763-5766`) zeroes `#where`, closes the sheet and takes the door off.
+    ///
+    /// **AT THE CENTRE THE INSTRUMENT HAS NOTHING LEFT TO SAY.** Past 9.5 the chrome is not
+    /// faded, it is GONE — the ladder, the way back, the captions. The app's chrome kept
+    /// talking over the bloom, so the last register read as one more place with furniture
+    /// rather than as the instrument falling silent. That is the whole difference between
+    /// arriving somewhere and arriving at the end.
+    ///
+    /// A hard cut, not a ramp, because the design's is: `doSplit` fires once and sets opacity
+    /// to 0. The bloom underneath is the continuous thing; the chrome's job is to stop.
+    static func chromeSilenced(z: Double) -> Bool { z > 9.5 }
+
+    /// **THE ONE DOMINANCE COEFFICIENT, so it cannot be `1.0` on one caption and `0.9` on
+    /// another.** `1 − dom*0.9` — the factor the chrome comes back through after a landing.
+    ///
+    /// The `0.9` is authored five times and `1.0` is authored nowhere:
+    /// `The Instrument v3.html:5644` (the rail), and `Claude Design Round 2/comps/The
+    /// Chrome.html:381` (`#where`), `:386` (`#pname`), `:397` (the rail again) and `:294` (the
+    /// shells). Round 1 gives the two captions no `dom` term at all — it hides `#where` on
+    /// `PS.on` and gives `#pname` nothing — so the app HAVING one here is app-own under C2.6.
+    /// **But that is a decision about whether the term exists, not a licence to invent its
+    /// coefficient**, and `(1 − dom)` was an invented one: at a full crossing it takes the
+    /// chrome to zero where every authored version leaves 0.10.
+    ///
+    /// It lives here, and not inline in the view, for the reason stated above this MARK: the
+    /// rail's copy was inside a function and a test caught it; the two captions' copies were
+    /// written inline in `InstrumentView` and the same test was **green over them**, because
+    /// `whereOpacity` and `pnameOpacity` contain no `dom` term for it to reach.
+    static func dominanceFade(dom: Double) -> Double { 1 - dom * 0.9 }
+
+    /// `:5644` — `(1−hush*0.85)*(1−immA)*(1−PS.dom()*0.9)`. Without the `0.9` the ladder
+    /// hard-zeroes at a full crossing, where the design leaves it faintly there: the rail is
+    /// the one thing that says where he is going while he is being carried there.
+    static func railOpacity(hush: Double, immA: Double, dom: Double) -> Double {
+        (1 - hush * 0.85) * (1 - immA) * dominanceFade(dom: dom)
+    }
+
+    /// `:5645` — `(1−hush)*(1−immA)`. **NO BASE CONSTANT.** The `0.9` is `#pname`'s and had
+    /// been transposed onto this element; see `pnameOpacity`.
+    static func whereOpacity(hush: Double, immA: Double) -> Double { (1 - hush) * (1 - immA) }
+
+    /// `:5646` — `0.9*(1−hush)*(1−immA)`. The `0.9` belongs HERE. The port had it on `#where`
+    /// and gave this element `1.0`, so both siblings were wrong in opposite directions and
+    /// each read as a considered number because the other sat beside it. Both rows were
+    /// CLOSED (C5.2, C5.6) with the constant on the wrong one.
+    static func pnameOpacity(hush: Double, immA: Double) -> Double {
+        0.9 * (1 - hush) * (1 - immA)
+    }
 }

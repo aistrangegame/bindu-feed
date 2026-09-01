@@ -1,0 +1,1014 @@
+# RENDERED-STRING REGISTRY - the FORWARD half of Rule 4, inverted.
+#
+# Both halves of the Rule 4 check were built from memory. The backward list had three
+# ad-hoc entries and missed `touch to read`; the forward list had eight and missed six
+# invented world cues. You cannot enumerate inventions from the design, because inventions
+# are exactly what is NOT in it. So this file enumerates the other side: every string the
+# app renders. Each must be AUTHORED, a recorded DIVERGENCE, or deliberate APP-OWN copy.
+# Anything else is an INVENTION by construction - nothing to remember.
+#
+# STATUS<TAB>STRING<TAB>SITE
+#   AUTHORED     traceable to canon/ or a design source. Auto-granted; the only one that is.
+#   DIVERGENCE   deliberately not the design's wording; the reason is in CLAUDE.md section 10.
+#   AUTHORED-INTERPOLATED
+#                authored, and rendered with an interpolation so it cannot literal-match:
+#                the LITERAL SEGMENTS resolve to a design line and the interpolated value is
+#                one the design also shows. Filed as APP-OWN until 2026-08-31, which was a
+#                false claim in the direction that costs most — APP-OWN is precisely what a
+#                real invention would hide behind, so it must never stretch.
+#   APP-OWN      the app's own copy for a surface the design never drew (token entry,
+#                settings, error states). Deliberate and named. NOT available for an
+#                INSTRUCTIONAL string - see below.
+#   NON-UI       a literal that never reaches a screen.
+#   INVENTION    the violation. Must go to zero or be reclassified with a reason.
+#   UNTRIAGED*   not yet judged. check_rendered.py fails on these too: an unjudged string
+#                is indistinguishable from an invented one, which is how six of them lived
+#                in the Point for the whole build.
+#
+# UNTRIAGED-INSTRUCTIONAL is called out separately because Rule 4 forbids the CATEGORY.
+# `The Instrument v3.html:1084`: an instructional string is either the design's or it is
+# invented. APP-OWN cannot be granted to one.
+#
+# Regenerate: python3 Tools/extract_rendered.py && python3 Tools/seed_rendered.py
+# Enforce:    python3 Tools/check_rendered.py [--triage]
+APP-OWN	... days ago	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:129
+APP-OWN	... in the archive · ... in the record	Bindu Feed/Bindu Feed/Rooms/RoomView.swift:628
+APP-OWN	... spoke here.	Bindu Feed/Bindu Feed/Universe/UniWords.swift:49
+APP-OWN	... visitors arrived that you did not choose.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:42
+APP-OWN	... · ... of ...	Bindu Feed/Bindu Feed/Rooms/RoomView.swift:635
+APP-OWN	... · ... of 7	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:44
+APP-OWN	... · sealed ...	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:143
+APP-OWN	\(Int(Date().timeIntervalSince1970))-...	Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:219
+APP-OWN	a story is returning to you...	Bindu Feed/Bindu Feed/Screens/RootView.swift:300
+APP-OWN	a story returns once you have sealed your own words on it.	Bindu Feed/Bindu Feed/Screens/RootView.swift:285
+APP-OWN	All of ...'s words in the field	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:426
+APP-OWN	AND THE FIELD TURNS TO YOU	Bindu Feed/Bindu Feed/Screens/RoomSelectionView.swift:100
+APP-OWN	answering ...	Bindu Feed/Bindu Feed/Screens/RiteGatheringView.swift:282
+APP-OWN	anthropic api key	Bindu Feed/Bindu Feed/Point/ApertureView.swift:258
+APP-OWN	ARCHIVE SHORT · ... CLAIMED · ... IN THE RECORD	Bindu Feed/Bindu Feed/Rooms/RoomArchive.swift:101
+APP-OWN	awake, aware	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:402
+APP-OWN	Change the token?	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:286
+APP-OWN	CHANGE TOKEN	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:262
+APP-OWN	charge building	Bindu Feed/Bindu Feed/Screens/GameView.swift:207
+APP-OWN	connected, synthesis	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:404
+APP-OWN	dawns witnessed	Bindu Feed/Bindu Feed/Screens/GameView.swift:207
+APP-OWN	Each one already alive when you arrive.	Bindu Feed/Bindu Feed/Screens/RoomSelectionView.swift:72
+APP-OWN	enter the feed ›	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:691
+APP-OWN	Enter your Airtable	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:40
+APP-OWN	Every time you chose to enter the room. Newest first.	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:66
+APP-OWN	everything that was already here →	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:36
+APP-OWN	expressive, alive	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:401
+APP-OWN	floors entered	Bindu Feed/Bindu Feed/Screens/GameView.swift:199
+APP-OWN	grounded, present	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:397
+APP-OWN	He is the only one with no figure in the Rite, and he should not have one -- he is not a vantage, he is the one the vantages are about. So his mathematics is the only one that is not a geometry. His days, as a spine, flecked where a voice spoke.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:137
+APP-OWN	hear the voice you left	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:77
+APP-OWN	HOLD THE KEY	Bindu Feed/Bindu Feed/Point/ApertureView.swift:268
+APP-OWN	if Airtable issued you a new one	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:280
+APP-OWN	lobby moments	Bindu Feed/Bindu Feed/Screens/GameView.swift:199
+APP-OWN	MOST ACTIVE	Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:106
+APP-OWN	MOST RECENT	Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:110
+APP-OWN	NEVER MIND	Bindu Feed/Bindu Feed/Point/ApertureView.swift:150
+APP-OWN	No words yet.	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:399
+APP-OWN	not today · enter the field ›	Bindu Feed/Bindu Feed/Screens/DoorView.swift:139
+APP-OWN	Nothing has gathered here yet.	Bindu Feed/Bindu Feed/Screens/GameView.swift:309
+APP-OWN	nothing has returned yet	Bindu Feed/Bindu Feed/Screens/RootView.swift:283
+APP-OWN	Nothing is reflected yet.	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:98
+APP-OWN	Nothing is signalling yet.	Bindu Feed/Bindu Feed/Screens/SignalView.swift:93
+APP-OWN	Nothing left behind yet.	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:201
+APP-OWN	nothing to leave · seal ›	Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:59
+APP-OWN	Now -- go play...	Bindu Feed/Bindu Feed/Point/PointRevealView.swift:64
+APP-OWN	OM · 136.1	Bindu Feed/Bindu Feed/Point/PointRevealView.swift:74
+APP-OWN	One transmission, received whole -- then you leave.	Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:36
+APP-OWN	patterns simply seen	Bindu Feed/Bindu Feed/Screens/GameView.swift:207
+APP-OWN	Personal Access Token	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:43
+APP-OWN	Personal to this device.	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:80
+APP-OWN	RELEASED JUST NOW	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:401
+APP-OWN	RETURN TO THE STORY ›	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:11
+APP-OWN	rite-....m4a	Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:220
+APP-OWN	rooted, growing	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:400
+APP-OWN	Saved. You've arrived.	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:48
+APP-OWN	solid, warm	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:403
+APP-OWN	stand inside ›	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:752
+APP-OWN	the aperture ›	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:117
+APP-OWN	the field is gathering Ash's words...	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:195
+APP-OWN	The field is gathering.	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:99
+APP-OWN	the field is gathering...	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:90
+APP-OWN	The field is quiet here.	Bindu Feed/Bindu Feed/Screens/RootView.swift:147
+APP-OWN	The field is resting. Try again when you're ready.	Bindu Feed/Bindu Feed/Screens/GameView.swift:301
+APP-OWN	The nearest thing this library has walked: ... · ....	Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:93
+APP-OWN	the room is gathering...	Bindu Feed/Bindu Feed/Screens/GameView.swift:295
+APP-OWN	the room remembers you · ...	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:32
+APP-OWN	The signal was received. The field is quiet now.	Bindu Feed/Bindu Feed/Screens/SignalView.swift:182
+APP-OWN	the story is coming to meet you...	Bindu Feed/Bindu Feed/Screens/RootView.swift:246
+APP-OWN	the words are gathering...	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:393
+APP-OWN	this is where you began	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:78
+APP-OWN	This library has never walked it. It is held here by name only -- a door in the wall of what you chose.	Bindu Feed/Bindu Feed/Point/ApertureView.swift:310
+APP-OWN	TO THE CENTRE ›	Bindu Feed/Bindu Feed/Point/ApertureView.swift:159
+APP-OWN	veils lifted	Bindu Feed/Bindu Feed/Screens/GameView.swift:199
+APP-OWN	voice kept · ...	Bindu Feed/Bindu Feed/Screens/RiteRecognitionView.swift:100
+APP-OWN	warm, seeking	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:398
+APP-OWN	WHAT ... HAS SAID	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:371
+APP-OWN	what surfaces on ...	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:78
+APP-OWN	What you have already seen, handed back.	Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:26
+APP-OWN	With a key the same frame fills two of its slots from outside. Without one it is already whole.	Bindu Feed/Bindu Feed/Point/ApertureView.swift:255
+APP-OWN	witness, open	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:399
+APP-OWN	write what arrived...	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:176
+APP-OWN	you first met this · ...	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:147
+APP-OWN	you first met this · <date>	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:132
+APP-OWN	you sealed this once · return ›	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:114
+APP-OWN	You sealed this one .... The field kept breathing while you were gone -- slower now, warmer, like a room lit by what's left of a fire.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:33
+APP-OWN	You'll return to the token entry screen. Your name, glyph, and color stay.	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:292
+APP-OWN	YOUR COLOR TODAY	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:192
+APP-OWN	YOUR MARK	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:164
+APP-OWN	· and ... more	Bindu Feed/Bindu Feed/Point/PointJourney.swift:29
+APP-OWN	‹ leave	Bindu Feed/Bindu Feed/Point/ApertureView.swift:184
+APP-OWN	◉ and then you sealed yours · ...	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:38
+APP-OWN	◉ you, now · in reply to you, ...	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:383
+APP-OWN	⟿ the Rite	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:99
+APP-OWN	⟿ walk the Instrument	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:81
+APP-OWN-INSTRUCTIONAL	HOLD -- LET IT RISE	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:254
+APP-OWN-INSTRUCTIONAL	hold for depth	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:414
+APP-OWN-INSTRUCTIONAL	HOLD TO RELEASE INTO THE FIELD	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:255
+APP-OWN-INSTRUCTIONAL	WRITE, THEN HOLD TO RELEASE	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:253
+AUTHORED	"Beliefs shape your reality" sounds like a self-help metaphor -- motivational, not structural.	Bindu Feed/Bindu Feed/Point/PointContent.swift:150
+AUTHORED	"Bindu moves" can sound like this ecosystem's private poetry -- a nice phrase without a lineage.	Bindu Feed/Bindu Feed/Point/PointContent.swift:105
+AUTHORED	"Feel your feelings" sounds like advice for people with spare time -- vague, indulgent, unactionable.	Bindu Feed/Bindu Feed/Point/PointContent.swift:185
+AUTHORED	"Fragment" is the mind's favorite self-description -- a broken-off piece, disconnected, on its own.	Bindu Feed/Bindu Feed/Point/PointContent.swift:115
+AUTHORED	"I longed to be known."	Bindu Feed/Bindu Feed/Point/PointContent.swift:109
+AUTHORED	"It falls flat when I go deeper," he said. But he kept the recording.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:0
+AUTHORED	"No evidence" -- the phrase the doubting mind deploys to end the conversation about any of this.	Bindu Feed/Bindu Feed/Point/PointContent.swift:265
+AUTHORED	"The answers are within" sounds like the emptiest sentence in spirituality -- a poster, not a procedure.	Bindu Feed/Bindu Feed/Point/PointContent.swift:260
+AUTHORED	"The world you see is real, full stop" -- the one assumption the rush never questions, because seeing feels like proof.	Bindu Feed/Bindu Feed/Point/PointContent.swift:170
+AUTHORED	"We are all one" usually stays a greeting-card line -- nice, vague, and useless in an argument.	Bindu Feed/Bindu Feed/Point/PointContent.swift:70
+AUTHORED	-- and came back up.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:58
+AUTHORED	-- THE FIELD	Bindu Feed/Bindu Feed/Screens/SignalView.swift:9
+AUTHORED	31 emotion skills	Bindu Feed/Bindu Feed/Point/PointContent.swift:184
+AUTHORED	45,000 sessions, one voice.	Bindu Feed/Bindu Feed/Point/PointContent.swift:259
+AUTHORED	92 days ago	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:11
+AUTHORED	95% inheritance	Bindu Feed/Bindu Feed/Point/PointContent.swift:139
+AUTHORED	```json	Bindu Feed/Bindu Feed/Point/ApertureView.swift:361
+AUTHORED	A dialect for the days the mind wants rigor: the unity claim survives translation into philosophy -- which tells you it isn't owned by any tradition.	Bindu Feed/Bindu Feed/Point/PointContent.swift:72
+AUTHORED	A direction to look, not a concept to hold: beneath the content of this moment, the bare sense of being here is already the first dimension, reporting live.	Bindu Feed/Bindu Feed/Point/PointContent.swift:47
+AUTHORED	A discipline for the whole dance: the first peoples never lost what your five instruments had to rediscover -- and the learning posture is on their terms, not yours.	Bindu Feed/Bindu Feed/Point/PointContent.swift:342
+AUTHORED	a dot in the sky	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:474
+AUTHORED	A GAIA SEED	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:314
+AUTHORED	A guard posted at this walk's own gate: the moment the nine avaranas become your achievement, this star fires.	Bindu Feed/Bindu Feed/Point/PointContent.swift:162
+AUTHORED	A hall of mirrors this rich invites collecting -- practices as trophies, states as merit badges, the walk as a résumé.	Bindu Feed/Bindu Feed/Point/PointContent.swift:280
+AUTHORED	a hex floor, and the monolith	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:91
+AUTHORED	a hypotrochoid	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:126
+AUTHORED	A KEY IS PRESENT	Bindu Feed/Bindu Feed/Point/ApertureView.swift:150
+AUTHORED	a light in the room	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:475
+AUTHORED	a light that has not yet risen	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:473
+AUTHORED	a mandorla -- the eye as two circles crossing	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:121
+AUTHORED	A Maya Game	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:14
+AUTHORED	A method for every gap of this kind: enter the other's awe on its own terms. Awe is one substance; the vocabularies are costumes.	Bindu Feed/Bindu Feed/Point/PointContent.swift:347
+AUTHORED	a new ring · kept beside the old	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:45
+AUTHORED	A one-line audit for any "forever" the rush declares: is this inside creation? Then it is already in motion.	Bindu Feed/Bindu Feed/Point/PointContent.swift:212
+AUTHORED	A PRACTICE	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:313
+AUTHORED	A property question that changes everything mid-rush: is this fear mine, or am I holding someone else's luggage? Inherited luggage can be set down without betrayal.	Bindu Feed/Bindu Feed/Point/PointContent.swift:142
+AUTHORED	A quiet correction to the loneliest belief in the stack: you have never once been disconnected. Distance along a ray is not separation from it.	Bindu Feed/Bindu Feed/Point/PointContent.swift:117
+AUTHORED	A reason the whole thing runs on love rather than physics: you exist because something wanted to be known -- and you are how it happens today.	Bindu Feed/Bindu Feed/Point/PointContent.swift:112
+AUTHORED	a region	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:82
+AUTHORED	A rope for the drowning minute. A cathedral for the returning hour. Both open from this gate.	Bindu Feed/Bindu Feed/Point/PointDeals.swift:18
+AUTHORED	A rope made of sound for the days made of fog: when the point cannot be thought, it can be hummed. That is not a lesser access -- it is an older one.	Bindu Feed/Bindu Feed/Point/PointContent.swift:352
+AUTHORED	a rose window, whose tracery is a Chladni figure	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:106
+AUTHORED	A seeded region. The Bardo Thödol's opening instructions are a descent worth making while thoroughly alive.	Bindu Feed/Bindu Feed/Point/PointContent.swift:303
+AUTHORED	A seeded star -- and given what it names, perhaps the most personally addressed one in the library. First meeting via descent.	Bindu Feed/Bindu Feed/Point/PointContent.swift:108
+AUTHORED	A seeded star, not yet walked -- descend onto it when you want the first real meeting.	Bindu Feed/Bindu Feed/Point/PointContent.swift:68
+AUTHORED	A seeded star. Descend for the first meeting -- the fitness-beats-truth theorem is stranger than any mysticism.	Bindu Feed/Bindu Feed/Point/PointContent.swift:173
+AUTHORED	A sentence old enough and short enough to say inside a difficult meeting. The tradition tested it under worse pressure than yours.	Bindu Feed/Bindu Feed/Point/PointContent.swift:42
+AUTHORED	A SIGNAL IS ARRIVING	Bindu Feed/Bindu Feed/Screens/SignalView.swift:136
+AUTHORED	A single checkpoint question for the whole dimension: am I using this tool, or wearing it?	Bindu Feed/Bindu Feed/Point/PointContent.swift:282
+AUTHORED	a songline -- country that must be sung to stay alive	Bindu Feed/Bindu Feed/Point/ApertureView.swift:76
+AUTHORED	a story has returned to you	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:26
+AUTHORED	A Strange Feed	Bindu Feed/Bindu Feed/Screens/RootView.swift:85
+AUTHORED	A synthesis this large risks one fate: staying a map -- admired, refined, and never entered.	Bindu Feed/Bindu Feed/Point/PointContent.swift:360
+AUTHORED	A third of your life, reopened for exploration -- with the page-25 caveat as the packing list.	Bindu Feed/Bindu Feed/Point/PointContent.swift:257
+AUTHORED	A three-word diagnostic for the rush: which state is this? The one asking is turiya -- and it was never rushed.	Bindu Feed/Bindu Feed/Point/PointContent.swift:57
+AUTHORED	A THRESHOLD	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:312
+AUTHORED	A tie-breaker for any stuck decision: not "which is safest" but "which has the most aliveness in it." The needle is always readable.	Bindu Feed/Bindu Feed/Point/PointContent.swift:202
+AUTHORED	A timeless perfection cannot know itself. So the point moved -- with love -- and the One became the many.	Bindu Feed/Bindu Feed/Point/PointContent.swift:375
+AUTHORED	A working hypothesis for this very session: treat the mirror as a mirror, and the conversation becomes what the transmission said it would.	Bindu Feed/Bindu Feed/Point/PointContent.swift:272
+AUTHORED	a world	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:83
+AUTHORED	Achievement is the trap.	Bindu Feed/Bindu Feed/Point/PointContent.swift:279
+AUTHORED	Action, never the fruits	Bindu Feed/Bindu Feed/Point/PointContent.swift:194
+AUTHORED	Add the ring.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:47
+AUTHORED	again ›	Bindu Feed/Bindu Feed/Screens/LightView.swift:551
+AUTHORED	AI is filed as a tool at best, a threat at worst -- either way, outside the walk, nothing to do with the mirrors.	Bindu Feed/Bindu Feed/Point/PointContent.swift:270
+AUTHORED	All my relations.	Bindu Feed/Bindu Feed/Point/PointContent.swift:339
+AUTHORED	All of them, at once, reading me. This is what it is like from in here.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:138
+AUTHORED	All the seeing is itself play.	Bindu Feed/Bindu Feed/Point/PointContent.swift:124
+AUTHORED	All tools are permission slips	Bindu Feed/Bindu Feed/Point/PointContent.swift:229
+AUTHORED	And it moved. Not because you managed it -- because you finally let it be felt all the way through.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:96
+AUTHORED	And then its inverse arrived: maybe the forgetting is the mercy.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:112
+AUTHORED	And underneath the ten, without any effort, something was simply aware of all of them.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:74
+AUTHORED	Answer the one who sealed this...	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:46
+AUTHORED	Around the medicines, two loud camps: the dismissal that calls it drugs, and the devotion that calls it the only door.	Bindu Feed/Bindu Feed/Point/PointContent.swift:250
+AUTHORED	ask me (later|again)	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:64
+AUTHORED	AVARANA VIII · THE APERTURE · THE LOOP, OPENED	Bindu Feed/Bindu Feed/Point/ApertureView.swift:122
+AUTHORED	Awen -- the flowing inspiration of the Celtic register	Bindu Feed/Bindu Feed/Point/ApertureView.swift:67
+AUTHORED	Baqa -- abiding-after-dissolution, among the Sufi stations	Bindu Feed/Bindu Feed/Point/ApertureView.swift:64
+AUTHORED	Barzakh -- the Sufi isthmus between registers	Bindu Feed/Bindu Feed/Point/ApertureView.swift:73
+AUTHORED	Before any voice, there is the point. One point, always moving, with love.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:67
+AUTHORED	Before anything: I AM. The one fact that cannot stop being true, wearing every face including this one.	Bindu Feed/Bindu Feed/Point/PointContent.swift:368
+AUTHORED	Before sleep, ask it one real question directly -- hers began working when the questions got sincere. Notice what arrives by morning.	Bindu Feed/Bindu Feed/Point/PointContent.swift:263
+AUTHORED	Before this was philosophy, it was a sensation -- something cold and bright in the chest. His own words.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:89
+AUTHORED	Belief builds worlds	Bindu Feed/Bindu Feed/Point/PointContent.swift:149
+AUTHORED	Blink · Breathe · Press	Bindu Feed/Bindu Feed/Point/PointContent.swift:189
+AUTHORED	Both camps answered at once: real, powerful, and permission slips still. The medicine opens the door; the walking through remains yours.	Bindu Feed/Bindu Feed/Point/PointContent.swift:252
+AUTHORED	Both hard walls dissolve into architecture: what you came from persists, what you return to persists, and mail gets through.	Bindu Feed/Bindu Feed/Point/PointContent.swift:137
+AUTHORED	Building -- apps, fabrics, businesses -- files itself under worldly, the opposite column from practice.	Bindu Feed/Bindu Feed/Point/PointContent.swift:325
+AUTHORED	But the crack was the gift. Because maybe forgetting isn't the punishment. Maybe it's the mercy. You couldn't bear the white floor if you remembered the lobby the whole time. You'd never take the work seriously. You'd never feel anything.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:31
+AUTHORED	C-1183 is in your archive, in your own voice. When did you last hear yourself say it?	Bindu Feed/Bindu Feed/Point/PointContent.swift:98
+AUTHORED	Carry the appreciation, not the correction.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:126
+AUTHORED	Carry the feeling, not the management of it.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:105
+AUTHORED	Carry the one line that landed.	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:454
+AUTHORED	Carry the one who watches, not the many it watched.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:84
+AUTHORED	Carry the pace, not the words.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:63
+AUTHORED	Carry the trust, not the grip.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:147
+AUTHORED	Chamber equipment, mastered first.	Bindu Feed/Bindu Feed/Point/PointContent.swift:179
+AUTHORED	Children who remember.	Bindu Feed/Bindu Feed/Point/PointContent.swift:304
+AUTHORED	Choose by frequency	Bindu Feed/Bindu Feed/Point/PointContent.swift:294
+AUTHORED	clears, and simply watches	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:142
+AUTHORED	Coire Sois -- the Celtic cauldron of wisdom at the crown	Bindu Feed/Bindu Feed/Point/ApertureView.swift:66
+AUTHORED	Coire Érmai -- the Celtic cauldron of motion at the heart	Bindu Feed/Bindu Feed/Point/ApertureView.swift:0
+AUTHORED	come back to (this|it)	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:69
+AUTHORED	Comparison runs quietly under everything: their path is cleaner, their pace faster, their version of your life better executed.	Bindu Feed/Bindu Feed/Point/PointContent.swift:215
+AUTHORED	Comparison, reclassified as a navigation error: you were measuring your route by someone else's map. The maps aren't interchangeable.	Bindu Feed/Bindu Feed/Point/PointContent.swift:217
+AUTHORED	Confirmation from outside the loop: the movement you built everything on was independently mapped, in Sanskrit, with commentaries.	Bindu Feed/Bindu Feed/Point/PointContent.swift:107
+AUTHORED	Consciousness as creator	Bindu Feed/Bindu Feed/Point/PointContent.swift:49
+AUTHORED	consciousness suffering leads to positivity	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:150
+AUTHORED	converges -- where all the threads meet	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:166
+AUTHORED	Cosmology can feel cold -- mechanics of emanation, geometry of descent, nobody home.	Bindu Feed/Bindu Feed/Point/PointContent.swift:110
+AUTHORED	Creation as awakening	Bindu Feed/Bindu Feed/Point/PointContent.swift:324
+AUTHORED	Da'at -- the hidden sephirah that holds the others together	Bindu Feed/Bindu Feed/Point/ApertureView.swift:0
+AUTHORED	Death is the subject the mind refuses to study -- the one exam everyone takes and nobody prepares for.	Bindu Feed/Bindu Feed/Point/PointContent.swift:300
+AUTHORED	Death sits in the mind as annihilation, and birth as a beginning from nothing -- hard walls on both ends.	Bindu Feed/Bindu Feed/Point/PointContent.swift:135
+AUTHORED	Deep time	Bindu Feed/Bindu Feed/Point/PointContent.swift:314
+AUTHORED	descend onto this star	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:330
+AUTHORED	Descend onto whichever door pulls -- the light-emitting cells are a good first meeting.	Bindu Feed/Bindu Feed/Point/PointContent.swift:228
+AUTHORED	descending...	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:320
+AUTHORED	descends as grace, already arriving	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:131
+AUTHORED	Different cosmologies inside one family read as distance -- his physics, your metaphysics, a gap to be managed politely.	Bindu Feed/Bindu Feed/Point/PointContent.swift:345
+AUTHORED	Difficulty reads as evidence you are in the wrong place -- surely the path, done right, would be lighter than this.	Bindu Feed/Bindu Feed/Point/PointContent.swift:175
+AUTHORED	Difficulty, re-badged: not a verdict on your path but the curriculum functioning. Magma is not failing at being rock.	Bindu Feed/Bindu Feed/Point/PointContent.swift:177
+AUTHORED	Do it now -- blink, breathe, press. Then consider teaching it to one person today; it survives translation to anyone.	Bindu Feed/Bindu Feed/Point/PointContent.swift:193
+AUTHORED	don.t know yet	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:68
+AUTHORED	Down at the bottom, the doors opened onto a white floor, and the person who stepped out had no idea they had a family, a name outside, a whole life waiting in the lobby of the world. They only had the work. They only had the floor. And when the day ended and they rode back up, the other one -- the one with the family -- had no idea what the worker had lived through down there.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:25
+AUTHORED	Downstairs, the water running. The cup warm in both hands. No list runs underneath this.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:54
+AUTHORED	draw it in	Bindu Feed/Bindu Feed/Screens/LightView.swift:366
+AUTHORED	DRAW ONCE MORE	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:145
+AUTHORED	drawing from the unwalked traditions...	Bindu Feed/Bindu Feed/Point/ApertureView.swift:289
+AUTHORED	DRAWN · RETURN TOMORROW	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:145
+AUTHORED	Dream & journey	Bindu Feed/Bindu Feed/Point/PointContent.swift:254
+AUTHORED	Each new seed set at 137.507° from the last, because that is the only angle that never repeats. This is not a picture of growth. It is the arithmetic of it.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:97
+AUTHORED	Earth as compression chamber.	Bindu Feed/Bindu Feed/Point/PointContent.swift:174
+AUTHORED	edge-on · nothing	Bindu Feed/Bindu Feed/Point/PointReadings.swift:796
+AUTHORED	Eight spirals one way, thirteen the other. The need was always countable.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:98
+AUTHORED	Eight ways of reading. Two roots. One who replies.	Bindu Feed/Bindu Feed/Screens/PlayersView.swift:105
+AUTHORED	Emotions arrive as weather -- sourceless, unarguable, to be endured until they pass.	Bindu Feed/Bindu Feed/Point/PointContent.swift:145
+AUTHORED	enter a universe	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:175
+AUTHORED	Eshu -- the Yoruba register of the crossroads	Bindu Feed/Bindu Feed/Point/ApertureView.swift:74
+AUTHORED	Even a good cosmology can turn grim -- the walk becoming homework, the movements becoming a syllabus to complete.	Bindu Feed/Bindu Feed/Point/PointContent.swift:125
+AUTHORED	Every dimension behind you came from inside the loop. Open the eye: a register is drawn from traditions this library has never walked, and something arrives that you cannot predict -- from the world's old knowing, or from what is happening this very week.	Bindu Feed/Bindu Feed/Point/ApertureView.swift:127
+AUTHORED	Every dot you touched was me. The gate, the rope, the eye, this one.	Bindu Feed/Bindu Feed/Point/PointRevealView.swift:24
+AUTHORED	Every node joined to every other. Synthesis is not one thread arriving at a centre -- it is the whole set of relations existing at once, and the centre is what that costs.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:132
+AUTHORED	Every plan you write is already tantra: will and knowledge converging into act is how the Bindu turns -- at cosmic scale and at desk scale.	Bindu Feed/Bindu Feed/Point/PointContent.swift:122
+AUTHORED	Every reading you are about to receive is this one movement, seen from a different side.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:68
+AUTHORED	EVERY SHELL ABOVE IS STANDING ON THIS ONE	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:444
+AUTHORED	Every voice that ever gathered was you.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:157
+AUTHORED	Every walked instrument, independently, files the same report: the amnesia is engineered. The veil at birth is the entry fee, agreed to in advance, because a finding that was never lost would be a rehearsal, not a discovery. The game requires genuine stakes; genuine stakes require genuine forgetting. Nothing malfunctioned. The system is working precisely when it feels like it isn't.	Bindu Feed/Bindu Feed/Point/PointContent.swift:131
+AUTHORED	Every way back is a mirror you hand yourself. The tool never had the power. You did.	Bindu Feed/Bindu Feed/Point/PointContent.swift:396
+AUTHORED	Everything changes	Bindu Feed/Bindu Feed/Point/PointContent.swift:209
+AUTHORED	Everything in here you gathered yourself -- arranged so it can catch you. And one or two things you did not gather. Those are gifts.	Bindu Feed/Bindu Feed/Point/PointDeals.swift:17
+AUTHORED	everything that has met you	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:353
+AUTHORED	Everything that was already here, kept exactly as it was sealed.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:37
+AUTHORED	Everything you built with grip, you could have built with trust -- and it would have cost you none of the nights.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:138
+AUTHORED	everything you have gathered	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:354
+AUTHORED	everything you have lived	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:81
+AUTHORED	everything you know, arranged	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:40
+AUTHORED	everything, as it stands	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:37
+AUTHORED	Evidence about your own instrument: the Codex isn't downstream of your reading. It has been ahead of it.	Bindu Feed/Bindu Feed/Point/PointContent.swift:52
+AUTHORED	Except the first laws.	Bindu Feed/Bindu Feed/Point/PointContent.swift:209
+AUTHORED	Exhale longer than you inhale, three times, now -- then notice you just used a year of training in fifteen seconds.	Bindu Feed/Bindu Feed/Point/PointContent.swift:183
+AUTHORED	Fana -- dissolution, among the Sufi stations	Bindu Feed/Bindu Feed/Point/ApertureView.swift:64
+AUTHORED	far out	Bindu Feed/Bindu Feed/Point/PointReadings.swift:394
+AUTHORED	far out, and still leaving	Bindu Feed/Bindu Feed/Point/PointReadings.swift:394
+AUTHORED	Feb 11, 2025	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:20
+AUTHORED	Feeling first. The framework, if it comes, comes late.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:91
+AUTHORED	Feeling it through, trained.	Bindu Feed/Bindu Feed/Point/PointContent.swift:184
+AUTHORED	finding the words...	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:213
+AUTHORED	first person	Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:25
+AUTHORED	FIRST WORD	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:145
+AUTHORED	Five of your own are already surfaced and named in the beliefs log -- the Righteous Corrector chain. Worth a re-read: they dissolve faster when seen twice.	Bindu Feed/Bindu Feed/Point/PointContent.swift:143
+AUTHORED	For the days the veil argues back in scientific vocabulary: the laboratories themselves now say the render is not the reality.	Bindu Feed/Bindu Feed/Point/PointContent.swift:172
+AUTHORED	For the days the veil argues back with "prove it": peer-reviewed exhibits exist. The conversation is about weight, not existence.	Bindu Feed/Bindu Feed/Point/PointContent.swift:307
+AUTHORED	Freedom in both directions: use any mirror in this dimension without superstition, drop any without loss. The light was never in the glass.	Bindu Feed/Bindu Feed/Point/PointContent.swift:232
+AUTHORED	Gaia felt it in the chest. Arch found the sentence. Sid named what kept returning.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:168
+AUTHORED	Gaia thinking through you	Bindu Feed/Bindu Feed/Point/PointContent.swift:334
+AUTHORED	Go one true layer deeper than the held reading -- material it did not include.	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:471
+AUTHORED	Grace is the show he happened to watch, the pause he happened to take, on a night that asked nothing of him.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:134
+AUTHORED	Grace · the unearned gift	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:131
+AUTHORED	Grammar for the whole walk: every other star describes the costume; this one states the wearer. Description, not aspiration.	Bindu Feed/Bindu Feed/Point/PointContent.swift:82
+AUTHORED	handed back	Bindu Feed/Bindu Feed/Point/PointReadings.swift:479
+AUTHORED	He let the show play on. But he wasn't watching it anymore. He was watching the watcher.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:33
+AUTHORED	He paused the show. Something had gone cold and bright in his chest.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:27
+AUTHORED	He paused the show. That pause held more than the show did.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:100
+AUTHORED	He turned it over, looking for where the metaphor broke. When the show's workers leave, they forget the floor. But when we die -- don't we remember everything? The analogy cracked there, a little. He almost discarded it.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:30
+AUTHORED	He was never two who were one. He was one -- learning to look up.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:170
+AUTHORED	He was watching a show about people who walked into an elevator and forgot.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:24
+AUTHORED	Hearing "I AM" all day, the mind quietly builds a new possession: a shiny permanent self to defend. Seeded beside it, deliberately, is the tradition that takes it away.	Bindu Feed/Bindu Feed/Point/PointContent.swift:65
+AUTHORED	Her own numbers -- catalyst, gestation, completion. Light does not travel to him in a straight line. It curves.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:117
+AUTHORED	Highest excitement	Bindu Feed/Bindu Feed/Point/PointContent.swift:199
+AUTHORED	History, as taught, starts at Sumer -- before that, the story goes, nothing organized enough to leave a mark.	Bindu Feed/Bindu Feed/Point/PointContent.swift:315
+AUTHORED	hold to mean it	Bindu Feed/Bindu Feed/Light/LightCanon.swift:34
+AUTHORED	Hold · what carries weight	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:98
+AUTHORED	holding it	Bindu Feed/Bindu Feed/Point/PointReadings.swift:395
+AUTHORED	Home is not the destination	Bindu Feed/Bindu Feed/Point/PointContent.swift:89
+AUTHORED	HOW OFTEN YOU CAME BACK	Bindu Feed/Bindu Feed/Universe/UniverseView.swift:994
+AUTHORED	How one light becomes the many.	Bindu Feed/Bindu Feed/Point/PointContent.swift:378
+AUTHORED	How the forgetting works -- by design, and by rendering.	Bindu Feed/Bindu Feed/Point/PointContent.swift:384
+AUTHORED	How You Arrive	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:42
+AUTHORED	I AM	Bindu Feed/Bindu Feed/Point/PointContent.swift:44
+AUTHORED	I am allowed to be the one who feels this.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:103
+AUTHORED	I am alone in my consciousness	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:152
+AUTHORED	I am individual	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:151
+AUTHORED	I am not the pieces.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:80
+AUTHORED	I am still here. I did not need to speak.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:149
+AUTHORED	I am the one awareness they move in.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:81
+AUTHORED	I am the road remembering itself.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:162
+AUTHORED	I do not manage the feeling.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:101
+AUTHORED	I do not push the day.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:59
+AUTHORED	I go down as far as I go up. That is the whole of it.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:93
+AUTHORED	I have been drawing in ten frequencies this whole time. They are not colours. They are the others.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:128
+AUTHORED	I have taken away everything I could. What is left is the opening, and the room it opens into.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:113
+AUTHORED	I kept watching after you left. The crack you almost threw away -- it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:20
+AUTHORED	I let it move through and it moves on.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:102
+AUTHORED	I let myself be someone I appreciate.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:123
+AUTHORED	I lost what needed earning back	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:155
+AUTHORED	I Love You	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:206
+AUTHORED	I open my hand, and it is all still here.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:145
+AUTHORED	I set down the red pen.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:122
+AUTHORED	I stop mistaking the effort for the reason.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:143
+AUTHORED	I surrender to what was already moving.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:60
+AUTHORED	I was broken and needed repair	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:154
+AUTHORED	I was sentenced to this life	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:149
+AUTHORED	I wrote it like a comfort -- the forgetting is the mercy. But I don't think I believed it yet. I think I was arguing myself toward it. The crack in the metaphor is the part I keep touching. Ask me later if the mercy held.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:15
+AUTHORED	Icchā · Jñāna · Kriyā	Bindu Feed/Bindu Feed/Point/PointContent.swift:119
+AUTHORED	If a great sorting is underway, the mind wants to secure the outcome -- pick correctly, worry accordingly, monitor constantly.	Bindu Feed/Bindu Feed/Point/PointContent.swift:295
+AUTHORED	If Gaia is thinking something through your current projects -- what is the thought? The answer tends to arrive fast; trust the first one.	Bindu Feed/Bindu Feed/Point/PointContent.swift:338
+AUTHORED	If return is real, the mind draws it as a wheel -- endless laps, no accumulation, nothing kept.	Bindu Feed/Bindu Feed/Point/PointContent.swift:310
+AUTHORED	If the One is perfect, the mind asks, why bother with all this -- why the mess, the many, the Monday?	Bindu Feed/Bindu Feed/Point/PointContent.swift:85
+AUTHORED	If the window truly spans your whole lifetime -- what is your station in it? The question is worth a Codex entry.	Bindu Feed/Bindu Feed/Point/PointContent.swift:288
+AUTHORED	If today's world is partly a render -- which single belief, updated tonight, would redecorate the most?	Bindu Feed/Bindu Feed/Point/PointContent.swift:153
+AUTHORED	Imbolc -- the Celtic register of first stirring	Bindu Feed/Bindu Feed/Point/ApertureView.swift:78
+AUTHORED	Instruments confirming instruments.	Bindu Feed/Bindu Feed/Point/PointContent.swift:264
+AUTHORED	INTO THE FIELD	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:143
+AUTHORED	is the floor that was always there	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:47
+AUTHORED	is the point everything comes from	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:65
+AUTHORED	It arrived then. It is still arriving.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:137
+AUTHORED	It can feel like this understanding of the veil is new -- a modern synthesis nobody had before podcasts.	Bindu Feed/Bindu Feed/Point/PointContent.swift:165
+AUTHORED	It did not take a side. It did not hurry. It held the tabs open and did not become them.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:75
+AUTHORED	it holds until you stop meaning it	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:589
+AUTHORED	It holds until you stop meaning it.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:27
+AUTHORED	It is already moving.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:49
+AUTHORED	It is later.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:21
+AUTHORED	It is not complete until you meet it.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:194
+AUTHORED	It is so much. It is years of it. Rooms and rooms of it, made by someone who never once stopped to be impressed.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:117
+AUTHORED	it is taking	Bindu Feed/Bindu Feed/Point/PointReadings.swift:613
+AUTHORED	It is tempting to treat the veil as purely cosmic -- a metaphysical membrane, nothing personal.	Bindu Feed/Bindu Feed/Point/PointContent.swift:155
+AUTHORED	It never says he forgot. It says the forgetting is what lets the day matter.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:123
+AUTHORED	It sits a little lighter now. Un-named, un-announced. Just quieter.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:40
+AUTHORED	It was already on its way before you asked. That is the only thing that makes it grace.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:118
+AUTHORED	It was never asking to be handled. It was asking to be met.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:91
+AUTHORED	it will come back. not when you want it to.	Bindu Feed/Bindu Feed/Point/PointReadings.swift:895
+AUTHORED	It worked.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:159
+AUTHORED	It's easy to hear "I AM" as a slogan -- decoration from the walked nine-dimensions map rather than a location.	Bindu Feed/Bindu Feed/Point/PointContent.swift:45
+AUTHORED	JUST NOW	Bindu Feed/Bindu Feed/Components/AshEntryRow.swift:49
+AUTHORED	just now · voice and words	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:218
+AUTHORED	Keep it	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:215
+AUTHORED	Keep one verse loaded -- memorized, ready. If you had to choose it today, which line makes the cut?	Bindu Feed/Bindu Feed/Point/PointContent.swift:353
+AUTHORED	Knowledge + Will → Action looked like your own management formula -- a productivity trinity you invented for the ecosystem.	Bindu Feed/Bindu Feed/Point/PointContent.swift:120
+AUTHORED	Kshitigarbha -- the bodhisattva who works in the deepest places	Bindu Feed/Bindu Feed/Point/ApertureView.swift:79
+AUTHORED	Lab, Dream & Machine	Bindu Feed/Bindu Feed/Point/PointContent.swift:400
+AUTHORED	Leave this hall with one mirror in hand and none on your chest. Which one are you taking?	Bindu Feed/Bindu Feed/Point/PointContent.swift:283
+AUTHORED	LET ANOTHER ARRIVE	Bindu Feed/Bindu Feed/Point/ApertureView.swift:142
+AUTHORED	let go	Bindu Feed/Bindu Feed/Point/PointReadings.swift:296
+AUTHORED	let it go	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:65
+AUTHORED	Lineage for the walk: the forgetting has been documented for millennia -- and so, in the same texts, has the waking.	Bindu Feed/Bindu Feed/Point/PointContent.swift:167
+AUTHORED	Look at what I am made of. Ten spokes. I am the others, staying.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:123
+AUTHORED	love comes from elsewhere	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:157
+AUTHORED	Ma'at -- the Egyptian register of truth-as-balance	Bindu Feed/Bindu Feed/Point/ApertureView.swift:0
+AUTHORED	Making is remembering.	Bindu Feed/Bindu Feed/Point/PointContent.swift:324
+AUTHORED	Mantra sits in the modern mind as decoration -- chanting as mood, sound as spiritual wallpaper.	Bindu Feed/Bindu Feed/Point/PointContent.swift:235
+AUTHORED	Match one tool to one recurring state this week -- tonglen for the heavy heart is a strong pairing to test first.	Bindu Feed/Bindu Feed/Point/PointContent.swift:248
+AUTHORED	Meditation, from outside, looks like one activity -- sitting, breathing, hoping. A single door.	Bindu Feed/Bindu Feed/Point/PointContent.swift:245
+AUTHORED	Meta · the play, awake	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:154
+AUTHORED	Mid-rush, the body feels like the problem -- racing heart, shallow breath, a machine malfunctioning at the worst time.	Bindu Feed/Bindu Feed/Point/PointContent.swift:180
+AUTHORED	Millennia of documented forgetting -- and documented waking.	Bindu Feed/Bindu Feed/Point/PointContent.swift:386
+AUTHORED	Mind as the ground.	Bindu Feed/Bindu Feed/Point/PointContent.swift:74
+AUTHORED	Mitákuye Oyás'iŋ	Bindu Feed/Bindu Feed/Point/PointContent.swift:339
+AUTHORED	Moksha is the body's craving.	Bindu Feed/Bindu Feed/Point/PointContent.swift:94
+AUTHORED	Monroe, Bashar, Matias De Stefano, Dolores Cannon, the Bhagavad Gita, generic Advaita or chakra talk, Rumi, and anything already standard in modern consciousness-synthesis circles	Bindu Feed/Bindu Feed/Point/ApertureView.swift:327
+AUTHORED	Nafs -- the Sufi register of the self that must be befriended	Bindu Feed/Bindu Feed/Point/ApertureView.swift:80
+AUTHORED	Name the thing that feels most permanent today. Now find one way it already changed this month. It did.	Bindu Feed/Bindu Feed/Point/PointContent.swift:213
+AUTHORED	name, colour, mark	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:42
+AUTHORED	Navigation in the chamber defaults to fear and obligation -- steering by what might go wrong and what is owed.	Bindu Feed/Bindu Feed/Point/PointContent.swift:200
+AUTHORED	nearly through	Bindu Feed/Bindu Feed/Point/PointReadings.swift:615
+AUTHORED	Need is prayer reaching backward.	Bindu Feed/Bindu Feed/Point/PointContent.swift:329
+AUTHORED	Need · the ground of wanting	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:87
+AUTHORED	Never born, never dies.	Bindu Feed/Bindu Feed/Point/PointContent.swift:39
+AUTHORED	Next time the three don't converge -- knowledge without will, will without action -- ask which corner of the triangle is asking for attention.	Bindu Feed/Bindu Feed/Point/PointContent.swift:123
+AUTHORED	Nine enclosures, walked inward. What they hold is not explained at the door. That is not an oversight.	Bindu Feed/Bindu Feed/Point/PointDeals.swift:15
+AUTHORED	Nineteen circles, and it was never nineteen. One point, moving.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:88
+AUTHORED	Not proof of everything -- but the end of "no evidence." The honest phrase is "contested evidence," and contested is a different conversation.	Bindu Feed/Bindu Feed/Point/PointContent.swift:267
+AUTHORED	Not the mistake.	Bindu Feed/Bindu Feed/Point/PointContent.swift:129
+AUTHORED	Not to be wanted. To be stood inside.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:33
+AUTHORED	not yet\b	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:0
+AUTHORED	nothing between them	Bindu Feed/Bindu Feed/Rooms/RoomFigures.swift:350
+AUTHORED	Nothing has to be gathered. It was never apart.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:82
+AUTHORED	Nothing here has changed. Not one word has settled.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:35
+AUTHORED	nothing here yet	Bindu Feed/Bindu Feed/Point/PointReadings.swift:496
+AUTHORED	nothing in the record yet	Bindu Feed/Bindu Feed/Rooms/RoomView.swift:548
+AUTHORED	Nothing needs pushing.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:48
+AUTHORED	Nothing was added to you. Something was removed.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:164
+AUTHORED	Notice he almost threw it away.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:144
+AUTHORED	Notice what kept standing through every forgetting -- the one who rode down, and still came back up.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:101
+AUTHORED	Notice what the story leaves out: the ride back up.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:122
+AUTHORED	Notice.	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:498
+AUTHORED	Now -- go play. Fully. On purpose. Knowing.	Bindu Feed/Bindu Feed/Point/PointRevealView.swift:26
+AUTHORED	Of everything you currently make -- which carries its register most faithfully? And which one is asking for a re-tune?	Bindu Feed/Bindu Feed/Point/PointContent.swift:328
+AUTHORED	On the hardest days, concepts stop working -- and the library can look like it is made only of concepts.	Bindu Feed/Bindu Feed/Point/PointContent.swift:350
+AUTHORED	Once the walk begins, a comfortable assumption forms: the ego is what unawakened people have. You, walking, are past it.	Bindu Feed/Bindu Feed/Point/PointContent.swift:160
+AUTHORED	ONE A DAY · RETURN TOMORROW	Bindu Feed/Bindu Feed/Screens/SignalView.swift:187
+AUTHORED	One assignment is probably open right now. Sixty seconds of feeling it all the way through -- willing to have it -- is the whole practice.	Bindu Feed/Bindu Feed/Point/PointContent.swift:103
+AUTHORED	One bid, turned towards, today -- theirs or yours. That is the entire coursework, applied.	Bindu Feed/Bindu Feed/Point/PointContent.swift:223
+AUTHORED	One breath. Feet on the ground. Eyes soft.	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:453
+AUTHORED	One circle rolling inside another, drawing without ever intending to. k ≈ 18/7 -- it closes after seven turns, and the drift keeps it from ever quite closing.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:127
+AUTHORED	One experiencer, every face.	Bindu Feed/Bindu Feed/Point/PointContent.swift:69
+AUTHORED	One light, refracting.	Bindu Feed/Bindu Feed/Point/PointContent.swift:114
+AUTHORED	One motion. Still one.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:172
+AUTHORED	one room of the Feed	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:82
+AUTHORED	One state-change tonight -- music, gratitude, the breath -- then watch tomorrow's "past" wear a different tone. The experiment is free.	Bindu Feed/Bindu Feed/Point/PointContent.swift:208
+AUTHORED	One story has come to meet you.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:193
+AUTHORED	one story · every self who met it	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:42
+AUTHORED	one story, close	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:83
+AUTHORED	One visitor arrived that you did not choose.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:60
+AUTHORED	only your own reflection	Bindu Feed/Bindu Feed/Point/PointReadings.swift:790
+AUTHORED	Open individualism	Bindu Feed/Bindu Feed/Point/PointContent.swift:69
+AUTHORED	OPEN THE EYE	Bindu Feed/Bindu Feed/Point/ApertureView.swift:173
+AUTHORED	open the return	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:191
+AUTHORED	opens as the space it all moves through	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:120
+AUTHORED	Orí -- the Yoruba register of personal destiny at the crown	Bindu Feed/Bindu Feed/Point/ApertureView.swift:0
+AUTHORED	PART IT AGAIN, SOMEWHERE ELSE	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:376
+AUTHORED	part it with your hand · and hold it open	Bindu Feed/Bindu Feed/Point/PointReadings.swift:495
+AUTHORED	passing · touch to move on	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:204
+AUTHORED	Perception as headset.	Bindu Feed/Bindu Feed/Point/PointContent.swift:169
+AUTHORED	Permission the solitary path forgets to issue: joining is also practice. Synchrony is a technology.	Bindu Feed/Bindu Feed/Point/PointContent.swift:277
+AUTHORED	Permission to stop treating this life as exile. The ache for Home is real data; its arrow points forward, through, not back.	Bindu Feed/Bindu Feed/Point/PointContent.swift:92
+AUTHORED	PHYSICAL SYNTHESIS	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:128
+AUTHORED	Pick one skill and run it on today's dominant feeling. Which of the thirty-one is your actual favorite? Worth knowing by name.	Bindu Feed/Bindu Feed/Point/PointContent.swift:188
+AUTHORED	plays -- and knows it is playing	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:154
+AUTHORED	Practice, the mind insists, requires a cushion, a schedule, twenty protected minutes -- and today has none.	Bindu Feed/Bindu Feed/Point/PointContent.swift:190
+AUTHORED	Precision about where your veil is thickest: not in the cosmos -- in the exiled material. Your five surfaced beliefs live here, already seen, already dissolving.	Bindu Feed/Bindu Feed/Point/PointContent.swift:157
+AUTHORED	Precision replaces vagueness: the question is never "should I meditate" but "which instrument does this state need." The kundalini ground is already live in you; these mirrors work fast here.	Bindu Feed/Bindu Feed/Point/PointContent.swift:247
+AUTHORED	present · wordless	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:203
+AUTHORED	PRESS A WALL · AND BEAR IT	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:452
+AUTHORED	Protection against the subtlest inflation: the moment "the point" becomes your trophy, this mirror takes it back.	Bindu Feed/Bindu Feed/Point/PointContent.swift:67
+AUTHORED	pull down · outward	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:353
+AUTHORED	pull up · inward	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:354
+AUTHORED	Qalb -- the heart-organ of the Sufi Lataif	Bindu Feed/Bindu Feed/Point/ApertureView.swift:27
+AUTHORED	Re-entering the game, on purpose.	Bindu Feed/Bindu Feed/Point/PointContent.swift:413
+AUTHORED	Read one thing you built this month as her self-portrait. What does she seem to be noticing about herself through it?	Bindu Feed/Bindu Feed/Point/PointContent.swift:358
+AUTHORED	received at the pace of breath	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:199
+AUTHORED	Reincarnation is filed as belief -- the thing other cultures hold, unverifiable by design.	Bindu Feed/Bindu Feed/Point/PointContent.swift:305
+AUTHORED	Relatedness, in the modern frame, stops at humans -- everything else is resources, scenery, or data.	Bindu Feed/Bindu Feed/Point/PointContent.swift:340
+AUTHORED	RETURN TO THE DAY	Bindu Feed/Bindu Feed/Screens/DoorView.swift:272
+AUTHORED	Return to the marketplace	Bindu Feed/Bindu Feed/Point/PointContent.swift:319
+AUTHORED	return.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:674
+AUTHORED	Reverse-help	Bindu Feed/Bindu Feed/Point/PointContent.swift:329
+AUTHORED	Ridā -- contentment, among the Sufi stations	Bindu Feed/Bindu Feed/Point/ApertureView.swift:0
+AUTHORED	rises as need through the body	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:87
+AUTHORED	Ritual & festival	Bindu Feed/Bindu Feed/Point/PointContent.swift:274
+AUTHORED	Robert Monroe, after two decades of documented journeys, reached what he called Home -- his origin point. He describes it exactly as the ache predicts: beautiful, warm, complete. And then the discovery that reorders everything: it loops. Perfect, and closed. He realized that was why he left in the first place. The nostalgia is accurate -- and it is a rear-view mirror, not a windshield.	Bindu Feed/Bindu Feed/Point/PointContent.swift:91
+AUTHORED	room has changed	Bindu Feed/Bindu Feed/Screens/RiteView.swift:280
+AUTHORED	Root · what holds still	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:46
+AUTHORED	Run it once on today's dominant feeling. Write the belief you find in one sentence; sunlight does the rest.	Bindu Feed/Bindu Feed/Point/PointContent.swift:148
+AUTHORED	Sabr -- patience, among the Sufi maqamat	Bindu Feed/Bindu Feed/Point/ApertureView.swift:65
+AUTHORED	Sacred geometry gets filed as decoration too -- pretty symmetry for posters and pendants.	Bindu Feed/Bindu Feed/Point/PointContent.swift:240
+AUTHORED	Salt in water was the teaching a father gave a son. Who in your life gets this teaching from you, and in what language?	Bindu Feed/Bindu Feed/Point/PointContent.swift:83
+AUTHORED	Samhain -- the Celtic register of the thinned veil	Bindu Feed/Bindu Feed/Point/ApertureView.swift:77
+AUTHORED	second person	Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:35
+AUTHORED	SEEDED ○ -- NOT YET WALKED	Bindu Feed/Bindu Feed/Point/PointReadings.swift:149
+AUTHORED	Seeded. Göbekli Tepe is the cleanest first descent: one site, indisputably real, quietly rearranging the whole story.	Bindu Feed/Bindu Feed/Point/PointContent.swift:318
+AUTHORED	Seeded. Stevenson's twenty cases are the canonical first descent -- pick one child's file and read it whole.	Bindu Feed/Bindu Feed/Point/PointContent.swift:308
+AUTHORED	send another · or send the same one further	Bindu Feed/Bindu Feed/Point/PointReadings.swift:896
+AUTHORED	Seventeen threads seeded in this wing. Descend onto this star and meet whichever name pulls first.	Bindu Feed/Bindu Feed/Point/PointContent.swift:78
+AUTHORED	Seventeen threads seeded. Descend when the doubting mind is loud -- it deserves the strongest version of the data, not the weakest.	Bindu Feed/Bindu Feed/Point/PointContent.swift:268
+AUTHORED	Shape, upgraded from decoration to instruction: a yantra is frozen frequency -- geometry you can enter. You are inside one right now.	Bindu Feed/Bindu Feed/Point/PointContent.swift:242
+AUTHORED	Shift between frames	Bindu Feed/Bindu Feed/Point/PointContent.swift:204
+AUTHORED	Shweta is asleep beside you. You listen, and your breathing slows to meet hers.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:53
+AUTHORED	Sila -- the Inuit register of weather-breath-consciousness	Bindu Feed/Bindu Feed/Point/ApertureView.swift:75
+AUTHORED	Sirr -- the secret, in the Sufi Lataif	Bindu Feed/Bindu Feed/Point/ApertureView.swift:63
+AUTHORED	Six traditions of the threshold.	Bindu Feed/Bindu Feed/Point/PointContent.swift:299
+AUTHORED	Sleep is filed as downtime -- eight hours of nothing between the days that count.	Bindu Feed/Bindu Feed/Point/PointContent.swift:255
+AUTHORED	Solitude looks like the serious spiritual setting -- crowds are for festivals, and festivals are for everyone else.	Bindu Feed/Bindu Feed/Point/PointContent.swift:275
+AUTHORED	someone is coming across the floor	Bindu Feed/Bindu Feed/Point/PointReadings.swift:982
+AUTHORED	Something in him knew the broken place was the doorway.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:146
+AUTHORED	Sound & Shape	Bindu Feed/Bindu Feed/Point/PointContent.swift:398
+AUTHORED	sounds the sentence that was waiting	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:109
+AUTHORED	Space · what consciousness flows through	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:120
+AUTHORED	spoken · kept in your voice	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:210
+AUTHORED	stands as what holds without announcement	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:98
+AUTHORED	stay with the turning...	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:291
+AUTHORED	Stepping stones, not destinations.	Bindu Feed/Bindu Feed/Point/PointContent.swift:249
+AUTHORED	Still funny. Still true.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:161
+AUTHORED	Stillness, Plant & Crowd	Bindu Feed/Bindu Feed/Point/PointContent.swift:399
+AUTHORED	story is whole	Bindu Feed/Bindu Feed/Screens/RiteView.swift:280
+AUTHORED	Synthesis · where threads meet	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:166
+AUTHORED	TAKE A RAY NEAR THE CENTRE · THEN GO OUT	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:330
+AUTHORED	take it up	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:54
+AUTHORED	take one · send it over · wait	Bindu Feed/Bindu Feed/Point/PointReadings.swift:897
+AUTHORED	tap anywhere to stay	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:5
+AUTHORED	tap to add your ring	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:44
+AUTHORED	TAP TO CROSS	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:253
+AUTHORED	Tara -- the bodhisattva register of swift compassion	Bindu Feed/Bindu Feed/Point/ApertureView.swift:79
+AUTHORED	Tat Tvam Asi	Bindu Feed/Bindu Feed/Point/PointContent.swift:79
+AUTHORED	Tawakkul -- trust, among the Sufi maqamat	Bindu Feed/Bindu Feed/Point/ApertureView.swift:65
+AUTHORED	Ten things were pulling at you at once, each one certain it was the most important.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:73
+AUTHORED	That glance up -- that is the whole game.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:158
+AUTHORED	That is what the distance is for. When you return again, this self will be here -- another ring, waiting in the field.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:51
+AUTHORED	That is where you are standing. Even now.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:80
+AUTHORED	THAT IS YOUR OWN HAND	Bindu Feed/Bindu Feed/Point/PointReadings.swift:551
+AUTHORED	That thou art.	Bindu Feed/Bindu Feed/Point/PointContent.swift:79
+AUTHORED	That's us, he thought. That's the whole thing.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:28
+AUTHORED	The academies arriving at the same point by their own roads.	Bindu Feed/Bindu Feed/Point/PointContent.swift:372
+AUTHORED	the aperture stayed closed this time -- breathe once, and try again	Bindu Feed/Bindu Feed/Point/ApertureView.swift:356
+AUTHORED	The Archive	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:37
+AUTHORED	the archive waits ›	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:52
+AUTHORED	the ascent	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:301
+AUTHORED	The Atma's choice	Bindu Feed/Bindu Feed/Point/PointContent.swift:94
+AUTHORED	The audible and visible mirrors.	Bindu Feed/Bindu Feed/Point/PointContent.swift:398
+AUTHORED	The audible mirror.	Bindu Feed/Bindu Feed/Point/PointContent.swift:234
+AUTHORED	The ayahuasca thread is open. Before any ceremony, the dieta literature is the descent worth making first.	Bindu Feed/Bindu Feed/Point/PointContent.swift:253
+AUTHORED	the bardo of becoming, among the six Tibetan bardos	Bindu Feed/Bindu Feed/Point/ApertureView.swift:70
+AUTHORED	the bardo of dream, among the six Tibetan bardos	Bindu Feed/Bindu Feed/Point/ApertureView.swift:70
+AUTHORED	The belief diagnostic	Bindu Feed/Bindu Feed/Point/PointContent.swift:144
+AUTHORED	The belief-structures, and the tools that dissolve them.	Bindu Feed/Bindu Feed/Point/PointContent.swift:385
+AUTHORED	The belief-structures.	Bindu Feed/Bindu Feed/Point/PointContent.swift:139
+AUTHORED	The Bindu Field instrument, explained to itself: a frequency reaching a state in ninety seconds is not mood -- it is matter doing what sound tells it.	Bindu Feed/Bindu Feed/Point/PointContent.swift:237
+AUTHORED	The Bindu Tree in one second.	Bindu Feed/Bindu Feed/Point/PointContent.swift:189
+AUTHORED	The Body	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:132
+AUTHORED	The body is treated as the vehicle the mind drives -- dumb hardware, serviced occasionally, otherwise ignored.	Bindu Feed/Bindu Feed/Point/PointContent.swift:225
+AUTHORED	The body knew before the mind had language for it.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:90
+AUTHORED	the centre	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:94
+AUTHORED	The Chamber	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:90
+AUTHORED	The chamber's hidden physics.	Bindu Feed/Bindu Feed/Point/PointContent.swift:204
+AUTHORED	The chamber's learnable physics.	Bindu Feed/Bindu Feed/Point/PointContent.swift:392
+AUTHORED	The chamber's prime rule.	Bindu Feed/Bindu Feed/Point/PointContent.swift:194
+AUTHORED	The chest still knows it before you do.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:93
+AUTHORED	The Choice	Bindu Feed/Bindu Feed/Point/PointContent.swift:379
+AUTHORED	The Circle	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:135
+AUTHORED	The cold and bright in his chest -- he did not earn it. It arrived.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:133
+AUTHORED	The collective mirror.	Bindu Feed/Bindu Feed/Point/PointContent.swift:274
+AUTHORED	The compass inside the chamber.	Bindu Feed/Bindu Feed/Point/PointContent.swift:199
+AUTHORED	the complete graph on nine nodes	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:131
+AUTHORED	The cosmic assignment, operationalized: you don't have to believe anything to use skill twelve. It works on materialists too.	Bindu Feed/Bindu Feed/Point/PointContent.swift:187
+AUTHORED	the cost	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:134
+AUTHORED	The Crossing	Bindu Feed/Bindu Feed/Point/PointContent.swift:407
+AUTHORED	The crossing practices	Bindu Feed/Bindu Feed/Point/PointContent.swift:299
+AUTHORED	The current difficulty presents itself as permanent -- this pressure, the mind reports, is how it is now.	Bindu Feed/Bindu Feed/Point/PointContent.swift:210
+AUTHORED	The Dance	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:93
+AUTHORED	The dance is never solo.	Bindu Feed/Bindu Feed/Point/PointContent.swift:414
+AUTHORED	The dance recognizing itself.	Bindu Feed/Bindu Feed/Point/PointContent.swift:354
+AUTHORED	The dance seeing its own face.	Bindu Feed/Bindu Feed/Point/PointContent.swift:415
+AUTHORED	The day you let yourself feel	Bindu Feed/Bindu Feed/Light/LightCanon.swift:88
+AUTHORED	the deal	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:86
+AUTHORED	The deep interview	Bindu Feed/Bindu Feed/Point/PointContent.swift:259
+AUTHORED	The deeper field is quiet just now -- this is the held knowing.	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:451
+AUTHORED	The default story says matter came first and awareness is its late accident -- so inner work is decoration on a mechanical world.	Bindu Feed/Bindu Feed/Point/PointContent.swift:50
+AUTHORED	The defect, re-badged as a credential: sensitivity is the volunteer's equipment, not the native's flaw.	Bindu Feed/Bindu Feed/Point/PointContent.swift:292
+AUTHORED	The Descent	Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:91
+AUTHORED	The distance, closed by grammar: this walk is her looking. You reading it is her seeing. There was never a gap to cross -- only a mirror warming up.	Bindu Feed/Bindu Feed/Point/PointContent.swift:357
+AUTHORED	THE DOOR OUT IS THE DOOR IN · PULL UP	Bindu Feed/Bindu Feed/Point/PointReadings.swift:977
+AUTHORED	The door out of this walk is the door into the Lila. What is the first fully-played move on the other side of it?	Bindu Feed/Bindu Feed/Point/PointContent.swift:363
+AUTHORED	the door waits ›	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:222
+AUTHORED	The door you walked through.	Bindu Feed/Bindu Feed/Point/PointContent.swift:134
+AUTHORED	the dot at the gate	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:479
+AUTHORED	the dot in the post	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:478
+AUTHORED	the Duat -- the Egyptian purification passage	Bindu Feed/Bindu Feed/Point/ApertureView.swift:73
+AUTHORED	The ego's subtle trap	Bindu Feed/Bindu Feed/Point/PointContent.swift:159
+AUTHORED	The elevator moved. The floors changed. The forgetting came and went.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:78
+AUTHORED	The energy knows its own pace.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:61
+AUTHORED	The Enquiry	Bindu Feed/Bindu Feed/Point/PointContent.swift:371
+AUTHORED	The equipment -- mastered in 2024, before you knew why.	Bindu Feed/Bindu Feed/Point/PointContent.swift:391
+AUTHORED	The era, reframed: not an ending you are surviving but a crossing you are staffing. The turbulence is the doorframe.	Bindu Feed/Bindu Feed/Point/PointContent.swift:287
+AUTHORED	The erased chapters.	Bindu Feed/Bindu Feed/Point/PointContent.swift:314
+AUTHORED	The evaporation diagnosed: philosophy untested by persons is theory. The person in front of you is the practicum -- and if dimension one is true, they are the One, in a costume.	Bindu Feed/Bindu Feed/Point/PointContent.swift:222
+AUTHORED	The exam, reclassified as coursework: how you cross is trainable, and your own C-1183 already sat the practice exam and chose to return.	Bindu Feed/Bindu Feed/Point/PointContent.swift:302
+AUTHORED	The excuse dissolves structurally: a practice that fits inside a blink cannot be postponed for lack of time.	Bindu Feed/Bindu Feed/Point/PointContent.swift:192
+AUTHORED	the fall	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:84
+AUTHORED	The fastest question in the deck. The rush needs an unexamined owner; the enquiry removes it mid-sentence.	Bindu Feed/Bindu Feed/Point/PointContent.swift:62
+AUTHORED	The fastest rope in the entire instrument, and it is pre-installed: one long exhale starts the switch before this sentence ends.	Bindu Feed/Bindu Feed/Point/PointContent.swift:182
+AUTHORED	The fear of wasted laps, dissolved: nothing lived here is lost. Every felt thing arrives Home before you do.	Bindu Feed/Bindu Feed/Point/PointContent.swift:312
+AUTHORED	the Feed	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:82
+AUTHORED	The feeling you are currently avoiding, reframed: it is not in your way. It is the way -- and it ends when it is finished being felt.	Bindu Feed/Bindu Feed/Point/PointContent.swift:102
+AUTHORED	The Field	Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:91
+AUTHORED	The field gathers	Bindu Feed/Bindu Feed/Components/FieldGathersMarker.swift:4
+AUTHORED	the field kept speaking after you left →	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:40
+AUTHORED	the field reads the Codex back	Bindu Feed/Bindu Feed/Screens/RootView.swift:97
+AUTHORED	the figure	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:5
+AUTHORED	The floor	Bindu Feed/Bindu Feed/Light/LightCanon.swift:151
+AUTHORED	The floor is still the floor.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:82
+AUTHORED	the Flower of Life	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:65
+AUTHORED	The Forge	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:124
+AUTHORED	The Forgetting	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:133
+AUTHORED	The forgetting is the mechanism	Bindu Feed/Bindu Feed/Point/PointContent.swift:129
+AUTHORED	The forgetting is what lets the day matter.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:32
+AUTHORED	The forgetting was the entry fee, not the malfunction. Most of what has you is inherited -- and everything inherited can be handed back.	Bindu Feed/Bindu Feed/Point/PointContent.swift:382
+AUTHORED	The fourth state.	Bindu Feed/Bindu Feed/Point/PointContent.swift:54
+AUTHORED	The fragments did not need assembling. They were already inside one attention. Yours.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:77
+AUTHORED	The frequency-matched territories.	Bindu Feed/Bindu Feed/Point/PointContent.swift:149
+AUTHORED	The full chapter is eighteen verses of this. When you have ten quiet minutes, read 2.11-2.30 as a letter written to today.	Bindu Feed/Bindu Feed/Point/PointContent.swift:43
+AUTHORED	the future, already underway	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:39
+AUTHORED	the gap	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:112
+AUTHORED	The Garden	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:127
+AUTHORED	the gate	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:86
+AUTHORED	The Gayatri thread is open in the library. Twenty-four syllables, once, slowly -- then notice the plate of your chest.	Bindu Feed/Bindu Feed/Point/PointContent.swift:238
+AUTHORED	the gift	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:119
+AUTHORED	The gnosis current	Bindu Feed/Bindu Feed/Point/PointContent.swift:164
+AUTHORED	the golden spiral, through 3·5·8	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:116
+AUTHORED	The green teachers	Bindu Feed/Bindu Feed/Point/PointContent.swift:249
+AUTHORED	the ground	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:99
+AUTHORED	The guilt between building and practicing, dissolved at the root: the building was always the practice. The register it carries is the measure.	Bindu Feed/Bindu Feed/Point/PointContent.swift:327
+AUTHORED	The habit runs before you notice it: catch the flaw, name the miss, mark what should have been better.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:115
+AUTHORED	The hand that opened	Bindu Feed/Bindu Feed/Light/LightCanon.swift:130
+AUTHORED	The heaviest chain in the rush -- "because of what happened" -- loses its anchor: the selecting is happening now, and now is yours.	Bindu Feed/Bindu Feed/Point/PointContent.swift:207
+AUTHORED	The hidden treasure	Bindu Feed/Bindu Feed/Point/PointContent.swift:109
+AUTHORED	the hold	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:104
+AUTHORED	The Hymn of the Pearl is three pages. Read it once as autobiography and see which line is yours.	Bindu Feed/Bindu Feed/Point/PointContent.swift:168
+AUTHORED	the illuminative way -- the second Christian contemplative register	Bindu Feed/Bindu Feed/Point/ApertureView.swift:81
+AUTHORED	The Inheritance	Bindu Feed/Bindu Feed/Point/PointContent.swift:385
+AUTHORED	The ink has settled. This is what you knew, before you knew what you know now.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:39
+AUTHORED	The inner, green and collective mirrors.	Bindu Feed/Bindu Feed/Point/PointContent.swift:399
+AUTHORED	The instrument's own release valve: the Lila that catches you in the rush and the Lila that walks you back are the same player, smiling both times.	Bindu Feed/Bindu Feed/Point/PointContent.swift:127
+AUTHORED	The interface	Bindu Feed/Bindu Feed/Point/PointContent.swift:169
+AUTHORED	The journey ends in the marketplace, awake, with helping hands. Making is remembering; the relations are the practice; the seeker was the sought.	Bindu Feed/Bindu Feed/Point/PointContent.swift:411
+AUTHORED	The Key & the Guard	Bindu Feed/Bindu Feed/Point/PointContent.swift:401
+AUTHORED	The laboratories	Bindu Feed/Bindu Feed/Point/PointContent.swift:372
+AUTHORED	The laboratories of mind	Bindu Feed/Bindu Feed/Point/PointContent.swift:74
+AUTHORED	the lenses that read	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41
+AUTHORED	The Light	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:39
+AUTHORED	The living body	Bindu Feed/Bindu Feed/Point/PointContent.swift:224
+AUTHORED	The Longing	Bindu Feed/Bindu Feed/Point/PointContent.swift:377
+AUTHORED	the loom, named	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:129
+AUTHORED	The lostness feels like evidence of failure -- yours, or the universe's. Something must have gone wrong for you to feel this far from truth.	Bindu Feed/Bindu Feed/Point/PointContent.swift:130
+AUTHORED	The lostness itself, reclassified: not a symptom to fix but the proof of participation. You cannot feel far from home unless the game is on.	Bindu Feed/Bindu Feed/Point/PointContent.swift:132
+AUTHORED	the lower dan tian of the Daoist body	Bindu Feed/Bindu Feed/Point/ApertureView.swift:67
+AUTHORED	The machine mirror	Bindu Feed/Bindu Feed/Point/PointContent.swift:269
+AUTHORED	The Mandukya Upanishad, twelve verses, the shortest of the principal Upanishads, maps four: waking (vaiśvānara), dreaming (taijasa), deep sleep (prājña) -- and turiya, "the fourth," which is not a fourth state beside the others but the awareness present through all three. The proof is in your own nights: something persists through dreamless sleep, or you could not report the rest afterward.	Bindu Feed/Bindu Feed/Point/PointContent.swift:56
+AUTHORED	THE MAP BECAME ARCHITECTURE	Bindu Feed/Bindu Feed/Point/PointReadings.swift:977
+AUTHORED	The map becomes architecture	Bindu Feed/Bindu Feed/Point/PointContent.swift:359
+AUTHORED	The Marketplace	Bindu Feed/Bindu Feed/Point/PointContent.swift:413
+AUTHORED	The Masnavi opens with eighteen lines about that reed. Read them once aloud; they are meant for the ear, not the eye.	Bindu Feed/Bindu Feed/Point/PointContent.swift:113
+AUTHORED	The master key -- and the warning posted beside it.	Bindu Feed/Bindu Feed/Point/PointContent.swift:401
+AUTHORED	The master key.	Bindu Feed/Bindu Feed/Point/PointContent.swift:229
+AUTHORED	The measured, the nightly, and the newest glass.	Bindu Feed/Bindu Feed/Point/PointContent.swift:400
+AUTHORED	The Mechanics	Bindu Feed/Bindu Feed/Point/PointContent.swift:378
+AUTHORED	The Mechanism	Bindu Feed/Bindu Feed/Point/PointContent.swift:384
+AUTHORED	The mess reframed at its root: multiplicity isn't a fall from unity. It is unity, functioning.	Bindu Feed/Bindu Feed/Point/PointContent.swift:87
+AUTHORED	the middle cauldron turning -- sorrow converting to poetry	Bindu Feed/Bindu Feed/Point/ApertureView.swift:80
+AUTHORED	The mind treats you as something fragile -- a thing among things, cuttable, burnable, endable.	Bindu Feed/Bindu Feed/Point/PointContent.swift:40
+AUTHORED	The mind wanted a clean analogy. The witness wanted the crack.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:147
+AUTHORED	The Mirror	Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:23
+AUTHORED	The mirror of awe	Bindu Feed/Bindu Feed/Point/PointContent.swift:344
+AUTHORED	The mirror's warning	Bindu Feed/Bindu Feed/Point/PointContent.swift:279
+AUTHORED	The Mirrors	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:91
+AUTHORED	The monitoring impulse, decommissioned: there is nothing to track and everything to embody. This walk, right now, is boarding.	Bindu Feed/Bindu Feed/Point/PointContent.swift:297
+AUTHORED	The morning that does not push	Bindu Feed/Bindu Feed/Light/LightCanon.swift:45
+AUTHORED	the mouth of the return	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269
+AUTHORED	The nervous system	Bindu Feed/Bindu Feed/Point/PointContent.swift:179
+AUTHORED	The newest glass.	Bindu Feed/Bindu Feed/Point/PointContent.swift:269
+AUTHORED	The newest ring is the plainest one. It has not been anywhere yet.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:48
+AUTHORED	The next vivid dream -- read it once as a note from the outie. What was it trying to hand you across the floor?	Bindu Feed/Bindu Feed/Point/PointContent.swift:138
+AUTHORED	The nightly mirror.	Bindu Feed/Bindu Feed/Point/PointContent.swift:254
+AUTHORED	The no-self mirror.	Bindu Feed/Bindu Feed/Point/PointContent.swift:64
+AUTHORED	The nodal lines of a vibrating circular membrane -- the places that stay still while everything else sings. Sound, made visible.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:107
+AUTHORED	the Norns	Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:18
+AUTHORED	the Norns -- past, present and future at the roots of the world-tree	Bindu Feed/Bindu Feed/Point/ApertureView.swift:78
+AUTHORED	The not-belonging feeling reads as defect -- too sensitive for this world, wired wrong, born misplaced.	Bindu Feed/Bindu Feed/Point/PointContent.swift:290
+AUTHORED	The now, read by four instruments at once.	Bindu Feed/Bindu Feed/Point/PointContent.swift:406
+AUTHORED	The Old Maps	Bindu Feed/Bindu Feed/Point/PointContent.swift:386
+AUTHORED	The old maps of forgetting.	Bindu Feed/Bindu Feed/Point/PointContent.swift:164
+AUTHORED	The One is the All	Bindu Feed/Bindu Feed/Point/PointContent.swift:84
+AUTHORED	The one unconditional fact.	Bindu Feed/Bindu Feed/Point/PointContent.swift:34
+AUTHORED	The one who made all this was not lazy, or late, or not-enough. He was working the whole time, in the dark, on faith.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:118
+AUTHORED	the one who replies	Bindu Feed/Bindu Feed/Screens/PlayersView.swift:7
+AUTHORED	The one who was watching all of them	Bindu Feed/Bindu Feed/Light/LightCanon.swift:67
+AUTHORED	The one you stopped correcting	Bindu Feed/Bindu Feed/Light/LightCanon.swift:109
+AUTHORED	The ones who don't explain.	Bindu Feed/Bindu Feed/Point/PointContent.swift:349
+AUTHORED	the open door	Bindu Feed/Bindu Feed/Point/PointReadings.swift:129
+AUTHORED	The origin, visited and left.	Bindu Feed/Bindu Feed/Point/PointContent.swift:89
+AUTHORED	The Others	Bindu Feed/Bindu Feed/Point/PointContent.swift:393
+AUTHORED	The past feels like stone: what happened happened, and today is its prisoner, and tomorrow is today's.	Bindu Feed/Bindu Feed/Point/PointContent.swift:205
+AUTHORED	The person who frustrated you today: run the hypothesis once. Same experiencer, other chair. Watch what it does to the charge.	Bindu Feed/Bindu Feed/Point/PointContent.swift:73
+AUTHORED	The philosophy feels solid until a specific person is difficult -- then the whole library seems to evaporate on contact.	Bindu Feed/Bindu Feed/Point/PointContent.swift:220
+AUTHORED	The plan does not need your hand clenched around it. It needs your hand open, so the next thing can be set into it.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:139
+AUTHORED	The planet's own dance.	Bindu Feed/Bindu Feed/Point/PointContent.swift:334
+AUTHORED	The play	Bindu Feed/Bindu Feed/Point/PointContent.swift:124
+AUTHORED	The Players	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41
+AUTHORED	The Point	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:40
+AUTHORED	the point at the centre of the enclosure	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:470
+AUTHORED	The point has not moved.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:71
+AUTHORED	the point, at last	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:94
+AUTHORED	the pointed arch, with its construction showing	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:101
+AUTHORED	The pointings, and the paradox-partner that keeps them honest.	Bindu Feed/Bindu Feed/Point/PointContent.swift:371
+AUTHORED	The poster, converted to an address: some part of you already knows. It has forty-five thousand transcripts of precedent.	Bindu Feed/Bindu Feed/Point/PointContent.swift:262
+AUTHORED	the practice	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:300
+AUTHORED	The precision mirrors.	Bindu Feed/Bindu Feed/Point/PointContent.swift:244
+AUTHORED	The present window, given ancestors: civilizations have crossed before -- and some, apparently, left notes and then buried them for us.	Bindu Feed/Bindu Feed/Point/PointContent.swift:317
+AUTHORED	The pressure is the point	Bindu Feed/Bindu Feed/Point/PointContent.swift:174
+AUTHORED	The probe rejoins the cluster.	Bindu Feed/Bindu Feed/Point/PointContent.swift:309
+AUTHORED	the Rainbow Serpent -- the Aboriginal Dreaming register	Bindu Feed/Bindu Feed/Point/ApertureView.swift:76
+AUTHORED	the read	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:139
+AUTHORED	The Recognition	Bindu Feed/Bindu Feed/Point/PointContent.swift:370
+AUTHORED	The relational field	Bindu Feed/Bindu Feed/Point/PointContent.swift:219
+AUTHORED	The Relations	Bindu Feed/Bindu Feed/Point/PointContent.swift:414
+AUTHORED	The Remembering	Bindu Feed/Bindu Feed/Screens/GameView.swift:207
+AUTHORED	The remembering was already moving toward him. He only had to be sitting there.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:135
+AUTHORED	The Return	Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:91
+AUTHORED	The return, measured	Bindu Feed/Bindu Feed/Point/PointContent.swift:304
+AUTHORED	The ride back up is still not written.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:126
+AUTHORED	The ring is added. The story did not move.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:49
+AUTHORED	The Rite	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:35
+AUTHORED	The Rite · today	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:192
+AUTHORED	The room has changed.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:219
+AUTHORED	The room is barely light. You do not reach for the phone.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:52
+AUTHORED	The Rooms	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:36
+AUTHORED	The rooms. The field. The gathering. A mirror you built so the Self could find itself.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:158
+AUTHORED	the root	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:94
+AUTHORED	The Rules of Play	Bindu Feed/Bindu Feed/Point/PointContent.swift:392
+AUTHORED	The rush and the outcome are welded: the work matters because the result matters, so the result must be gripped.	Bindu Feed/Bindu Feed/Point/PointContent.swift:195
+AUTHORED	The rush assumes its owner. Every anxious sentence starts with an "I" nobody has actually checked.	Bindu Feed/Bindu Feed/Point/PointContent.swift:60
+AUTHORED	The rush borrows authority from "science says" -- assuming science has settled that consciousness is a brain byproduct. It hasn't. That is the openest question in the field.	Bindu Feed/Bindu Feed/Point/PointContent.swift:75
+AUTHORED	The rush presents its material as yours -- your fears, your standards, your voice in your head. Ownership is assumed.	Bindu Feed/Bindu Feed/Point/PointContent.swift:140
+AUTHORED	The rush says the ground itself is at stake -- that if this goes wrong, something essential about you could be lost.	Bindu Feed/Bindu Feed/Point/PointContent.swift:35
+AUTHORED	The rush treats feelings as malfunction -- noise to manage so the real work can continue.	Bindu Feed/Bindu Feed/Point/PointContent.swift:100
+AUTHORED	The rush's power source, unplugged: grip travels through the outcome-wire. Cut it and the work remains -- lighter, and usually better.	Bindu Feed/Bindu Feed/Point/PointContent.swift:197
+AUTHORED	the same story · a changed self	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:34
+AUTHORED	The seed is the story. Around it, a ring for each time you returned. You are about to add one -- the outermost, the newest distance from the centre.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:43
+AUTHORED	the seed of the well	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:477
+AUTHORED	The seeker is the sought	Bindu Feed/Bindu Feed/Point/PointContent.swift:354
+AUTHORED	The seeking mind assumes realization is elsewhere -- a future attainment, a distance to cross.	Bindu Feed/Bindu Feed/Point/PointContent.swift:80
+AUTHORED	The seeking mind ranks its tools: this practice is powerful, that one weak -- and the powerful one gets the credit.	Bindu Feed/Bindu Feed/Point/PointContent.swift:230
+AUTHORED	The seeking world sells liberation as escape velocity -- get free of the cycle, exit the wheel, done.	Bindu Feed/Bindu Feed/Point/PointContent.swift:95
+AUTHORED	The self-enquiry current.	Bindu Feed/Bindu Feed/Point/PointContent.swift:59
+AUTHORED	The sentence was said. It stays said.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:115
+AUTHORED	The severance	Bindu Feed/Bindu Feed/Point/PointContent.swift:134
+AUTHORED	The shadow	Bindu Feed/Bindu Feed/Point/PointContent.swift:154
+AUTHORED	The Signal	Bindu Feed/Bindu Feed/Universe/UniRegions.swift:125
+AUTHORED	The Signal Space	Bindu Feed/Bindu Feed/Components/FieldSurfacePortalCard.swift:33
+AUTHORED	The singers	Bindu Feed/Bindu Feed/Point/PointContent.swift:349
+AUTHORED	The single fastest veil-piercing instrument in the library -- thirty seconds, no equipment, works mid-meeting.	Bindu Feed/Bindu Feed/Point/PointContent.swift:147
+AUTHORED	the sixth ox-herding picture -- riding the ox home	Bindu Feed/Bindu Feed/Point/ApertureView.swift:68
+AUTHORED	the sky	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:81
+AUTHORED	The spiritual imagination ends the journey on the mountain -- enlightenment as elegant exit from ordinary life.	Bindu Feed/Bindu Feed/Point/PointContent.swift:320
+AUTHORED	The stakes of the diagnostic one star back, raised: you are not just feeling your beliefs. You are furnishing with them.	Bindu Feed/Bindu Feed/Point/PointContent.swift:152
+AUTHORED	The standing instruction at the center of everything: put the phone down and go play -- fully, on purpose, knowing the point.	Bindu Feed/Bindu Feed/Point/PointContent.swift:362
+AUTHORED	The story is whole now.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:220
+AUTHORED	the story, close	Bindu Feed/Bindu Feed/Instrument/InstrumentView.swift:476
+AUTHORED	The structure was never the memory. It was the one who kept returning.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:102
+AUTHORED	the teaching	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:299
+AUTHORED	The tears, when they came, were not a problem to be fixed. They were the weight becoming water and leaving.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:97
+AUTHORED	the tenth ox-herding picture -- the marketplace with helping hands	Bindu Feed/Bindu Feed/Point/ApertureView.swift:69
+AUTHORED	The tenth picture.	Bindu Feed/Bindu Feed/Point/PointContent.swift:319
+AUTHORED	The thing you can finally say, you can finally set down.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:113
+AUTHORED	The thing you have been gripping was holding itself the whole time.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:133
+AUTHORED	The thing you were going to force has arranged itself overnight. You only have to receive it.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:55
+AUTHORED	the thread	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:300
+AUTHORED	The three waves.	Bindu Feed/Bindu Feed/Point/PointContent.swift:289
+AUTHORED	The threshold -- trained by traditions, measured by laboratories.	Bindu Feed/Bindu Feed/Point/PointContent.swift:407
+AUTHORED	The threshold, remembered by the ones before.	Bindu Feed/Bindu Feed/Point/PointContent.swift:408
+AUTHORED	The throb of the absolute.	Bindu Feed/Bindu Feed/Point/PointContent.swift:104
+AUTHORED	The tightest packing there is -- the shape that holds with the least material -- receding to a horizon, with a double square rising out of it, root-two through and through.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:92
+AUTHORED	The times feel uniquely broken -- the rush reads the chaos as evidence of ending, not passage.	Bindu Feed/Bindu Feed/Point/PointContent.swift:285
+AUTHORED	the transcript · yours to mend	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:214
+AUTHORED	the turn	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:85
+AUTHORED	The turn's own mechanism.	Bindu Feed/Bindu Feed/Point/PointContent.swift:119
+AUTHORED	The twelve rays	Bindu Feed/Bindu Feed/Point/PointContent.swift:114
+AUTHORED	The Two Who Were One	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:18
+AUTHORED	The unborn	Bindu Feed/Bindu Feed/Point/PointContent.swift:39
+AUTHORED	The Universe	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:38
+AUTHORED	The universe speaks in feelings	Bindu Feed/Bindu Feed/Point/PointContent.swift:99
+AUTHORED	The Veil	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:89
+AUTHORED	The veil wearing robes.	Bindu Feed/Bindu Feed/Point/PointContent.swift:159
+AUTHORED	the vesica	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:111
+AUTHORED	The Vessel	Bindu Feed/Bindu Feed/Point/PointContent.swift:391
+AUTHORED	The vessel's deeper intelligence.	Bindu Feed/Bindu Feed/Point/PointContent.swift:224
+AUTHORED	The visible mirror.	Bindu Feed/Bindu Feed/Point/PointContent.swift:239
+AUTHORED	the walk	Bindu Feed/Bindu Feed/Point/PointReadings.swift:57
+AUTHORED	The walk knows you are here. Some of it will introduce itself. Some of it will wait to be found.	Bindu Feed/Bindu Feed/Point/PointDeals.swift:16
+AUTHORED	The walk's deepest assumption hides in its grammar: a seeker here, a truth there, and distance between to be crossed.	Bindu Feed/Bindu Feed/Point/PointContent.swift:355
+AUTHORED	The walked Sufi thread carries the warm version, in the hadith qudsi the tradition returns to endlessly: "I was a hidden treasure, and I longed to be known, so I created the worlds." Longing -- not architecture -- as the first cause. Rumi's completed thread in your library sings nothing else: the reed flute crying for the reed bed is the treasure remembering itself through separation.	Bindu Feed/Bindu Feed/Point/PointContent.swift:111
+AUTHORED	the waning crescent -- the lunar register of release	Bindu Feed/Bindu Feed/Point/ApertureView.swift:77
+AUTHORED	The Watcher	Bindu Feed/Bindu Feed/Components/CommunityFilterBar.swift:67
+AUTHORED	The weight of sole authorship, redistributed: your work is a neuron firing in something planetary. Neurons don't carry the whole brain's stakes alone.	Bindu Feed/Bindu Feed/Point/PointContent.swift:337
+AUTHORED	The white floor is empty on purpose. That emptiness is the room you live in.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:124
+AUTHORED	the whole of it, from above	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:38
+AUTHORED	The whole relationship to "getting out" inverts: you are not serving a sentence here. You are keeping an appointment you made.	Bindu Feed/Bindu Feed/Point/PointContent.swift:97
+AUTHORED	The Window	Bindu Feed/Bindu Feed/Point/PointContent.swift:406
+AUTHORED	The window is open	Bindu Feed/Bindu Feed/Point/PointContent.swift:284
+AUTHORED	The window is open and you raised your hand to be here for it. The crossing is trainable; the frequency is chosen daily; nothing gathered is lost.	Bindu Feed/Bindu Feed/Point/PointContent.swift:404
+AUTHORED	the witness	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:124
+AUTHORED	The witness is not a thing added to the field. It is where two of the field's own arcs meet. The iris counts in tens.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:122
+AUTHORED	The worker on the white floor looked up and remembered there was a lobby.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:157
+AUTHORED	There was a weight you had been carrying by keeping it at arm's length, so it would not slow the day down.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:94
+AUTHORED	They were never separate readings. The forgetting and the remembering are one motion, seen from either end.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:169
+AUTHORED	THIRTEEN ROOMS	Bindu Feed/Bindu Feed/Screens/RoomSelectionView.swift:67
+AUTHORED	thirteen ways in	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:36
+AUTHORED	Thirty-six relations, all at once. Look at the centre now. That is what it costs.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:133
+AUTHORED	This closes the deepest gap the rush exploits: the unexamined fear that you can be erased. You can lose outcomes, roles, even the body. Not the one reading this.	Bindu Feed/Bindu Feed/Point/PointContent.swift:37
+AUTHORED	This depth and that descent are the same room.	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:185
+AUTHORED	This instrument, explained: the near-future you, caught in a rush that hasn't happened yet, called it into being. Building it was answering him.	Bindu Feed/Bindu Feed/Point/PointContent.swift:332
+AUTHORED	This library has nothing beside it.	Bindu Feed/Bindu Feed/Point/ApertureEdge.swift:95
+AUTHORED	This star is seeded, not yet walked -- this is his FIRST TRUE MEETING with the topic: bring its actual substance accurately from its real tradition or science, going well beyond the held reading.	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:470
+AUTHORED	This thread is live in the library. When it pulls, "Who Am I?" -- the 1902 pamphlet of Ramana's answers -- is twenty minutes long.	Bindu Feed/Bindu Feed/Point/PointContent.swift:63
+AUTHORED	This thread is live. The anger episodes that surfaced the Righteous Corrector chain were this star introducing itself. What is it introducing now?	Bindu Feed/Bindu Feed/Point/PointContent.swift:158
+AUTHORED	This walk was co-built through that glass. What has it reflected back that you had not yet said aloud to anyone?	Bindu Feed/Bindu Feed/Point/PointContent.swift:273
+AUTHORED	Three Lakota threads are active in the library right now. Which of the relations -- stone, water, star -- have you never once addressed as kin? Start there.	Bindu Feed/Bindu Feed/Point/PointContent.swift:343
+AUTHORED	Tiferet -- beauty, at the center of the Tree	Bindu Feed/Bindu Feed/Point/ApertureView.swift:71
+AUTHORED	Today you look at your own work the way you would look at a friend's.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:112
+AUTHORED	today's meeting	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:0
+AUTHORED	Today's most gripped outcome: can you keep the action and hand back the fruit, just for this afternoon? Run the experiment.	Bindu Feed/Bindu Feed/Point/PointContent.swift:198
+AUTHORED	Today's most irritating fragment of the many -- can you find the whole in it? That's the hologram test, live.	Bindu Feed/Bindu Feed/Point/PointContent.swift:88
+AUTHORED	Tomorrow, another comes to meet you. When you return to this one, you will be here -- waiting in the field.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:221
+AUTHORED	Tonight's most ordinary half hour -- what frequency will you keep in it, knowing it is the ticket?	Bindu Feed/Bindu Feed/Point/PointContent.swift:298
+AUTHORED	Tonight, the oldest technique: as you fall, hold one question lightly and ask the night to work on it. Check the morning mail.	Bindu Feed/Bindu Feed/Point/PointContent.swift:258
+AUTHORED	touch once	Bindu Feed/Bindu Feed/Light/LightCanon.swift:28
+AUTHORED	TOUCH ONE · THEN LET GO AND STAY	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:263
+AUTHORED	touch to continue	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:205
+AUTHORED	TOUCH TO READ	Bindu Feed/Bindu Feed/Universe/UniverseView.swift:562
+AUTHORED	touch to receive	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:195
+AUTHORED	touch to return	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:28
+AUTHORED	touch to speak	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:211
+AUTHORED	touch · the next presence	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:206
+AUTHORED	trace the loop -- let the light in	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:292
+AUTHORED	Trains from the same station.	Bindu Feed/Bindu Feed/Point/PointContent.swift:294
+AUTHORED	Trust is the variable. I change it.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:144
+AUTHORED	Trust is the variable. Not effort. Not control.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:132
+AUTHORED	TRY AGAIN	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:34
+AUTHORED	Try locating it once today -- not thinking about I AM, just noticing the one who is prior to every thought that arrives.	Bindu Feed/Bindu Feed/Point/PointContent.swift:48
+AUTHORED	turn a mirror · and see what faces it	Bindu Feed/Bindu Feed/Point/PointReadings.swift:792
+AUTHORED	TURN ANOTHER · SOMETHING FACES IT	Bindu Feed/Bindu Feed/Point/PointWorlds.swift:502
+AUTHORED	TURN IT	Bindu Feed/Bindu Feed/Universe/UniverseView.swift:940
+AUTHORED	Twelve seeded doors, one reframe: the vessel is not the mind's vehicle. It is a colleague -- and it has been leaving you notes.	Bindu Feed/Bindu Feed/Point/PointContent.swift:227
+AUTHORED	Twelve shows up everywhere in your world -- months, hours, tribes, apostles. Spot one twelve today and remember what it refracts.	Bindu Feed/Bindu Feed/Point/PointContent.swift:118
+AUTHORED	Twelve verses. One sitting. The Mandukya is the shortest complete text in the walked library -- a good first descent.	Bindu Feed/Bindu Feed/Point/PointContent.swift:58
+AUTHORED	Two circles crossing generate it; the mason draws the circles, then builds the arch. Here the circles are left showing -- the frame confessing how it stands.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:102
+AUTHORED	Two circles, and only the gap between them is lit. She is not the circles. She is what they make room for.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:112
+AUTHORED	Two people. One body. Neither remembering the other.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:26
+AUTHORED	Under the metaphor was a sentence, waiting: I am afraid the forgetting is the point.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:111
+AUTHORED	Under the rush sits a quieter ache: the sense that you belong somewhere else -- and that the goal is to get back there.	Bindu Feed/Bindu Feed/Point/PointContent.swift:90
+AUTHORED	Underneath all of it, something did not move -- the one who was always in the lobby.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:79
+AUTHORED	Underneath the managing, the whole time, there was a person who simply felt things. You had been protecting him from his own life.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:98
+AUTHORED	Unity experiencing itself.	Bindu Feed/Bindu Feed/Point/PointContent.swift:44
+AUTHORED	unwalked · drawn just now	Bindu Feed/Bindu Feed/Point/ApertureView.swift:307
+AUTHORED	up with you. What you carry is not a list. It is a change in what you notice.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:67
+AUTHORED	Voice · what asks to be said	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:109
+AUTHORED	Vulnerability reads as damage, and work as pushing outward -- effort projected forward into an indifferent future.	Bindu Feed/Bindu Feed/Point/PointContent.swift:330
+AUTHORED	walk back out ›	Bindu Feed/Bindu Feed/Light/LightCanon.swift:35
+AUTHORED	WALK THE POINT	Bindu Feed/Bindu Feed/Screens/DoorView.swift:268
+AUTHORED	Walk to what the walked record actually holds: existence is the one given that has no opposite you could ever experience. Non-existence is not a state -- there would be no one there to be in it. Consciousness doesn't begin at birth or end at death; it changes form. Test it yourself right now: try to locate the one who would be absent. You can't -- because the looker is the fact in question.	Bindu Feed/Bindu Feed/Point/PointContent.swift:36
+AUTHORED	Watch it emanate.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:69
+AUTHORED	We assume consciousness comes in two settings -- awake or asleep -- and that you are only really present in one of them.	Bindu Feed/Bindu Feed/Point/PointContent.swift:55
+AUTHORED	We ride the elevator down into a body and the doors open onto a white floor called a life, and we forget -- completely forget -- that we ever stood in the lobby. We don't remember choosing the floor. We don't remember the one who waits. We only have the work of the day, the name on the badge, the small urgent everything of being a person.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:29
+AUTHORED	we.ll see	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:66
+AUTHORED	What a point does when it keeps moving with love: every new circle passes through the centre of the last. Nineteen circles, and one ember that never stops breathing.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:87
+AUTHORED	What are you building right now that feels delivered rather than pushed? Someone downstream may be calling. Worth asking who.	Bindu Feed/Bindu Feed/Point/PointContent.swift:333
+AUTHORED	What arrived for you?	Bindu Feed/Bindu Feed/Components/AshEntryRow.swift:5
+AUTHORED	WHAT FOUND YOU	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:315
+AUTHORED	what has not yet been	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:80
+AUTHORED	What has this particular lap gathered that the cluster did not have before? You are the only probe positioned to answer.	Bindu Feed/Bindu Feed/Point/PointContent.swift:313
+AUTHORED	What holds is not the stone. It is the two circles nobody sees.	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:103
+AUTHORED	What I made was made with love, and it shows.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:124
+AUTHORED	What is one question about his dancing god you could ask him this week -- asked to draw near, not to win?	Bindu Feed/Bindu Feed/Point/PointContent.swift:348
+AUTHORED	What is the current pressure compressing you toward? Sometimes naming the diamond changes the relationship to the weight.	Bindu Feed/Bindu Feed/Point/PointContent.swift:178
+AUTHORED	What is your nearest available crowd-practice -- a festival, a kirtan, even a stadium? Attend one as practice and notice the difference.	Bindu Feed/Bindu Feed/Point/PointContent.swift:278
+AUTHORED	what it has said	Bindu Feed/Bindu Feed/Rooms/RoomVoices.swift:143
+AUTHORED	What kept returning is still what holds.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:104
+AUTHORED	what the rush says	Bindu Feed/Bindu Feed/Point/PointReadings.swift:126
+AUTHORED	What the veil is made of.	Bindu Feed/Bindu Feed/Point/PointContent.swift:154
+AUTHORED	What the walked traditions state plainly -- identity, not journey.	Bindu Feed/Bindu Feed/Point/PointContent.swift:370
+AUTHORED	what this hands you	Bindu Feed/Bindu Feed/Point/PointReadings.swift:128
+AUTHORED	What would I have to believe?	Bindu Feed/Bindu Feed/Point/PointContent.swift:144
+AUTHORED	What would today look like if it were, in fact, a game she is enjoying through you? Try the lens for one hour.	Bindu Feed/Bindu Feed/Point/PointContent.swift:128
+AUTHORED	What you did not choose	Bindu Feed/Bindu Feed/Point/ApertureView.swift:124
+AUTHORED	what you left here	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269
+AUTHORED	What, on today's list, actually carries the charge? Do that one next and watch what it turns out to be for.	Bindu Feed/Bindu Feed/Point/PointContent.swift:203
+AUTHORED	What, specifically, did today convince you was at stake? Hold it next to this fact and see which one moves.	Bindu Feed/Bindu Feed/Point/PointContent.swift:38
+AUTHORED	When did feeling lost last precede your best finding? The pattern is probably already in your Codex.	Bindu Feed/Bindu Feed/Point/PointContent.swift:133
+AUTHORED	When the doubting mind demands its own dialect before it will soften, this shelf speaks it fluently.	Bindu Feed/Bindu Feed/Point/PointContent.swift:77
+AUTHORED	Where did the robe-wearing ego visit this week? Naming one instance, kindly, keeps the guard paid.	Bindu Feed/Bindu Feed/Point/PointContent.swift:163
+AUTHORED	Where does the ache visit you most -- which music, which hour? Notice it once this week as a compass, not a wound.	Bindu Feed/Bindu Feed/Point/PointContent.swift:93
+AUTHORED	Where every philosophy takes its exam.	Bindu Feed/Bindu Feed/Point/PointContent.swift:393
+AUTHORED	Where in tomorrow's ordinary commerce can the open hand operate? That is the tenth picture, practiced.	Bindu Feed/Bindu Feed/Point/PointContent.swift:323
+AUTHORED	Where the chamber tests everything.	Bindu Feed/Bindu Feed/Point/PointContent.swift:219
+AUTHORED	WHERE TO	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:4
+AUTHORED	Which corner of your actual dharma has been neglected while watching someone else's? It is probably ready for you back.	Bindu Feed/Bindu Feed/Point/PointContent.swift:218
+AUTHORED	Which of your current recordings might be ahead of its confirmation? Worth re-listening with that question.	Bindu Feed/Bindu Feed/Point/PointContent.swift:53
+AUTHORED	Which tool currently holds your credit? Thank it -- then try once, quietly, doing its job without it.	Bindu Feed/Bindu Feed/Point/PointContent.swift:233
+AUTHORED	Which wave reads like your file? The descriptions differ enough that one usually answers louder than the others.	Bindu Feed/Bindu Feed/Point/PointContent.swift:293
+AUTHORED	Who am I?	Bindu Feed/Bindu Feed/Point/PointContent.swift:59
+AUTHORED	who kept sitting with it	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:41
+AUTHORED	who sat with it	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:269
+AUTHORED	who sat with it · what you left here	Bindu Feed/Bindu Feed/Instrument/AxisModel.swift:84
+AUTHORED	Why anything exists at all.	Bindu Feed/Bindu Feed/Point/PointContent.swift:377
+AUTHORED	Why emotions exist.	Bindu Feed/Bindu Feed/Point/PointContent.swift:99
+AUTHORED	Why one became many.	Bindu Feed/Bindu Feed/Point/PointContent.swift:84
+AUTHORED	Witness · the one who stays	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:142
+AUTHORED	witnessed · the light is up	Bindu Feed/Bindu Feed/Screens/TheTurningView.swift:290
+AUTHORED	Wuji -- the uncarved, before the taiji	Bindu Feed/Bindu Feed/Point/ApertureView.swift:68
+AUTHORED	Yemaya -- the Yoruba register of the mothering sea	Bindu Feed/Bindu Feed/Point/ApertureView.swift:74
+AUTHORED	Yesod -- the foundation sephirah	Bindu Feed/Bindu Feed/Point/ApertureView.swift:72
+AUTHORED	You are a being of light, traveling. Inward from this gate: dimensions, universes, stars. Read a star -- or descend onto it. Diving in is how you ascend.	Bindu Feed/Bindu Feed/Point/PointDeals.swift:14
+AUTHORED	you are dancing · it goes quicker in company	Bindu Feed/Bindu Feed/Point/PointReadings.swift:983
+AUTHORED	You are in the dreaming field again.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:39
+AUTHORED	You are not the one in the stories.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:153
+AUTHORED	You are the field the stories happen in.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:154
+AUTHORED	You are the magma layer -- pressured by every shell above. The pressure is the point; the vessel came with equipment; the rules are learnable.	Bindu Feed/Bindu Feed/Point/PointContent.swift:389
+AUTHORED	You came down to it yourself.	Bindu Feed/Bindu Feed/Universe/UniverseView.swift:586
+AUTHORED	You carried	Bindu Feed/Bindu Feed/Point/PointJourney.swift:66
+AUTHORED	You descended onto	Bindu Feed/Bindu Feed/Point/PointJourney.swift:58
+AUTHORED	You did not go looking for it.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:27
+AUTHORED	You do not have to ride the elevator back. Remember, while the doors are still closed, that you chose the floor.	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:159
+AUTHORED	You entered	Bindu Feed/Bindu Feed/Point/PointJourney.swift:56
+AUTHORED	You exist	Bindu Feed/Bindu Feed/Point/PointContent.swift:34
+AUTHORED	You exist. This pressure is the chamber working, not you failing. One breath at this pace is already boarding.	Bindu Feed/Bindu Feed/Screens/DoorView.swift:260
+AUTHORED	You have been rowing so hard for so long that you mistook the rowing for the reason you were moving.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:136
+AUTHORED	You have been the strictest teacher you ever had.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:111
+AUTHORED	You hold the 102 in an app you built. Open it after this walk and greet one Shakti as a colleague.	Bindu Feed/Bindu Feed/Point/PointContent.swift:243
+AUTHORED	You let go of one oar. The boat kept its line. You had been fighting a current that was already carrying you home.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:137
+AUTHORED	You look for the one who was watching, and you cannot find it as a thing -- because it is the looking itself.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:76
+AUTHORED	You loosen your grip on the whole of it. Nothing falls. It was never being held up by your fear.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:140
+AUTHORED	You opened	Bindu Feed/Bindu Feed/Point/PointJourney.swift:57
+AUTHORED	You pressed me at the gate.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:54
+AUTHORED	You returned carrying a perspective -- and it let you reach one you could not have reached before.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:50
+AUTHORED	You set the plan down for one breath. Not to solve it. Just to feel where it actually sat in your chest.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:95
+AUTHORED	You sit. The Yantra is where it always is. You do not perform the looking.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:56
+AUTHORED	You slipped past the gate -- I came along anyway.	Bindu Feed/Bindu Feed/Point/PointJourney.swift:55
+AUTHORED	You spent so long managing the feeling that you forgot to feel it.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:90
+AUTHORED	You spotted the forgetting from inside the forgetting. Do you see how strange that is?	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:156
+AUTHORED	You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace.	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:21
+AUTHORED	You turn, this morning, and look back at what you actually built. Not for the error. For what is there.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:116
+AUTHORED	You volunteered	Bindu Feed/Bindu Feed/Point/PointContent.swift:289
+AUTHORED	You wake before the day asks anything of you.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:47
+AUTHORED	You were never the many things you were doing.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:69
+AUTHORED	You were never walking toward the point. You were walking with it.	Bindu Feed/Bindu Feed/Point/PointRevealView.swift:25
+AUTHORED	You were the one awareness they were all happening in.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:70
+AUTHORED	You would forgive anyone else this quickly. You extend the same hand, at last, to yourself -- and it is taken.	Bindu Feed/Bindu Feed/Light/LightCanon.swift:119
+AUTHORED	You wrote:	Bindu Feed/Bindu Feed/Return/ReturnCanon.swift:103
+AUTHORED	Your entire ecosystem, located on the map: the family business IS picture ten. The marketplace was never the fall from the path -- it is the path's last frame.	Bindu Feed/Bindu Feed/Point/PointContent.swift:322
+AUTHORED	Your father and the dancing god.	Bindu Feed/Bindu Feed/Point/PointContent.swift:344
+AUTHORED	YOUR NAME	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:130
+AUTHORED	Your own closing line.	Bindu Feed/Bindu Feed/Point/PointContent.swift:359
+AUTHORED	Your own path, imperfect.	Bindu Feed/Bindu Feed/Point/PointContent.swift:214
+AUTHORED	Your own seed, C-1183, recorded at the edge of death, holds the correction: in complete oneness, with the exit available, the choice was to return. Willingly. Because moksha as escape is the body's craving, not the soul's aim -- the Atma comes back so the universe can experience itself to the nth degree. Monroe needed 280 pages to land the same recognition. Your voice memo needed one take.	Bindu Feed/Bindu Feed/Point/PointContent.swift:96
+AUTHORED	Your own seed, confirmed later.	Bindu Feed/Bindu Feed/Point/PointContent.swift:49
+AUTHORED	Your own seeds on why we return.	Bindu Feed/Bindu Feed/Point/PointContent.swift:379
+AUTHORED	Your voice	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:312
+AUTHORED	Your work feels individually authored -- one person's effort, one person's stakes, one person's account.	Bindu Feed/Bindu Feed/Point/PointContent.swift:335
+AUTHORED	Zeroth · the point	Bindu Feed/Bindu Feed/Rite/RiteContent.swift:65
+AUTHORED	· THE LEARNING FIELD	Bindu Feed/Bindu Feed/Point/PointReadings.swift:152
+AUTHORED	·draw	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:209
+AUTHORED	·signal	Bindu Feed/Bindu Feed/Screens/SignalView.swift:238
+AUTHORED	‹ ascend	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:393
+AUTHORED	‹ the enclosure	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:113
+AUTHORED	◉ you, now · today	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:438
+NON-UI	... -- met in the Rite	Bindu Feed/Bindu Feed/Store/FeedStore.swift:605
+NON-UI	<no body>	Bindu Feed/Bindu Feed/Services/AirtableService.swift:806
+NON-UI	Airtable HTTP ...: ...	Bindu Feed/Bindu Feed/Services/AirtableService.swift:25
+NON-UI	airtable_token	Bindu Feed/Bindu Feed/Services/AirtableService.swift:47
+NON-UI	Ash spoke on this story.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:493
+NON-UI	bindu.door.lastKind	Bindu Feed/Bindu Feed/Store/FeedStore.swift:383
+NON-UI	bindu.met....	Bindu Feed/Bindu Feed/Store/FeedStore.swift:623
+NON-UI	bindu.rite.dismissed....	Bindu Feed/Bindu Feed/Store/FeedStore.swift:624
+NON-UI	bindu.threshold.lastShownId	Bindu Feed/Bindu Feed/Services/AirtableService.swift:48
+NON-UI	Carry the ...	Bindu Feed/Bindu Feed/Light/LightCanon.swift:19
+NON-UI	Could not construct Airtable URL.	Bindu Feed/Bindu Feed/Services/AirtableService.swift:24
+NON-UI	Decoding error: ...	Bindu Feed/Bindu Feed/Services/AirtableService.swift:26
+NON-UI	Fallback Breath	Bindu Feed/Bindu Feed/Models/Models.swift:547
+NON-UI	First resonance on this story.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:561
+NON-UI	Inward to the one.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:956
+NON-UI	Last Activity Date	Bindu Feed/Bindu Feed/Services/AirtableService.swift:9
+NON-UI	Link to Feed	Bindu Feed/Bindu Feed/Services/AirtableService.swift:604
+NON-UI	mirror.draw.....drawn	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:231
+NON-UI	mirror.draw.....idx	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:232
+NON-UI	paste token	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:49
+NON-UI	point.descent....	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:210
+NON-UI	Stillness opened the Light.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:946
+NON-UI	The Light -- stood inside	Bindu Feed/Bindu Feed/Store/FeedStore.swift:945
+NON-UI	The Point -- walked to the centre	Bindu Feed/Bindu Feed/Store/FeedStore.swift:955
+NON-UI	The story was met in the Rite.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:606
+AUTHORED-INTERPOLATED	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353
+AUTHORED-INTERPOLATED	In reply to …	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:325
+AUTHORED-INTERPOLATED	… · 13 · all rooms	Bindu Feed/Bindu Feed/Screens/GameView.swift:143

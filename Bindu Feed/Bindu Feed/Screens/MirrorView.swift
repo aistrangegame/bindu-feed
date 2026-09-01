@@ -72,7 +72,7 @@ struct MirrorView: View {
     private var header: some View {
         VStack(spacing: 9) {
             Text("THE MIRROR")
-                .font(.spaceMono(11))
+                .spaceMonoTracked(11)
                 .tracking(2.6)
                 .foregroundColor(BinduTheme.colorAsh.opacity(0.78))
             Text("what surfaces on \(prettyDayLabel)")
@@ -143,10 +143,14 @@ struct MirrorView: View {
             .disabled(drawn)
 
             Text(drawn ? "DRAWN · RETURN TOMORROW" : "DRAW ONCE MORE")
-                .font(.spaceMono(9))
+                .spaceMonoTracked(9)
                 .tracking(1.8)
                 .foregroundColor(drawn ? BinduTheme.inkTertiary : BinduTheme.colorBindu.opacity(0.62))
-                .modifier(BreathingOpacity(active: !drawn, lo: 0.26, hi: 1.0, duration: 5))
+                // `The Mirror.html:40` — the hint breathes between 0.26 and **0.58**, never to full.
+                // At `hi: 1.0` the quietest surface in the room pulses to the same weight as
+                // the card it sits under, so the invitation competes with the reflection
+                // instead of waiting beneath it.
+                .modifier(BreathingOpacity(active: !drawn, lo: 0.26, hi: 0.58, duration: 5))
         }
     }
 
@@ -169,7 +173,20 @@ struct MirrorView: View {
         guard store.foundationLoaded else { return }
 
         await store.loadMirrorCards()
-        let cards = store.mirrorCards
+        // A1.5 · **A CARD WITH NO REGISTER IS NOT SHOWN, RATHER THAN SHOWN AS THE WRONG ONE.**
+        //
+        // `MirrorCard.register` is optional, and the render asked `card.register == .koan`,
+        // so a nil silently became a VOW — upright Lora, *"A VOW · ARRIVED"*, closing `·` —
+        // on a card that may be a koan. Not an absence: **a confident assertion of the other
+        // register.**
+        //
+        // This is §6's blank-`Status` lesson in a second field. That rule is that a record
+        // missing a discriminator is invisible rather than guessed, and it is enforced on
+        // every reader; `Card Register` is a discriminator too — §8: *"The `Card Register`
+        // field drives render"* — and it was being guessed. Filtering costs nothing today
+        // (all 24 Live cards carry one) and is the only behaviour that cannot be wrong: the
+        // app does not know which register a blank card belongs to, so it does not choose.
+        let cards = store.mirrorCards.filter { $0.register != nil }
 
         if cards.isEmpty {
             loadError = store.error != nil
@@ -178,7 +195,12 @@ struct MirrorView: View {
         }
 
         let key = Self.dayKey
-        let baseIdx = Int(Self.fnv1a(key) % UInt32(cards.count))
+        // A1.6 · rendezvous, not modulus — see `MirrorDay`. The count appears nowhere, so a
+        // card added or archived no longer re-decides every other day.
+        guard let baseIdx = MirrorDay.pick(cards.map(\.id), key: key) else {
+            loaded = true
+            return
+        }
         let savedDrawn = UserDefaults.standard.bool(forKey: drawnKey(for: key))
         let savedIdx = UserDefaults.standard.object(forKey: idxKey(for: key)) as? Int
 
@@ -197,7 +219,11 @@ struct MirrorView: View {
     // revealing" if the pool is too small to honour the gap.
     private func drawAlternate() {
         guard !drawn else { return }
-        let cards = store.mirrorCards
+        // A1.5 · the DRAW reads the same pool and must filter identically. One reader
+        // filtered and the other not is the shape §10 records for claims: *every* path
+        // its owner can leave by, not only the polite one. A blank-register card the
+        // day-pick refuses would otherwise arrive through the Bindu Draw instead.
+        let cards = store.mirrorCards.filter { $0.register != nil }
         guard cards.count > 3 else {
             drawn = true
             persist(idx: nil, drawn: true)
@@ -205,8 +231,15 @@ struct MirrorView: View {
         }
 
         let key = Self.dayKey
-        let base = Int(Self.fnv1a(key) % UInt32(cards.count))
-        let altIdx = (base + 3 + Int(Self.fnv1a(key + "·draw") % UInt32(cards.count - 3))) % cards.count
+        // A1.6 · the alternate is second place by the same scoring, which is stable for the
+        // same reason first place is — and cannot collide with the base, where the old
+        // `(base + 3 + hash % (count − 3)) % count` could land back on it as the pool changed
+        // size. The "+3 gap" it was protecting was an index trick guarding an index problem.
+        guard let altIdx = MirrorDay.alternate(cards.map(\.id), key: key) else {
+            drawn = true
+            persist(idx: nil, drawn: true)
+            return
+        }
 
         // Two-stage (comp The Mirror): the current reflection fades out and lifts, THEN the
         // alternate rises in — the old face departs before the new surfaces.
@@ -268,7 +301,7 @@ private struct ReflectionCard: View {
 
         VStack(spacing: 30) {
             Text(registerLabel)
-                .font(.spaceMono(10))
+                .spaceMonoTracked(10)
                 .tracking(2.5)
                 .foregroundColor(BinduTheme.colorAsh.opacity(0.72))
 

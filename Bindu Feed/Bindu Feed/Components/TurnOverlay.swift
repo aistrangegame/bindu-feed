@@ -61,7 +61,7 @@ struct TurnOverlay: View {
 
             VStack(spacing: 0) {
                 Text("WHERE TO")
-                    .font(.spaceMono(10)).tracking(3.4)
+                    .spaceMonoTracked(10, em: 0.34)
                     .foregroundStyle(BinduTheme.inkTertiary)
                     .padding(.top, 80).padding(.bottom, 30)
 
@@ -76,7 +76,13 @@ struct TurnOverlay: View {
                                     .opacity(0.55 + 0.4 * breath.eased(offset: Double(i) * 0.09))
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(row.name).font(.lora(16)).foregroundStyle(BinduTheme.inkPrimary)
-                                    Text(row.sub).font(.loraItalic(12.5)).foregroundStyle(BinduTheme.inkSecondary)
+                                    // F11.1 · the row's sub-line is drawn in the row's OWN
+                                    // colour, not the shared secondary ink. Eight
+                                    // destinations described in one voice read as one list;
+                                    // in their own hands they read as eight places. The
+                                    // colour is already bound one line above, on the mark.
+                                    Text(row.sub).font(.loraItalic(12.5))
+                                        .foregroundStyle(row.color.opacity(0.72))
                                 }
                                 Spacer()
                             }
@@ -91,7 +97,7 @@ struct TurnOverlay: View {
 
                 Spacer()
                 Text("tap anywhere to stay")
-                    .font(.spaceMono(9)).tracking(2)
+                    .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.4 * breath.value))
                     .padding(.bottom, 40)
             }

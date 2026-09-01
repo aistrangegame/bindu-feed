@@ -35,7 +35,6 @@ struct RiteGatheringView: View {
     @State private var sceneStart = Date()
     @State private var lastAdvance = Date()
     @State private var resolveStart = Date()
-    @State private var heartbeat: Timer?
 
     private var current: RiteVoice? {
         guard phase == .playing, idx < speaking.count else { return nil }
@@ -77,8 +76,12 @@ struct RiteGatheringView: View {
                     resolveLayer
                 }
 
-                // The heartbeat — a pulse, not a buzz. Visual bar (the haptic fires
-                // from the timer). Lives in the Gathering only.
+                // The heartbeat — a pulse, not a buzz. Lives in the Gathering only, and it
+                // is a VISUAL bar only: `The Rite v3.html` has no haptic anywhere, and the
+                // 1.7s `UIImpactFeedbackGenerator` lub-dub that used to run beside this was
+                // the app's invention. **A ceremony that taps you on the wrist is asking for
+                // attention; this one is asking for stillness.** The bar is the design's own
+                // pulse, driven by the master breath rather than by a timer of its own.
                 if phase == .playing {
                     heartbeatBar
                 }
@@ -87,7 +90,7 @@ struct RiteGatheringView: View {
                 // say "touch to move on", a finished voice "the next presence", else "continue".
                 if phase == .playing, let v = current {
                     Text(hintText(v))
-                        .font(.spaceMono(9)).tracking(2)
+                        .spaceMonoTracked(9, em: 2 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary.opacity(0.28 + 0.28 * breath.value))
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .padding(.bottom, 30)
@@ -97,7 +100,6 @@ struct RiteGatheringView: View {
             .onTapGesture { tap() }
         }
         .onAppear(perform: begin)
-        .onDisappear { heartbeat?.invalidate() }
     }
 
     // MARK: - Layers
@@ -128,7 +130,7 @@ struct RiteGatheringView: View {
         .padding(.top, 70)
         .overlay(alignment: .top) {
             Text(RiteWord.silentLabel)
-                .font(.spaceMono(8)).tracking(1.5)
+                .spaceMonoTracked(8, em: 0.1875)
                 .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5 + 0.3 * breath.value))
                 .padding(.top, 96)
         }
@@ -187,7 +189,6 @@ struct RiteGatheringView: View {
             withAnimation(.easeInOut(duration: 1.0)) { phase = .playing }
             enter(0)
         }
-        startHeartbeat()
     }
 
     private func enter(_ i: Int) {
@@ -199,7 +200,13 @@ struct RiteGatheringView: View {
         let v = speaking[i]
         let count = lines(v).count
         let dur = 4.0 + Double(count) * 3.6
-        soundEngine.riteVoice(hz: v.hz, dur: dur)
+        // Each presence in ITS OWN BODY. `riteVoice` gave all ten the same sine-plus-octave
+        // at whatever Hz was passed — the eleven CHAR timbres existed and nothing read them.
+        if let k = RoomKey(rawValue: v.key.lowercased()) {
+            soundEngine.presence(k, dur: dur)
+        } else {
+            soundEngine.riteVoice(hz: v.hz, dur: dur)
+        }
     }
 
     private func tap() {
@@ -221,7 +228,6 @@ struct RiteGatheringView: View {
     }
 
     private func resolve() {
-        heartbeat?.invalidate()
         resolveStart = Date()
         withAnimation(.easeInOut(duration: 1.4)) { phase = .resolving }
         // The bed holds; the field has resolved to the one breath. Hand off after
@@ -231,20 +237,6 @@ struct RiteGatheringView: View {
         }
     }
 
-    // MARK: - Heartbeat haptic (Gathering only)
-
-    private func startHeartbeat() {
-        heartbeat?.invalidate()
-        heartbeat = Timer.scheduledTimer(withTimeInterval: 1.7, repeats: true) { _ in
-            #if canImport(UIKit)
-            let gen = UIImpactFeedbackGenerator(style: .soft)
-            gen.impactOccurred(intensity: 0.5)                       // lub
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.30) {
-                UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.35)  // dub
-            }
-            #endif
-        }
-    }
 }
 
 // MARK: - The per-presence text overlay (surfacing)
@@ -269,12 +261,12 @@ private struct VoiceText: View {
                         .font(.lora(13)).italic()
                         .foregroundStyle(voice.color)
                     Text(voice.role)
-                        .font(.spaceMono(8)).tracking(1.2)
+                        .spaceMonoTracked(8, em: 0.15)
                         .foregroundStyle(BinduTheme.inkTertiary)
                     // "answering Sakshi" — the one who speaks in reply (comp The Rite v3).
                     if let answering = voice.answering {
                         Text("answering \(answering)")
-                            .font(.spaceMono(8)).tracking(1)
+                            .spaceMonoTracked(8, em: 0.125)
                             .foregroundStyle(voice.color.opacity(0.6))
                     }
                 }

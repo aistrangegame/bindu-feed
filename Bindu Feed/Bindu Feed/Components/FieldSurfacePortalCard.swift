@@ -61,8 +61,8 @@ struct FieldSurfacePortalCard: View {
 
                 if let label = config.label {
                     Text(label.uppercased())
-                        .font(.spaceMono(9))
-                        .tracking(2.0)
+                        .spaceMonoTracked(9)
+                        .tracking(1.08)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }
 
@@ -87,11 +87,11 @@ struct FieldSurfacePortalCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(config.color.opacity(0.08))
+                .fill(config.color.opacity(0.051))        // ${color}0D
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(config.color.opacity(0.22), lineWidth: 0.6)
+                .strokeBorder(config.color.opacity(0.133), lineWidth: 1) // ${color}22, 1px
         )
         .background(
             GeometryReader { proxy in

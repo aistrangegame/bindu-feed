@@ -1,0 +1,347 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>The Aperture — what you did not choose</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Space+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--hue:#D4A94B;--cream:#F0E9DC;--dim:rgba(240,233,220,.62);--faint:rgba(240,233,220,.3)}
+body{background:#0a0a0c;min-height:100vh;display:grid;place-items:center;padding:40px 20px;font-family:'Lora',Georgia,serif;color:var(--cream)}
+a{color:var(--hue)}a:hover{color:#E8C468}
+#desk{display:flex;gap:42px;align-items:flex-start}
+#phone{position:relative;width:393px;height:852px;border-radius:46px;overflow:hidden;background:#0A0803;box-shadow:0 0 0 1px rgba(237,232,227,.09),0 40px 120px rgba(0,0,0,.8);flex:0 0 auto}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#plate{position:absolute;left:0;right:0;top:0;bottom:0;z-index:5;padding:68px 30px 92px;overflow-y:auto;overflow-x:hidden}
+#plate::-webkit-scrollbar{width:0}
+.mnum{display:block;font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint)}
+.title{font-size:25px;font-weight:500;letter-spacing:-.014em;margin-top:9px;line-height:1.2}
+.voice{font-size:13.5px;line-height:1.72;color:var(--dim);margin-top:13px;text-wrap:pretty}
+/* the eye — two counter-facing triangles. 42s. 2.4s while busy. */
+#apeye{position:relative;width:120px;height:120px;margin:20px auto 0;display:grid;place-items:center;cursor:pointer;background:none;border:none}
+#apeye svg{width:120px;height:120px;overflow:visible}
+#apeye .tri{transform-origin:50% 50%;animation:spin 42s linear infinite}
+#apeye.busy .tri{animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#apeye .dot{transition:r .8s ease,opacity .8s ease}
+#apeye:hover .ring{stroke-opacity:.5}
+#apstatus{font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:16px;min-height:12px;text-align:center}
+/* the visitor card — four typographically distinct slots, exactly */
+#visitor{opacity:0;transition:opacity 1.2s ease;margin-top:14px}
+#visitor.in{opacity:1}
+.v-reg{font-family:"Space Mono",monospace;font-size:8px;letter-spacing:.16em;text-transform:uppercase;color:var(--hue);margin-bottom:10px}
+.v-line{font-family:'Lora',serif;font-size:19px;line-height:1.44;color:var(--cream);margin-bottom:12px;text-wrap:pretty}
+.v-deep{font-size:14.5px;line-height:1.7;color:var(--dim);text-wrap:pretty}
+.v-deep .edge{display:block;margin-top:10px;padding-top:10px;border-top:.5px solid rgba(212,169,75,.2);font-style:italic;color:rgba(240,233,220,.5)}
+.v-org{font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-top:12px}
+.v-cite{font-family:"Space Mono",monospace;font-size:6.5px;letter-spacing:.16em;text-transform:uppercase;color:rgba(240,233,220,.2);margin-top:9px}
+.lnk{display:block;margin-top:14px;background:none;border:none;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--hue);cursor:pointer;padding:0;text-align:left}
+.lnk:hover{color:#EFD07C}
+#again{display:none}
+.hint{position:absolute;bottom:56px;left:0;right:0;text-align:center;z-index:6;pointer-events:none;font-family:"Space Mono",monospace;font-size:8.5px;letter-spacing:.26em;text-transform:uppercase;color:rgba(240,233,220,.34);transition:opacity .7s}
+#mode{position:absolute;bottom:0;left:0;right:0;height:44px;z-index:9;display:flex;justify-content:center;align-items:center;gap:6px}
+#mode span{padding:6px 11px;border-radius:11px;cursor:pointer;font-family:"Space Mono",monospace;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(240,233,220,.3);border:1px solid transparent;transition:all .35s}
+#mode span.on{color:var(--cream);border-color:rgba(212,169,75,.42);background:rgba(212,169,75,.10)}
+#notes{width:418px;font-size:13.5px;line-height:1.72;color:rgba(237,232,227,.62)}
+#notes h1{font-size:21px;font-weight:500;letter-spacing:-.014em;color:#EDE8E3;margin-bottom:4px}
+#notes .sub{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.44);margin-bottom:22px}
+#notes h2{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(201,206,218,.6);margin:22px 0 9px}
+#notes p{margin-bottom:11px;text-wrap:pretty}
+#notes em{color:rgba(237,232,227,.9);font-style:italic}
+#notes code{font-family:'Space Mono',monospace;font-size:11px;color:rgba(212,174,74,.86)}
+#notes .law{border-left:1px solid rgba(212,174,74,.45);padding:2px 0 2px 15px;margin:0 0 13px;font-style:italic;color:rgba(237,232,227,.88)}
+#notes .warn{border-left:1px solid rgba(229,83,60,.5);padding:2px 0 2px 15px;margin:0 0 13px}
+.k{display:flex;gap:10px;margin-bottom:8px}
+.k b{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-weight:400;flex:0 0 88px;padding-top:3px}
+.k span{flex:1}
+</style></head><body>
+<div id="desk">
+<div id="phone">
+  <canvas id="cv"></canvas>
+  <div id="plate">
+    <span class="mnum">avarana VIII · the aperture · the loop, opened</span>
+    <h2 class="title">What you did not choose</h2>
+    <p class="voice">Every dimension behind you came from inside the loop. Open the eye: a register is drawn from traditions this library has never walked, and something arrives that you cannot predict — from the world's old knowing, or from what is happening this very week.</p>
+    <button id="apeye" aria-label="open the aperture"><svg viewBox="0 0 96 96">
+      <g class="tri"><path d="M48 14 L84 76 L12 76 Z" fill="none" stroke="var(--hue)" stroke-opacity=".5" stroke-width="1"></path>
+      <path d="M48 82 L12 20 L84 20 Z" fill="none" stroke="var(--hue)" stroke-opacity=".22" stroke-width="1"></path></g>
+      <circle class="ring" cx="48" cy="48" r="34" fill="none" stroke="var(--hue)" stroke-opacity=".3" stroke-width="1"></circle>
+      <circle class="dot" cx="48" cy="48" r="2.4" fill="#FFF6E2" opacity=".9"></circle>
+    </svg></button>
+    <div id="apstatus"></div>
+    <div id="visitor">
+      <div class="v-reg"></div>
+      <div class="v-line"></div>
+      <div class="v-deep"></div>
+      <div class="v-org"></div>
+      <div class="v-cite"></div>
+    </div>
+    <button class="lnk" id="again">let another arrive</button>
+  </div>
+  <div class="hint" id="hint">open the eye</div>
+  <div id="mode"><span id="mStd" class="on">standard</span><span id="mKey">a key is present</span></div>
+</div>
+<div id="notes">
+  <h1>The Aperture</h1>
+  <div class="sub">avarana VIII · the standard state · comp 6</div>
+  <p>Open the eye. Then open it again — the register is never the same twice in a session.</p>
+  <h2>The move: this is not a fallback</h2>
+  <p>D6.7 says three surfaces are dead without a personal key. The instinct is to design a graceful failure. Your instruction was better, and following it turned up something: <em>the model was never supplying the unpredictability.</em></p>
+  <p>The Aperture promises two things — <em>a register is drawn from traditions this library has never walked</em>, and <em>something arrives that you cannot predict</em>. The first needs no model: 37 unwalked registers, drawn at random, is a local table. And the second was never about generated text. It was about <em>this came from outside your loop — you did not choose it.</em> A random draw from 37 traditions you have never walked <strong>is</strong> that.</p>
+  <p class="law">The standard Aperture gives you the register, honestly, and never fabricates the teaching.</p>
+  <p>So all four slots fill locally, and none of them pretends. The register, its gloss, its tradition and where it lives — and then the honest part: <em>where this library stops.</em></p>
+  <h2>Where this library stops</h2>
+  <p>The best thing the Aperture can say without a model is a claim about <em>itself</em>, not about the tradition. Some registers have a nearest walked star — <em>Ridā sits next to</em> <code>c-compression · The pressure is the point</code>. Many have nothing next to them at all, and the card says so plainly: <em>this library has nothing beside it.</em></p>
+  <p>Those are the best cards. A register with nothing beside it is the purest instance of what you did not choose — and no generated paragraph could say it more sharply than the empty edge does.</p>
+  <h2>What the key adds — inside the same frame</h2>
+  <p>Toggle <strong>a key is present</strong>. The frame does not change: same eye, same four slots, same typography. The live call fills <code>line</code> and <code>deepening</code> with the small true thing from inside the tradition, and the <em>where this library stops</em> line stays underneath it. The key is an enhancement to a complete surface, never the thing that makes it work.</p>
+  <p>The prompt is restored verbatim, including the two things the build dropped: the <strong>Arch register</strong> instruction (D6.3) and the four-key JSON shape <code>origin / line / deepening / register</code> rendered into four distinct slots (D6.2).</p>
+  <h2>The eye, restored</h2>
+  <p>D6.4: two counter-facing triangles, both paths verbatim from <code>point-levels.js:120-121</code>, <code>42s/rev</code> accelerating to <code>2.4s</code> while busy, with the circle and the centre dot the build dropped. On arrival the yantra <em>flares</em> (D6.5) — the flare is the visual half of <code>Snd.shimmer()</code>, which belongs to the sound pass.</p>
+  <h2>Both non-repetition guards, for different states</h2>
+  <p>D6.6 called the build's guard wrong. It is not wrong — it guards a different axis, and <em>both are needed</em>. The register pool is drawn without repeats (the build's guard, and the only one that can work with no model). When live, <code>seen</code> also holds the last six returned lines and goes into the prompt as the design specifies. Standard state needs the first; live state needs both.</p>
+  <h2>Six authored strings, restored verbatim</h2>
+  <p><code>avarana VIII · the aperture · the loop, opened</code> · <code>What you did not choose</code> · the 46-word voice · <code>open the eye</code> · <code>drawing from the unwalked traditions…</code> · <code>let another arrive</code> · <code>the aperture stayed closed this time — breathe once, and try again</code>. All 37 <code>REGISTERS</code> verbatim from <code>The Instrument v3.html:931-951</code>.</p>
+  <h2>⚠ What I authored, and what needs checking</h2>
+  <p class="warn"><strong>The origin table.</strong> The design's <code>origin</code> slot was the model's job; in the standard state it must be local, so I authored <em>tradition and where it lives</em> for all 37, to the design's own 5–10 word spec. These are factual claims about living traditions and <em>every one needs checking before launch</em> — they are marked <code>authored · for approval</code> on the card itself.</p>
+  <p class="warn"><strong>The adjacency claims.</strong> I only claim a nearest walked star for the ten stars I read verbatim from <code>point-content.js</code>. Everywhere else the card says <em>nothing beside it</em> — which is honest about my reading, not necessarily about the 66. Someone with the full star list should complete the mapping; the mechanism is right and the data is deliberately under-claimed.</p>
+</div>
+</div>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   THE APERTURE — avarana VIII, whole without a key.
+   Plate, eye, four slots, six strings: `The Point v9.html:893-905` +
+   `point-levels.js:63-70,119-122,231-256` — verbatim.
+   REGISTERS (37): `The Instrument v3.html:931-951` — verbatim.
+   ORIGIN + EDGE tables: authored here (see notes) — for approval.
+   ═══════════════════════════════════════════════════════════════════════ */
+const TAU=Math.PI*2;
+const REGISTERS=[
+ 'Qalb — the heart-organ of the Sufi Lataif','Sirr — the secret, in the Sufi Lataif',
+ 'Fana — dissolution, among the Sufi stations','Baqa — abiding-after-dissolution, among the Sufi stations',
+ 'Sabr — patience, among the Sufi maqamat','Tawakkul — trust, among the Sufi maqamat',
+ 'Coire Sois — the Celtic cauldron of wisdom at the crown','Coire \u00c9rmai — the Celtic cauldron of motion at the heart',
+ 'Awen — the flowing inspiration of the Celtic register','the lower dan tian of the Daoist body',
+ 'Wuji — the uncarved, before the taiji','the sixth ox-herding picture — riding the ox home',
+ 'the tenth ox-herding picture — the marketplace with helping hands',
+ 'the bardo of dream, among the six Tibetan bardos','the bardo of becoming, among the six Tibetan bardos',
+ 'Da\u2019at — the hidden sephirah that holds the others together','Tiferet — beauty, at the center of the Tree',
+ 'Yesod — the foundation sephirah','Ma\u2019at — the Egyptian register of truth-as-balance',
+ 'the Duat — the Egyptian purification passage','Barzakh — the Sufi isthmus between registers',
+ 'Yemaya — the Yoruba register of the mothering sea','Eshu — the Yoruba register of the crossroads',
+ 'Or\u00ed — the Yoruba register of personal destiny at the crown','Sila — the Inuit register of weather-breath-consciousness',
+ 'the Rainbow Serpent — the Aboriginal Dreaming register','a songline — country that must be sung to stay alive',
+ 'the waning crescent — the lunar register of release','Samhain — the Celtic register of the thinned veil',
+ 'Imbolc — the Celtic register of first stirring','the Norns — past, present and future at the roots of the world-tree',
+ 'Tara — the bodhisattva register of swift compassion','Kshitigarbha — the bodhisattva who works in the deepest places',
+ 'the middle cauldron turning — sorrow converting to poetry','Nafs — the Sufi register of the self that must be befriended',
+ 'the illuminative way — the second Christian contemplative register','Rid\u0101 — contentment, among the Sufi stations',
+];
+/* AUTHORED — tradition and where it lives, 5-10 words (the design's own spec
+   for `origin`). Factual claims about living traditions: CHECK BEFORE LAUNCH. */
+const ORIGIN={
+ 'Qalb':'Sufi Lataif · Persian and Anatolian orders',
+ 'Sirr':'Sufi Lataif · the Naqshbandi transmission',
+ 'Fana':'Sufi maqamat · Baghdad, ninth century onward',
+ 'Baqa':'Sufi maqamat · the station after Fana',
+ 'Sabr':'Sufi maqamat · Qur\u2019anic, then the manuals',
+ 'Tawakkul':'Sufi maqamat · the early Basran ascetics',
+ 'Coire Sois':'Early Irish poetics · the Cauldron of Poesy',
+ 'Coire \u00c9rmai':'Early Irish poetics · the same manuscript',
+ 'Awen':'Welsh bardic tradition · still in living use',
+ 'the lower dan tian':'Daoist internal alchemy · neidan practice',
+ 'Wuji':'Daoist cosmology · the Taijitu diagram lineage',
+ 'the sixth ox-herding picture':'Chan/Zen · Kuo-an\u2019s twelfth-century sequence',
+ 'the tenth ox-herding picture':'Chan/Zen · the same sequence, its last frame',
+ 'the bardo of dream':'Tibetan Buddhism · the six-bardo teachings',
+ 'the bardo of becoming':'Tibetan Buddhism · the Bardo Th\u00f6dol',
+ 'Da\u2019at':'Kabbalah · the Zohar and Lurianic schools',
+ 'Tiferet':'Kabbalah · centre of the sephirotic Tree',
+ 'Yesod':'Kabbalah · foundation of the same Tree',
+ 'Ma\u2019at':'Ancient Egyptian · Old Kingdom onward',
+ 'the Duat':'Ancient Egyptian · the Book of Gates',
+ 'Barzakh':'Qur\u2019anic term · developed by Ibn \u2018Arabi',
+ 'Yemaya':'Yoruba orisha tradition · Nigeria and the diaspora',
+ 'Eshu':'Yoruba orisha tradition · guardian of the crossroads',
+ 'Or\u00ed':'Yoruba cosmology · the inner head, chosen before birth',
+ 'Sila':'Inuit cosmology · Greenland and the Canadian Arctic',
+ 'the Rainbow Serpent':'Aboriginal Australian · across many nations',
+ 'a songline':'Aboriginal Australian · Dreaming tracks, sung to be kept',
+ 'the waning crescent':'Lunar reckoning · near-universal, and specific in each',
+ 'Samhain':'Gaelic calendar · Ireland, Scotland, the Isle of Man',
+ 'Imbolc':'Gaelic calendar · the first of the four fire festivals',
+ 'the Norns':'Norse cosmology · the Poetic and Prose Eddas',
+ 'Tara':'Vajrayana Buddhism · Tibet, Nepal, Mongolia',
+ 'Kshitigarbha':'East Asian Buddhism · Jiz\u014d in Japan, Dizang in China',
+ 'the middle cauldron turning':'Early Irish poetics · turned by joy or by sorrow',
+ 'Nafs':'Sufi psychology · the Qur\u2019anic soul, in seven degrees',
+ 'the illuminative way':'Christian contemplative tradition · the three ways',
+ 'Rid\u0101':'Sufi maqamat · contentment with what is given',
+};
+/* AUTHORED — the nearest star THIS LIBRARY has walked. Claimed only where I
+   read the star verbatim in point-content.js; everywhere else the card says
+   nothing beside it, which is honest about my reading. Complete this. */
+const EDGE={
+ 'Rid\u0101':['c-compression','The pressure is the point'],
+ 'Sabr':['c-compression','The pressure is the point'],
+ 'the tenth ox-herding picture':['d-marketplace','Return to the marketplace'],
+ 'the sixth ox-herding picture':['d-marketplace','Return to the marketplace'],
+ 'Nafs':['v-inherit','95% inheritance'],
+ 'Fana':['t-oneall','The One is the All'],
+ 'Baqa':['t-oneall','The One is the All'],
+ 'Qalb':['t-treasure','The hidden treasure'],
+ 'Awen':['d-poets','The singers'],
+ 'the middle cauldron turning':['d-poets','The singers'],
+ 'Samhain':['x-cycles','Deep time'],
+ 'the Norns':['x-cycles','Deep time'],
+ 'Ma\u2019at':['v-diagnostic','The belief diagnostic'],
+ 'Sila':['p-exist','You exist'],
+ 'Wuji':['p-exist','You exist'],
+ 'a songline':['r-ritual','Ritual & festival'],
+ 'the Rainbow Serpent':['r-ritual','Ritual & festival'],
+ 'Eshu':['r-ritual','Ritual & festival'],
+};
+const nameOf=r=>{const i=r.indexOf(' \u2014 ');return i<0?r:r.slice(0,i);};
+const glossOf=r=>{const i=r.indexOf(' \u2014 ');return i<0?null:r.slice(i+3);};
+/* three of the 37 carry no em-dash — they are a whole phrase, not name+gloss.
+   Print them once, and key their origin off the phrase the design wrote. */
+const ORIGIN_ALIAS={
+ 'the lower dan tian of the Daoist body':'the lower dan tian',
+ 'the bardo of dream, among the six Tibetan bardos':'the bardo of dream',
+ 'the bardo of becoming, among the six Tibetan bardos':'the bardo of becoming'};
+const keyOf=r=>ORIGIN_ALIAS[r]||nameOf(r);
+
+const E=id=>document.getElementById(id);
+const cv=E('cv'),x=cv.getContext('2d');
+let W=393,H=852,DPR=Math.min(2,devicePixelRatio||1);
+function fit(){W=cv.clientWidth||393;H=cv.clientHeight||852;cv.width=W*DPR;cv.height=H*DPR;x.setTransform(DPR,0,0,DPR,0,0);}
+
+const apeye=E('apeye'),apstatus=E('apstatus'),vis=E('visitor'),again=E('again'),hint=E('hint');
+let mode='std',busy=false,flare=0,visitors=0;
+const drawn=new Set();                 /* the register pool, without repeats */
+const seen=[];                         /* the last six lines, for the prompt */
+
+E('mStd').onclick=()=>setMode('std');
+E('mKey').onclick=()=>setMode('key');
+function setMode(m){mode=m;
+  E('mStd').classList.toggle('on',m==='std');
+  E('mKey').classList.toggle('on',m==='key');}
+
+function drawRegister(){
+  if(drawn.size>=REGISTERS.length)drawn.clear();
+  let r;do{r=REGISTERS[Math.floor(Math.random()*REGISTERS.length)];}while(drawn.has(r));
+  drawn.add(r);return r;}
+
+/* ── the standard state ─────────────────────────────────────────────
+   Every slot local, nothing fabricated. The register, its gloss, its
+   tradition — and then where this library stops. */
+function standard(reg){
+  const nm=nameOf(reg),gl=glossOf(reg),k=keyOf(reg);
+  const org=ORIGIN[k]||'\u2014';
+  const edge=EDGE[k];
+  vis.querySelector('.v-reg').textContent='unwalked \u00b7 drawn just now';
+  /* a register with no gloss is already a whole phrase — never doubled */
+  vis.querySelector('.v-line').textContent=gl?(nm+' \u2014 '+gl+'.'):(reg+'.');
+  vis.querySelector('.v-deep').innerHTML=
+    'This library has never walked it. It is held here by name only \u2014 '+
+    'a door in the wall of what you chose.'+
+    '<span class="edge">'+(edge
+      ? 'The nearest thing this library <em>has</em> walked: '+edge[1]+' \u00b7 '+edge[0]+'.'
+      : 'This library has nothing beside it.')+'</span>';
+  vis.querySelector('.v-org').textContent=org+' \u00b7 from the unwalked';
+  vis.querySelector('.v-cite').textContent='origin authored \u00b7 for approval';
+  show();
+  visitors++;flare=1;
+  again.style.display='block';
+}
+/* the fade is a class, never a race between two inline writes */
+function show(){apstatus.textContent='';void vis.offsetHeight;vis.classList.add('in');}
+function hide(){vis.classList.remove('in');}
+
+/* ── with a key · the same frame, two slots filled from outside ───── */
+async function live(reg){
+  apstatus.textContent='drawing from the unwalked traditions\u2026';
+  const avoid='Monroe, Bashar, Matias De Stefano, Dolores Cannon, the Bhagavad Gita, generic Advaita or chakra talk, Rumi, and anything already standard in modern consciousness-synthesis circles';
+  const prompt='You are the Aperture of an instrument called The Point. From authentic human tradition OUTSIDE a library spanning the well-known mystics and consciousness science, bring ONE small true thing \u2014 a practice, an image, a story-fragment, a word and its real meaning \u2014 that transmits this register: "'+reg+'". Accurate to its tradition, specific, not generic. Speak in the Arch register: name what the reader might assume, walk to the specific and true (a name, a place, a word in its language), equip rather than impress, and let the deepening end as an opening rather than a conclusion. Respond with ONLY a JSON object, no markdown fences, keys: "origin" (tradition and where it lives, 5-10 words), "line" (one compressed sentence, 8-20 words, that reorients a person caught in mental rush \u2014 do not name the register), "deepening" (2-3 sentences: the thing itself, precisely, then what it hands the reader), "register" ("'+reg+'"). Avoid '+avoid+'. Avoid anything already given this session: '+(seen.join('; ')||'none')+'. No preamble.';
+  try{
+    if(!(window.claude&&window.claude.complete))throw new Error('offline');
+    const txt=await window.claude.complete(prompt);
+    const c=txt.replace(/```json|```/g,'').trim();
+    const j=JSON.parse(c.slice(c.indexOf('{'),c.lastIndexOf('}')+1));
+    const edge=EDGE[keyOf(reg)];
+    vis.querySelector('.v-reg').textContent='through '+(j.register||reg);
+    vis.querySelector('.v-line').textContent=j.line||'';
+    vis.querySelector('.v-deep').innerHTML=(j.deepening||'')+
+      '<span class="edge">'+(edge
+        ? 'The nearest thing this library <em>has</em> walked: '+edge[1]+' \u00b7 '+edge[0]+'.'
+        : 'This library has nothing beside it.')+'</span>';
+    vis.querySelector('.v-org').textContent=(j.origin||'')+' \u00b7 from the unwalked';
+    vis.querySelector('.v-cite').textContent='';
+    show();
+    visitors++;flare=1;
+    again.style.display='block';
+    seen.push(j.line||'');if(seen.length>6)seen.shift();
+  }catch(e){
+    /* the authored failure line — and then the surface is still whole */
+    apstatus.textContent='the aperture stayed closed this time \u2014 breathe once, and try again';
+    setTimeout(()=>{if(!busy)standard(reg);},1400);
+  }
+}
+
+async function openAperture(){
+  if(busy)return;busy=true;
+  const reg=drawRegister();
+  apeye.classList.add('busy');hide();again.style.display='none';
+  hint.style.opacity=0;
+  if(mode==='std'){
+    apstatus.textContent='drawing from the unwalked traditions\u2026';
+    await new Promise(r=>setTimeout(r,1100));
+    standard(reg);
+  }else await live(reg);
+  apeye.classList.remove('busy');busy=false;
+}
+apeye.onclick=openAperture;again.onclick=openAperture;
+
+/* ── the field, and the flare ───────────────────────────────────── */
+const rnd=i=>{const v=Math.sin(i*127.1+31.4)*43758.5453;return v-Math.floor(v);};
+function frame(){
+  requestAnimationFrame(frame);
+  const t=performance.now()/1000;
+  if(cv.clientWidth!==W||cv.clientHeight!==H)fit();
+  const b=(Math.sin(t*TAU/9)+1)/2;
+  x.clearRect(0,0,W,H);
+  const g=x.createRadialGradient(W/2,H*0.30,0,W/2,H*0.30,Math.max(W,H)*0.85);
+  g.addColorStop(0,'rgba(28,20,6,'+(0.62+b*0.10)+')');
+  g.addColorStop(0.55,'rgba(16,12,5,.72)');g.addColorStop(1,'rgba(8,6,3,.96)');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  /* the yantra, faint — three enclosures and a 16-petal ring */
+  const cx=W/2,cy=H*0.30,R=Math.min(W,H)*0.30;
+  x.save();x.translate(cx,cy);
+  [1.46,1.38,1.30].forEach((e,i)=>{
+    const s=R*e*0.62;
+    x.strokeStyle='rgba(212,169,75,'+(0.055-i*0.012+flare*0.14)+')';x.lineWidth=1;
+    x.strokeRect(-s,-s,s*2,s*2);});
+  x.rotate(t*0.006);
+  for(let k=0;k<16;k++){const a=k/16*TAU;
+    x.beginPath();
+    x.arc(Math.cos(a)*R*0.94,Math.sin(a)*R*0.94,R*0.075,0,TAU);
+    x.strokeStyle='rgba(212,169,75,'+(0.05+flare*0.16)+')';x.lineWidth=0.8;x.stroke();}
+  x.restore();
+  /* the flare — the visual half of Snd.shimmer(); the sound is its own pass */
+  if(flare>0.001){
+    const q=1-flare;
+    x.beginPath();x.arc(cx,cy,R*(0.3+q*1.7),0,TAU);
+    x.strokeStyle='rgba(255,238,196,'+(0.42*flare*flare)+')';x.lineWidth=1.4;x.stroke();
+    for(let i=0;i<26;i++){
+      const a=rnd(i)*TAU,rr=R*(0.4+q*1.5)*(0.6+rnd(i+9)*0.8);
+      x.beginPath();x.arc(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,1+rnd(i+3)*1.6,0,TAU);
+      x.fillStyle='rgba(255,246,220,'+(0.6*flare*flare)+')';x.fill();}
+    flare=Math.max(0,flare-0.012);}
+  /* dust, so the enclosure is never empty */
+  for(let i=0;i<40;i++){
+    const px=(rnd(i)*W+Math.sin(t*0.14+i)*9+W)%W,py=(rnd(i+7)*H+t*(2+rnd(i)*5))%H;
+    x.beginPath();x.arc(px,py,0.5+rnd(i+2)*1.2,0,TAU);
+    x.fillStyle='rgba(226,204,158,'+(0.05+rnd(i+4)*0.18)+')';x.fill();}
+}
+fit();frame();
+</script>
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" fill="#100C04"/><g fill="none" stroke="#D4A94B"><path d="M60 26 L96 86 L24 86 Z" stroke-opacity=".55"/><path d="M60 94 L24 34 L96 34 Z" stroke-opacity=".3"/><circle cx="60" cy="60" r="34" stroke-opacity=".35"/></g><circle cx="60" cy="60" r="3.4" fill="#FFF6E2"/></svg></template>
+</body></html>

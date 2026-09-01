@@ -12,13 +12,17 @@ struct StaggeredReveal<Content: View>: View {
     /// The comp's `riseIn` — the element also lifts from `rise` points below as it fades in.
     /// 0 = a pure dissolve (the earlier behaviour).
     var rise: CGFloat = 0
+    /// F7.4 · the comp's `substrateArrive` ends at **`opacity: 0.72`**, not 1 — the roots
+    /// arrive quieter than the lenses and STAY quieter. Weight is part of the sequence:
+    /// the gathering says *the lenses, then the roots more softly, then him*.
+    var settledOpacity: Double = 1
     @ViewBuilder let content: () -> Content
 
     @State private var visible = false
 
     var body: some View {
         content()
-            .opacity(visible ? 1 : 0)
+            .opacity(visible ? settledOpacity : 0)
             .offset(y: visible ? 0 : rise)
             .onAppear { revealIfReady() }
             .onChange(of: triggered) { revealIfReady() }

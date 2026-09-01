@@ -19,6 +19,14 @@ final class FeedStore: ObservableObject {
     // Feed data
     @Published var stories: [Story] = []
     @Published var storyStats: [String: StoryStats] = [:]
+    /// story record id → its rings, in `Ring Index` order. The strata's depth and every
+    /// story's age both come from here, and from nothing else.
+    @Published var returnRings: [String: [ReturnRing]] = [:]
+
+    /// F1 · every answer, keyed by the RING it answers. *"the field has your return · N
+    /// voices are sitting with it"* → *"the field answered"*. Ash's own words are here too —
+    /// they are the ring's `frag` — and the caller splits them by record id, never by name.
+    @Published var returnAnswers: [String: [ReturnAnswer]] = [:]
 
     // Card surface data (Mirror, Signal, Practice Invitation).
     // Comments dictionaries are keyed by the card's record ID — field
@@ -27,6 +35,13 @@ final class FeedStore: ObservableObject {
     @Published var mirrorCards: [MirrorCard] = []
 
     @Published var signals: [Signal] = []
+
+    /// The Gaia seed's own pool — NOT Signals. See CLAUDE.md §8.
+    @Published var gaiaSeeds: [GaiaSeed] = []
+
+    /// Feed record ids carrying a `Story Met`. The sky's met-ness, from its specified source
+    /// (Brief §8.5) rather than the comment/resonance proxy it used to infer. `A4.1`.
+    @Published var metStoryIDs: Set<String> = []
 
     @Published var practiceInvitations: [PracticeInvitation] = []
 
@@ -76,6 +91,8 @@ final class FeedStore: ObservableObject {
         storyStats = [:]
         mirrorCards = []
         signals = []
+        gaiaSeeds = []
+        metStoryIDs = []
         practiceInvitations = []
         fieldSounds = []
         pendingStoryRefreshes = []
@@ -171,6 +188,16 @@ final class FeedStore: ObservableObject {
         archetypes.first { $0.name == name }
     }
 
+    /// The physical user's archetype record. Resolved by RECORD ID, never by name:
+    /// the display string is device-local (`ArrivalSettings`) and may be changed at any
+    /// time, while the record cannot. See CLAUDE.md §7 and §10.
+    static let ashRecordID = "rec9BUbHMuylYiVwH"
+    var ashArchetype: Archetype? { archetypes.first { $0.id == Self.ashRecordID } }
+
+    /// The next Sort Order in the runtime band. Sort bands are a contract (CLAUDE.md §10):
+    /// 900+ is always runtime-written, so a carved Declaration can never sort to the front.
+    var nextRuntimeSortOrder: Int { 900 + mirrorCards.filter { $0.sortOrder >= 900 }.count }
+
     func room(named name: String) -> Room? {
         rooms.first { $0.name == name }
     }
@@ -187,7 +214,11 @@ final class FeedStore: ObservableObject {
         do {
             async let fieldT = service.fetchAllFieldComments()
             async let ashT = service.fetchAllAshComments()
+            async let ringsT: () = loadReturnRings()      // the strata and every story's age
+            async let answersT: () = loadReturnAnswers()  // F1 · and what answered them
             let (field, ash) = try await (fieldT, ashT)
+            await ringsT
+            await answersT
 
             // Sort by comment order so the first archetype to speak shows leftmost.
             let combined = (field + ash).sorted { $0.commentOrder < $1.commentOrder }
@@ -196,9 +227,27 @@ final class FeedStore: ObservableObject {
             var orderedArchetypes: [String: [String]] = [:]
             var seenArchetypes: [String: Set<String>] = [:]
 
+            let known = Set(self.stories.map(\.id))
+            // The Airtable NAME of the record `rec9BUbHMuylYiVwH`, resolved once per pass —
+            // never the literal. If he is renamed in the base this still finds him.
+            let ashName = self.ashArchetype?.name ?? "Ash"
             for c in combined {
-                guard let sid = c.linkedStoryId else { continue }
+                guard let sid = c.storyId(in: known) else { continue }
+                // `cmts` — EVERY comment on the story, Ash's included. The seat rule measures
+                // the thread running past the field, so his own words have to be in the count.
                 counts[sid, default: 0] += 1
+                // `spoke` — THE LENSES ONLY. `uni-field.js:54-56` sorts `spoke` through
+                // `BY[k]` and then pushes Ash SEPARATELY as `ASH`; he is not among the voices
+                // it looks up. With him inside `spoke` three things broke at once: `BY['ash']`
+                // has nothing to resolve, `spoke.length` inflated so the threshold rose by
+                // one (he would have needed a third return), and he was seated twice — once
+                // as a lens in the fan and once as himself.
+                //
+                // He has always been in here, because `loadStoryStats` has always folded in
+                // `fetchAllAshComments`. Adding Return Answers to that fetch is what made it
+                // matter: before, it only mis-sorted a fan; now it moves the arithmetic that
+                // decides whether he is present at all.
+                guard c.archetype != ashName else { continue }
                 if seenArchetypes[sid, default: []].insert(c.archetype).inserted {
                     orderedArchetypes[sid, default: []].append(c.archetype)
                 }
@@ -222,11 +271,67 @@ final class FeedStore: ObservableObject {
         storyStats[storyId] ?? StoryStats(commentCount: 0, archetypes: [])
     }
 
+    // MARK: - The rooms (Pass 4)
+
+    /// Ash's spine: his real days, flecked with the voices who actually spoke on each one.
+    /// The comp filled this with 117 invented days and `rnd()` flecks; this is the record.
+    @Published var ashDays: [AshDay] = []
+
+    /// A voice's whole archive, resolved in ONE bulk story lookup — never N+1 (§10).
+    /// Returns the comments, a story-id → title map, and the earliest day the voice has
+    /// spoken on (derived: Field Comments carry no date of their own).
+    func roomArchive(for archetype: Archetype) async
+        -> (comments: [FieldComment], titles: [String: String], since: String) {
+        let comments = (try? await service.fetchArchetypeComments(
+            archetypeName: archetype.name,
+            isAsh: archetype.id == Self.ashRecordID)) ?? []
+        if stories.isEmpty { await loadStories() }
+        let known = Set(stories.map(\.id))
+        // Only the ids that are STORIES. A threaded reply's back-link would otherwise be sent
+        // to `fetchStoriesByIds` and come back as nothing, quietly widening the query.
+        let ids = comments.compactMap { $0.storyId(in: known) }
+        guard !ids.isEmpty else { return (comments, [:], "") }
+        let found = (try? await service.fetchStoriesByIds(ids)) ?? []
+        var titles: [String: String] = [:]
+        var days: [String] = []
+        for s in found {
+            titles[s.id] = s.title
+            let d = String(s.sourceDate.prefix(10))
+            if !d.isEmpty { days.append(d) }
+        }
+        return (comments, titles, days.min() ?? "")
+    }
+
+    /// Built from the stories already loaded plus their per-story archetype stats, so it
+    /// costs no extra fetch. A day with no voice on it is a real position with no words
+    /// behind it, and draws as exactly that.
+    func loadAshSpine() async {
+        if stories.isEmpty { await loadStories() }
+        if storyStats.isEmpty { await loadStoryStats() }
+        var byStory: [String: [String]] = [:]
+        for s in stories { byStory[s.id] = stats(for: s.id).archetypes }
+        ashDays = AshSpine.build(stories: stories, commentsByStory: byStory)
+    }
+
     // MARK: - Card surfaces (Mirror / Signal / Practice)
 
     func loadMirrorCards() async {
         do {
             self.mirrorCards = try await service.fetchMirrorCards()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    func loadMetStories() async {
+        self.metStoryIDs = await service.fetchMetStoryIDs()
+        rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
+    }
+
+    func loadGaiaSeeds() async {
+        do {
+            self.gaiaSeeds = try await service.fetchGaiaSeeds()
             self.error = nil
         } catch {
             self.error = error
@@ -279,22 +384,6 @@ final class FeedStore: ObservableObject {
         fieldSounds.first { $0.role == .practiceDoor }
     }
 
-    // Field Comments are stored with `Linked Story` pointing at their parent
-    // (which may be a Story, Mirror Card, Signal, or Practice Invitation —
-    // Airtable record IDs don't collide across types). Grouping by that ID
-    // lets every card surface look up its own comments without a per-card
-    // round trip.
-    private static func groupByLinkedStory(_ comments: [FieldComment]) -> [String: [FieldComment]] {
-        var grouped: [String: [FieldComment]] = [:]
-        for c in comments {
-            guard let sid = c.linkedStoryId else { continue }
-            grouped[sid, default: []].append(c)
-        }
-        for (key, value) in grouped {
-            grouped[key] = value.sorted { $0.commentOrder < $1.commentOrder }
-        }
-        return grouped
-    }
 
     // MARK: - Practice Door (Phase 9 weighted selector)
 
@@ -342,7 +431,7 @@ final class FeedStore: ObservableObject {
         switch kind {
         case .threshold: return thresholdSentences.contains { $0.source != "Bindu" }
         case .practice:  return !practiceInvitations.isEmpty
-        case .gaiaSeed:  return !signals.isEmpty
+        case .gaiaSeed:  return !gaiaSeeds.isEmpty
         case .story:     return !stories.isEmpty
         case .binduDot:  return thresholdSentences.contains { $0.source == "Bindu" }
         }
@@ -355,7 +444,7 @@ final class FeedStore: ObservableObject {
             guard let chosen = practiceInvitations.randomElement() else { return nil }
             return .practice(chosen)
         case .gaiaSeed:
-            guard let chosen = signals.randomElement() else { return nil }
+            guard let chosen = gaiaSeeds.randomElement() else { return nil }
             return .gaiaSeed(chosen)
         case .story:
             guard let chosen = stories.randomElement() else { return nil }
@@ -381,7 +470,7 @@ final class FeedStore: ObservableObject {
     /// now, false if it was queued for retry.
     @discardableResult
     func postComment(storyId: String, body: String, parentId: String?, audioReference: String? = nil) async -> Bool {
-        let userArchetypeName = archetype(named: "Ash")?.name ?? "Ash"
+        let userArchetypeName = ashArchetype?.name ?? "Ash"
         do {
             _ = try await service.postAshComment(
                 storyId: storyId,
@@ -442,7 +531,7 @@ final class FeedStore: ObservableObject {
         guard !queue.isEmpty else { return }
         var remaining: [PendingComment] = []
         for c in queue {
-            let name = archetype(named: "Ash")?.name ?? "Ash"
+            let name = ashArchetype?.name ?? "Ash"
             do { _ = try await service.postAshComment(storyId: c.storyId, body: c.body, parentCommentId: c.parentId, archetypeName: name, audioReference: c.audioReference) }
             catch { remaining.append(c) }
         }
@@ -483,18 +572,40 @@ final class FeedStore: ObservableObject {
         }
     }
 
-    /// The Rite met a story. A pulse into App Activity — never a count. Resolves
-    /// the live Story record by Codex ID when the feed is loaded (to link it);
-    /// logs without a link otherwise (the canon Rite can run before stories load).
+    /// The Rite met a story. A pulse into App Activity — never a count.
+    ///
+    /// THE WRITER DEFECT, and why both `Story Met` rows in the base were wrong.
+    ///
+    /// This used to resolve the record with `stories.first { $0.codexId == codexId }`, and
+    /// `Story.codexId` normalises a missing Codex ID to `""`. Fifteen Live stories carry a
+    /// blank Codex ID, so meeting any one of them matched the FIRST blank-Codex story in the
+    /// array instead — an arbitrary record, and a different one day to day because the feed
+    /// is sorted by `Last Activity Date`. That is the row that pointed at the wrong story.
+    /// And when `stories` had not loaded (it is not in `bootstrap()`, so a cold launch
+    /// straight into the Rite always hits this), the lookup returned nil and the row was
+    /// written with no link at all. That is the row that pointed at nothing.
+    ///
+    /// `Ash Replied` and `Story Resonated` were never affected because they pass the record
+    /// id straight through — which is why the pair written in the same second diverged.
+    ///
+    /// The fix is §10's rule, applied to stories: **resolve by record id, never by a soft
+    /// key.** `RiteStoryData` has carried `storyId` all along — the line below this call
+    /// already uses it for `postComment`. Codex ID survives only as a NON-EMPTY exact
+    /// fallback; a blank key resolves to nothing rather than to whatever sorts first.
+    ///
+    /// A row with no link is still written, and is still correct: the canon Rite (C-1052)
+    /// meets no live story, and `isTodayMet()` reads these rows by DATE, not by link. What
+    /// must never happen is a GUESSED link.
     /// Fire-and-forget: a failed activity row never affects the ceremony.
-    func logStoryMet(codexId: String, title: String) async {
+    func logStoryMet(storyId: String, title: String) async {
         // Mark today met LOCALLY first, synchronously — so a completed Rite can never
         // re-prompt on this device even if the Airtable write is slow, fails, or the
         // read is flaky. App Activity remains the cross-device source of truth; this is a
         // same-day reliability cache, not a replacement (it is the exact failure the user
         // hit — the ceremony completed but the day still read "unmet").
         UserDefaults.standard.set(true, forKey: Self.metCacheKey(AirtableService.localDayString()))
-        let recordId = stories.first { $0.codexId == codexId }?.id
+        todayMet = true                     // the seam and anything else gated on the day's weather
+        let recordId = resolveMetRecordId(storyId: storyId)
         do {
             _ = try await service.logActivity(
                 type: .storyMet,
@@ -508,6 +619,13 @@ final class FeedStore: ObservableObject {
             print("[FeedStore] logStoryMet write failed (local met-cache still set): \(error)")
             #endif
         }
+    }
+
+    /// The one place a `Story Met` link is decided. Record id first, because that is what
+    /// the Rite already knows; a non-empty Codex ID second, for a caller that only has one;
+    /// nil last — an unlinked pulse, never a guessed one.
+    private func resolveMetRecordId(storyId: String) -> String? {
+        storyId.isEmpty ? nil : storyId
     }
 
     private static func metCacheKey(_ day: String) -> String { "bindu.met.\(day)" }
@@ -579,8 +697,9 @@ final class FeedStore: ObservableObject {
         do { ash = try await service.fetchAllAshComments() } catch { return nil }
         // the most recent own-words per story — the self he sealed there
         var sealedByStory: [String: FieldComment] = [:]
+        let knownStories = Set(stories.map(\.id))
         for c in ash {
-            guard let sid = c.linkedStoryId, !c.body.isEmpty else { continue }
+            guard let sid = c.storyId(in: knownStories), !c.body.isEmpty else { continue }
             if let existing = sealedByStory[sid] {
                 if c.sourceDate > existing.sourceDate { sealedByStory[sid] = c }
             } else {
@@ -601,7 +720,7 @@ final class FeedStore: ObservableObject {
         let story = candidates[Int(h % UInt32(candidates.count))]
         guard let sealed = sealedByStory[story.id] else { return nil }
         let field = await loadComments(for: story.id).field
-        let seals = ash.filter { $0.linkedStoryId == story.id && !$0.body.isEmpty }
+        let seals = ash.filter { $0.belongs(to: story.id) && !$0.body.isEmpty }
         return buildReturnData(story: story, sealed: sealed, field: field, seals: seals)
     }
 
@@ -627,18 +746,46 @@ final class FeedStore: ObservableObject {
             let k = c.archetype.lowercased()
             guard !k.isEmpty, k != "ash", !seen.contains(k), !c.body.isEmpty, !c.isBinduSilence else { continue }
             seen.insert(k)
-            anew.append(ReturnCanon.AnewVoice(name: c.archetype, line: c.body))
+            // E3.10 · the presence, not just the name — the disc, the glyph and the role all
+            // come from the archetype record, resolved by name here because that is what the
+            // comment carries. A voice with no archetype cannot be drawn as a presence, so it
+            // is skipped rather than drawn as a blank disc.
+            guard let a = archetype(named: c.archetype) else { continue }
+            anew.append(ReturnCanon.AnewVoice(key: k, name: a.name, hex: a.hexColor,
+                                              glyph: a.glyph, role: a.role, line: c.body))
             if anew.count >= 2 { break }
         }
-        let record = riteVoices(from: field)      // real aged gathering (canon only if empty)
+        // E3.3 · the Record is the gathering CONDENSED — the canon corpus for `C-1052`,
+        // whose ten lines are about that story, and each voice's authored passing line for
+        // every other. A Record recalls that a voice was here; it does not re-read it.
+        let record = ReturnRecord.entries(codexId: story.codexId,
+                                          voices: riteVoices(from: field))
         let room = room(named: story.room)
         let paras = story.body
             .components(separatedBy: "\n\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        // Each own-words seal on this story is one ring; the earliest is when he first met it.
-        let ringCount = max(1, seals.count)
-        let firstMetDay = seals.map { $0.sourceDate }.min() ?? story.sourceDate
+        // THE RINGS ARE THE `Return` ROWS — not the Ash comments. A seal is something he
+        // said; a ring is a time he came back. Before Pass 6 nothing wrote a ring, so the
+        // strata counted his comments instead and every story with one comment drew one ring.
+        let rings = returnRings[story.id] ?? []
+        // NOT `max(1, …)`. A story he has never returned to has zero rings, and saying so is
+        // the whole point of the surface — with a floor of one, the first return was invisible.
+        let ringCount = rings.count
+        // `days` from the EARLIEST date this story can show — across the rings AND the seals
+        // together, not the rings first and the seals only as a fallback.
+        //
+        // Written as a `??` chain it read the earliest RING and never looked at the seal,
+        // so the moment the first ring was added the story's age reset to zero. Caught on
+        // device the only way it could be: "you first met this" moved from August 24 to
+        // August 27 after one return. You cannot first meet a thing later than you sealed it.
+        //
+        // The same fault as `age = returnCount/5`, one layer down — age taken from an act of
+        // returning rather than from when the thing began. Returning to something must never
+        // make it younger.
+        let dated = rings.map(\.sealedAt).filter { !$0.isEmpty }
+            + seals.map { String($0.sourceDate.prefix(10)) }.filter { !$0.isEmpty }
+        let firstMetDay = dated.min() ?? String(story.sourceDate.prefix(10))
         return ReturnStoryData(
             title: story.title, roomName: story.room, roomColor: room?.color ?? RiteCanon.roomColor,
             codexId: story.codexId, date: story.sourceDate,
@@ -648,19 +795,67 @@ final class FeedStore: ObservableObject {
             anew: anew.isEmpty ? ReturnCanon.anew : anew,
             storyId: story.id, record: record,
             returnCount: ringCount,
+            ringRows: Self.ringRows(rings, answers: returnAnswers, ash: ashArchetype?.name ?? "Ash"),
+            days: ReturnRing.days(since: firstMetDay),
+            ringDays: rings.map(\.days),          // oldest first — each ring's own age
             firstMet: ReturnCanon.firstMetDate(fromDay: firstMetDay),
             audioReference: sealed.audioReference,
             roomRGB: UniGeo.hx(room?.hexColor ?? "#9B6BD6"))
     }
 
+    /// E3.2 · the rings list — each prior return with the words he left there.
+    ///
+    /// **THE WORDS COME FROM THE RING'S OWN `Return Answer`**, not from the ring. §10 records
+    /// why: the app writes the ring as pure record — `Ring Index` and `Sealed At`, no words —
+    /// and puts every utterance in the thread, his included, in a `Return Answer` told apart
+    /// by `Archetype`. So the ring's fragment is the answer whose archetype is Ash, and the
+    /// *"N voices answered"* count is every answer that is not.
+    ///
+    /// `ash` is resolved from `rec9BUbHMuylYiVwH` by the caller and passed in — the name is
+    /// used to READ a value, never to choose a query's shape (§10). If the record is renamed
+    /// in the base the split follows the rename, which is the point of resolving it.
+    ///
+    /// Oldest first, matching `ringDays`, so `ReturnRingRow.rel` makes the oldest row the
+    /// strongest — the surface's whole argument.
+    nonisolated static func ringRows(_ rings: [ReturnRing],
+                         answers: [String: [ReturnAnswer]],
+                         ash: String) -> [ReturnRingRow] {
+        rings.enumerated().map { i, ring in
+            let mine = answers[ring.id] ?? []
+            let his = mine.first { $0.archetype == ash }
+            return ReturnRingRow(
+                id: i,
+                when: ReturnRingRow.when(days: ring.days),
+                frag: ReturnRingRow.frag(from: his?.body ?? ""),
+                answers: mine.filter { $0.archetype != ash }.count)
+        }
+    }
+
+    /// THE DAY'S WEATHER, lifted out of `DoorView`'s private `@State`.
+    ///
+    /// `The Instrument v3.html:5619` gates the axis's `#seam` on
+    /// `Math.abs(Z)<0.30 && GR.weather==='met'` — so met-ness is not the Door's private
+    /// business, it is a property of the day that other surfaces read. It was a
+    /// `private @State DoorWeather` inside `DoorView`, which meant the Door recomputed it
+    /// on every appearance and nothing else could see it at all.
+    ///
+    /// `nil` = not yet determined, and it stays nil until something asks. A surface that
+    /// gates on met-ness must treat nil as "not yet", never as "unmet" — the design only
+    /// knows the weather once the Door has read it either.
+    @Published private(set) var todayMet: Bool?
+
     /// The Door's weather read: is today already met? True if the local same-day cache is
     /// set (a Rite completed on this device today) OR App Activity has today's Story Met.
-    /// Fail-safe to `false` (unmet).
+    /// Fail-safe to `false` (unmet). Publishes to `todayMet` on the way out.
+    @discardableResult
     func checkTodayMet() async -> Bool {
         if UserDefaults.standard.bool(forKey: Self.metCacheKey(AirtableService.localDayString())) {
+            todayMet = true
             return true
         }
-        return await service.isTodayMet()
+        let met = await service.isTodayMet()
+        todayMet = met
+        return met
     }
 
     /// A destination chosen from the launch Door's turn — the Door lives before
@@ -668,13 +863,127 @@ final class FeedStore: ObservableObject {
     /// appear and pushes it once the feed is reachable. Nil clears it.
     @Published var pendingLaunchRoute: FeedRoute?
 
+    // MARK: - the sky's light-wells
+
+    /// The room the Universe is looking at, so the shader can wear ITS weather.
+    /// Set by `UniverseView` as the camera moves; nil is the honest default (the fallback).
+    @Published var currentUniRoomId: String?
+
+    /// `SKY` — 39 floats, rebuilt whenever met-ness changes. Density is DERIVED from how much
+    /// of him each room holds (`uni-deep.js:60-66`), never a flat constant.
+    @Published var uniSky: [Float] = UniWeather.sky(
+        density: [Double](repeating: 0.6, count: uniRooms.count),
+        ext: max(1, uniRooms.map { max(abs($0.x), abs($0.y)) }.max() ?? 1))
+
+    func rebuildUniSky() {
+        let ext = max(1, uniRooms.map { max(abs($0.x), abs($0.y)) }.max() ?? 1)
+        var metByRoom: [Int: [Int]] = [:]
+        for st in stories where metStoryIDs.contains(st.id) {
+            guard let ri = uniRooms.firstIndex(where: { $0.id == st.room }) else { continue }
+            metByRoom[ri, default: []].append(stats(for: st.id).commentCount)
+        }
+        uniSky = UniWeather.sky(density: UniWeather.density(metByRoom: metByRoom), ext: ext)
+    }
+
+    // MARK: - walk-continuity · `walk-continuity.js:26-52`
+
+    /// THE DEPTH HE LEFT FROM, so a ceremony returns him there and not to a cold Door.
+    ///
+    ///   *"A ceremony opened from the Feed returns to the Feed; one opened from the fall
+    ///    returns to the fall… at the depth he left, with the way back already open."*
+    ///
+    /// **The other half of this contract is already better than the design's.** The design
+    /// carries `breath` in the same object because its clock restarts per page: *"He left
+    /// mid-breath; he arrives mid-breath."* `Breath.originSeconds` is launch-anchored, so the
+    /// 0.1 Hz clock CANNOT restart inside a session — there is nothing to carry. Only the
+    /// depth needs remembering, and only for the session (`sessionStorage`, TTL 90 min).
+    ///
+    /// `carry` / `carved` / `crossed` are deliberately NOT stored: E5 rules they exist so a
+    /// ceremony may colour itself by them and may never render them, and nothing here reads
+    /// them today. An unused field would be the unwired-slot fault.
+    private var leftFromZ: Double?
+    private var leftAt: Date?
+
+    /// Called as a ceremony opens from the axis.
+    func markDeparture(z: Double) { leftFromZ = z; leftAt = Date() }
+
+    /// Where to put him back, or nil — the Feed, as before.
+    func departureZ() -> Double? {
+        guard let z = leftFromZ, let at = leftAt,
+              Date().timeIntervalSince(at) < 90 * 60 else { return nil }   // TTL
+        return z
+    }
+    func clearDeparture() { leftFromZ = nil; leftAt = nil }
+
+    // MARK: - THE RETURN
+
+    /// F1 · group every `Return Answer` by the ring it hangs from.
+    ///
+    /// Fire-and-forget on failure, like the rest of the Return's reads: a story with no
+    /// answers and a story whose answers failed to load look the same on screen, and the
+    /// honest state of both is *"no answer"*. It is not worth breaking the ceremony over.
+    func loadReturnAnswers() async {
+        guard let all = try? await service.fetchReturnAnswers() else { return }
+        var byRing: [String: [ReturnAnswer]] = [:]
+        for a in all { byRing[a.ringId, default: []].append(a) }
+        returnAnswers = byRing
+    }
+
+    func loadReturnRings() async {
+        if stories.isEmpty { await loadStories() }
+        guard let all = try? await service.fetchReturns() else { return }
+        // WHICH LINK IS THE STORY. `Linked Story` can hold more than one id (the symmetric
+        // back-link from the answer's `Parent Comment`), so the story is the one that IS a
+        // story — resolved by identity, never taken by position.
+        let known = Set(stories.map(\.id))
+        var byStory: [String: [ReturnRing]] = [:]
+        for var r in all {
+            guard let sid = r.linkedIds.first(where: { known.contains($0) }) else { continue }
+            r.storyId = sid
+            byStory[sid, default: []].append(r)
+        }
+        for k in byStory.keys { byStory[k]?.sort { $0.ringIndex < $1.ringIndex } }
+        returnRings = byStory
+    }
+
+    /// SEAL ONE RETURN. Two rows: the ring, then its answer parented to the ring.
+    ///
+    /// It is called from exactly one place — the hand completing the ceremony — and it never
+    /// fires on its own. An empty answer writes NOTHING AT ALL, not an empty ring: a return
+    /// that arrived empty would be a ring he did not add.
+    ///
+    /// Nothing here counts. `Ring Index` is written so the rings have an order to be drawn
+    /// in; no surface reads it as a total, a streak or a score.
+    func sealReturn(storyId: String, text: String) async {
+        let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !storyId.isEmpty, !body.isEmpty else { return }
+        let who = ashArchetype?.name ?? "Ash"       // by record `rec9BUbHMuylYiVwH`
+        let index = (returnRings[storyId]?.count ?? 0) + 1
+        do {
+            // §10's sort contract: runtime-written rows live in the 900 band, always.
+            let ring = try await service.writeReturn(storyId: storyId, ringIndex: index,
+                                                    archetypeName: who, sortOrder: 900 + index)
+            _ = try? await service.writeReturnAnswer(storyId: storyId, ringId: ring.id, body: body,
+                                                     archetypeName: who, sortOrder: 900 + index)
+            await loadReturnRings()
+            await loadStoryStats()        // so Ash's seat re-derives from the new count
+        } catch {
+            // A failed write must never break the ceremony — the ring he added is still his.
+            print("[Return] seal failed: \(error)")
+        }
+    }
+
     /// The Vow loop — a carved Declaration in the Light writes a Reflection (Vow).
     /// Fire-and-forget; a failed write never affects the ceremony.
     private static let pendingVowsKey = "bindu.vows.pending"
 
     func writeVow(text: String) async {
         do {
-            _ = try await service.writeVow(text: text)
+            _ = try await service.writeVow(
+                text: text,
+                archetypeName: ashArchetype?.name ?? "Ash",
+                sortOrder: nextRuntimeSortOrder
+            )
         } catch {
             // A carved Declaration is durable user content the Mirror promises to hand
             // back — never lose it on a failed write. Queue it and retry on next launch.
@@ -693,7 +1002,13 @@ final class FeedStore: ObservableObject {
         guard !pending.isEmpty else { return }
         var remaining: [String] = []
         for text in pending {
-            do { _ = try await service.writeVow(text: text) }
+            do {
+                _ = try await service.writeVow(
+                    text: text,
+                    archetypeName: ashArchetype?.name ?? "Ash",
+                    sortOrder: nextRuntimeSortOrder
+                )
+            }
             catch { remaining.append(text) }
         }
         UserDefaults.standard.set(remaining, forKey: Self.pendingVowsKey)

@@ -56,7 +56,7 @@ struct AshComposeView: View {
     // display), and "Ash" is the canonical Airtable identity for the
     // person who replies.
     private var displayName: String {
-        settings.name.isEmpty ? "Ash" : settings.name
+        settings.displayName
     }
 
     private var armed: Bool {
@@ -141,7 +141,7 @@ struct AshComposeView: View {
     private var context: some View {
         VStack(spacing: 7) {
             Text("INTO THE FIELD")
-                .font(.spaceMono(10))
+                .spaceMonoTracked(10)
                 .tracking(2.6)
                 .foregroundColor(accent.opacity(0.72))
 
@@ -210,16 +210,23 @@ struct AshComposeView: View {
 
     private var emberControl: some View {
         VStack(spacing: 13) {
+            // F9.1 · **A RING FLOATING IN ITS TARGET IS AN EMBER TO HOLD; A RING THAT *IS*
+            // ITS TARGET IS A BUTTON TO PRESS.** `Claude Design Round 1/comps/Ash's Compose.html:73-83`
+            // — `const R = 31` inside an `svg 80×80`, so the ring's diameter is **62 floating
+            // in an 80pt hit area**. The app drew it at 80, filling the area edge-to-edge.
+            // Every other property — alphas, widths, cap, rotation, shadow — was already
+            // correct, which is what makes the size the whole of the difference. And this is
+            // the compose ember, the app's one writing ritual.
             ZStack {
                 Circle()
                     .stroke(accent.opacity(armed ? 0.16 : 0.09), lineWidth: 1.5)
-                    .frame(width: 80, height: 80)
+                    .frame(width: 62, height: 62)
 
                 Circle()
                     .trim(from: 0, to: max(0.001, progress))
                     .stroke(accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .frame(width: 80, height: 80)
+                    .frame(width: 62, height: 62)
                     .shadow(
                         color: accent.opacity(0.5 + progress * 0.4),
                         radius: 3 + progress * 10
@@ -241,7 +248,7 @@ struct AshComposeView: View {
             .gesture(holdGesture)
 
             Text(hintText)
-                .font(.spaceMono(9))
+                .spaceMonoTracked(9)
                 .tracking(1.6)
                 .foregroundColor(armed ? accent.opacity(0.62) : BinduTheme.inkTertiary)
                 .modifier(HintFade(active: armed && progress < 0.02))
@@ -367,7 +374,7 @@ struct AshComposeView: View {
                         onPosted()
                     } label: {
                         Text("RETURN TO THE STORY ›")
-                            .font(.spaceMono(9))
+                            .spaceMonoTracked(9)
                             .tracking(1.8)
                             .foregroundColor(BinduTheme.inkTertiary)
                             .padding(10)
@@ -399,7 +406,7 @@ struct AshComposeView: View {
                         .font(.lora(13, weight: .medium))
                         .foregroundColor(accent)
                     Text("RELEASED JUST NOW")
-                        .font(.spaceMono(9))
+                        .spaceMonoTracked(9)
                         .tracking(0.8)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

@@ -93,7 +93,7 @@ struct CommentCard: View {
                     if displayResonance > 0 {
                         Button(action: handleResonate) {
                             Text("♡ \(displayResonance)")
-                                .font(.spaceMono(10))
+                                .spaceMonoTracked(10)
                                 .foregroundColor(BinduTheme.inkTertiary)
                                 .contentShape(Rectangle())
                         }
@@ -105,7 +105,7 @@ struct CommentCard: View {
                 }
                 if let role = archetype?.role, !role.isEmpty {
                     Text(role.uppercased())
-                        .font(.spaceMono(10))
+                        .spaceMonoTracked(10)
                         .tracking(0.6)
                         .foregroundColor(BinduTheme.inkTertiary)
                 }

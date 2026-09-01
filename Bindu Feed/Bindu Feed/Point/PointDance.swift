@@ -1,0 +1,508 @@
+import Foundation
+
+// E1 · WORLD VII'S CHAIN — and the relationship that INVERTS world VI's
+//
+// `world-seven.js:112-300`. `AUDIT D5.8`, BLOCKER: 11 of 23 mechanisms absent — `hand`,
+// `offer`, `moveHand`, `letGo`, `chain`, `joinedQ`, `_join`, `tookHand`, `lock`, `joinedNow`,
+// and the whole `update` figure.
+//
+// **THE CAPTION IS THE TELL, AND IT IS THE NINTH SHAPE AGAIN.** `ReadCompany` printed
+// `"\(s.revealed) hands · the dance is carrying you"` — the number right, the thing absent.
+// Complete-looking output over nothing: `s.revealed` counts SECTIONS READ, and the sentence
+// claims a count of HANDS HELD. Every outcome check passes a caption that renders.
+//
+// **AND ITS RELATIONSHIP IS THE OPPOSITE OF WORLD VI'S.**
+//
+//   VI · `world-six.js:101` — *"nothing in flight cares whether he is watching."*
+//        Time decides; attention does not. An arc abandoned still arrives.
+//   VII · `world-seven.js:155` — `letGo()` empties the chain outright.
+//        **The dance exists only while a hand is held.** Attention is the whole of it.
+//
+// So the relationship assertion here is that **letting go actually DISSOLVES it** — not that
+// it persists. Kuramoto coupling will happily hold five bodies locked forever if nothing
+// breaks the chain, and locked-forever passes every outcome check exactly as world III's
+// four sections did. `lock` decaying to zero after `letGo` is the assertion; `lock` reaching
+// 1 is not.
+/// D5.8 · **THE NINE STARS ARE LAID ON THREE LANES, ONE PER UNIVERSE.**
+///
+/// `The Instrument v3.html:2176-2185`, verbatim in its numbers:
+///
+///     var lane = {r: 0.30 + ui*0.215, sp: (1.42 - ui*0.30)*0.16, …}
+///     lane.stars.push({ph: (i/u.stars.length)*TAU + ui*0.7, …})
+///
+/// The app flew all nine on ONE Lissajous — `cos(bt*0.55 + ph)` against
+/// `sin(bt*0.73 + ph*1.3)` — which is a pretty figure and says nothing. **The lanes are the
+/// world's structure made visible:** a star's universe decides which orbit it is on, so the
+/// three universes are three rings rather than nine points in a shared scribble, and a hand
+/// offered near the inner lane meets a different set of bodies than one offered at the rim.
+///
+/// **THE INNER LANE IS THE FASTEST.** `sp = (1.42 − ui*0.30)*0.16` falls with `ui` while
+/// `r = 0.30 + ui*0.215` rises — so the tight orbit whirls and the wide one drifts, which is
+/// what makes catching from the inside a different act from catching at the edge.
+enum DanceLanes {
+    /// The lane's radius, as a fraction of the smaller half-dimension.
+    static func radius(universe ui: Int) -> Double { 0.30 + Double(ui) * 0.215 }
+    /// The lane's angular speed. Falls as the radius grows.
+    static func speed(universe ui: Int) -> Double { (1.42 - Double(ui) * 0.30) * 0.16 }
+    /// A star's own phase on its lane — spread evenly, with each lane offset by `ui*0.7` so
+    /// the three rings do not line up into spokes.
+    static func phase(index i: Int, of n: Int, universe ui: Int) -> Double {
+        (Double(i) / Double(max(1, n))) * (2 * Double.pi) + Double(ui) * 0.7
+    }
+    /// Where a star is at time `t`, in fractions of the frame's half-width/height.
+    static func point(index i: Int, of n: Int, universe ui: Int, t: Double) -> (x: Double, y: Double) {
+        let a = t * speed(universe: ui) + phase(index: i, of: n, universe: ui)
+        let r = radius(universe: ui)
+        return (cos(a) * r, sin(a) * r)
+    }
+}
+
+/// D5.8 · **THE READING IS CAUGHT, NOT OPENED.** `The Instrument v3.html:2231-2262`.
+///
+/// The four sections do not arrive on a timer and they are not handed over on contact. They
+/// land as the PACE HOLDS — `sync` climbs while his reach stays inside the star's lane, the
+/// frame turns to match that lane, and each gate crossed hands over one section. Let the pace
+/// go before the fourth and everything **scatters**: `caught` returns to zero.
+///
+///     sync += (keep ? 0.42 : -0.85) * dt        // holding, and inside the lane
+///     sync -= 1.35 * dt                          // not holding at all
+///     if sync <= 0.001 && held && caught < 4 { scatter = 1; caught = 0 }
+///     gate = [0.34, 0.55, 0.74, 0.90][caught]
+///
+/// **THE THREE RATES ARE THE TEACHING, AND THEY ARE DELIBERATELY UNEQUAL.** Gaining is slow
+/// (0.42); drifting out of the lane while still holding loses twice as fast (0.85); letting go
+/// altogether loses fastest (1.35). Keeping pace is harder than losing it, which is what makes
+/// the fourth section mean anything.
+///
+/// **AND THE SCATTER IS NOT A PUNISHMENT.** `:2165` — *"let go early, the rest scatters — and
+/// it is not a punishment, it is the tenth ox-herding picture: the marketplace does not pause
+/// for you."* The figure keeps moving, the ones who danced stay lit; only what he had not yet
+/// finished catching is gone.
+struct DanceCatch {
+    /// How well the pace is kept, 0…1.
+    private(set) var sync: Double = 0
+    /// How many sections have landed, 0…4.
+    private(set) var caught: Int = 0
+    /// The frame's own rotation, matching the lane it is keeping pace with.
+    private(set) var spin: Double = 0
+    /// 1 at the moment of a scatter, decaying at 0.55/s. Nothing else reads `caught == 0`.
+    private(set) var scatter: Double = 0
+
+    /// **THE SCATTER RELEASES THE STAR.** `:2247` is `this.scatter=1; this.held=null;` — and
+    /// the release is not incidental. Without it the scatter condition (`sync <= 0.001 &&
+    /// held && caught < 4`) is true on the very next frame too, so `scatter` is re-set to 1
+    /// forever and never decays: the figure stays permanently mid-scatter and the caller can
+    /// never tell one scatter from a hundred.
+    ///
+    /// The first port dropped it, because `held` arrives here as a PARAMETER and a parameter
+    /// cannot be set to null. Caught by `scatterDecays`, which is exactly the assertion that
+    /// distinguishes a fading state from a latched one — the reason it was worth writing a
+    /// test for a decay that "obviously" decays.
+    ///
+    /// The caller reads this and drops the star.
+    private(set) var releasedByScatter = false
+
+    /// `:2253` — the four gates on `sync`, in the order they can be caught.
+    static let gates = [0.34, 0.55, 0.74, 0.90]
+
+    /// `:2236` — `keep = d < max(34, R*4.5)`. The reach has to stay in the star's own lane;
+    /// the floor of 34 keeps a small star catchable.
+    /// UNWIRED(AUDIT D5.8, reopened 2026-08-30 — `DanceCatch` is undriven; the reading gives on carry-seconds, not on sync)
+    static func keeping(distance d: Double, starRadius R: Double) -> Bool {
+        d < max(34, R * 4.5)
+    }
+
+    /// One frame. `holding` is whether a hand is out at all; `keep` whether it is in the lane.
+    /// `laneSpeed` turns the frame with the lane. Returns the sections that landed this frame.
+    mutating func update(dt: Double, holding: Bool, held: Bool,
+                         keep: Bool, laneSpeed: Double) -> [Int] {
+        if holding && held {
+            sync += (keep ? 0.42 : -0.85) * dt
+        } else {
+            sync -= 1.35 * dt
+        }
+        sync = max(0, min(1, sync))
+        if held { spin += laneSpeed * sync * dt * (2 * Double.pi) / 6 * 0.80 }
+
+        // THE SCATTER. Only while something is still uncaught — losing the pace after the
+        // fourth has landed takes nothing away, because by then he has it.
+        if sync <= 0.001 && held && caught < 4 && !releasedByScatter {
+            scatter = 1
+            caught = 0
+            releasedByScatter = true          // `this.held = null` — the star is let go
+        }
+        if holding && held && sync > 0.001 { releasedByScatter = false }   // a fresh reach
+        if scatter > 0 { scatter = max(0, scatter - dt * 0.55) }
+
+        // `tick` — a section lands when the pace crosses the next gate. One per frame at
+        // most, so four cannot arrive in a single step no matter how large `dt` is: they
+        // land ONE AT A TIME, which is the thing being felt.
+        guard held, !releasedByScatter, caught < 4, sync >= Self.gates[caught] else { return [] }
+        caught += 1
+        return [caught - 1]
+    }
+
+    /// D5.8 · **THE WORLD'S CUE SLOT, INCLUDING ITS SILENCE.** `nil` until he has reached
+    /// for something.
+    ///
+    /// The silence is the authored half and is why this is a function rather than a view
+    /// guard. `The Instrument v3.html:2297-2350` draws exactly four things in world VII —
+    /// lane names, status marks, star titles, and the pace word at `H-150`, which is the
+    /// cue's own position. It says NOTHING at rest. Having removed the offer model's stale
+    /// cue from that slot, writing a new one would have been an invented string with a
+    /// design-shaped justification; the design's answer is that the slot stays empty until
+    /// the pace has something to report.
+    static func cue(reaching: Bool, sync: Double, caught: Int, scatter: Double) -> String? {
+        guard reaching || scatter > 0 else { return nil }
+        return word(sync: sync, caught: caught, scatter: scatter).uppercased()
+    }
+
+    /// D5.8 · **THE AXIS READS THE PACE FROM HERE.** `The Instrument v3.html:2132-2133` feeds
+    /// the shader `o.sync` and `o.spin` — the DANCE object's own values.
+    ///
+    /// The app fed `uSync`/`uSpin` from `PointDance.lock`, recorded at the time as *"the same
+    /// quantity by a different construction"*, because the offer model's lock was static and
+    /// the axis could read it without the Point being mounted. That stand-in was honest while
+    /// the grab model was unbuilt; now `DanceCatch` holds the real `sync` and `spin`, and a
+    /// proxy for a quantity that exists is just a wrong number with a citation.
+    ///
+    /// Static for the same reason `PointVeil` is: a `@State` struct inside a view is invisible
+    /// to the axis, which is C4.5's whole finding. Zeroed on leaving, so a register he is not
+    /// in reads 0.
+    enum Pace {
+        private(set) static var sync: Double = 0
+        private(set) static var spin: Double = 0
+        static func set(sync s: Double, spin sp: Double) { sync = s; spin = sp }
+        static func clear() { sync = 0; spin = 0 }
+    }
+
+    /// **THE PACE, IN WORDS** — `The Instrument v3.html:2343-2348`, verbatim and in order.
+    ///
+    /// Six authored strings for the six states this mechanism can be in, and they were sitting
+    /// unbuilt while the surface spoke the OTHER model's language: `"someone is coming across
+    /// the floor"`, `"N hands · the dance is carrying you"`, read off `PointDance.chain.count`.
+    /// Under the grab model there is no chain, so that caption would have read *"someone is
+    /// coming across the floor"* forever — correct-looking output over a mechanism that no
+    /// longer runs, which is the NINTH SHAPE, and I would have introduced it myself.
+    ///
+    /// **`it went by` is the scatter's word and it is not an apology** — `:2165`, *"let go
+    /// early, the rest scatters, and it is not a punishment: the marketplace does not pause
+    /// for you."*
+    static func word(sync: Double, caught: Int, scatter: Double) -> String {
+        if scatter > 0 { return "it went by" }
+        if sync < 0.30 { return "reaching" }
+        if sync < 0.55 { return "matching" }
+        if sync < 0.80 { return "in step" }
+        return caught >= 4 ? "held" : "keeping pace"
+    }
+
+    /// `grab(px,py)` — `The Instrument v3.html:2264-2270`. The nearest star **within reach**
+    /// is the one held; nothing outside the radius is taken, so a touch on empty floor takes
+    /// nothing rather than snapping to whatever is least far away.
+    ///
+    /// **THIS IS NOT PICKING FROM A LIST, WHICH IS WHAT `AUDIT D5.8` CALLED THE FAULT.** The
+    /// original was `.onTapGesture` on each mark — selecting a specific star by hitting it.
+    /// This is proximity: he puts his hand somewhere and whatever is close enough takes it.
+    /// The radius `max(40, R*5)` is generous for exactly that reason.
+    static func grabbed(reachX: Double, reachY: Double,
+                        candidates: [(id: String, x: Double, y: Double, R: Double)]) -> String? {
+        var best: String? = nil, bd = Double.infinity
+        for c in candidates {
+            let dx = c.x - reachX, dy = c.y - reachY
+            let d = (dx * dx + dy * dy).squareRoot()
+            if d < max(40, c.R * 5) && d < bd { bd = d; best = c.id }
+        }
+        return best
+    }
+
+    /// `:2204 reset()` — the spin is zeroed too, *"so a spin left behind would offset their
+    /// geometry"*.
+    mutating func reset() { sync = 0; caught = 0; spin = 0; scatter = 0; releasedByScatter = false }
+}
+
+enum PointDance {
+
+    /// One body on the floor. Nine that dance, and `d-map`, which is `last` — *"it comes when
+    /// everyone else has danced, and not before, and it is not asked."*
+    final class Body {
+        let id: String
+        let uni: Int
+        /// `last:(id==='d-map')` — the one nobody may take by the hand.
+        let last: Bool
+        var x: Double, y: Double, vx = 0.0, vy = 0.0
+        /// Its own phase and its own natural rate — the Kuramoto pair.
+        var ph: Double
+        let w: Double
+        var danced = false
+        /// Its place in the chain, or −1 for free.
+        var chain = -1
+        /// How long it has been close enough to the chain to be joining it.
+        var near = 0.0
+        /// Where the chain wants it this frame, when it is in one. `nil` means free.
+        var target: (x: Double, y: Double)?
+
+        init(id: String, uni: Int, index: Int, last: Bool) {
+            self.id = id; self.uni = uni; self.last = last
+            let a = Double(index) / 9 * (.pi * 2)
+            x = cos(a) * 0.52; y = sin(a) * 0.46          // normalised to rim
+            ph = (a * 1.7).truncatingRemainder(dividingBy: .pi * 2)
+            w = 0.62 + Double(index % 5) * 0.055
+        }
+    }
+
+    // ── the design's constants, every one of them ──────────────────────
+
+    /// `var GATE=[1.5,3.3,5.5,8.1]` — *"Alone it takes about eight seconds of dancing to
+    /// reach the fourth. With four others in the chain it takes under four."*
+    static let gates: [Double] = [1.5, 3.3, 5.5, 8.1]
+    /// `L=0.22` — the length of one link, and `11.0` its spring. *"a held hand is a spring,
+    /// not a weld."*
+    static let linkLength = 0.22, linkSpring = 11.0
+    /// `K=1.9` — the Kuramoto coupling.
+    static let coupling = 1.9
+    /// The most that can be holding on at once.
+    static let maxChain = 5
+
+    // ── the floor ──────────────────────────────────────────────────────
+
+    private(set) static var bodies: [Body] = []
+    /// His hand, in rim-normalised floor coordinates. `nil` when it is not down — and that
+    /// single fact is what the whole register hangs on.
+    private(set) static var hand: (x: Double, y: Double)?
+    private(set) static var chain: [Body] = []
+    /// `carry` — how much dancing has been done, at the chain's rate.
+    private(set) static var carry = 0.0
+    private(set) static var given = 0
+    /// `lock` — the order parameter of the chain's phases, 0 → 1. **The number the sound
+    /// uses**: `ensemble(lock:)` closes each dancer's detune by it.
+    private(set) static var lock = 0.0
+    private(set) static var swirl = 0.0
+    private(set) static var resolved = 0.0
+    /// Every body that has danced, in the order it did. `reset` does not clear this —
+    /// *"it does not un-dance anybody."*
+    private(set) static var order: [String] = []
+    /// Bodies that joined since the last read. `joinedQ` — *"several can take a hand in the
+    /// same frame; none is lost."*
+    private(set) static var joinedQueue: [Body] = []
+    private(set) static var gaveNow: Int?
+
+    static func floor(universes: [[String]]) {
+        guard bodies.isEmpty else { return }
+        var index = 0
+        for (ui, stars) in universes.enumerated() {
+            for id in stars {
+                bodies.append(Body(id: id, uni: ui, index: index, last: id == "d-map"))
+                index += 1
+            }
+        }
+    }
+
+    static func resetAll() {
+        bodies = []; hand = nil; chain = []
+        carry = 0; given = 0; lock = 0; swirl = 0; resolved = 0
+        order = []; joinedQueue = []; gaveNow = nil
+    }
+
+    // ── offering a hand, and taking it back ────────────────────────────
+
+    /// UNWIRED(AUDIT D5.8 closed on the GRAB model 2026-08-30 — this is the offer model's
+    /// entry point and is superseded; see the §10 divergence. **Kept rather than deleted**,
+    /// because `world-seven.js` is a real design source and this is a faithful port of it —
+    /// a future ruling could reinstate it, and deleting it would throw away walked work.)
+    ///
+    /// `offer(px,py,…)` — the hand comes down.
+    @discardableResult
+    static func offer(x: Double, y: Double) -> Bool {
+        guard resolved == 0 else { return false }
+        hand = (x, y)
+        return true
+    }
+
+    static func moveHand(x: Double, y: Double) {
+        guard hand != nil, resolved == 0 else { return }
+        hand = (x, y)
+    }
+
+    /// `letGo()` — `world-seven.js:155-160`. **THE INVERSION.** The chain is emptied, every
+    /// body is freed, `carry` and `given` go to zero. The dance does not continue without a
+    /// hand, and `lock` has nothing left to hold it up.
+    ///
+    /// What it does NOT clear is `danced` and `order` — *"it does not un-dance anybody."*
+    /// A body that has danced has danced; only the holding is undone.
+    /// UNWIRED(no audit row names this, and it needs a ruling rather than a guess.
+    /// `PointDance.leaveRegister` (:345) does the same work and IS called, from the world's
+    /// `onDisappear`. So either `letGo` is residue of the offer model D5.8 retired and should
+    /// go, or the app is missing the MID-REGISTER release the design distinguishes — letting
+    /// go of the hand without leaving the room. The two are opposite conclusions from the same
+    /// evidence, so it is recorded rather than resolved. Found 2026-08-30 by `check_wired`.)
+    static func letGo() {
+        guard hand != nil else { return }
+        hand = nil
+        joinedQueue = []
+        for b in chain { b.chain = -1; b.near = 0 }
+        chain = []
+        carry = 0
+        given = 0
+    }
+
+    /// `reset()` — leaving the register. *"leaving the register lets go of his hand. It does
+    /// not stop the figure and it does not un-dance anybody."* Same as `letGo` on the chain,
+    /// and the bodies keep moving because the floor is not his.
+    static func leaveRegister() {
+        hand = nil
+        joinedQueue = []
+        for b in chain { b.chain = -1 }
+        chain = []
+        carry = 0
+        given = 0
+    }
+
+    static func takeJoined() -> Body? { joinedQueue.isEmpty ? nil : joinedQueue.removeFirst() }
+
+    // ── the figure ─────────────────────────────────────────────────────
+
+    /// `update(dt)` — `world-seven.js:167-297`. Nine coupled bodies: cohesion, separation,
+    /// alignment with their own universe, one slow shared swirl, and Kuramoto phase coupling
+    /// — *"so they fall into time with each other the way anything that dances together
+    /// does. He is a tenth body when his hand is down."*
+    @discardableResult
+    static func update(_ rawDt: Double) -> Double {
+        let dt = min(0.05, rawDt)
+        gaveNow = nil
+        let res = resolved
+        let damp = res > 0 ? max(0, 1 - res * 1.6) : 1
+        swirl += dt * 0.16 * damp
+
+        // where the chain wants each of them — a line of links off his hand
+        for b in bodies { b.target = nil }
+        if let h = hand, res == 0 {
+            var prev = h
+            for b in chain {
+                let ang = atan2(b.y - prev.y, b.x - prev.x)
+                b.target = (prev.x + cos(ang) * linkLength, prev.y + sin(ang) * linkLength)
+                prev = (b.x, b.y)
+            }
+        }
+
+        let mx = bodies.reduce(0) { $0 + $1.x } / Double(bodies.count)
+        let my = bodies.reduce(0) { $0 + $1.y } / Double(bodies.count)
+
+        for b in bodies {
+            var ax = 0.0, ay = 0.0
+            if let t = b.target {
+                ax += (t.x - b.x) * linkSpring; ay += (t.y - b.y) * linkSpring
+            } else {
+                ax += (mx - b.x) * 0.52; ay += (my - b.y) * 0.52          // cohesion, gently
+                let r = max(0.001, (b.x * b.x + b.y * b.y).squareRoot())  // the floor's current
+                ax += (-b.y / r) * 0.78 * (0.4 + r); ay += (b.x / r) * 0.78 * (0.4 + r)
+                if !chain.isEmpty, let h = hand, !b.last {                // toward a dancing pair
+                    let hx = h.x - b.x, hy = h.y - b.y
+                    let hd = max(1e-9, (hx * hx + hy * hy).squareRoot())
+                    let pull = min(1.05, 0.30 / (hd * hd + 0.13))
+                    ax += hx / hd * pull; ay += hy / hd * pull
+                }
+            }
+            for o in bodies where o !== b {
+                let dx = b.x - o.x, dy = b.y - o.y, d2 = dx * dx + dy * dy
+                if d2 < 0.0484 && d2 > 1e-6 {                             // separation
+                    let d = d2.squareRoot()
+                    ax += dx / d * (0.22 - d) * 9.5; ay += dy / d * (0.22 - d) * 9.5
+                }
+                if o.uni == b.uni {                                       // alignment
+                    ax += (o.vx - b.vx) * 0.30; ay += (o.vy - b.vy) * 0.30
+                }
+            }
+            // the pulse — every body moves a little more on its own upbeat
+            let pu = 0.86 + cos(b.ph) * 0.20
+            b.vx = (b.vx + ax * dt) * 0.955; b.vy = (b.vy + ay * dt) * 0.955
+            b.x += b.vx * dt * pu * damp; b.y += b.vy * dt * pu * damp
+            let rr = (b.x * b.x + b.y * b.y).squareRoot()
+            if rr > 0.76 {                                                // a soft edge
+                let k = 0.76 / rr
+                b.x *= k; b.y *= k; b.vx *= 0.72; b.vy *= 0.72
+            }
+        }
+
+        // PHASE. Inside the chain the coupling is strong, so a chain comes into time with
+        // itself and the floor hears it happen.
+        for b in bodies {
+            var s = 0.0, cnt = 0.0
+            for o in bodies where o !== b {
+                let both = b.chain >= 0 && o.chain >= 0
+                let w = both ? 1.0 : (o.uni == b.uni ? 0.30 : 0.10)
+                s += w * sin(o.ph - b.ph); cnt += w
+            }
+            b.ph += (b.w + (cnt > 0 ? coupling * s / cnt : 0)) * dt * damp
+            if b.ph > .pi * 8 { b.ph -= .pi * 8 }
+        }
+
+        // how in time the chain is — the number the sound and the shader use
+        if !chain.isEmpty {
+            var sx = 0.0, sy = 0.0
+            for b in chain { sx += cos(b.ph); sy += sin(b.ph) }
+            let r = (sx * sx + sy * sy).squareRoot() / Double(chain.count)
+            lock += (r - lock) * min(1, dt * 2.2)
+        } else {
+            // **AND THIS IS THE INVERSION, IN ONE LINE.** With no chain there is nothing to
+            // be in time with, so the lock falls. A dance that kept its lock after the hand
+            // came off would be a dance nobody was in.
+            lock = max(0, lock - dt * 1.1)
+        }
+
+        joins(dt: dt, res: res)
+        if resolved > 0 { resolved = min(1, resolved + dt * 0.40) }
+        return lock
+    }
+
+    /// *"The nearest free body takes his offered hand. After that, anyone who stays close to
+    /// the chain long enough joins it. Nobody is chosen; it is whoever the figure brings."*
+    private static func joins(dt: Double, res: Double) {
+        guard let h = hand, res == 0 else { return }
+        if chain.isEmpty {
+            var best: Body?, bd = 1e9
+            for b in bodies where !b.last {
+                let d = ((b.x - h.x) * (b.x - h.x) + (b.y - h.y) * (b.y - h.y)).squareRoot()
+                if d < bd { bd = d; best = b }
+            }
+            if let best, bd < 0.19 { join(best) }
+        } else if chain.count < maxChain {
+            for b in bodies where b.chain < 0 && !b.last {
+                var cd = 1e9
+                for c in chain {
+                    cd = min(cd, ((b.x - c.x) * (b.x - c.x) + (b.y - c.y) * (b.y - c.y)).squareRoot())
+                }
+                if cd < 0.28 {
+                    b.near += dt
+                    if b.near > 1.9 && chain.count < maxChain { join(b) }
+                } else {
+                    b.near = max(0, b.near - dt * 1.4)
+                }
+            }
+        }
+        // *"the pace: the sections come faster the more of them there are — and it does not
+        // start until somebody has actually taken the hand. The wait for a body to cross the
+        // floor is not dancing, and a section spent during it would be handed to nobody."*
+        if !chain.isEmpty {
+            carry += dt * (0.52 + Double(chain.count) * 0.46)
+            if given < 4 && carry >= gates[given] {
+                given += 1
+                gaveNow = given
+            }
+        }
+
+        // d-map — *"it comes when everyone else has danced, and not before, and it is not
+        // asked."*
+        if res == 0, let map = bodies.first(where: { $0.last }), !map.danced, !chain.isEmpty {
+            let all = bodies.filter { !$0.last }.allSatisfy(\.danced)
+            if all { join(map); resolved = 0.0001; given = 4; gaveNow = 1 }
+        }
+    }
+
+    private static func join(_ b: Body) {
+        b.chain = chain.count
+        chain.append(b)
+        b.near = 0
+        if !b.danced { b.danced = true; order.append(b.id) }
+        joinedQueue.append(b)
+    }
+}

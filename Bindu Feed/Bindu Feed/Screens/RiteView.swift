@@ -66,7 +66,7 @@ struct RiteView: View {
                     HStack {
                         Button(action: leave) {
                             Text("‹ leave")
-                                .font(.spaceMono(9)).tracking(2)
+                                .spaceMonoTracked(9, em: 2 / 9)
                                 .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
                                 .padding(16)
                         }
@@ -103,15 +103,15 @@ struct RiteView: View {
     // MARK: - Movement transitions (each with its threshold tone)
 
     private func begin() {
-        soundEngine.riteThreshold(hz: 220, dur: 6)   // the threshold into Reading
+        soundEngine.fieldThreshold(hz: 220, dur: 6)   // `The Rite v3.html:1538` — threshold(220,6)
         withAnimation(.easeInOut(duration: 1.0)) { movement = .reading }
     }
     private func toGathering() {
-        soundEngine.riteThreshold(hz: 146, dur: 7)
+        soundEngine.fieldThreshold(hz: 146, dur: 7)   // `The Rite v3.html:1542` — threshold(146,7)
         withAnimation(.easeInOut(duration: 1.2)) { movement = .gathering }
     }
     private func toRecognition() {
-        soundEngine.riteThreshold(hz: 261, dur: 7)
+        soundEngine.fieldThreshold(hz: 261, dur: 7)   // `The Rite v3.html:1436` — threshold(261,7)
         withAnimation(.easeInOut(duration: 1.2)) { movement = .recognition }
     }
     private func toSealed(_ text: String, _ audioRef: String?) {
@@ -119,7 +119,9 @@ struct RiteView: View {
         withAnimation(.easeInOut(duration: 1.0)) { movement = .sealed }
         let sid = storyData.storyId
         Task {
-            await store.logStoryMet(codexId: storyData.codexId, title: storyData.title)
+            // `sid` — the record id, the same one `postComment` uses below. Passing the
+            // Codex ID alone is what mislinked both rows already in the base.
+            await store.logStoryMet(storyId: sid, title: storyData.title)
             // When the Rite met a LIVE story (not the canon fallback) and Ash left words,
             // the Recognition becomes a durable Ash Comment on that story, carrying the
             // Movement-IV audio reference. The spoken audio itself stays kept on-device
@@ -150,7 +152,7 @@ private struct RiteArrival: View {
         VStack(spacing: 22) {
             Spacer()
             Text(RiteWord.arrivalKicker)
-                .font(.spaceMono(10)).tracking(3)
+                .spaceMonoTracked(10, em: 0.3)
                 .foregroundStyle(BinduTheme.inkTertiary)
             Text(RiteWord.arrivalMeeting)
                 .font(.lora(15)).italic()
@@ -165,11 +167,11 @@ private struct RiteArrival: View {
                     .multilineTextAlignment(.center)
                 HStack(spacing: 8) {
                     Text(data.roomName)
-                        .font(.spaceMono(9)).tracking(1.5)
+                        .spaceMonoTracked(9, em: 1.5 / 9)
                         .foregroundStyle(data.roomColor)
                     Text("·").foregroundStyle(BinduTheme.inkTertiary)
                     Text("\(data.codexId) · \(data.date)")
-                        .font(.spaceMono(9)).tracking(1)
+                        .spaceMonoTracked(9, em: 1 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary)
                 }
             }
@@ -180,7 +182,7 @@ private struct RiteArrival: View {
                 .padding(.top, 10)
             Spacer()
             Text(RiteWord.arrivalTouch)
-                .font(.spaceMono(9)).tracking(2)
+                .spaceMonoTracked(9, em: 2 / 9)
                 .foregroundStyle(BinduTheme.inkTertiary)
                 .opacity(appear ? 0.7 : 0.2)
                 .padding(.bottom, 40)
@@ -248,7 +250,7 @@ private struct RiteReading: View {
             .overlay(alignment: .bottom) {
                 if !done {
                     Text(RiteWord.readingBaseLine)
-                        .font(.spaceMono(9)).tracking(1.5)
+                        .spaceMonoTracked(9, em: 1.5 / 9)
                         .foregroundStyle(BinduTheme.inkTertiary)
                         .padding(.bottom, 16)
                         .modifier(RiteBreathe())
@@ -280,12 +282,19 @@ private struct RiteSealed: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            if phase >= 0 {
+            // E2.4 · `The Rite v3.html:1513/1521/1522` — `phase===0` / `===1` / `===2`.
+            // **THE SEALING SHOWS ONE THING AT A TIME.** The app tested `>=`, so the beats
+            // accumulated: by 7.6s his sealed words, *The room has changed.* and the room's
+            // glyph were all on screen together. The design REPLACES each beat with the
+            // next — what he wrote, then what it did, then where it landed — and a sealing
+            // that ends holding all three says he is being shown a summary rather than
+            // let go of. The timings at `:338`/`:341` were already the design's.
+            if phase == 0 {
                 VStack(spacing: 14) {
                     HStack(spacing: 8) {
                         Text(RiteAsh.glyph).foregroundStyle(RiteAsh.color)
                         Text(RiteWord.sealEntryLabel)
-                            .font(.spaceMono(9)).tracking(1.5)
+                            .spaceMonoTracked(9, em: 1.5 / 9)
                             .foregroundStyle(BinduTheme.inkTertiary)
                     }
                     if !text.isEmpty {
@@ -297,14 +306,14 @@ private struct RiteSealed: View {
                 }
                 .transition(.opacity)
             }
-            if phase >= 1 {
+            if phase == 1 {
                 Text(RiteWord.sealChanged)
                     .font(.lora(16)).italic()
                     .foregroundStyle(BinduTheme.inkPrimary)
                     .transition(.opacity)
                     .padding(.top, 8)
             }
-            if phase >= 2 {
+            if phase == 2 {
                 VStack(spacing: 16) {
                     Text(data.roomGlyph)
                         .font(.system(size: 30))
@@ -318,7 +327,7 @@ private struct RiteSealed: View {
                         .multilineTextAlignment(.center)
                     Button(action: onDoor) {
                         Text(RiteWord.sealDoorWaits)
-                            .font(.spaceMono(10)).tracking(2)
+                            .spaceMonoTracked(10, em: 0.2)
                             .foregroundStyle(data.roomColor)
                             .padding(.top, 10)
                     }

@@ -153,8 +153,8 @@ struct TheTurningView: View {
 
             if !archetype.role.isEmpty {
                 Text(archetype.role.uppercased())
-                    .font(.spaceMono(11))
-                    .tracking(2.0)
+                    .spaceMonoTracked(11)
+                    .tracking(1.32)
                     .foregroundColor(BinduTheme.inkSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -208,7 +208,7 @@ struct TheTurningView: View {
                 .foregroundColor(archetype.color)
                 .lineLimit(1)
             Text(label)
-                .font(.spaceMono(9))
+                .spaceMonoTracked(9)
                 .tracking(0.8)
                 .foregroundColor(BinduTheme.inkTertiary)
         }
@@ -227,9 +227,7 @@ struct TheTurningView: View {
     private var earliestDate: String {
         let dates = comments.map { $0.sourceDate }.filter { !$0.isEmpty }
         guard let earliest = dates.sorted().first else { return "—" }
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: earliest) else { return earliest }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM yyyy"
@@ -275,8 +273,8 @@ struct TheTurningView: View {
             .frame(width: 150, height: 80)
 
             Text(caption.uppercased())
-                .font(.spaceMono(9))
-                .tracking(1.4)
+                .spaceMonoTracked(9)
+                .tracking(1.08)
                 .foregroundColor(archetype.color.opacity(captionOpacity))
                 .modifier(HintPulse(active: !done && progress < 0.04))
         }
@@ -369,7 +367,7 @@ struct TheTurningView: View {
     private var wordsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("WHAT \(archetype.name.uppercased()) HAS SAID")
-                .font(.spaceMono(9))
+                .spaceMonoTracked(9)
                 .tracking(1.6)
                 .foregroundColor(BinduTheme.inkTertiary)
                 .padding(.horizontal, BinduTheme.space20)
@@ -377,7 +375,7 @@ struct TheTurningView: View {
 
             wordsContent
 
-            if archetype.name == "Ash" {
+            if archetype.id == FeedStore.ashRecordID {
                 ashramVoiceLink
                     .padding(.horizontal, BinduTheme.space20)
                     .padding(.top, 18)
@@ -408,7 +406,7 @@ struct TheTurningView: View {
                 ForEach(Array(comments.enumerated()), id: \.element.id) { i, comment in
                     WordCard(
                         comment: comment,
-                        story: storyById[comment.linkedStoryId ?? ""],
+                        story: comment.story(in: storyById),
                         color: archetype.color
                     )
                     .offset(y: done ? 0 : 10)
@@ -453,7 +451,7 @@ struct TheTurningView: View {
                 archetypeName: archetype.name
             )
             comments = fetched
-            let ids = fetched.compactMap { $0.linkedStoryId }
+            let ids = fetched.flatMap(\.linkedStoryIds)
             let stories = try await AirtableService.shared.fetchStoriesByIds(ids)
             storyById = Dictionary(uniqueKeysWithValues: stories.map { ($0.id, $0) })
             loaded = true
@@ -520,7 +518,7 @@ private struct WordCard: View {
                 Spacer(minLength: 8)
                 if !comment.sourceDate.isEmpty {
                     Text(formatted(comment.sourceDate))
-                        .font(.spaceMono(10))
+                        .spaceMonoTracked(10)
                         .foregroundColor(BinduTheme.inkTertiary)
                         .lineLimit(1)
                 }
@@ -549,7 +547,7 @@ private struct WordCard: View {
             HStack {
                 Spacer()
                 Text("♡ \(comment.resonance)")
-                    .font(.spaceMono(10))
+                    .spaceMonoTracked(10)
                     .foregroundColor(BinduTheme.inkTertiary)
             }
         }
@@ -567,9 +565,7 @@ private struct WordCard: View {
     }
 
     private func formatted(_ raw: String) -> String {
-        let inFmt = DateFormatter()
-        inFmt.dateFormat = "yyyy-MM-dd"
-        inFmt.timeZone = TimeZone(identifier: "UTC")
+        let inFmt = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC") ?? .current)
         guard let d = inFmt.date(from: raw) else { return raw }
         let outFmt = DateFormatter()
         outFmt.dateFormat = "MMM d, yyyy"

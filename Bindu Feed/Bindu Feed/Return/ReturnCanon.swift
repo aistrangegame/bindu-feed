@@ -15,10 +15,24 @@ enum ReturnCanon {
     static let sealedSelf = "I wrote it like a comfort — the forgetting is the mercy. But I don\u{2019}t think I believed it yet. I think I was arguing myself toward it. The crack in the metaphor is the part I keep touching. Ask me later if the mercy held."
 
     // The voices that kept sitting with it after he left (verbatim).
-    struct AnewVoice { let name: String; let line: String }
+    /// E3.10 · `The Return v2.html:983-988` — `ANEW`. **A voice speaking anew is a PRESENCE,
+    /// not a name and a line**: the movement shows a 28px disc in the voice's own colour with
+    /// its glyph inside, its name in that colour, and its role beneath. Carrying only
+    /// `(name, line)` is what made the surface a list.
+    struct AnewVoice {
+        let key: String
+        let name: String
+        let hex: String
+        let glyph: String
+        let role: String
+        let line: String
+        var color: Color { Color(hex: hex) }
+    }
     static let anew: [AnewVoice] = [
-        AnewVoice(name: "Sakshi", line: "I kept watching after you left. The crack you almost threw away — it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive."),
-        AnewVoice(name: "Lalita", line: "You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace."),
+        AnewVoice(key: "sakshi", name: "Sakshi", hex: "#7B82D4", glyph: "◇",
+                  role: "Witness · the one who stays", line: "I kept watching after you left. The crack you almost threw away — it widened. What you called arguing, I watched become believing. Slowly. The way real things arrive."),
+        AnewVoice(key: "lalita", name: "Lalita", hex: "#9B6BD6", glyph: "∞",
+                  role: "Meta · the play, awake", line: "You told yourself: ask me later. Look where you are standing. It is later. That is the whole joke, and the whole grace."),
     ]
 
     // MARK: - Movement wording (verbatim)
@@ -153,6 +167,31 @@ enum ReturnCanon {
 // day over day and standing alone, or the canon fallback when the feed isn't reachable
 // or nothing has been sealed yet. The sealedSelf is ALWAYS the user's real prior words
 // (never generated); anew are real field voices that spoke after.
+/// THE ONE AGE VALUE — `return-strata.js:20-23`, verbatim.
+///
+///     const a = clamp(Math.pow(days/1095, 0.55), 0, 1);
+///     return {days, a, sat:1-0.30*a, breathMul:1+0.45*a, grain:0.05+0.14*a, warm:0.30+0.70*a};
+///
+/// *"One Age value governs every material. Nothing here counts; everything deepens."* 1095 is
+/// three years, and `^0.55` is why the first months move fastest and the third year barely at
+/// all — a thing goes from raw to lovely quickly and then just keeps being old.
+///
+/// It takes DAYS. It has never taken a count of anything, and it must not: `returnCount/5`
+/// made five returns in a week look like a decade and one return after three years look like
+/// this morning. Bone → amber → deep gold is the palette of time, not of effort.
+enum ReturnAge {
+    struct Materials {
+        let days: Int, a: Double
+        let sat: Double, breathMul: Double, grain: Double, warm: Double
+    }
+    static func of(days: Int) -> Materials {
+        let a = max(0, min(1, pow(Double(max(0, days)) / 1095, 0.55)))
+        return Materials(days: days, a: a,
+                         sat: 1 - 0.30 * a, breathMul: 1 + 0.45 * a,
+                         grain: 0.05 + 0.14 * a, warm: 0.30 + 0.70 * a)
+    }
+}
+
 struct ReturnStoryData {
     let title: String
     let roomName: String
@@ -164,8 +203,20 @@ struct ReturnStoryData {
     let sealedSelf: String
     let anew: [ReturnCanon.AnewVoice]
     let storyId: String            // where a new ring (the reply) is written; "" = canon demo, no target
-    let record: [RiteVoice]        // the aged gathering, kept exactly as it was sealed — real voices
-    var returnCount: Int = 1       // rings already sealed here (each seal = one ring); ≥1
+    /// E3.3 · the aged gathering, CONDENSED — one line each, never the Rite's first-of-three.
+    let record: [ReturnRecord.Entry]
+    var returnCount: Int = 0       // rings already sealed here; ZERO is real and common
+    /// E3.2 · the prior returns, oldest first — each with the words it was sealed with.
+    /// Empty is correct and common: a story returned to zero times has no rows.
+    var ringRows: [ReturnRingRow] = []
+    /// Days since this story was sealed — the ONLY source of its age. Computed at read time
+    /// by the store from the earliest `Sealed At` it can find, never stored as a number here.
+    var days: Int = 0
+    /// `age` is a function of `days` and of nothing else.
+    var age: Double { ReturnAge.of(days: days).a }
+    /// Each ring's own days, oldest first — one per sealed return. The strata age them
+    /// individually; the story's `days` above only warms the field.
+    var ringDays: [Int] = []
     var firstMet: String = ReturnCanon.firstMetDate(fromDay: RiteCanon.date)  // "you first met this · <date>"
     var audioReference: String? = nil   // Movement IV — the kept voice of the sealed self, if any
     var roomRGB: [Double] = [155, 107, 214]   // the room colour as [r,g,b] 0…255, for the four-layer fall
@@ -174,5 +225,5 @@ struct ReturnStoryData {
         title: RiteCanon.title, roomName: RiteCanon.roomName, roomColor: RiteCanon.roomColor,
         codexId: RiteCanon.codexId, date: RiteCanon.date, body: RiteCanon.body,
         sealedWhen: ReturnCanon.sealedWhen, sealedSelf: ReturnCanon.sealedSelf, anew: ReturnCanon.anew,
-        storyId: "", record: RiteVoices.all, returnCount: 2)
+        storyId: "", record: ReturnRecord.gathering, returnCount: 2, days: 420)
 }

@@ -16,7 +16,32 @@ struct PlayersView: View {
         "Bindu", "Gaia", "Sid", "Arch", "Sakshi", "Karishma", "Ashrey", "Lalita"
     ]
     private static let rootNames: Set<String> = ["Neev", "Shweta"]
-    private static let ashName = "Ash"
+    /// The eleventh voice is found by RECORD. §10: nothing in the app resolves a voice by
+    /// name — the display string is device-local and changeable at any time.
+    private static let ashRecordID = "rec9BUbHMuylYiVwH"
+
+    /// Colours come from the live `Hex Color`, never from constants (§10).
+    private var doorVoices: [Color] {
+        PlayersDoorField.order.compactMap { name in
+            store.archetypes.first { $0.name == name }?.color
+        }
+    }
+
+    /// The geometry is `PlayersDoorField`; this only paints it.
+    private func drawDoorField(_ ctx: GraphicsContext, _ size: CGSize, _ t: Double) {
+        let voices = doorVoices
+        guard !voices.isEmpty else { return }        // no invented colours before the fetch
+        let R = PlayersDoorField.radius
+        for (i, c) in voices.enumerated() {
+            let p = PlayersDoorField.point(i, count: voices.count,
+                                           W: Double(size.width), H: Double(size.height), t: t)
+            ctx.fill(
+                Path(ellipseIn: CGRect(x: p.x - R, y: p.y - R, width: R * 2, height: R * 2)),
+                with: .radialGradient(
+                    Gradient(colors: [c.opacity(PlayersDoorField.innerAlpha), c.opacity(0)]),
+                    center: p, startRadius: 0, endRadius: R))
+        }
+    }
 
     private var lenses: [Archetype] {
         // Preserve the canonical lens order regardless of Airtable Sort.
@@ -32,7 +57,7 @@ struct PlayersView: View {
     }
 
     private var ash: Archetype? {
-        store.archetypes.first { $0.name == Self.ashName }
+        store.archetypes.first { $0.id == Self.ashRecordID }
     }
 
     private let columns = [
@@ -43,6 +68,21 @@ struct PlayersView: View {
     var body: some View {
         ZStack {
             BinduTheme.bgDeep.ignoresSafeArea()
+
+            // `doorField` — `The Rooms v4.html:1030`, drawn on the door itself (`:1010`
+            // guards it with `if(!who)`, so it is what the surface looks like when no voice
+            // has been entered). Eleven coloured glows orbiting behind the grid.
+            //
+            // ITS POINT IS A CLAIM ABOUT WHAT THE DOOR IS. A flat ground makes this a menu
+            // of eleven cards; the glows make it a FIELD the voices are already standing in,
+            // which is the same sentence the app makes everywhere else — *already alive when
+            // you arrive*. That is why it is worth porting a background nobody would name.
+            TimelineView(.animation) { tl in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                Canvas { ctx, sz in drawDoorField(ctx, sz, t) }
+                    .allowsHitTesting(false)
+                    .ignoresSafeArea()
+            }
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -55,18 +95,29 @@ struct PlayersView: View {
                     lensGrid
                         .padding(.horizontal, BinduTheme.space16)
 
-                    sectionDivider(glyph: "▽", color: Color(hex: "#7A8899"), label: "ROOTS")
-                        .padding(.vertical, 28)
+                    // F7.4 · the dividers and Ash's card carry their own places in the
+                    // sequence — `dissolve 0.7s 0.62s`, `0.82s`, and `dissolve 0.9s 0.90s`.
+                    // They had none, so the whole screen after the lenses arrived at once.
+                    StaggeredReveal(triggered: true, delay: 0.62, duration: 0.7) {
+                        sectionDivider(glyph: "▽", color: Color(hex: "#7A8899"), label: "ROOTS")
+                    }
+                    .padding(.vertical, 28)
 
                     rootGrid
                         .padding(.horizontal, BinduTheme.space16)
 
-                    sectionDivider(glyph: "◉", color: BinduTheme.colorAsh, label: nil)
-                        .padding(.vertical, 28)
+                    StaggeredReveal(triggered: true, delay: 0.82, duration: 0.7) {
+                        sectionDivider(glyph: "◉", color: BinduTheme.colorAsh, label: nil)
+                    }
+                    .padding(.vertical, 28)
 
                     if let ash {
-                        AshramCard(archetype: ash) {
-                            $path.pushDissolve(FeedRoute.turning(ash))
+                        // **HE ARRIVES LAST**, at 0.90s — after the lenses that read and the
+                        // roots that hold. The order is the sentence.
+                        StaggeredReveal(triggered: true, delay: 0.90, duration: 0.9) {
+                            AshramCard(archetype: ash) {
+                                $path.pushDissolve(FeedRoute.home(ash))
+                            }
                         }
                         .padding(.horizontal, BinduTheme.space16)
                     }
@@ -83,7 +134,7 @@ struct PlayersView: View {
             // item used to sit — the router has no toolbar to host either.
             ZStack {
                 Text("THE PLAYERS")
-                    .font(.spaceMono(10)).tracking(2.2).foregroundColor(BinduTheme.inkTertiary)
+                    .spaceMonoTracked(10, em: 0.14).foregroundColor(BinduTheme.inkTertiary)
                 HStack(spacing: 4) {
                     BackChevron { $path.popDissolve() }
                     HubTrigger(open: $showHub)
@@ -116,7 +167,7 @@ struct PlayersView: View {
             ForEach(Array(lenses.enumerated()), id: \.element.id) { i, archetype in
                 StaggeredReveal(triggered: true, delay: Double(i) * 0.075, duration: 0.8, rise: 10) {
                     PlayerCard(archetype: archetype, isSubstrate: false) {
-                        $path.pushDissolve(FeedRoute.turning(archetype))
+                        $path.pushDissolve(FeedRoute.home(archetype))
                     }
                 }
             }
@@ -125,9 +176,18 @@ struct PlayersView: View {
 
     private var rootGrid: some View {
         LazyVGrid(columns: columns, spacing: 14) {
-            ForEach(roots) { archetype in
-                PlayerCard(archetype: archetype, isSubstrate: true) {
-                    $path.pushDissolve(FeedRoute.turning(archetype))
+            // F7.4 · `substrateArrive 0.9s ease-out ${0.66 + i*0.10}s`, `translateY(6px)→0`,
+            // **ending at opacity 0.72** (`Claude Design Round 1/Players View.html:55-64,398-430`).
+            // The roots had NO stagger and no delay at all, so the gathering arrived as one
+            // block at full brightness — and the design's sequence is an ORDER and a WEIGHT:
+            // the lenses first, then the roots more quietly, then him. A gathering that
+            // arrives all at once and equally bright is a list.
+            ForEach(Array(roots.enumerated()), id: \.element.id) { i, archetype in
+                StaggeredReveal(triggered: true, delay: 0.66 + Double(i) * 0.10,
+                                duration: 0.9, rise: 6, settledOpacity: 0.72) {
+                    PlayerCard(archetype: archetype, isSubstrate: true) {
+                        $path.pushDissolve(FeedRoute.home(archetype))
+                    }
                 }
             }
         }
@@ -152,8 +212,8 @@ struct PlayersView: View {
 
             if let label {
                 Text(label)
-                    .font(.spaceMono(9))
-                    .tracking(2.0)
+                    .spaceMonoTracked(9)
+                    .tracking(1.26)
                     .foregroundColor(BinduTheme.inkTertiary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, BinduTheme.space20)
@@ -167,6 +227,20 @@ struct PlayersView: View {
 private struct PlayerCard: View {
     let archetype: Archetype
     let isSubstrate: Bool
+
+    /// Players View.html:155-177 — the border alpha is PER-PRESENCE, and it is the only
+    /// thing that lights the Zeroth and the Meta differently from the eight. Flattening it
+    /// to one value loses that signal entirely.
+    ///   zeroth (Bindu) `42` = 25.9%  ·  meta (Lalita) `38` = 22%
+    ///   substrate       `1C` = 11%   ·  everything else `26` = 14.9%
+    private var borderAlpha: Double {
+        if isSubstrate { return 0.11 }
+        switch archetype.name {
+        case "Bindu":  return 0.259
+        case "Lalita": return 0.22
+        default:       return 0.149
+        }
+    }
     let onTap: () -> Void
 
     @State private var pressed = false
@@ -183,8 +257,8 @@ private struct PlayerCard: View {
                         .foregroundColor(archetype.color.opacity(isSubstrate ? 0.80 : 0.94))
                         .lineLimit(1)
                     Text(archetype.role.uppercased())
-                        .font(.spaceMono(8))
-                        .tracking(1.6)
+                        .spaceMonoTracked(8)
+                        .tracking(0.8)
                         .foregroundColor(isSubstrate ? archetype.color.opacity(0.50) : BinduTheme.inkTertiary)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
@@ -200,17 +274,10 @@ private struct PlayerCard: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .strokeBorder(archetype.color.opacity(isSubstrate ? 0.18 : 0.26), lineWidth: 1)
+                    .strokeBorder(archetype.color.opacity(borderAlpha), lineWidth: 1)
             )
-            .scaleEffect(pressed ? 0.96 : 1.0)
-            .animation(.easeOut(duration: 0.18), value: pressed)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in pressed = true }
-                .onEnded { _ in pressed = false }
-        )
+        .buttonStyle(PressScaleStyle(scale: 0.96))
     }
 
     private var glyphCircle: some View {
@@ -233,8 +300,8 @@ private struct PlayerCard: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            archetype.color.opacity(0.18),
-                            archetype.color.opacity(0.06),
+                            archetype.color.opacity(0.118),   // ${color}1E
+                            archetype.color.opacity(0.039),   // ${color}0A
                             .clear
                         ],
                         center: .center,
@@ -244,7 +311,7 @@ private struct PlayerCard: View {
                 )
                 .frame(width: size, height: size)
                 .overlay(
-                    Circle().strokeBorder(archetype.color.opacity(0.32), lineWidth: 1)
+                    Circle().strokeBorder(archetype.color.opacity(0.196), lineWidth: 1)  // ${color}32
                 )
 
             // Glyph — each presence at its own breath cadence (comp)
@@ -299,8 +366,8 @@ private struct AshramCard: View {
                         .font(.lora(14, weight: .medium))
                         .foregroundColor(archetype.color.opacity(0.94))
                     Text(archetype.role.uppercased())
-                        .font(.spaceMono(9))
-                        .tracking(1.6)
+                        .spaceMonoTracked(9)
+                        .tracking(0.9)
                         .foregroundColor(BinduTheme.inkTertiary)
                     Text("the one who replies")
                         .font(.loraItalic(11))
@@ -324,15 +391,8 @@ private struct AshramCard: View {
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                     .strokeBorder(archetype.color.opacity(0.28), lineWidth: 1)
             )
-            .scaleEffect(pressed ? 0.985 : 1.0)
-            .animation(.easeOut(duration: 0.18), value: pressed)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in pressed = true }
-                .onEnded { _ in pressed = false }
-        )
+        .buttonStyle(PressScaleStyle(scale: 0.985))
     }
 
     private var glyphCircle: some View {
@@ -373,5 +433,29 @@ private struct AshramCard: View {
                 .shadow(color: archetype.color.opacity(0.5), radius: 9)
         }
         .frame(width: size, height: size)
+    }
+}
+
+
+/// THE PRESS THAT DOES NOT EAT THE SCROLL.
+///
+/// Both cards used `.simultaneousGesture(DragGesture(minimumDistance: 0))` to drive their
+/// `pressed` highlight. A zero-distance drag on a scroll CHILD claims the touch sequence
+/// before the enclosing `ScrollView` can recognise a pan, so the list could not be scrolled —
+/// **and that fails a real finger, not only a synthetic one.** Neev, Shweta and Ash live below
+/// the fold, so the eleventh voice was unreachable in his own instrument for that reason.
+///
+/// It was recorded as "synthetic touches don't drive a SwiftUI ScrollView". That was wrong:
+/// the Return's story view scrolls under the same synthetic drags, because it has no child
+/// gesture competing. Same class as the Point readings' shadowing, inverted — there a parent
+/// `.gesture` lost to a ScrollView; here a child gesture beats one.
+///
+/// `ButtonStyle` is the scroll-cooperative way to get the same `isPressed`.
+struct PressScaleStyle: ButtonStyle {
+    var scale: CGFloat = 0.96
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? scale : 1.0)
+            .animation(.easeOut(duration: 0.18), value: configuration.isPressed)
     }
 }

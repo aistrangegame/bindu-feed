@@ -166,6 +166,8 @@ struct RootView: View {
             StoryDetailView(path: $path, story: story)
         case .turning(let archetype):
             TheTurningView(path: $path, archetype: archetype)
+        case .home(let archetype):
+            RoomView(archetype: archetype, path: $path)
         case .ash:
             AshVoiceView(path: $path)
         case .settings:
@@ -281,11 +283,11 @@ private struct ReturnRoute: View {
                         Text("nothing has returned yet")
                             .font(.loraItalic(16)).foregroundStyle(BinduTheme.inkSecondary)
                         Text("a story returns once you have sealed your own words on it.")
-                            .font(.spaceMono(9)).tracking(1).lineSpacing(3)
+                            .spaceMonoTracked(9, em: 1 / 9).lineSpacing(3)
                             .multilineTextAlignment(.center)
                             .foregroundStyle(BinduTheme.inkTertiary).padding(.horizontal, 44)
                         Button { $path.popDissolve() } label: {
-                            Text("‹ leave").font(.spaceMono(10)).tracking(2)
+                            Text("‹ leave").spaceMonoTracked(10, em: 0.2)
                                 .foregroundStyle(BinduTheme.inkTertiary)
                         }.padding(.top, 10)
                     }

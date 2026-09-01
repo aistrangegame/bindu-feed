@@ -1,6 +1,11 @@
 import Foundation
 import AVFoundation
+import UIKit
 import Combine
+
+/// B2 · where the mute is remembered. File-level so the stored-property initializer can
+/// read it — `Self.` is not available there.
+let SoundMuteKey = "sound.muted"
 
 // MARK: - SoundEngine
 //
@@ -22,6 +27,13 @@ final class SoundEngine: ObservableObject {
     @Published private(set) var isRunning = false
     @Published private(set) var isOnHeadphones = false
 
+    // B2 · THE MUTE. `field-sound.js:31,88-89` — `muted` and `setMuted(m)`, ramping the
+    // master to zero. The app shipped with **no `setMuted`, no `setOn`, and no sound
+    // control anywhere in Settings**: once the Breath started there was no way to stop it
+    // short of leaving the app. Persisted here rather than in the view so a muted launch is
+    // silent from the first buffer, not silent a frame after Settings appears.
+    @Published private(set) var isMuted: Bool = UserDefaults.standard.bool(forKey: SoundMuteKey)
+
     // MARK: - Public holders (shared with audio thread)
 
     let routeState = RouteStateHolder(false)
@@ -39,6 +51,10 @@ final class SoundEngine: ObservableObject {
     private var outgoingBreath: BreathVoice?
     private var crossfadeTask: Task<Void, Never>?
     private var breathFadeTask: Task<Void, Never>?
+    private var naveTask: Task<Void, Never>?
+    private var stillVoice: StillnessVoice?
+    private var strainVoice: SurfaceNoiseVoice?
+    private var rushVoice: SurfaceNoiseVoice?
 
     // Current sonic context — set by surfaces via `setContext(_:)`.
     // Default is .base until a surface reports otherwise.
@@ -55,6 +71,9 @@ final class SoundEngine: ObservableObject {
     // phase from this one origin so sound and visuals breathe as one. nil until
     // wired (voices then free-run their own LFO — the pre-fold behavior).
     private var breathOriginSeconds: Double?
+
+    /// The Light's room tone, held so it can be put out. See `lightOff(dur:)`.
+    private var lightToneVoice: CeremonyVoice?
 
     // 4s equal-power crossfade for room transitions. The initial
     // cold-launch Breath fade-in uses the Breath's own attackSeconds
@@ -96,6 +115,7 @@ final class SoundEngine: ObservableObject {
 
             try engine.start()
             isRunning = true
+            applyMute(fading: false)     // a muted launch is silent from the first buffer
         } catch {
             // Soft-fail: sound is non-essential. The app continues silent
             // if the session or engine refuses, never crashes.
@@ -215,6 +235,46 @@ final class SoundEngine: ObservableObject {
         }
     }
 
+    // MARK: - Mute · B2
+
+    private var muteTask: Task<Void, Never>?
+
+    /// `setMuted:function(m)` — `field-sound.js:89`. The master rides to zero and back; it
+    /// never cuts. The ramp is `field-sound.js:88`'s **1.4s**, not the 0.5s
+    /// `HANDOFF-VERIFICATION.md:86` names — the runnable design source is canon and the
+    /// checklist is not, and the two disagree here. Recorded rather than reconciled.
+    ///
+    /// `mainMixerNode.outputVolume` is this app's master: it has no separate master gain
+    /// node, and the design's `CEIL = 0.55` is folded into the per-voice levels already, so
+    /// unmuted is 1.0 and introducing CEIL here would quieten every level in the app.
+    func setMuted(_ muted: Bool) {
+        guard muted != isMuted else { return }
+        isMuted = muted
+        UserDefaults.standard.set(muted, forKey: SoundMuteKey)
+        applyMute(fading: true)
+    }
+
+    /// `setOn:function(v){this.setMuted(!v);}` — `field-sound.js:327`.
+    func setOn(_ on: Bool) { setMuted(!on) }
+
+    private func applyMute(fading: Bool) {
+        guard isRunning else { return }
+        muteTask?.cancel()
+        let target: Float = isMuted ? 0 : 1
+        guard fading else { engine.mainMixerNode.outputVolume = target; return }
+        let from = engine.mainMixerNode.outputVolume
+        let mixer = engine.mainMixerNode
+        muteTask = Task { @MainActor in
+            let start = Date(), dur = 1.4
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                mixer.outputVolume = from + (target - from) * Float(f)
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 30_000_000)
+            }
+        }
+    }
+
     // MARK: - Context
 
     // Set the current sonic context. Resolves to a target snapshot and
@@ -234,6 +294,14 @@ final class SoundEngine: ObservableObject {
             return baseBreathSnapshot
         case .room(let room):
             return VoiceSnapshot(from: room)
+        case .point(let enclosure):
+            // Pitch AND beat from the ladder — `point-sound.js:42` reads `FREQS[i]` and
+            // `BEATS[i]` from the same index, so they can never drift apart.
+            let step = PointLadder.drone(enclosure)
+            return VoiceSnapshot(rootHz: step.hz, binauralHz: step.beat,
+                                 level: 0.055,          // `gn.gain → 0.055` (`:57`)
+                                 brightness: 0.42, texture: .sine,
+                                 bed: .climbing)
         }
     }
 
@@ -339,15 +407,489 @@ final class SoundEngine: ObservableObject {
 
     // MARK: - Attach / detach
 
+    // THE ROOM, HEARD BEFORE IT IS SEEN. Both beds run through a reverb, and they are not the
+    // same room: `field-sound.js:39-41` is `_air(3.6, 0.34)` at wet 0.5 — a held breath in a
+    // space — while `point-sound.js:35-37` is `_stone(7.5, 0.6)` at wet 0.42, a tail twice as
+    // long. The design calls the second one the cathedral, and it should not be audible
+    // anywhere the walk is not climbing.
+    /// `this.bus = ctx.createGain()` — `field-sound.js:39`, `Claude Design Round 2/design-source/spine-sound.js:45`. Everything
+    /// that sounds arrives here and the room is raised on it.
+    ///
+    /// Added for A2, and needed rather than merely tidy: `AVAudioUnitReverb` is an
+    /// `AVAudioUnitEffect` with a SINGLE input bus, so it cannot take fan-in. Two voices
+    /// during a crossfade and the delay's return are three sources for one room. The mixer
+    /// is unity in and out, so the path it replaces is unchanged.
+    private lazy var bus: AVAudioMixerNode = {
+        let m = AVAudioMixerNode()
+        engine.attach(m)
+        engine.connect(m, to: room, format: nil)
+        return m
+    }()
+
+    private lazy var room: AVAudioUnitReverb = {
+        let r = AVAudioUnitReverb()
+        r.loadFactoryPreset(.mediumRoom)
+        r.wetDryMix = 50                       // `wet.gain = 0.5`
+        engine.attach(r)
+        engine.connect(r, to: engine.mainMixerNode, format: nil)
+        return r
+    }()
+
+    /// Called when the bed changes. Tail and wetness are the room's identity.
+    private func setRoom(for bed: BedMode) {
+        switch bed {
+        case .field:    room.loadFactoryPreset(.mediumRoom);  room.wetDryMix = 50
+        case .climbing: room.loadFactoryPreset(.cathedral);   room.wetDryMix = 42
+        }
+    }
+
+    // MARK: - A2 · THE DELAY LINE
+    //
+    // `Claude Design Round 2/design-source/spine-sound.js:52-57`. *"THE DELAY LINE — VI's whole physics. A thing sent out comes
+    // back later, quieter, and each return of it comes back later still. It is built once
+    // and sits silent until something is actually away."*
+    //
+    // The app had exactly one audio unit, a reverb. World VI's premise — *"the room IS the
+    // distance it travelled"* — had nothing to stand on, and `distance`/`send`/`arrive`/
+    // `arriveAll` all route through this. Built here, silent, so STAGE C1 has somewhere to
+    // send to.
+    //
+    // `createDelay(3.0)` is a maximum, not a setting; `distance(f)` drives the time to
+    // `0.30 + f*1.35`, so the app's ceiling of 2.0s is above anything the design asks for.
+    private lazy var delay: AVAudioUnitDelay = {
+        let d = AVAudioUnitDelay()
+        d.delayTime = 0.42                 // `this.dly.delayTime.value = 0.42`
+        d.feedback = 44                    // `fb.gain.value = 0.44`, as a percentage
+        d.lowPassCutoff = 2400             // `dtone.frequency.value = 2400`
+        d.wetDryMix = 100                  // a send bus carries no dry signal
+        engine.attach(d)
+        // `dtone.connect(this.dlyOut); this.dlyOut.connect(this.master); dlyOut.connect(cv)`
+        // — the returns land BOTH dry-of-the-room and back into it, which is what makes a
+        // late arrival sound like it came from further inside the same space.
+        engine.connect(d, to: [AVAudioConnectionPoint(node: delayReturn, bus: 0)],
+                       fromBus: 0, format: nil)
+        return d
+    }()
+
+    /// `dlyOut` — `dlyOut.gain.value = 0.55`, the delay's return level.
+    private lazy var delayReturn: AVAudioMixerNode = {
+        let m = AVAudioMixerNode()
+        m.outputVolume = 0.55
+        engine.attach(m)
+        // `dtone.connect(dlyOut); dlyOut.connect(master); dlyOut.connect(cv)` — the design
+        // returns the delay both dry and into the room. Here it returns onto the bus, which
+        // is the room's own input, so a late arrival is heard inside the same space. The
+        // dry half of that split is folded into the reverb's `wetDryMix`; recorded as a
+        // divergence rather than modelled with a second path.
+        engine.connect(m, to: bus, format: nil)
+        return m
+    }()
+
+    /// One send mixer per live voice. `ech` is a parallel connection in the design's graph,
+    /// not a trim on the direct path, so it is one here too: the voice reaches the room and
+    /// the delay independently, and this mixer's volume IS `ech.gain`.
+    private var sends: [ObjectIdentifier: AVAudioMixerNode] = [:]
+
+    /// One null mixer per live voice, in the DIRECT path only. `Claude Design Round 2/design-source/spine-sound.js:95` is
+    /// `pk.connect(bus)` **and** `pk.connect(nul); nul.connect(bus)` — the signal plus an
+    /// inverted copy of it, summed, which is `1 + nul`. One mixer at that volume is the same
+    /// arithmetic in one node, and it puts the null AFTER the point the send taps.
+    private var nulls: [ObjectIdentifier: AVAudioMixerNode] = [:]
+
+    /// `nul.gain` → the direct path's volume. Pure, so it can be asserted without a graph.
+    /// `nul ∈ [−1, 0]` maps to `[0, 1]`, and −1 gives exactly 0 — a null, not a fade.
+    nonisolated static func nullVolume(for nul: Double) -> Float {
+        Float(max(0, min(1, 1 + nul)))
+    }
+
+    // MARK: - C1 · THE SEVEN REGISTER LAWS
+    //
+    // `Claude Design Round 2/design-source/spine-sound.js:104-190`. Each law is one register's whole claim expressed as physics,
+    // and `7-STATE-OF-THE-BUILD.md` §3.1 found all thirteen mechanisms absent —
+    // `PointReadings.swift` and `PointWorlds.swift` made no sound calls at all. A1 and A2
+    // built the nodes they move; these are the movements.
+    //
+    // FIVE OF THE SEVEN ARE PORTS. `narrow` · `widen` · `unveil` · `bear` · `reflect` are
+    // each invoked in the design corpus, so each has a caller to port against and a stated
+    // curve to match. **`nul` and `distance` are not** — see below.
+
+    /// I · THE POINT. *"as a star admits him, the two tones converge toward unison. The beat
+    /// narrowing IS the reading arriving — by the fourth section the world is very nearly one
+    /// note."* `Claude Design Round 2/design-source/spine-sound.js:106-110` — `beat·(1 − f·0.94)`, over 1.2s.
+    func narrow(_ f: Double) {
+        let f = max(0, min(1, f))
+        currentBreath?.laws.mutate { $0.beat = Smoothed(beatHz * (1 - f * 0.94), tau: 1.2) }
+    }
+
+    /// II · THE TURN, the opposite law on the same instrument. *"The further out he travels,
+    /// the further the second tone departs from the first — one note becoming two, then a
+    /// chord. The One becoming the many, heard."* `:113-118` — `beat·(1 + f·11)`, over 0.5s.
+    func widen(_ f: Double) {
+        let f = max(0, min(1, f))
+        currentBreath?.laws.mutate { $0.beat = Smoothed(beatHz * (1 + f * 11), tau: 0.5) }
+    }
+
+    /// III · THE VEIL. *"a filter, not a metaphor. The register arrives muffled — that is
+    /// what a veil does to a sound — and parting it opens the cutoff. What he has handed back
+    /// keeps a floor under it, so the world is never quite as closed as it was the first
+    /// time."* `:124-130` — `340 · 58^max(f, floor)`, over 0.30s.
+    func unveil(_ f: Double, floor: Double = 0) {
+        let base = max(0, min(1, max(f, floor)))
+        currentBreath?.laws.mutate { $0.veilHz = Smoothed(340 * pow(58, base), tau: 0.30) }
+    }
+
+    /// IV · THE CHAMBER. *"Pressure is heard as the room ringing under load: the resonance
+    /// sharpens and swells at the register's own frequency, and the fundamental sags a little
+    /// flat — compression lowers pitch, in stone as in anything else. Nothing is added from
+    /// outside the register."* `:136-149` — `pk.gain → f·13` dB and `pk.Q → 1.2 + f·7` over
+    /// 0.35s; `sag = 1 − f·0.020` on both tones over 0.5s.
+    func bear(_ f: Double) {
+        let f = max(0, min(1, f))
+        guard let voice = currentBreath else { return }
+        let existing = voice.peak.read()
+        voice.peak.write(PeakSettings(frequencyHz: existing.frequencyHz,
+                                      q: 1.2 + f * 7, gainDB: f * 13))
+        voice.laws.mutate { $0.sag = Smoothed(1 - f * 0.020, tau: 0.5) }
+    }
+
+    /// V · THE MIRRORS. *"The pane's angle IS the sign of the second tone. Face on: +. Edge
+    /// on: zero — a mirror seen edge-on is nothing at all, and the second tone is gone at the
+    /// same instant. Turned away: minus, the same note at the same pitch, arriving inverted.
+    /// It does not go quiet; it goes HOLLOW."* `:156-160` — `o2g.gain → 0.5·c` over 0.10s,
+    /// which relative to its resting 0.5 is exactly `c`.
+    func reflect(_ c: Double) {
+        currentBreath?.laws.mutate { $0.reflect = Smoothed(max(-1, min(1, c)), tau: 0.10) }
+    }
+
+    /// EVERY REGISTER LEAVES AS IT ARRIVED.
+    ///
+    /// A law is a state on the voice, not an event, so it outlives the register that set it.
+    /// Walking out of world III with the veil half-closed would leave every register after it
+    /// muffled; leaving IV under load would leave the room ringing; leaving VI away would
+    /// leave the delay long. The design never has to say this because `_voice` is rebuilt per
+    /// register and the new one starts at the defaults — the app crossfades voices for the
+    /// BED but keeps one law-carrier, so it has to say it.
+    ///
+    /// Called on entering a register and on leaving it. Both, deliberately: entering must not
+    /// inherit, and leaving must not bequeath.
+    func releaseRegisterLaws() {
+        currentBreath?.laws.write(RegisterLaws())          // narrow/widen/unveil/bear/reflect
+        if let voice = currentBreath {
+            voice.peak.write(.flat(at: voice.snapshot.rootHz * 2))   // bear's resonance
+        }
+        setNull(0)                                          // V's silence, if it was open
+        setEchoSend(0)                                      // VI's send
+        setDelayTime(0.42)                                  // and the room back to its own length
+        leaveAll()                                          // VII's chain, if any
+    }
+
+    /// The register's own beat, for the two laws that move it. The Point's ladder pairs pitch
+    /// and beat at one index (`PointLadder.drone`), so this can never drift from the drone.
+    private var beatHz: Double { currentBreath?.snapshot.binauralHz ?? 4 }
+
+    // ── SPECIFIED BY THE DESIGN, NEVER INVOKED BY IT, COMPLETED HERE ──────
+    //
+    // FOUR mechanisms are declared in `spine-sound.js`, documented there at length — and
+    // called by nothing in the design corpus: `nul` (`:164`), `distance` (`:176`),
+    // `send` (`:189`) and `resolve` (`:271`). Every other register law has a caller.
+    //
+    // **AND THEY ARE NOT AN ARBITRARY THREE.** `nul` is world V's whole claim and
+    // `distance`/`send` are world VI's — the two registers whose SOUND IS THE MECHANISM
+    // rather than an accompaniment to it. A null that is silence rather than quiet; a room
+    // that IS the distance travelled. Every other law colours a voice that would still make
+    // sense without it; these two are the thing the register is about. The design specified
+    // exactly the two hardest to fake and stopped at the specification. `resolve` — the close
+    // of the whole register — is the fourth and the largest.
+    //
+    // So C1 did not *port* them. **It completed them.** The numbers below are the design's
+    // and are exact; the invocation is this build's, because there was none. That is a
+    // different claim from "the app's own idiom" and a stronger one: nothing was invented,
+    // and nothing upstream was ignored — there was simply nothing upstream to call.
+    //
+    // **A future session should not go looking for a source that is not there.**
+    // `Coverage/9` §5b.
+
+    /// The one deliberate silence in the Point. *"Not a fade — the voice summed against
+    /// itself, which is exact. The stone tail already in the air keeps decaying, so the hall
+    /// dies away and then there is nothing."* `Claude Design Round 2/design-source/spine-sound.js:164-171` — `nul.gain → −1` over
+    /// 0.09s, back to 0 after `secs` over 1.8s.
+    ///
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** This is world V's entire claim as
+    /// physics, and the design wrote the mechanism and no caller.
+    func nul(secs: Double = 4.4) {
+        guard isRunning, let voice = currentBreath else { return }
+        setNull(-1)
+        let id = ObjectIdentifier(voice)
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(secs * 1_000_000_000))
+            guard let self, self.currentBreath === voice, self.nulls[id] != nil else { return }
+            self.setNull(0)
+        }
+    }
+
+    /// VI · THE RETURN. *"The room IS the distance it travelled. While something of his is
+    /// away, the register's own voice leans into the delay line and the delay lengthens; when
+    /// everything is home the world is dry again. Nothing is added — the same note, arriving
+    /// late."* `Claude Design Round 2/design-source/spine-sound.js:176-186` — `ech.gain → f·0.62` and `delayTime → 0.30 + f·1.35`.
+    ///
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** World VI's whole physics, and the
+    /// design wrote the mechanism and no caller.
+    func distance(_ f: Double) {
+        let f = max(0, min(1, f))
+        setEchoSend(f * 0.62)
+        setDelayTime(0.30 + f * 1.35)
+    }
+
+    // ── VI · what is sent, and what comes back ────────────────────────────
+
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE**, like `distance` — world VI's departure.
+    /// *"the departure. It bends down and away
+    /// as it goes, the way a thing leaving does, and it goes straight into the delay — which
+    /// is to say it is already on its way back the moment he lets go."*
+    /// `Claude Design Round 2/design-source/spine-sound.js:189-203`: `f*2` bending to `f*1.12` over 1.5s, 0 → 0.075 at 0.05s,
+    /// exponential to 0.0001 at 1.7s, panning 0 → `pan` over 1.4s, into the bus AND the delay.
+    ///
+    /// DIVERGENCE: the design bends the pitch with `exponentialRampToValueAtTime`; this is
+    /// linear across the same 1.5s. Recorded, not silently matched.
+    func send(hz: Double, pan: Double = 0) {
+        playCeremony(CeremonyVoice(hz: hz * 2, peak: 0.075,
+                                   attackSeconds: 0.05, releaseSeconds: 1.65,
+                                   synth: .sine, endHz: hz * 1.12, glideSeconds: 1.5,
+                                   envelope: .linearExp, panTo: pan, panSeconds: 1.4),
+                     maxWait: 2.0, intoDelay: true)
+    }
+
+    /// *"the arrival. The same note he sent, later, quieter, and one interval up — a fifth, a
+    /// sixth, a seventh, and on the fourth return the octave: the lap that finally arrives
+    /// home. It swells IN, backwards, because that is the shape of a thing approaching."*
+    /// `Claude Design Round 2/design-source/spine-sound.js:208-221`.
+    ///
+    /// **TWO THINGS HERE ARE THE REGISTER'S SENTENCE, NOT PARAMETERS. DO NOT NORMALISE THEM.**
+    ///
+    /// 1 · **It swells IN.** `.expSwellExp` ramps *up* exponentially from silence across
+    ///     1.15s. Every other event in this app strikes and decays, so this one reads as
+    ///     wrong to any pass tidying envelopes toward a common shape — and a linear or
+    ///     instant attack turns a lap coming home into a note that started. The backwards
+    ///     swell IS the approach.
+    /// 2 · **The octave is BELOW, at 0.34.** `o2` at `f·r·0.5`, not `f·r·2`. A thing
+    ///     returning from a distance sounds LARGER, not brighter — more of it arrives than
+    ///     left. An octave above would be the same interval and the opposite meaning, and it
+    ///     is a one-character edit away, which is exactly why it is written down here.
+    ///
+    /// Both are cheap to flatten by accident and neither would fail a peak or a ceiling
+    /// check. `ReturnRegisterTests.arriveSwellsIn` and `.arriveIsLargerNotBrighter` are what
+    /// stand between them and a future optimisation.
+    func arrive(hz: Double, n: Int = 1, after: Double = 0) {
+        let ratios = [1.5, 5.0 / 3.0, 15.0 / 8.0, 2.0]
+        let lap = max(1, min(4, n))
+        let r = ratios[lap - 1]
+        let peak = 0.052 / (1 + Double(lap) * 0.22)
+        Task { @MainActor [weak self] in
+            if after > 0 { try? await Task.sleep(nanoseconds: UInt64(after * 1_000_000_000)) }
+            guard let self else { return }
+            self.playCeremony(CeremonyVoice(hz: hz * r, peak: peak,
+                                            attackSeconds: 1.15, releaseSeconds: 2.25,
+                                            synth: .sineOctaveBelow, envelope: .expSwellExp),
+                              maxWait: 3.8, intoDelay: true)
+        }
+    }
+
+    /// *"Deep Time hands over all four at once, so all four intervals sound together: the
+    /// crossing was made before him, complete."* `Claude Design Round 2/design-source/spine-sound.js:225-228`.
+    func arriveAll(hz: Double) {
+        for i in 1...4 { arrive(hz: hz, n: i, after: Double(i - 1) * 0.30) }
+    }
+
+    // ── C2 · THE CLOSE OF THE POINT ───────────────────────────────────────
+
+    /// `resolve()` — `Claude Design Round 2/design-source/spine-sound.js:271-291`. *"All nine sound at once, pull to one note,
+    /// and the one note rises toward the centre's own."*
+    ///
+    /// Nine tones at `852 × [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8, 2, 3]`, entering 0.09s apart,
+    /// each bending **exponentially to 852** by 5.2s — a just-intoned chord collapsing into
+    /// a unison. Then a tenth from 4.6s, 852 rising to **963**: the ladder's last step, taken
+    /// after the chord has already become one note. The app played a single bowl.
+    ///
+    /// **SPECIFIED, NEVER INVOKED, COMPLETED HERE.** `resolve` joins `nul`, `distance` and
+    /// `send`: declared in `spine-sound.js` and called by nothing in the design corpus. It is
+    /// the fourth, and the largest — the close of the whole register.
+    func resolve() {
+        guard isRunning else { return }
+        leaveAll()                                   // `this.leaveAll()` — the dance stops first
+        let ratios: [Double] = [1, 9.0 / 8, 5.0 / 4, 4.0 / 3, 3.0 / 2, 5.0 / 3, 15.0 / 8, 2, 3]
+        for (i, r) in ratios.enumerated() {
+            let start = Double(i) * 0.09
+            playCeremony(CeremonyVoice(hz: 852 * r, peak: 0.026,
+                                       attackSeconds: 0.7, releaseSeconds: 8.6 - start - 0.7,
+                                       synth: .sine,
+                                       endHz: 852, glideSeconds: 5.2 - start,
+                                       glideExponential: true,
+                                       startDelaySeconds: start,
+                                       envelope: .linearExp),
+                         maxWait: 9.0)
+        }
+        // *"and the one note rises toward the centre's own."* 852 → 963, the ladder's last
+        // step. It begins at 4.6s, while the nine are still pulling together, so the rise is
+        // heard out of the unison rather than after it.
+        playCeremony(CeremonyVoice(hz: 852, peak: 0.05,
+                                   attackSeconds: 1.8, releaseSeconds: 5.6,
+                                   synth: .sine,
+                                   endHz: 963, glideSeconds: 4.8,
+                                   startDelaySeconds: 4.6,
+                                   envelope: .linearExp),
+                     maxWait: 12.4)
+    }
+
+    // ── C3 · THE DESCENT, THE ASCENT, AND THE ARRIVAL ─────────────────────
+
+    /// `glide(i, down)` — `The Point v9.html:623-632`. The enclosure's own tone falling an
+    /// octave as he descends, or rising one as he comes back up, over 2.2s.
+    ///
+    /// **EXPONENTIAL IN PITCH**, which is linear in what is heard: an octave is an octave
+    /// wherever it starts, so a fall that halves a frequency sounds like one steady descent
+    /// only on this curve. A linear ramp would start fast and end slow.
+    func glide(enclosure i: Int, down: Bool) {
+        let f = PointLadder.drone(i).hz
+        playCeremony(CeremonyVoice(hz: down ? f : f / 2, peak: 0.06,
+                                   attackSeconds: 0.15, releaseSeconds: 2.35,
+                                   synth: .sine,
+                                   endHz: down ? f / 2 : f, glideSeconds: 2.2,
+                                   glideExponential: true,
+                                   envelope: .linearExp),
+                     maxWait: 3.6)
+    }
+
+    /// `shimmer()` — `Claude Design Round 2/design-source/spine-sound.js:363-373`. Five solfeggio tones an octave up —
+    /// 285 · 396 · 528 · 639 · 852, doubled — entering 0.18s apart and gone in 1.6s each.
+    /// The sound of something arriving that was not asked for: `The Point v9.html:1286`
+    /// fires it as the aperture opens, and the Instrument fires it at every fourth give.
+    func shimmer() {
+        for (i, f) in [285.0, 396.0, 528.0, 639.0, 852.0].enumerated() {
+            playCeremony(CeremonyVoice(hz: f * 2, peak: 0.03,
+                                       attackSeconds: 0.1, releaseSeconds: 1.5,
+                                       synth: .sine,
+                                       startDelaySeconds: Double(i) * 0.18,
+                                       envelope: .linearExp),
+                         maxWait: 2.6)
+        }
+    }
+
+    // ── VII · THE DANCE — the only polyphonic register ────────────────────
+
+    private var dancers: [DancerVoice] = []
+
+    /// `join(k)` — a body enters the chain at `852 × [1, 1.5, 2, 2.5, 3][k]`, out of tune by
+    /// `(k odd ? + : −)(11 + k·5)` cents, and a blip at a quarter of its own pitch marks the
+    /// moment. `Claude Design Round 2/design-source/spine-sound.js:236-252`.
+    /// UNWIRED(AUDIT D5.8 closed on the GRAB model 2026-08-30 — `join`/`ensemble` are the
+    /// OFFER model's company: five bodies each taking a voice as they enter the chain. The
+    /// Instrument's world VII holds ONE star and has no chain, so there is nothing to join.
+    /// Kept as a faithful port of `spine-sound.js:236-252`; see the §10 divergence.)
+    func join(_ k: Int) {
+        guard isRunning, dancers.count < 5 else { return }
+        let d = DancerVoice(k: k)
+        engine.attach(d.sourceNode)
+        engine.connect(d.sourceNode, to: bus,
+                       format: d.sourceNode.outputFormat(forBus: 0))
+        dancers.append(d)
+        blip(hz: d.hz * 0.25)          // `this.blip(f*0.25)`
+    }
+
+    /// `ensemble(lock)` — *"how in time they are. The detune closes as the lock rises, so the
+    /// chord beats when it forms and tunes itself as they dance."* `:255-261`.
+    /// UNWIRED(AUDIT D5.8, as `join` — the detune closes as a CHAIN comes into time, and
+    /// the grab model has no chain. `leaveAll()` stays wired and is now a no-op tear-down.)
+    func ensemble(lock: Double) {
+        let k = 1 - max(0, min(1, lock))
+        for d in dancers { d.setDetune(cents: d.restingDetuneCents * k) }
+    }
+
+    /// `leaveAll()` — `:262-266`. They go the way they came: a fade, not a cut.
+    func leaveAll() {
+        let leaving = dancers
+        dancers.removeAll()
+        for d in leaving { d.leave() }
+        let deadline = Date().addingTimeInterval(4.0)
+        Task { @MainActor [weak self] in
+            while leaving.contains(where: { !$0.isDone }) && Date() < deadline {
+                try? await Task.sleep(nanoseconds: 100_000_000)
+            }
+            guard let self else { return }
+            for d in leaving {
+                self.engine.disconnectNodeInput(d.sourceNode)
+                self.engine.detach(d.sourceNode)
+            }
+        }
+    }
+
+    /// How many bodies are in the chain. `dancers.length` — the caption in world VII prints
+    /// this, and `AUDIT D5.8` (now PARTIAL, scatter still absent) records that it printed a
+    /// count of hands that did not exist.
+    var dancerCount: Int { dancers.count }
+
+    /// `nul(secs)` — the Point's one deliberate silence. STAGE C1 drives this; A1/A2 only
+    /// need the path to exist and to be open.
+    func setNull(_ nul: Double) {
+        guard let voice = currentBreath else { return }
+        voice.null.write(nul)
+        nulls[ObjectIdentifier(voice)]?.outputVolume = Self.nullVolume(for: nul)
+    }
+
+    /// `distance(f)` will drive this in STAGE C1. A1/A2 only need it to exist and to be
+    /// shut, so the delay line is inaudible until something is actually away.
+    func setEchoSend(_ level: Double) {
+        guard let voice = currentBreath else { return }
+        let clamped = max(0, min(1, level))
+        voice.echoSend.write(clamped)
+        sends[ObjectIdentifier(voice)]?.outputVolume = Float(clamped)
+    }
+
+    /// `dly.delayTime.setTargetAtTime(0.30 + f*1.35, …)` — the room lengthening. Also C1.
+    func setDelayTime(_ seconds: Double) {
+        delay.delayTime = max(0, min(2.0, seconds))
+    }
+
     private func attach(_ voice: BreathVoice) {
         engine.attach(voice.sourceNode)
         let format = voice.sourceNode.outputFormat(forBus: 0)
-        engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        setRoom(for: voice.snapshot.bed)
+
+        // A1/A2 · the voice's node IS `pk`, and two things hang off it, as they do in
+        // `Claude Design Round 2/design-source/spine-sound.js:95-97`: the direct path through the null, and the send into the
+        // delay. Both mixers start where the design starts them — the null wide open, the
+        // send shut — so this changes nothing anyone can hear until C1 moves them.
+        let null = AVAudioMixerNode()
+        engine.attach(null)
+        engine.connect(null, to: bus, format: format)
+        nulls[ObjectIdentifier(voice)] = null
+
+        let send = AVAudioMixerNode()
+        engine.attach(send)
+        engine.connect(send, to: delay, format: format)
+        sends[ObjectIdentifier(voice)] = send
+
+        // VOLUMES AFTER ATTACH AND CONNECT, never before. A mixer parameter set on a node
+        // that is not yet in a running graph does not survive being wired in — the offline
+        // test that first measured the null set `outputVolume` on a detached mixer and every
+        // setting rendered identically, a graph silently ignoring the write rather than
+        // refusing it. Same ordering hazard here, and the same fix.
+        null.outputVolume = Self.nullVolume(for: voice.null.read())
+        send.outputVolume = Float(voice.echoSend.read())
+
+        engine.connect(voice.sourceNode,
+                       to: [AVAudioConnectionPoint(node: null, bus: 0),
+                            AVAudioConnectionPoint(node: send, bus: 0)],
+                       fromBus: 0, format: format)
     }
 
     private func detach(_ voice: BreathVoice) {
         engine.disconnectNodeInput(voice.sourceNode)
         engine.detach(voice.sourceNode)
+        let id = ObjectIdentifier(voice)
+        for node in [nulls.removeValue(forKey: id), sends.removeValue(forKey: id)].compactMap({ $0 }) {
+            engine.disconnectNodeInput(node)
+            engine.detach(node)
+        }
     }
 
     private func attachThreshold(_ voice: ThresholdTone) {
@@ -462,12 +1004,105 @@ final class SoundEngine: ObservableObject {
 
     private var inkVoice: InkVoice?
 
-    /// A movement-transition threshold bloom (bowl), e.g. 220 / 146 / 261 Hz.
+    /// `Sound.threshold(hz, dur)` — a ceremony crossing in the field: the Rite's movements,
+    /// the Return's `cross`, the Universe's stars. `Coverage/9` §2 maps seven sites here.
+    func fieldThreshold(hz: Double, dur: Double) {
+        playCeremony(Self.fieldThresholdVoice(hz: hz, dur: dur), maxWait: dur + 1)
+    }
+
+    /// `B.threshold(f)` — a crossing on the axis. Three sites: the register crossing, the
+    /// turn opening, and the day's own door.
+    func spineThreshold(hz: Double) {
+        playCeremony(Self.spineThresholdVoice(hz: hz), maxWait: 6.5)
+    }
+
+    /// `B.blip(f)` — a small confirming arrival. One site in the nineteen: the Light's
+    /// place-selection.
+    func blip(hz: Double) {
+        playCeremony(Self.blipVoice(hz: hz), maxWait: 1.2)
+    }
+
+    /// `om()` — `Claude Design Round 2/design-source/spine-sound.js:374-384`. **Three** oscillators at 136.1 · 272.2 · 408.3,
+    /// each at `0.06/(i+1)`, 0.9s up and exponential to 0.0001 at 9s.
+    ///
+    /// `PointRevealView`'s own comment says *"one tone fanning into three, then collapsing to
+    /// the one point"* and the visual does exactly that; the sound was a single bowl. There
+    /// is no collision with Bindu's voice — she is **136** through `RoomKey.hz` and
+    /// `VoiceCharacter`, this is **136.1** and reads no table. `Coverage/9` §4b.
+    func om() {
+        for (i, f) in [136.1, 272.2, 408.3].enumerated() {
+            playCeremony(CeremonyVoice(hz: f, peak: 0.06 / (Double(i) + 1),
+                                       attackSeconds: 0.9, releaseSeconds: 8.1,
+                                       synth: .sine, envelope: .linearExp),
+                         maxWait: 9.4)
+        }
+    }
+
+    /// The app-own strike. `Coverage/9` §4: two sites have no design counterpart — a room
+    /// that resolves without a voice, and the arming tap — and one, the Door's `.absorbed`,
+    /// is deliberately left unresolved until Waves 5/6. None of them is a crossing, so none
+    /// gets a threshold's identity; they keep the bowl at its corrected 0.075.
     func riteThreshold(hz: Double, dur: Double) {
-        playCeremony(
-            CeremonyVoice(hz: hz, peak: 0.30, attackSeconds: 0.6, releaseSeconds: dur, synth: .bowl),
-            maxWait: dur + 1
-        )
+        playCeremony(Self.thresholdVoice(hz: hz, dur: dur), maxWait: dur + 1)
+        duckBreath()
+    }
+
+    /// THE BOWL, BUILT IN ONE PLACE. `AUDIT.md:944` G3.3.
+    ///
+    /// `field-sound.js:154-170` is the bowl: `0 → 0.075` over 0.09s, an exponential decay
+    /// across 11s, four inharmonic partials `[1, 2.004, 2.98, 4.02]` each at `1/(i*2.2+1)`,
+    /// and the bed ducking to 0.006 while it rings. It shipped at `peak 0.30`/`0.32` with
+    /// partials `[1, 2.756, 5.404]` and no duck — four times the ceiling `Claude Design Round 2/README.md:192`
+    /// states, from **19 call sites** across Door, Rite, Rooms, Universe, Return, Light,
+    /// Point and Instrument.
+    ///
+    /// These two factories are the only places the app builds a bowl, so
+    /// `SoundLayerTests` renders what SHIPS instead of a second copy of the numbers — the
+    /// failure mode `7-STATE-OF-THE-BUILD.md` §1 describes, where a checker and the thing
+    /// it checks agree with each other and neither agrees with the code.
+    nonisolated static func thresholdVoice(hz: Double, dur: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz, peak: BowlVoicing.peak,
+                      attackSeconds: 0.6, releaseSeconds: dur, synth: .bowl)
+    }
+
+    /// `threshold(hz, dur)` — `field-sound.js:139-151`. Peak **0.032**, a sine plus
+    /// `hz*2.002` at 0.22, up over `dur*0.42` and back to **zero** at `dur`.
+    ///
+    /// The signature is the giveaway `Coverage/9` §1 turns on: `riteThreshold(hz:dur:)` took
+    /// a duration because it was written against THIS function, and was then given a bowl's
+    /// body. Seven crossings — the Rite's three movements, the Return's `cross`, and all
+    /// three of the Universe's — ran at 0.075 with four inharmonic partials and an 11s tail
+    /// where the design has two components that end when they say they will.
+    nonisolated static func fieldThresholdVoice(hz: Double, dur: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz, peak: 0.032,
+                      attackSeconds: dur * 0.42, releaseSeconds: dur * 0.58,
+                      synth: .fieldThreshold, envelope: .linearToZero)
+    }
+
+    /// `threshold(f)` — `Claude Design Round 2/design-source/spine-sound.js:353-361`. Peak **0.06**, one sine, entering at
+    /// `f*0.985` and reaching tune at **2.2s**; up at 0.5s, exponential to 0.0001 at 6s.
+    ///
+    /// *"struck, and slightly flat, so the crossing is heard as a crossing."* The detune IS
+    /// the mechanism. Played in tune — which is what a bowl does — a crossing is just a
+    /// sound that happened. Takes no duration: its envelope is its own.
+    nonisolated static func spineThresholdVoice(hz: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz * 0.985, peak: 0.06,
+                      attackSeconds: 0.5, releaseSeconds: 5.5,
+                      synth: .spineThreshold,
+                      endHz: hz, glideSeconds: 2.2, envelope: .linearExp)
+    }
+
+    /// `blip(f)` — `Claude Design Round 2/design-source/spine-sound.js:343-350`. One sine at `f*2`, 0.02s up, 0.7s and gone.
+    /// The shortest event in the app; it was playing an 11-second bowl.
+    nonisolated static func blipVoice(hz: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz * 2, peak: 0.07,
+                      attackSeconds: 0.02, releaseSeconds: 0.68,
+                      synth: .blip, envelope: .linearExp)
+    }
+
+    nonisolated static func bowlVoice(hz: Double) -> CeremonyVoice {
+        CeremonyVoice(hz: hz, peak: BowlVoicing.peak,
+                      attackSeconds: 0.05, releaseSeconds: 11.0, synth: .bowl)
     }
 
     /// A presence's choir voice — a quiet sine-plus-octave bloom over the bed.
@@ -478,19 +1113,276 @@ final class SoundEngine: ObservableObject {
         )
     }
 
-    /// The Sealing bowl — struck once, long decay while the bed holds.
-    func riteBowl(hz: Double) {
+    /// ONE PRESENCE SPEAKS, in its own body and at its own pitch.
+    ///
+    /// `B.carry(hz)` — `The Instrument v3.html:4229-4239`, verbatim. Three sines at the
+    /// register's own Hz and its fifth and octave, each entering 0.30s after the last, each
+    /// a 0.25s ramp to `0.034/(i*0.6+1)` and then 6.5s of exponential decay. It is the
+    /// longest event in the app and the quietest thing that lasts: taking a reading up is
+    /// weightless, and what it leaves behind is company, so the tone stays after the hand
+    /// has moved on.
+    ///
+    /// UNHEARD. Like the rest of Pass 7 this is verified by reading only.
+    func carryTone(hz: Double) {
+        guard isRunning, !eventsSuppressed else { return }
+        for (i, m) in CarryVoicing.ratios.enumerated() {
+            let peak = CarryVoicing.peak(step: i)
+            let start = CarryVoicing.delay(step: i)
+            // the design staggers by scheduling each oscillator at `t + i*0.30`; the engine
+            // has no scheduled start, so the stagger is a delayed play of the same envelope
+            Task { @MainActor [weak self] in
+                if start > 0 { try? await Task.sleep(nanoseconds: UInt64(start * 1_000_000_000)) }
+                guard let self, self.isRunning, !self.eventsSuppressed else { return }
+                self.playCeremony(
+                    // `o.type='sine'` — a plain tone. `.bowl` adds struck partials the
+                    // design does not have here, and this is not a strike: three steps that
+                    // stay in the room.
+                    CeremonyVoice(hz: hz * m, peak: peak,
+                                  attackSeconds: 0.25, releaseSeconds: 6.5, synth: .sine),
+                    maxWait: 7.2
+                )
+            }
+        }
+    }
+
+    /// This is what Pass 7 was for and what it shipped without: `VoiceCharacter` held all
+    /// eleven `CHAR` timbres and **nothing read it**. The bed split landed and the voices
+    /// never did, so every presence sounded identical — a sine-plus-octave at whatever Hz the
+    /// caller happened to pass.
+    ///
+    /// Pitch from VOICES (`RoomKey.hz`), body from CHAR. The two tables disagree on four
+    /// voices and only one of them is the pitch; see §10.
+    func presence(_ key: RoomKey, dur: Double? = nil) {
+        guard let c = VoiceCharacter.of(key.rawValue) else { return }
         playCeremony(
-            CeremonyVoice(hz: hz, peak: 0.32, attackSeconds: 0.05, releaseSeconds: 11.0, synth: .bowl),
-            maxWait: 12
+            CeremonyVoice(hz: key.hz, peak: c.gain * 2.6,     // CHAR gains are bus-relative
+                          attackSeconds: c.atk, releaseSeconds: dur ?? c.rel,
+                          synth: .presence(c)),
+            maxWait: (dur ?? c.rel) + c.atk + 1
         )
     }
 
-    private func playCeremony(_ voice: CeremonyVoice, maxWait: Double) {
+    // MARK: - THE LIGHT · the photographic negative of the Gathering
+    //
+    //   *"The Gathering FILLS: voices arrive one after another into the dark. The Light
+    //    REMOVES. So the sound does the opposite of everything above: it draws in, holds,
+    //    drains, strikes once, and leaves silence."* (`The Light v2.html:290-293`)
+    //
+    // Seven of these eight events were missing. The Light had only generic engine calls —
+    // a bowl, an ungrip, an ink — so the one register built on subtraction sounded like
+    // every other one.
+    //
+    // The BED here stays the FIELD's room (root + fifth); the Light's nave is a reverb raised
+    // ON it, not the Point's cathedral. Nothing here speaks, so nothing routes through CHAR —
+    // when a presence speaks in the Light it goes through `presence(_:)` like everywhere else.
+
+    /// `openTheRoom(8.5)` — the long stone tail, wet ramping to 0.85. Heard before it is seen.
+    func lightOpenTheRoom(dur: Double = 8.5) {
         guard isRunning else { return }
+        room.loadFactoryPreset(.cathedral)
+        naveTask?.cancel()
+        naveTask = Task { @MainActor in
+            let start = Date(), from = Double(room.wetDryMix), to = 85.0
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                room.wetDryMix = Float(from + (to - from) * f)
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 60_000_000)
+            }
+        }
+    }
+
+    /// `breathIn(dur)` — *"swells, and holds. Does not release."* The bed's breathing STOPS,
+    /// it brightens as it draws in, and a rise slides root → root×1.5, the fifth opening.
+    func lightBreathIn(dur: Double = 6) {
+        guard isRunning else { return }
+        let root = 110.0
+        playCeremony(
+            CeremonyVoice(hz: root, peak: 0.026, attackSeconds: dur * 0.8,
+                          releaseSeconds: dur * 0.2, synth: .sine, endHz: root * 1.5),
+            maxWait: dur + 1)
+        guard let voice = currentBreath else { return }
+        breathFadeTask?.cancel()
+        breathFadeTask = Task { @MainActor in
+            let start = Date(), from = voice.crossfadeLevel.read()
+            while !Task.isCancelled {
+                let e = Date().timeIntervalSince(start)
+                let f = min(1, e / dur)
+                // 0.052 swell to 0.78·dur, then settle to 0.040 and HOLD
+                let target = f < 0.78 ? from + (1.35 - from) * (f / 0.78) : 1.35 - 0.30 * ((f - 0.78) / 0.22)
+                voice.crossfadeLevel.write(max(0, target))
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
+    /// `veilLift(3)` — *"everything drains downward and out. Nothing arrives here."*
+    func lightVeilLift(dur: Double = 3) {
+        guard isRunning else { return }
+        playCeremony(CeremonyVoice(hz: 110, peak: 0.030, attackSeconds: 0.05,
+                                   releaseSeconds: dur, synth: .drain), maxWait: dur + 1)
+        naveTask?.cancel()
+        naveTask = Task { @MainActor in
+            let start = Date(), from = Double(room.wetDryMix)
+            let bedFrom = currentBreath?.crossfadeLevel.read() ?? 0
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                room.wetDryMix = Float(from * (1 - f) + 50 * f)      // back to the field's room
+                currentBreath?.crossfadeLevel.write(bedFrom * (1 - f))
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
+    /// `lightBed` — *"the bare light: almost nothing. A single high room-tone, barely there,
+    /// so the silence has an edge to it."* 528 with 792 at 0.3, rising to 0.012 over 6s.
+    func lightRoomTone() {
+        guard isRunning else { return }
+        // RETAINED, where every other ceremony is fire-and-forget. A bloom is over when it is
+        // over; a ROOM is not, and `field-sound.js:305` keeps `this.lightNode` for exactly
+        // that reason. Without the handle the 40s release outlived the register and the tone
+        // followed the user out — `_mechverdicts1.md`'s ABSENT verdict on `lightOff`.
+        let voice = CeremonyVoice(hz: 528, peak: 0.012, attackSeconds: 6,
+                                  releaseSeconds: 40, synth: .sineOctave)
+        lightToneVoice = voice
+        playCeremony(voice, maxWait: 47)
+    }
+
+    /// `lightOff(dur)` — `field-sound.js:307-312`. Fade the Light's room tone and let go.
+    ///
+    /// The design's `dur||5` default is kept. Calling it with no tone running is a no-op, as
+    /// it is upstream (`if(!this.lightNode||!this.ctx)return`), so a leave that happens twice
+    /// or happens first costs nothing.
+    func lightOff(dur: Double = 5) {
+        guard let voice = lightToneVoice else { return }
+        lightToneVoice = nil
+        voice.fadeOut(seconds: dur)
+    }
+
+    // MARK: - F2 · THE RETURN'S OWN SOUND
+    //
+    // The Return opened on the ordinary field bed and struck a generic bowl. Both of its own
+    // voices were missing, and they are the two that say what a return IS.
+
+    /// `agedBed(84, 13)` — `field-sound.js:74-87`. *"patina — the same bed, aged. The Return
+    /// opens here."*
+    ///
+    /// Not a different bed: **the same bed, older.** Root 84 instead of 110, breathing at 13s
+    /// instead of 10, the warmth closing in as the filter falls 900 → 430 over 6s, the root
+    /// settling a few cents flat (`×0.996`) and the fifth further (`×0.994`) over 8, and a
+    /// slow tape wobble at 0.07 Hz on the root. Everything that happens to a recording that
+    /// has been kept.
+    ///
+    /// **WHAT THE APP CAN DO OF THAT, AND WHAT IT CANNOT.** `BreathVoice` bakes its cutoff and
+    /// its LFO at init (STAGE A1's own note), so the filter's close and the breath's slowing
+    /// have no scalar here. What it CAN do is the pitch: a snapshot at 84 with the fifth flat
+    /// by 0.6% is the aged bed's actual interval, and it is a crossfade away. So the bed ages
+    /// in pitch and not yet in warmth, and the rest is recorded rather than faked.
+    func agedBed() {
+        guard isRunning else { return }
+        setBaseBreathSnapshot(VoiceSnapshot(rootHz: 84, binauralHz: 4,
+                                            level: 0.12, brightness: 0.22,
+                                            texture: .sine, bed: .field))
+    }
+
+    /// `ring(step)` — `field-sound.js:172-190`. **The audible twin of the eccentric ring
+    /// settling into true.**
+    ///
+    /// `R = [2, 3, 4, 4.5, 6, 8]` on the aged bed's own 84, so each return lands one step
+    /// further up the series — and it **enters 1.5% flat and comes into tune over 4s**:
+    /// `o.frequency.setValueAtTime(hz*0.985, t)` then `linearRampToValueAtTime(hz, t+4)`.
+    ///
+    /// *"it grows outward; never strikes."* The envelope is the opposite of a bowl's: up to
+    /// 0.036 over **3.2s**, down to 0.020 by 6, and to zero at 9. A ring is not struck. It
+    /// forms.
+    ///
+    /// The 0.985 is the same figure the spine threshold enters on, and for the same reason:
+    /// a thing arriving out of true and pulling into it is heard as arriving. `ReturnStrata`
+    /// draws a hand-wobbled ring that is never a true circle; this is that, in pitch.
+    func ring(step: Int) {
+        let R: [Double] = [2, 3, 4, 4.5, 6, 8]
+        let hz = 84 * R[max(0, min(R.count - 1, step))]
+        playCeremony(CeremonyVoice(hz: hz * 0.985, peak: 0.036,
+                                   attackSeconds: 3.2, releaseSeconds: 5.8,
+                                   synth: .sineOctave,
+                                   endHz: hz, glideSeconds: 4.0,
+                                   envelope: .linearToZero),
+                     maxWait: 9.4)
+    }
+
+    /// `darkReturns()` — *"walking back out — the dark returns, and with it the
+    /// breathing."* `field-sound.js:315-322`. **AUDIT E4.1 / G3.1.**
+    ///
+    /// THE APP LEAKED SILENCE. `lightVeilLift` ramps the bed's level to zero on the way in
+    /// (`:600`, `currentBreath?.crossfadeLevel.write(bedFrom * (1 - f))`) and nothing ever
+    /// put it back — `LightView`'s walk-back-out called no sound at all. Every trip through
+    /// the Light left the whole app quieter than it was found, permanently, for the rest of
+    /// the session.
+    ///
+    /// The design restores three things over 7s: the bed's filter to 900, its LFO to 0.1
+    /// and its gain to 0.030. Only the third has an equivalent here, and this is why:
+    /// `BreathVoice` bakes its cutoff (from `snapshot.brightness`) and its 0.1 Hz LFO at
+    /// init and exposes neither, so the app's `lightBreathIn` never performed the other two
+    /// halves of the breath IN either — `Claude Design Round 2/design-source/spine-sound.js:63`'s per-voice filter nodes are
+    /// STAGE A1 and do not exist yet. Restoring what was never moved would be theatre. So
+    /// this restores the level, and the room, and the other two stay open.
+    func darkReturns(dur: Double = 7) {
+        guard isRunning else { return }
+        naveTask?.cancel()
+        breathFadeTask?.cancel()
+        duckTask?.cancel()
+        let voice = currentBreath
+        let from = voice?.crossfadeLevel.read() ?? 0
+        let roomFrom = Double(room.wetDryMix)
+        room.loadFactoryPreset(.mediumRoom)          // out of the nave, back into the field's air
+        breathFadeTask = Task { @MainActor [weak self] in
+            let start = Date()
+            while !Task.isCancelled {
+                let f = min(1, Date().timeIntervalSince(start) / dur)
+                voice?.crossfadeLevel.write(from + (1.0 - from) * f)
+                self?.room.wetDryMix = Float(roomFrom + (50 - roomFrom) * f)
+                if f >= 1 { return }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
+    }
+
+    /// The Sealing bowl — struck once, long decay while the bed holds.
+    func riteBowl(hz: Double) {
+        playCeremony(Self.bowlVoice(hz: hz), maxWait: 12)
+        duckBreath()
+    }
+
+    /// `prefers-reduced-motion` — **suppresses EVENTS and leaves the BED.**
+    ///
+    /// The design's rule (`HANDOFF-VERIFICATION.md`, Pass 7) is precise about the asymmetry:
+    /// what goes is the one-shot — the bowl, the threshold, the presence, the drain. What
+    /// stays is the continuous ground, because the bed is not motion; it is the room being
+    /// there. Silencing it would make reduced-motion mean "off", which it does not.
+    ///
+    /// Read from UIKit rather than SwiftUI's `@Environment` so the ENGINE can honour it at the
+    /// single choke point every event already passes through. A per-call-site check would be
+    /// eleven places to forget one.
+    private var eventsSuppressed: Bool { UIAccessibility.isReduceMotionEnabled }
+
+    /// `intoDelay` is VI's whole point: `send` and `arrive` connect to the bus AND the echo
+    /// line (`gn.connect(this.bus); if(this.echoIn)gn.connect(this.echoIn)`), so a thing sent
+    /// out *is already on its way back the moment he lets go*.
+    private func playCeremony(_ voice: CeremonyVoice, maxWait: Double, intoDelay: Bool = false) {
+        guard isRunning, !eventsSuppressed else { return }
         engine.attach(voice.sourceNode)
         let format = voice.sourceNode.outputFormat(forBus: 0)
-        engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        if intoDelay {
+            engine.connect(voice.sourceNode,
+                           to: [AVAudioConnectionPoint(node: engine.mainMixerNode,
+                                                       bus: engine.mainMixerNode.nextAvailableInputBus),
+                                AVAudioConnectionPoint(node: delay, bus: 0)],
+                           fromBus: 0, format: format)
+        } else {
+            engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: format)
+        }
         let deadline = Date().addingTimeInterval(maxWait)
         Task { @MainActor [weak self] in
             while !voice.isDone && Date() < deadline {
@@ -510,6 +1402,16 @@ final class SoundEngine: ObservableObject {
         let format = ink.sourceNode.outputFormat(forBus: 0)
         engine.connect(ink.sourceNode, to: engine.mainMixerNode, format: format)
         inkVoice = ink
+    }
+
+    /// `inkTouch()` — `field-sound.js:203-209`. One keystroke; the field leans in.
+    ///
+    /// Guarded exactly as the design guards it — `if(!this.inkNode||this.muted||reduced)` —
+    /// so it is silent with no ink running, silent when muted, and silent under Reduce
+    /// Motion. `eventsSuppressed` is this app's name for the last of those.
+    func inkTouch() {
+        guard isRunning, !eventsSuppressed, let ink = inkVoice else { return }
+        ink.touch()
     }
 
     func inkOff() {
@@ -538,9 +1440,44 @@ final class SoundEngine: ObservableObject {
         engine.attach(g.sourceNode)
         engine.connect(g.sourceNode, to: engine.mainMixerNode, format: g.sourceNode.outputFormat(forBus: 0))
         glideVoice = g
+        // the stillness drone lives for as long as the axis does — it has no events
+        let sv = StillnessVoice()
+        engine.attach(sv.sourceNode)
+        engine.connect(sv.sourceNode, to: engine.mainMixerNode, format: sv.sourceNode.outputFormat(forBus: 0))
+        stillVoice = sv
+        // C7.4 / C7.6 · the surface and the throat. Both are SET every frame and never
+        // struck, so like the stillness drone they are made once and held.
+        let st = SurfaceNoiseVoice(q: 7, gainTau: 0.12, freqTau: 0.14, startCentre: 300)
+        engine.attach(st.sourceNode)
+        engine.connect(st.sourceNode, to: engine.mainMixerNode, format: st.sourceNode.outputFormat(forBus: 0))
+        strainVoice = st
+        let ru = SurfaceNoiseVoice(q: 0.9, gainTau: 0.08, freqTau: 0.10, startCentre: 260)
+        engine.attach(ru.sourceNode)
+        engine.connect(ru.sourceNode, to: engine.mainMixerNode, format: ru.sourceNode.outputFormat(forBus: 0))
+        rushVoice = ru
     }
     func setAxisGlide(hz: Double, level: Double) { glideVoice?.set(hz: hz, level: min(0.03, level)) }
     func stopAxisGlide() {
+        for v in [strainVoice, rushVoice].compactMap({ $0 }) {
+            v.set(gain: 0, centre: 300)
+            let n = v.sourceNode
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard let self else { return }
+                self.engine.disconnectNodeInput(n); self.engine.detach(n)
+            }
+        }
+        strainVoice = nil; rushVoice = nil
+        if let sv = stillVoice {
+            stillVoice = nil
+            sv.set(fill: 0, cut: true)
+            let n = sv.sourceNode
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(nanoseconds: 400_000_000)
+                guard let self else { return }
+                self.engine.disconnectNodeInput(n); self.engine.detach(n)
+            }
+        }
         guard let g = glideVoice else { return }
         glideVoice = nil
         g.set(hz: 136.1, level: 0)
@@ -553,7 +1490,7 @@ final class SoundEngine: ObservableObject {
     }
 
     private func playAxis(_ voice: AxisVoice, maxWait: Double) {
-        guard isRunning else { return }
+        guard isRunning, !eventsSuppressed else { return }
         engine.attach(voice.sourceNode)
         engine.connect(voice.sourceNode, to: engine.mainMixerNode, format: voice.sourceNode.outputFormat(forBus: 0))
         let deadline = Date().addingTimeInterval(maxWait)
@@ -568,56 +1505,104 @@ final class SoundEngine: ObservableObject {
         playAxis(AxisVoice(hzStart: hz, hzEnd: hz * 0.985, glideSeconds: 3.5, twinRatio: 2.0,
                            peak: 0.026, attackSeconds: 0.4, releaseSeconds: 7.5, mode: .twin), maxWait: 8)
     }
-    func axisStrain(_ f: Double) {                     // the surface under load
-        guard f > 0.04 else { return }
-        playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
-                           peak: f * f * 0.030, attackSeconds: 0.2, releaseSeconds: 0.5,
-                           mode: .noise, noiseCentre: 300 + f * 1500), maxWait: 1)
+    /// C7.4 · **THE SURFACE UNDER LOAD.** `canon/spine-sound.js:70-85` — one bandpass noise
+    /// source made once, then only `setTargetAtTime(f*f*0.030)` and `(300 + f*1500)`.
+    ///
+    /// Called EVERY FRAME from `The Instrument v3.html:5474`, with the argument
+    /// `IMM.on ? 0 : TR.tension*(1 - TR.push*0.35)` — so the strain is silent inside a
+    /// reading, and **eases as he pushes through**: a surface complains while it is holding
+    /// and stops complaining as it begins to give. The app had this as a one-shot with no
+    /// call sites at all, so the whole relationship was unavailable.
+    func setStrain(_ f: Double) {
+        let v = AxisSurface.strain(f)
+        strainVoice?.set(gain: v.gain, centre: v.centre)
     }
-    func axisGive(hz: Double) {                        // it breaks — noise + the destination threshold
+    /// C7.5 · **IT GIVES: THE STRAIN SNAPS AND THE FAR SIDE RINGS.**
+    /// `canon/spine-sound.js:87-96` — a bandpass noise burst at 1600/Q 0.8 from **0.055**,
+    /// and then, **inside the same call**, `this.threshold(hz)`.
+    ///
+    /// The app played the burst at 0.03 — 45% quiet — and **dropped the threshold entirely**,
+    /// so the snap had no far side. That is the whole sentence the mechanism makes: something
+    /// lets go, and the place you have arrived rings. A burst alone is a noise; the pair is a
+    /// crossing. The threshold is not a second event a caller may add — the design puts it in
+    /// `give`, so every giving rings by construction and no call site can forget it.
+    func axisGive(hz: Double) {
         playAxis(AxisVoice(hzStart: 0, hzEnd: 0, glideSeconds: 0.1,
-                           peak: 0.03, attackSeconds: 0.02, releaseSeconds: 0.5,
+                           peak: 0.055, attackSeconds: 0.02, releaseSeconds: 0.5,
                            mode: .noise, noiseCentre: 1600), maxWait: 1)
+        spineThreshold(hz: hz)                          // `:95` — the far side, in the same call
     }
-    func axisRush(dir: Double) {                       // the passage — noise sweeping through the throat
-        let from = dir > 0 ? 260.0 : 2600.0, to = dir > 0 ? 2860.0 : 400.0
-        playAxis(AxisVoice(hzStart: from, hzEnd: to, glideSeconds: 2.9,
-                           peak: 0.042, attackSeconds: 0.6, releaseSeconds: 2.4,
-                           mode: .noise, noiseCentre: from), maxWait: 3.5)
+    /// C7.6 · **THE PASSAGE, SOUNDED.** `canon/spine-sound.js:110-127` — *"falling through a
+    /// throat is not a threshold; it is a rush that builds, opens, and is swallowed by the
+    /// arrival."*
+    ///
+    /// The envelope is `sin(min(1,t)·π)` — an ARCH: nothing at the mouth, full at the middle,
+    /// nothing at the far side. The app played a fixed 2.9s sweep at the passage's start, so
+    /// it neither swelled nor was swallowed, and above all **it did not follow `passageT`** —
+    /// leaning into a crossing makes the fall faster (`:5447`) and the sound stayed the same
+    /// length. Driven every frame from `:5450`, and zeroed at `:5472` whenever no passage is
+    /// running, which is what stops a continuous voice.
+    func setRush(t: Double, dir: Double) {
+        let v = AxisSurface.rush(t: t, dir: dir)
+        rushVoice?.set(gain: v.gain, centre: v.centre)
     }
     func axisGate(hz: Double) {                        // a gate passing — hz×3 → hz×1.5
         playAxis(AxisVoice(hzStart: hz * 3, hzEnd: hz * 1.5, glideSeconds: 0.9,
                            peak: 0.03, attackSeconds: 0.1, releaseSeconds: 1.6, mode: .tone), maxWait: 2)
     }
-    func axisCarry(hz: Double) {                       // a perspective taken up — three rising steps
-        for (i, r) in [1.0, 1.5, 2.0].enumerated() {
-            let delay = Double(i) * 0.30
-            Task { @MainActor [weak self] in
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1e9))
-                self?.playAxis(AxisVoice(hzStart: hz * r, hzEnd: hz * r, glideSeconds: 0.1,
-                                         peak: 0.03, attackSeconds: 0.05, releaseSeconds: 6.5, mode: .tone), maxWait: 7)
-            }
-        }
-    }
-    func axisThin(_ f: Double) {                       // the stillness gate — a companion sweeping 261→348
-        guard f > 0.04 else { return }
-        playAxis(AxisVoice(hzStart: 261, hzEnd: 348, glideSeconds: 0.35,
-                           peak: f * f * 0.026, attackSeconds: 0.2, releaseSeconds: 0.4, mode: .tone), maxWait: 1)
+    /// E4.2 · the stillness drone. Continuous, riding the axis's own accumulator.
+    ///
+    /// `axisThin` was a 0.6s one-shot at `f²·0.026` ≈ 0.0003 — present in the code and below
+    /// the threshold of hearing. It also fired ONCE at `thin > 0.1` and then never again, so
+    /// the sound could not follow the fill it was made of.
+    func setStillness(fill: Double, touching: Bool) {
+        stillVoice?.set(fill: fill, cut: touching)
     }
     func axisUngrip() {                                // the field answering an opened hand — 174→232
         playAxis(AxisVoice(hzStart: 174, hzEnd: 232, glideSeconds: 1.2,
                            peak: 0.03, attackSeconds: 0.3, releaseSeconds: 3.4, mode: .tone), maxWait: 4)
     }
 
-    // MARK: - Resonance Depth hook (silent stub)
+    // MARK: - The bed holds its breath · AUDIT G3.3
 
-    // Reserved for the future voice layer. The Sound Layer's locked
-    // scope is three generated layers (Breath + room coloration +
-    // threshold tones) — no voice layer in this scope, so nothing to
-    // duck. The hook stays callable so StoryDetailView's Resonance
-    // Depth code path can be wired without conditional checks; this
-    // implementation is intentionally empty.
+    private var duckTask: Task<Void, Never>?
+
+    /// *"The bed holds its breath."* `field-sound.js:168-169` — when the bowl is struck the
+    /// bed falls to `0.006` at `t+1.2` and comes back to `0.030` at `t+9`.
+    ///
+    /// This was an empty stub with a comment reserving it for a voice layer that is not in
+    /// scope, and it had **no callers at all**. It is now what the design says it is: the
+    /// third of G3.3's three parts, and the reason the bowl reads as a strike rather than
+    /// as one more thing added on top of everything already sounding.
+    ///
+    /// The bed's own gain lives in the snapshot, so the duck is applied to the crossfade
+    /// level as a MULTIPLIER (`0.006/0.030`) — the one place the level is a ratio rather
+    /// than an absolute, and the only way to duck a voice whose resting level differs per
+    /// room without teaching every room its own ducked value.
     func duckBreath() {
-        // Intentionally empty — see the comment above.
+        guard isRunning, !eventsSuppressed, let voice = currentBreath else { return }
+        duckTask?.cancel()
+        let level = voice.crossfadeLevel
+        let from = level.read()
+        guard from > 0 else { return }
+        let to = from * BowlVoicing.duckFactor
+        duckTask = Task { @MainActor in
+            let start = Date()
+            while !Task.isCancelled {
+                let e = Date().timeIntervalSince(start)
+                if e < BowlVoicing.duckInSeconds {
+                    let f = e / BowlVoicing.duckInSeconds
+                    level.write(from + (to - from) * f)
+                } else if e < BowlVoicing.duckOutSeconds {
+                    let f = (e - BowlVoicing.duckInSeconds)
+                          / (BowlVoicing.duckOutSeconds - BowlVoicing.duckInSeconds)
+                    level.write(to + (from - to) * f)
+                } else {
+                    level.write(from)
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 50_000_000)
+            }
+        }
     }
 }
