@@ -179,10 +179,13 @@ struct LightView: View {
 
             VStack {
                 Spacer().frame(height: 90)
-                // the scene's name, fading as stillness deepens (comp The Light v2 approach)
+                // `The Light v2.html:680-681` — `opacity: 1 - prog*0.55`. **THE PLACE'S NAME
+                // STAYS.** It fades to a FLOOR of 0.45, never to nothing: he is going still in
+                // front of a named thing, and the name is the last thing to go because it is
+                // the only thing on the screen that says where he is.
                 Text(scene.title)
                     .font(.lora(20)).italic()
-                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.75 * (1 - still)))
+                    .foregroundStyle(BinduTheme.inkSecondary.opacity(1 - still * 0.55))
                     .multilineTextAlignment(.center).padding(.horizontal, 40)
                 Spacer()
                 if still > 0.18 {
@@ -196,9 +199,14 @@ struct LightView: View {
                 Text(LightCanon.touchOnce)
                     .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6 * (1 - still)))
+                // `:682-683` — `opacity: 1 - prog`. **THE SENTENCE GOES.** It is the
+                // invitation, and an invitation still on screen once he has accepted it is
+                // nagging. Held at a flat 0.4 the app had these two exactly INVERTED — the
+                // name faded to nothing and the sentence stood forever — so going still left
+                // the wrong line up.
                 Text(LightCanon.approachSubtitle)
                     .font(.lora(12)).italic()
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4))
+                    .foregroundStyle(BinduTheme.inkTertiary.opacity(1 - still))
                     .padding(.top, 6).padding(.bottom, 44)
             }
         }
@@ -214,10 +222,33 @@ struct LightView: View {
     // E1.1 · THE SIX, STANDING IN THE DAWN — and he chooses.
     //
     // Geometry is canon (`LightPlaces`, `spine-light.js:104-121`): five drifting in the open
-    // sky, the Far one low where a floor would be, hit radius 30. The LOOK is the app's — no
-    // comp draws these — so it is the register's own idiom and nothing more: a breathing point
-    // in the Light's cream with its title beneath, the Far one distinguished because its
-    // material is the nave and not the dawn.
+    // sky, the Far one low where a floor would be, hit radius 30.
+    //
+    // **THE LOOK IS CANON TOO, AND THE COMMENT THAT USED TO STAND HERE SAID OTHERWISE.** It
+    // read *"no comp draws these — so it is the register's own idiom"*, and `spine-light.js:186-204`
+    // (extracted from `The Instrument v3.html:4074-4091`) draws all six, term by term. A false
+    // statement about the corpus is what licensed the invention: nobody looked again, because
+    // the file said there was nothing to look at.
+    //
+    // What the design actually says, and the app had inverted:
+    //
+    //   · TWO MATERIALS, NOT ONE. `far ? pc : c` — the Far one is `pool` #FBF9F4, the stone;
+    //     the five futures are `hex` #EDE3CE, the dawn. The app drew all six in one invented
+    //     #F5F0E8, so the Light's two materials became one.
+    //   · THE FAR ONE IS DIMMEST. `far ? 0.40 : 0.62`. The app had `far ? 0.55 : 0.85`.
+    //   · **THE FAR ONE IS SMALLEST** — `far ? 16 : 22` — and the app drew it BIGGEST, at
+    //     `far ? 17 : 13`. The relation was reversed, so the floor read as the brightest, most
+    //     present thing in the dawn.
+    //   · IT IS NOT A STAR. `:200-202` strokes a horizontal seam ±W·0.13 through it in stone
+    //     at `al*0.30`, under the design's own words: *"the Far one is a seam, not a star —
+    //     stone, below."* Absent entirely.
+    //
+    // Together the app made the floor the most prominent of the six futures, in the wrong
+    // material, as a star. The one thing that is NOT a future to be chosen was presented as
+    // the most choosable.
+    //
+    // KEPT, and app-own: the two-stage arm/name. The design places POINTS and the app must
+    // place titles too — see the note at the `VStack` below.
     private var choosingBody: some View {
         GeometryReader { geo in
             TimelineView(.animation) { tl in
@@ -239,13 +270,33 @@ struct LightView: View {
                         // and NAMES, the second enters. It fits this register especially —
                         // he approaches one of six futures and it tells him what it is before
                         // he commits to it — and it adds no instruction, only a name.
+                        // `:193` — `al = a*(far?0.40:0.62)`; the arm factor is the app's.
+                        let material = Color(hex: far ? LightCanon.pool : LightCanon.hex)
+                        let al = (far ? 0.40 : 0.62) * br * (armed == i ? 1.25 : 1)
+                        let halo = far ? 16.0 : 22.0            // `:195` — the Far one SMALLER
                         VStack(spacing: 9) {
-                            Circle()
-                                .fill(RadialGradient(
-                                    colors: [Color(hex: "#F5F0E8").opacity((far ? 0.55 : 0.85) * br * (armed == i ? 1.25 : 1)),
-                                             Color(hex: "#EDE3CE").opacity(0)],
-                                    center: .center, startRadius: 0, endRadius: far ? 17 : 13))
-                                .frame(width: far ? 34 : 26, height: far ? 34 : 26)
+                            ZStack {
+                                // `:196` — the wash, `al*0.55` at the centre to nothing.
+                                Circle()
+                                    .fill(RadialGradient(
+                                        colors: [material.opacity(al * 0.55), material.opacity(0)],
+                                        center: .center, startRadius: 0, endRadius: halo))
+                                    .frame(width: halo * 2, height: halo * 2)
+                                // `:198-199` — the point itself, `rr + br*0.5`, at full `al`.
+                                Circle()
+                                    .fill(material.opacity(al))
+                                    .frame(width: ((far ? 2.0 : 2.6) + br * 0.5) * 2,
+                                           height: ((far ? 2.0 : 2.6) + br * 0.5) * 2)
+                                // `:200-202` — *"the Far one is a seam, not a star — stone,
+                                // below."* A horizontal rule through it, and the only thing
+                                // in the dawn that is not a point of light.
+                                if far {
+                                    Rectangle()
+                                        .fill(Color(hex: LightCanon.pool).opacity(al * 0.30))
+                                        .frame(width: W * 0.26, height: 0.7)
+                                }
+                            }
+                            .frame(width: halo * 2, height: halo * 2)
                             if armed == i {
                                 Text(sc.title)
                                     .font(.loraItalic(12.5))

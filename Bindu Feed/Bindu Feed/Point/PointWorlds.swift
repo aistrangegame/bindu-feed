@@ -44,6 +44,29 @@ enum PointWorlds {
         }
         return out
     }
+    /// D5.5-a · **WHICH WALL EACH CHAMBER STAR IS ON**, resolved from the CONTENT rather than
+    /// from `PlacedStar.uni`.
+    ///
+    /// Lifted out of the view because the view is where the fault was, and a fault the tests
+    /// cannot reach is one the next pass repeats. `PointChamber.niches` was always correct;
+    /// what fed it was not.
+    ///
+    /// `PointWorlds.placed(_ universe:)` sets `uni: i` — the star's ORDINAL WITHIN its
+    /// universe, and it must keep meaning that, because worlds II and VII read it as a lane
+    /// index. The Chamber grouped by that ordinal and handed it over as a UNIVERSE index, so
+    /// every star was filed by its position in a list on a register whose whole third claim is
+    /// that **architecture is the argument**. Measured on the real content: The Others (one
+    /// star, *the wall you cannot walk around*) landed on the LEFT wall, and The Rules of Play
+    /// put four stars at the identical back-wall point — three of them unpressable.
+    static func chamberNiches(for present: [String]) -> [String: PointChamber.Niche] {
+        let chamber = PointContent.dimensions.first { $0.n == 4 }
+        let universes: [[String]] = (chamber?.universes ?? []).prefix(3).map { u in
+            u.stars.filter(present.contains)      // the universe's own order, mounted stars only
+        }
+        return Dictionary(uniqueKeysWithValues:
+            PointChamber.niches(universes: Array(universes)).map { ($0.id, $0) })
+    }
+
     // A universe's aggregate walked-status: ● all walked · ◐ some walked/in-progress · ○ none.
     static func status(_ universe: PointUniverse) -> Int {
         let sts = universe.stars.compactMap { k in PointContent.stars.first(where: { $0.key == k })?.st }
@@ -680,12 +703,28 @@ private struct WorldChamber: View {
     /// D · `world-four.js:135` — `easing`, at 0.8. *"THE WALL EASED. WHAT WAS STRUCK STAYS
     /// STRUCK."* The one closing line that says what the world KEEPS, not what it lets go.
     @State private var easing = PointLeaving.decay(dimension: 4)!
-    /// The niches, built once from the stars' own universe membership — the same three-way
-    /// split `PointChamber.niches` expects.
+    /// The niches — **built from the stars' REAL universe membership, read from the content,
+    /// not from `PlacedStar.uni`.**
+    ///
+    /// D5.5-a · THE WALL INDEX, and it is the one place in this build where AUTHORED CONTENT
+    /// WAS UNREACHABLE. `PointWorlds.placed(_ universe:)` sets `uni: i` — the star's ORDINAL
+    /// WITHIN its universe, and its own comment says so, because worlds II and VII read it as
+    /// a lane index. This grouped by that ordinal and handed it to `PointChamber.niches` as a
+    /// UNIVERSE index. The Chamber's whole third claim is that ARCHITECTURE IS THE ARGUMENT —
+    /// the Vessel on the left wall at working height, the Rules underfoot, the Others on the
+    /// wall you cannot walk around — and every star was being filed by its position in a list.
+    ///
+    /// Measured, on the real content:
+    ///   · **The Others** (one star — the wall you cannot avoid) landed on the LEFT wall.
+    ///   · **The Rules of Play** (six stars) put four at the identical back-wall point
+    ///     `(d: 0.27, h: 0.16)`, because `niches` only builds three walls and `chamberPlace`
+    ///     falls through to one fixed coordinate past that. **Three of those four could not be
+    ///     pressed at all** — four marks drawn on top of each other.
+    ///
+    /// Fixed HERE rather than in `placed(_ universe:)`, which must keep meaning the ordinal.
+    /// The Chamber is dimension 4, so its universes are the authority on which wall a star is.
     private var niches: [String: PointChamber.Niche] {
-        let byUni = Dictionary(grouping: stars, by: \.uni)
-        let universes = (0..<3).map { u in (byUni[u] ?? []).map(\.id) }
-        return Dictionary(uniqueKeysWithValues: PointChamber.niches(universes: universes).map { ($0.id, $0) })
+        PointWorlds.chamberNiches(for: stars.map(\.id))
     }
 
     /// A star's point in the drawn room. A star with no niche (a fourth universe, if one ever

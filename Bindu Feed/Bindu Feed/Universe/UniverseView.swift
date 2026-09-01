@@ -683,8 +683,13 @@ struct UniverseView: View {
         ctx.draw(Text("You came down to it yourself.")
                     .font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary.opacity(open)),
                  at: CGPoint(x: cx, y: cy - 64))
-        ctx.draw(Text.spaceMono("OPEN THE RETURN", 9, .asWritten)
-                    .foregroundStyle(Color(hex: "#E5533C").opacity(0.7 * open)),
+        // The mouth's label speaks in the chrome's ink, tracked, like every other mono
+        // caption in this canvas — the sibling twenty lines up (`TOUCH TO READ`) is bone at
+        // 0.4 with `em: 0.22`. In ember and untracked it read as the one lit control on the
+        // screen rather than as a threshold being named, which is the opposite of what a
+        // mouth at the bottom of a fall is: it does not solicit, it is simply what is there.
+        ctx.draw(Text.spaceMono("OPEN THE RETURN", 9, em: 0.22, .asWritten)
+                    .foregroundStyle(BinduTheme.inkPrimary.opacity(0.5 * open)),
                  at: CGPoint(x: cx, y: cy + r + 26))
     }
 
@@ -1436,10 +1441,25 @@ struct UniverseView: View {
         if gath > 0.004 {
             let set = max(0, min(1, (d - 0.17) / 0.16))
             let S = min(W * 0.40, 158)
+            // `Claude Design Round 1/comps/The Universe v2.html:945-952` — *"which story they
+            // are sitting with"*, and BOTH captions ride the same ramp:
+            //
+            //     var ta = L.gath*(set-0.35)/0.65;
+            //     8px Space Mono at ta*0.30 · italic 14px Lora at ta*0.58
+            //
+            // **THE STORY'S NAME ARRIVES; IT DOES NOT SWITCH ON.** The app snapped both in at
+            // `set > 0.35` and drew the title UPRIGHT at full primary ink — the brightest,
+            // most declarative thing in the fall, appearing between one frame and the next.
+            // The company is gathering around a story: the name should surface with them, as
+            // a murmur at 0.58 in the bone italic the rest of this canvas speaks, not as a
+            // headline that announces itself the instant the threshold is crossed.
             if set > 0.35 {
-                ctx.draw(Text.spaceMono(story.codexId, 9, .asWritten).foregroundStyle(BinduTheme.inkTertiary),
-                         at: CGPoint(x: cx, y: cy - hal * 0.42 - 18))
-                ctx.draw(Text(story.title).font(.lora(16, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary),
+                let ta = gath * (set - 0.35) / 0.65
+                ctx.draw(Text.spaceMono(story.codexId, 8, em: 0.0, .asWritten)
+                            .foregroundStyle(BinduTheme.inkPrimary.opacity(ta * 0.30)),
+                         at: CGPoint(x: cx, y: cy - hal * 0.42 - 15))
+                ctx.draw(Text(story.title).font(.loraItalic(14))
+                            .foregroundStyle(BinduTheme.inkPrimary.opacity(ta * 0.58)),
                          at: CGPoint(x: cx, y: cy - hal * 0.42))
             }
             // `uni-field.js:52-73 company()` — the fan seats the COMPANY, not the raw voice

@@ -22,6 +22,16 @@ struct LightScene: Identifiable {
 }
 
 enum LightCanon {
+
+    /// `canon/spine-light.js:100` — `hex:'#EDE3CE', pool:'#FBF9F4'`.
+    ///
+    /// **THE LIGHT HAS TWO MATERIALS AND THE DISTINCTION IS THE REGISTER'S SUBJECT.** `hex` is
+    /// the dawn — what the five futures are made of. `pool` is the stone — what the nave and
+    /// the Far scene are made of. `draw()` (`:186-204`) selects between them on one line,
+    /// `far ? pc : c`, and the Far one is additionally drawn smaller, dimmer and struck
+    /// through with a seam, because it is *"a seam, not a star — stone, below."*
+    static let hex  = "#EDE3CE"
+    static let pool = "#FBF9F4"
     // Verbatim once-ever line the gate speaks — the inversion of a normal surface's
     // "It holds until you mean it."
     static let gateLine = "It holds until you stop meaning it."
@@ -249,11 +259,26 @@ enum LightCanon {
 ///   *"The five Future scenes drift in the open sky; the Far one waits low, where a floor
 ///    would be."*
 ///
-/// The GEOMETRY is canon — `place()` and `hit()`'s radius 30 and `ORDER` are verbatim. The
-/// LOOK is not: no comp renders these. `The Light v2.html` goes straight to `SCENES[which]`,
-/// so the six-in-the-dawn exists only as this mechanism. Drawn here in the register's own
-/// idiom — a breathing point in the Light's cream with its title beneath — and said plainly
-/// rather than implied to be ported.
+/// The GEOMETRY is canon — `place()` and `hit()`'s radius 30 and `ORDER` are verbatim.
+///
+/// **AND SO IS THE LOOK. THIS COMMENT USED TO SAY OTHERWISE AND IT WAS WRONG.** It read
+/// *"no comp renders these"*, and `canon/spine-light.js:186-204` — `L.draw`, extracted from
+/// `The Instrument v3.html:4074-4091` — renders all six: two materials (`far ? pool : hex`),
+/// alphas 0.40/0.62, halo radii 16/22 with the FAR one smaller, a core point at `rr + br*0.5`,
+/// and a stone seam struck through the Far one because it is *"a seam, not a star — stone,
+/// below."* The claim was true only of `The Light v2.html`, which does go straight to
+/// `SCENES[which]` — one file checked, and the conclusion written as though the corpus had
+/// been. Corrected 2026-08-31; `LightView.choosingBody` now draws `:186-204`.
+///
+/// **SEARCH THAT ESTABLISHES IT, so this can be re-run rather than believed** (§10 — a
+/// comment asserting the design is SILENT must cite its search, because nothing checks a
+/// negative claim about a source):
+///   · `grep -rn "L.draw\|drawLightSide\|pts\[i\]" canon/ "Claude Design Round 1" "Claude Design Round 2"`
+///   · all three corpora, not one file. `canon/spine-light.js` is where it lives.
+///
+/// APP-OWN AND STILL APP-OWN: the two-stage arm/name. The design places POINTS, and six
+/// two-line titles at 0.058·H spacing collide; the arm is how the app gets a name onto a
+/// point without inventing an instruction.
 enum LightPlaces {
     /// `ORDER` — `spine-light.js:97`, and `LightCanon.scenes` is already in this order.
     static func place(_ W: Double, _ H: Double, _ t: Double) -> [CGPoint] {

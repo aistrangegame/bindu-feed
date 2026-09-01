@@ -476,7 +476,16 @@ private struct ReadFollowing: View {
                             // "take the ray and go" / "keep going", both invented.
                             Text(followWord.uppercased())
                                 .spaceMonoTracked(8.5, em: 0.2)
-                                .foregroundStyle(hue.opacity(0.55))
+                                // The held word is the design's NEUTRAL INK, not the register's
+                                // hue. `The Instrument v3.html:2560/:2809/:3072` are all
+                                // `rgba('#EDE8E3', A*0.44)`; `:3369` is `A*0.46`, and the full
+                                // ladder runs 0.44·0.44·0.44·0.46·0.46·0.48·0.46 with worlds
+                                // V–VII each taking their own ink. **THE FIRST FOUR REGISTERS
+                                // DO NOT OWN THEIR CAPTIONS.** The design keeps this word out
+                                // of the world's palette until V, so taking colour is what
+                                // marks a world as having become its own place. Coloured
+                                // everywhere, all seven look alike and the ladder says nothing.
+                                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.44))
                                 .frame(maxWidth: .infinity)
                         }
                         ReadingFooter(star: s.star, hue: hue)
@@ -611,7 +620,9 @@ private struct ReadParting: View {
                         }
                         Text(partWord.uppercased())
                             .spaceMonoTracked(8.5, em: 0.2)
-                            .foregroundStyle(hue.opacity(0.55)).padding(.bottom, 120)
+                            // `:3072` — `rgba('#EDE8E3', A*0.44)`. See world II's note.
+                            .foregroundStyle(BinduTheme.inkPrimary.opacity(0.44))
+                            .padding(.bottom, 120)
                     }.allowsHitTesting(false)
                 }
             }
@@ -746,7 +757,12 @@ private struct ReadPressing: View {
                             // leaves nothing" / "bear down", both invented.
                             Text(pressWord.uppercased())
                                 .spaceMonoTracked(8.5, em: 0.2)
-                                .foregroundStyle(hue.opacity(press <= 0.05 ? 0.4 : 0.85))
+                                // `:3369` — `rgba('#EDE8E3', A*0.46)`, ONE steady value. The
+                                // app also jumped 0.4 → 0.85 on the press, so the word
+                                // brightened as he bore down: the caption answering the gesture
+                                // instead of naming it, which is the Chamber's whole subject
+                                // stated twice, the second time by the label.
+                                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.46))
                         }
                         .contentShape(Rectangle())
                         .gesture(DragGesture(minimumDistance: 0)
