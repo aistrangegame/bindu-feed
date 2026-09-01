@@ -66,7 +66,11 @@ Bindu Feed is a living consciousness feed — an iOS SwiftUI app that renders on
 
 **Phases 1–9 complete** as of 2026-06-14. **Sound Layer landed 2026-06-15**. **The Instrument era (Aug 2026) is built and on `main`** — the whole app rebuilt as one continuous fifteen-register axis (the Universe, the seven Point worlds, the Light, the Rite, the Return, the Metal multi-shell shader, the ladder + particle-name chrome, the centre bloom). It is structure-complete and sim-verified end-to-end; the *felt* layer (drag physics, motion timing, binaural sound) is validated on Ashrey's device "Neev", not the sim. See the source-of-truth section above and §3 for where it lives.
 
-- iOS 17.6 deployment target (project.pbxproj); spec/intent is iOS 16+ — see §11
+- **iOS 18.0 deployment target** (`project.pbxproj`, all six configurations); spec/intent was
+  iOS 16+ — see §11. **This doc said 17.6 until 2026-08-31 and the project says 18.0**; the
+  drift surfaced from the first Release ARCHIVE, whose `MinimumOSVersion` is 18.0. It
+  matters for the walk rather than in the abstract: TestFlight will not offer the build to
+  a device below 18.0, so Neev must be on 18 or later before the deploy.
 - iPhone only, portrait only, dark mode only
 - No third-party dependencies
 
@@ -750,7 +754,7 @@ Surfaced during the Phase 9 audit, intentionally postponed. None block anything;
 | `onChange(of:perform:)` iOS 17 deprecation | ~10 sites | Widespread pre-existing pattern; modernize in one pass |
 | `terra` property name in AshVoiceView | AshVoiceView | Returns user's arrival color now, not necessarily terra. Cosmetic rename |
 | Resonance Depth phase timings (3s / 3s / 4s) | StoryDetailView | Hardcoded; configurable later if desired |
-| **iOS deploy target 17.6 vs spec 16+** | project.pbxproj | A real decision, but for before any public release, not before now |
+| **iOS deploy target 18.0 vs spec 16+** | project.pbxproj | A real decision, but for before any public release, not before now. Corrected from a documented 17.6 on 2026-08-31 — the project has been 18.0 in all six configurations; the first Release archive is what surfaced it. **Check Neev's iOS version before the TestFlight walk.** |
 | Ash→Ash threading parent hint | AshVoiceView | `fetchFieldCommentsByIds` is now `Type='Field Comment'` only — Ash-as-parent chains lose the "↩ In reply to" hint. **Currently moot** (all Ash comments are top-level; no app path creates Ash-as-parent replies). If needed later, add a separate `fetchAshCommentsByIds` |
 
 ---

@@ -234,6 +234,13 @@ enum InstrumentField {
 /// reachable by no state at all, fenced behind a Universe-wide guard. A string that exists
 /// and cannot be reached passes every checker in this build.
 enum InstrumentNames {
+
+    /// B0.5 · `The Instrument v3.html:1302` — the recognition at the sky, said once and only
+    /// when he has held still past `dwell > 0.62`. Held here rather than at the call site so
+    /// it sits with the other authored strings the axis speaks, and so the domain that
+    /// reaches it can be walked the way the nine particle names are.
+    static let dwellRecognition = "This is what you look like from outside."
+
     /// `The Instrument v3.html:1070-1080` — nine names, thresholds
     /// `−4.4, −3.4, −2.4, −1.4, −0.4, 0.6, 1.6, 8.6`.
     static func particle(_ z: Double) -> String {
@@ -583,6 +590,19 @@ enum Immersion {
     /// The `0.94` is NOT the rail's `0.9`: at a full crossing this leaves 0.06 and the rail
     /// leaves 0.10, two residues on two elements a reader would assume share a number.
     static func worldLayer(immA: Double, dom: Double) -> Double { (1 - immA) * (1 - dom * 0.94) }
+
+    /// C5.10 · `The Instrument v3.html:5647` — `if(Z>9.5&&!splitDone)doSplit();`, and
+    /// `doSplit` (`:5763-5766`) zeroes `#where`, closes the sheet and takes the door off.
+    ///
+    /// **AT THE CENTRE THE INSTRUMENT HAS NOTHING LEFT TO SAY.** Past 9.5 the chrome is not
+    /// faded, it is GONE — the ladder, the way back, the captions. The app's chrome kept
+    /// talking over the bloom, so the last register read as one more place with furniture
+    /// rather than as the instrument falling silent. That is the whole difference between
+    /// arriving somewhere and arriving at the end.
+    ///
+    /// A hard cut, not a ramp, because the design's is: `doSplit` fires once and sets opacity
+    /// to 0. The bloom underneath is the continuous thing; the chrome's job is to stop.
+    static func chromeSilenced(z: Double) -> Bool { z > 9.5 }
 
     /// **THE ONE DOMINANCE COEFFICIENT, so it cannot be `1.0` on one caption and `0.9` on
     /// another.** `1 − dom*0.9` — the factor the chrome comes back through after a landing.

@@ -118,8 +118,11 @@ struct PracticeDoorView: View {
                 let label = labelText(for: content)
                 if !label.isEmpty {
                     Text(label)
-                        .spaceMonoTracked(10)
-                        .tracking(2.4)
+                        // `spaceMonoTracked` applies `.tracking(em * size)` to the Text
+                        // INSIDE it (`Theme.swift:151`), so a View-level `.tracking` after
+                        // it never reaches the glyphs — the label shipped at 0 tracking
+                        // while reading as though it had been set. 2.4pt at 10 = 0.24em.
+                        .spaceMonoTracked(10, em: 0.24)
                         .foregroundColor(accent.opacity(0.66))
                         .padding(.bottom, 36)
                 }
@@ -242,8 +245,7 @@ struct PracticeDoorView: View {
             }
             if !story.codexId.isEmpty {
                 Text(story.codexId)
-                    .spaceMonoTracked(10)
-                    .tracking(0.6)
+                    .spaceMonoTracked(10, em: 0.06)
                     .foregroundColor(BinduTheme.inkTertiary)
             }
         }
@@ -251,8 +253,7 @@ struct PracticeDoorView: View {
 
     private var tapHint: some View {
         Text("TAP TO CROSS")
-            .spaceMonoTracked(9)
-            .tracking(1.6)
+            .spaceMonoTracked(9, em: 0.18)
             .foregroundColor(BinduTheme.inkTertiary)
             .opacity(0.24 + 0.31 * breath.value)   // the one master breath
     }

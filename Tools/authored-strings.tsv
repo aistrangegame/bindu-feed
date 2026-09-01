@@ -1835,7 +1835,7 @@ REVIEW	There is only the day, arriving, and you moving with it.	Claude Design Ro
 REVIEW	third return	Claude Design Round 2/design-source/world-six.js [js-literal]
 REVIEW	This instrument needs a live graphics context.	Claude Design Round 1/The Instrument v3.html;Claude Design Round 2/design-source/The Instrument v3.html [js-literal]
 REVIEW	This is the morning you already know how to have.	Claude Design Round 1/comps/The Light - S-L01 Dawn.html [js-literal]
-REVIEW	This is what you look like from outside.	Claude Design Round 1/The Instrument v3.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/uni-deep.js [js-literal]
+REQUIRED	This is what you look like from outside.	Claude Design Round 1/The Instrument v3.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/uni-deep.js [js-literal]
 REVIEW	This room was built to hold it.	Claude Design Round 1/comps/The Signal Space.html;Claude Design Round 2/design-source/The Signal Space.html [js-literal]
 REVIEW	Three Generations	Claude Design Round 1/The Instrument v3.html;Claude Design Round 1/comps/Game View.html;Claude Design Round 1/comps/The Universe v2.html;Claude Design Round 1/comps/The Universe v3.html;Claude Design Round 1/comps/uni-rooms.js;Claude Design Round 2/comps/The Seam.html;Claude Design Round 2/design-source/The Instrument v3.html;Claude Design Round 2/design-source/The Universe v3.html;Claude Design Round 2/design-source/uni-rooms.js [js-literal]
 REVIEW	three presences, in their own timbres	Claude Design Round 2/comps/The Sound.html [js-literal]

@@ -202,8 +202,11 @@ struct InstrumentView: View {
             // The particle's self-name at this scale (#pname), floated just beneath it.
             particleNameLabel
 
-            // The ladder (#rail) — where he is on the fifteen-register axis.
-            ladderRail
+            // The ladder (#rail) — where he is on the fifteen-register axis, and it stops
+            // existing past 9.5. C5.10 · `:5647` → `doSplit`.
+            if !Immersion.chromeSilenced(z: z) {
+                ladderRail
+            }
 
             // The seam — the two directions, named, at the Feed's own scale.
             axisSeam
@@ -253,7 +256,7 @@ struct InstrumentView: View {
             // The design never has to choose: its reading is an opaque `.ovl` over the host
             // chrome, so during a reading only the reading's own back exists. That is the same
             // recession `#where` and `#pname` now make, on the same signal.
-            if !pointHolds {
+            if !pointHolds && !Immersion.chromeSilenced(z: z) {
             HStack {
                 Button {
                     // B7.5 · one scale at a time. `The Universe v3.html:1701-1710` walks him
@@ -402,10 +405,15 @@ struct InstrumentView: View {
             travel.onCross = { left in
                 soundEngine.axisTrail(hz: left.hz)             // what he left, still sounding
             }
+            // C7.7 · `:5451` — the two gates inside every crossing, at `PS.to`'s pitch.
+            travel.onGate = { to in soundEngine.axisGate(hz: to.hz) }
             travel.onLand = { reg in
                 soundEngine.axisGive(hz: reg.hz)       // `:5452` — at the landing, the destination's pitch
                 if reg.key == "gate" {
-                    soundEngine.axisGate(hz: reg.hz)
+                    // C7.7 · the TONE moved to `travel.onGate` — `:5451` sounds a gate from
+                    // inside a passage, and this branch was a name collision with the
+                    // register that happens to be called the gate. The journey mark stays:
+                    // reaching that register is a real event, it just is not this sound.
                     PointJourney.reachedGate = true
                 } else if reg.key == "centre" {
                     // `resolve` — `spine-sound.js`. **APP-OWN CALLER, AND LABELLED SO.**
@@ -822,6 +830,27 @@ struct InstrumentView: View {
                 // INSIDE `:5598`'s globalAlpha. The caption below is not — `#trav .once` is a
                 // separate element, so the fade is scoped to the ring rather than the block.
                 .opacity(worldLayer)
+
+                // B0.5 · `The Instrument v3.html:1297-1302` — *"the recognition, said once,
+                // and only when he has held still."*
+                //
+                //     if(this.dwell>0.62){ … rgba(U.BONE, p*min(1,(dwell-0.62)/0.30)*0.72)
+                //       x.fillText('This is what you look like from outside.', W/2, H-126); }
+                //
+                // **THE ONE SENTENCE THE INSTRUMENT SAYS BACK TO HIM**, and it had never been
+                // built: `dwell` was published, fed to the shader, and read by no text. The
+                // threshold is the point of it — 0.62 of a 3.33s fill is past any accidental
+                // pause, so it cannot be met by putting the phone down mid-gesture. It arrives
+                // over the next 0.30 and it never repeats itself louder.
+                if travel.dwell > 0.62 {
+                    Text(InstrumentNames.dwellRecognition)
+                        .font(.loraItalic(15))
+                        .foregroundStyle(BinduTheme.inkPrimary
+                            .opacity(min(1, (travel.dwell - 0.62) / 0.30) * 0.72))
+                        .multilineTextAlignment(.center)
+                        .position(x: geo.size.width / 2, y: geo.size.height - 126)
+                        .transition(.opacity)
+                }
                 // C3.3 · **ONCE, EVER — and in the design's own medium.** This was shown on
                 // every visit, lowercase, at 12pt: a caption that reappears is a caption, and
                 // the design's is *"the one thing the surface is ever allowed to say, once,
@@ -907,6 +936,14 @@ struct InstrumentView: View {
         case "d1", "d2", "d3", "d4", "d5", "d6", "d7":
             PointWorldView(dimensionN: here.z - 1, liveZ: travel.z, path: $path,
                            onReturn: {
+                               // `spine-axis.js:60-69` gives BOTH ceremony doors into the
+                               // Return the same 126 Hz — the deep one out of world VI and the
+                               // Universe's mouth at z = −1 (`UniverseView.swift:225`). The
+                               // door's own line is *"This depth and that descent are the same
+                               // room."*, and the shared tone is how that kinship is HEARD.
+                               // Unsounded, the deep door stopped being a threshold and became
+                               // a button — the only silent crossing in the instrument.
+                               soundEngine.fieldThreshold(hz: 126, dur: 9)
                                store.markDeparture(z: travel.z)
                                $path.pushDissolve(FeedRoute.returnCeremony(nil))
                            },
@@ -924,7 +961,21 @@ struct InstrumentView: View {
                                }
                            })
         case "centre":
-            PointRevealView(path: $path)
+            // C5.11 · `:5647` — `if(Z>9.5 && !splitDone) doSplit();`
+            //
+            // **THE CENTRE IS A PLACE HE ARRIVES AT; THE REVEAL IS SOMETHING HE PUSHES PAST IT
+            // TO EARN.** `here.key` becomes "centre" at z ≥ 8.5 — the midpoint between The
+            // Dance and the centre — and `PointRevealView` paints `Color.black` over
+            // everything, so a full register before he got there the screen went black and
+            // *"Every dot you touched was me"* had already begun. He met the ending on the way
+            // to the ending.
+            //
+            // The design holds it until 9.5, inside the 9.62 overshoot: past the bloom filling
+            // the frame, past the chrome going quiet. The register still mounts at 8.5 — he is
+            // AT the centre, and the particle blooms — but the reveal waits for the push.
+            if travel.z > 9.5 {
+                PointRevealView(path: $path)
+            }
         case "gate":
             AxisGateView()
         case "sky", "region", "world", "fall":
@@ -977,12 +1028,36 @@ private struct ThroatView: View {
                 ctx.stroke(Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2)),
                            with: .color(hue.opacity(a)), lineWidth: 0.6 + (1 - zz) * 2.0)
             }
+            // `The Instrument v3.html:3681-3689` — *"4 · the aperture at the far end — it
+            // opens, and then it FLOODS."* **THE CROSSING NEVER FLOODED.**
+            //
+            //     gg.addColorStop(0,    rgba(WHITE, min(1, 0.5+ap*0.5) * al));
+            //     gg.addColorStop(0.34, rgba(mixc(cto,WHITE,0.5), min(0.92, ap*0.95) * al));
+            //     gg.addColorStop(1,    rgba(cto, 0));
+            //
+            // Three differences and each one held the light back. The core topped out at
+            // **0.5** where the design ends at 1.0, so the far end never became white. The
+            // shoulder sat at `0.2·ap` in the raw destination hue where the design carries
+            // `min(0.92, ap·0.95)` in that hue MIXED HALF WITH WHITE — a fifth of the value,
+            // and the wrong colour to be pouring. And its stop sat at the gradient's midpoint
+            // rather than at **0.34**, so what light there was spread instead of concentrating.
+            //
+            // Together: he approached a glow and the scene cut. The design delivers him
+            // THROUGH a whiteout, which is the whole reason act 5 can bloom the new world out
+            // of the point he came through.
             let ap = pow(max(0, (t - 0.28) / 0.72), 2.5)
             if ap > 0 {
                 let ar = R0 * (0.02 + ap * 2.3)
                 ctx.fill(Path(ellipseIn: CGRect(x: cx - ar, y: cy - ar, width: ar * 2, height: ar * 2)),
-                         with: .radialGradient(.init(colors: [.white.opacity(0.5 * ap), hue.opacity(0.2 * ap), .clear]),
-                                               center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: ar))
+                         with: .radialGradient(
+                            Gradient(stops: [
+                                .init(color: .white.opacity(min(1, 0.5 + ap * 0.5)), location: 0),
+                                // `mixc(cto, WHITE, 0.5)` — the destination's hue, half white.
+                                .init(color: hue.mixedWithWhite(0.5)
+                                        .opacity(min(0.92, ap * 0.95)), location: 0.34),
+                                .init(color: hue.opacity(0), location: 1),
+                            ]),
+                            center: CGPoint(x: cx, y: cy), startRadius: 0, endRadius: ar))
             }
         }
     }

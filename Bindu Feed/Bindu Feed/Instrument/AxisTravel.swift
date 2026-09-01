@@ -111,6 +111,19 @@ final class AxisTravel: ObservableObject {
     /// `spine-sound.js:12-13` says was **replaced**. `AUDIT C7.11`.
     var onLand: ((AxisRegister) -> Void)?
 
+    /// C7.7 · `The Instrument v3.html:5451` — `if(ev==='gate') B.gate(S.REG[PS.to].hz);`
+    ///
+    /// **THE GATE IS AN EVENT INSIDE A CROSSING, NOT A PLACE ON THE AXIS.** The two gates at
+    /// `t = 0.34` and `0.68` are what give a passage a middle; the sound is *"a gate passing
+    /// over him"* (`canon/spine-sound.js:128`), a sine at `hz*3` gliding to `hz*1.5`. The app
+    /// fired it from `onLand` when `reg.key == "gate"` — the register at z = +1 that happens
+    /// to be NAMED the gate — so the one place it sounded was the one place the design does
+    /// not sound it, and every crossing's middle was silent.
+    ///
+    /// Carries `PS.to`'s pitch, not the register being left: the gate announces where the
+    /// passage is taking him. Never fires on a slip-through, because `gatesCrossing` does not.
+    var onGate: ((AxisRegister) -> Void)?
+
     // The hand.
     private var zv = 0.0, force = 0.0, back = 0.0
     /// Readable so the stillness drone can be cut the instant the hand arrives — E4.2's
@@ -382,6 +395,7 @@ final class AxisTravel: ObservableObject {
             where !gateHit[i] {
                 gateHit[i] = true
                 gateFlare = 1
+                onGate?(Axis.nearest(glideTo))     // `:5451` — `B.gate(S.REG[PS.to].hz)`
             }
             lastPassageT = tt
             gateFlare = Swift.max(0, gateFlare - dt * 2.2)      // `:262` flare decay

@@ -282,7 +282,14 @@ private struct RiteSealed: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
-            if phase >= 0 {
+            // E2.4 · `The Rite v3.html:1513/1521/1522` — `phase===0` / `===1` / `===2`.
+            // **THE SEALING SHOWS ONE THING AT A TIME.** The app tested `>=`, so the beats
+            // accumulated: by 7.6s his sealed words, *The room has changed.* and the room's
+            // glyph were all on screen together. The design REPLACES each beat with the
+            // next — what he wrote, then what it did, then where it landed — and a sealing
+            // that ends holding all three says he is being shown a summary rather than
+            // let go of. The timings at `:338`/`:341` were already the design's.
+            if phase == 0 {
                 VStack(spacing: 14) {
                     HStack(spacing: 8) {
                         Text(RiteAsh.glyph).foregroundStyle(RiteAsh.color)
@@ -299,14 +306,14 @@ private struct RiteSealed: View {
                 }
                 .transition(.opacity)
             }
-            if phase >= 1 {
+            if phase == 1 {
                 Text(RiteWord.sealChanged)
                     .font(.lora(16)).italic()
                     .foregroundStyle(BinduTheme.inkPrimary)
                     .transition(.opacity)
                     .padding(.top, 8)
             }
-            if phase >= 2 {
+            if phase == 2 {
                 VStack(spacing: 16) {
                     Text(data.roomGlyph)
                         .font(.system(size: 30))

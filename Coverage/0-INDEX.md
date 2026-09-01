@@ -65,3 +65,11 @@ surface, so a mis-paired value has nowhere to live unless it happens to break so
 reader noticed. No `TRANSPOSED` verdict survived — the seed instance (C5.2/C5.6) is repaired
 and no second clean swap exists; what stands is the same porting-by-eye one step less tidy:
 constants COLLAPSED onto one value, and pairs where only one member kept its own.
+
+## 13 · `13-RECORDED.md` — **THE STOP CONDITION'S OTHER HALF**
+2026-08-31. Ashrey's ruling: build only what changes what a surface SAYS or DOES; record
+everything that changes a number. 178 items triaged — the 106 sibling findings and all 72
+remaining rows (OPEN · PARTIAL · NEEDS-JUDGMENT). **44 pass the line (37 after dedup); 134 are
+recorded here with their findings intact, not closed and not lost.** A recorded item asserts
+something narrower than a CLOSED row: *the app makes the design's claim on this surface, at a
+different value.*

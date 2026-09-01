@@ -501,10 +501,17 @@ struct ReturnView: View {
             if let frame = prompt.frame, let quote = prompt.quote {
                 Text(frame).spaceMonoTracked(9, em: 1 / 9).foregroundStyle(BinduTheme.inkTertiary)
                 Text("\u{201C}\(quote)\u{201D}")
-                    .font(.loraItalic(15)).foregroundStyle(ReturnCanon.ashColor).saturation(0.85)
+                    .font(.loraItalic(15)).foregroundStyle(ReturnCanon.ashColor)
+                    .saturation(0.85).opacity(0.82)
                     .multilineTextAlignment(.center)
             }
-            Text(prompt.ask).font(.lora(18)).italic().foregroundStyle(BinduTheme.inkPrimary)
+            // `Claude Design Round 1/comps/The Return.html:650,652` — the ask is ash at 16,
+            // not bone-white at 18. **THE SCREEN IS WRITTEN IN THE RECORD'S VOICE.** Set in
+            // the primary ink and larger than anything around it, the question read as
+            // something he had typed rather than as what the sealed self is asking him —
+            // and it is the one line on the screen that is not his.
+            Text(prompt.ask).font(.lora(16)).italic()
+                .foregroundStyle(ReturnCanon.ashColor).opacity(0.92)
             TextEditor(text: $replyText)
                 .font(.lora(15)).foregroundStyle(BinduTheme.inkPrimary)
                 .scrollContentBackground(.hidden).frame(height: 120)

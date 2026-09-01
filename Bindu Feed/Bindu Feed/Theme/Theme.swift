@@ -1,6 +1,27 @@
 import SwiftUI
 
 extension Color {
+    /// `mixc(a, b, t)` — `The Instrument v3.html:1147`. The design mixes toward white in two
+    /// places the app draws: the passage aperture's shoulder stop (`:3687`) and the Light's
+    /// own washes. A colour half-mixed with white is not the same as that colour at half
+    /// alpha over black — the first stays saturated and gets brighter, the second desaturates
+    /// toward the ground — and the aperture is the one place in the instrument where the
+    /// difference decides whether a crossing floods or fades.
+    func mixedWithWhite(_ t: Double) -> Color {
+        let k = max(0, min(1, t))
+        #if canImport(UIKit)
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a)
+        return Color(.sRGB,
+                     red:   Double(r) + (1 - Double(r)) * k,
+                     green: Double(g) + (1 - Double(g)) * k,
+                     blue:  Double(b) + (1 - Double(b)) * k,
+                     opacity: Double(a))
+        #else
+        return self
+        #endif
+    }
+
     init(hex: String) {
         let trimmed = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
         var value: UInt64 = 0

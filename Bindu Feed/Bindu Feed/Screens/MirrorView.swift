@@ -146,7 +146,11 @@ struct MirrorView: View {
                 .spaceMonoTracked(9)
                 .tracking(1.8)
                 .foregroundColor(drawn ? BinduTheme.inkTertiary : BinduTheme.colorBindu.opacity(0.62))
-                .modifier(BreathingOpacity(active: !drawn, lo: 0.26, hi: 1.0, duration: 5))
+                // `The Mirror.html:40` — the hint breathes between 0.26 and **0.58**, never to full.
+                // At `hi: 1.0` the quietest surface in the room pulses to the same weight as
+                // the card it sits under, so the invitation competes with the reflection
+                // instead of waiting beneath it.
+                .modifier(BreathingOpacity(active: !drawn, lo: 0.26, hi: 0.58, duration: 5))
         }
     }
 

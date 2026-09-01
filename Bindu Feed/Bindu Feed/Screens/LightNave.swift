@@ -66,7 +66,16 @@ struct LightNave: View {
         // the other two are the missing procession, seen twice.
         let cam = still
         let calm = easedCalm
-        let lit = floodStart.map { min(1, (t - $0) / 3) } ?? 0   // the flood, timed in-canvas
+        // `The Light v2.html:742-743` — `flood` and `lit` are TWO ramps off one progress,
+        // and the app derived `lit` from the progress directly:
+        //     setFlood(p<0.42 ? p/0.42 : max(0,1-(p-0.42)/0.58))
+        //     setLit(min(1, max(0, (p-0.2)/0.4)))
+        // **THE STONE DOES NOT RESOLVE UNTIL THE LIGHT HAS BEEN IN THE ROOM A MOMENT.**
+        // `lit` starts at p = 0.2 and completes at 0.6, so the aperture opens onto a dark
+        // interior and the stone comes up under a light already falling. With `lit = p` the
+        // two happened together and the flood had nothing to arrive into.
+        let floodProgress = floodStart.map { min(1, (t - $0) / 3) } ?? 0
+        let lit = max(0, min(1, (floodProgress - 0.2) / 0.4))
         let ink: (Double, Double, Double) = lit > 0.5 ? (22, 19, 27) : (246, 243, 237)
         let lgt: (Double, Double, Double) = lit > 0.5 ? (255, 253, 248) : (246, 243, 237)
 
