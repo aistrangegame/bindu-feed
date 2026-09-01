@@ -1,4 +1,34 @@
-# 10 · OWED — every claim that needs the walk, and what the walk must show
+# 10 · THE WALK SCRIPT — every claim that needs the walk, and what the walk must show
+
+> ## ⛔ STOP. DO NOT OPEN THE APP UNTIL THE NINE BELOW ARE TRUE.
+>
+> **Ashrey gets ONE walk.** Eight of these change what a CORRECT app does, globally, in a way
+> the walk itself cannot reveal — so a run that begins without them records a dozen failures
+> against a build that is fine, and by the time the pattern is noticed **the walk is spent.**
+> The ninth is new and it is the one that stops the walk before it starts.
+>
+> | | check | where |
+> |---|---|---|
+> | **G0** | **The device is on iOS 18.0 or later** | Settings → General → About → iOS Version |
+> | **G1** | Reduce Motion is **OFF** | Settings → Accessibility → Motion |
+> | **G2** | The app's sound is **ON** — the control reads `◉ sound` | in-app Settings |
+> | **G3** | The silent switch is **OFF** | the physical ring/silent switch |
+> | **G4** | **No other audio** is playing | anything else sounding masks a 0.032 threshold |
+> | **G5** | Headphones, if used, are **DETECTED** — the binaural pair sounds wide | put them on before launch |
+> | **G6** | Display Zoom is **STANDARD** | Settings → Display & Brightness → View |
+> | **G7** | Low Power Mode is **OFF** | the battery indicator is not yellow |
+> | **G8** | **One continuous session** — do not relaunch mid-walk | and say so if you do |
+>
+> **G0 is a hard stop, not a VOID.** The deployment target is **iOS 18.0** in all six build
+> configurations — confirmed against the first Release archive's `MinimumOSVersion`, not
+> against the docs, which said 17.6 until 2026-08-31. **TestFlight will not offer the build to
+> a device below 18.0.** If the phone is on 17, there is nothing to walk: update first.
+>
+> **If any of G1–G8 cannot be evidenced, the affected rows are VOID — not FAILED.** The full
+> reasoning for each is in THE WALK GATE below; this box is the checklist, that section is why.
+
+---
+
 
 **Ashrey walks only the final version.** Nothing is held for him mid-build, nothing is
 staged for his approval, and no session ends by asking him to look at something. Every
@@ -150,6 +180,36 @@ nothing.**
 
 ---
 
+## 0c · ⬤ **THE SOUND HAS NEVER BEEN HEARD BY ANYONE. HIS FIRST WALK IS ITS FIRST HEARING.**
+
+Stated at the top rather than distributed through §1, because it is not a gap in the work —
+it is the one class of thing the harness cannot observe, and the walk should expect it rather
+than discover it.
+
+**What IS established, and it is not nothing.** Every value in the sound layer verifies by
+reading and by offline render: pitches against `VOICES` and `canon/spine-light.js`, peak gains
+and ramps against `canon/spine-sound.js`, the intervals, the beat frequencies, the bed's
+filter, the delay's parameters. `OfflineRender` measures signed differences — a peak before
+and after a law fires — and those numbers are real.
+
+**What CANNOT be established, by construction:**
+
+| | why the harness cannot reach it |
+|---|---|
+| **Whether 0.032 is audible under a 0.12 bed** | a rendered peak is a number; audibility at listening volume is a judgement |
+| **The binaural pair** | **the Simulator reports as built-in / no-headphones, so it runs the single-centred-tone fallback.** The dual-oscillator path has never rendered on any machine that could produce it. §15 records this as deploy-first by design. |
+| **Whether the four strike voices sound like four things** | they are measured APART; that the right voice is at the right moment is a walk (Coverage/9) |
+| **Mix balance across a whole session** | every level is individually correct and no one has heard them together |
+
+> ### EXPECT TO TUNE LEVELS. That is the expected outcome, not a defect report.
+>
+> A level that is wrong by ear is a **finding to record, not a failure of the build** — the
+> numbers are the design's, and what the walk adds is the one thing no reading can: whether
+> the design's numbers are right in this room, on this hardware, at his listening volume.
+> Write down which voice and roughly how far off; do not chase it during the walk.
+
+---
+
 ## 1 · The three that need ears, and only ears
 
 `7-STATE-OF-THE-BUILD.md` §5 names these as the only judgement calls in the sound layer.
@@ -235,6 +295,26 @@ not happened. A walk that meets one of these reads a working surface as a broken
 write — *"authored · for approval"*, *"one family"*. **Where the design names the content as an
 act, an empty surface is the mechanism working.** Before filing an empty surface as a defect,
 look for that sentence.
+
+---
+
+## 3c · NEW THIS PASS — the stop-condition batch, 2026-08-31
+
+Eighteen items that change what a surface SAYS were built after the walk line was drawn
+(`Coverage/13-RECORDED.md` holds the 134 that change only a value). These are the ones whose
+proof is a walk rather than a test.
+
+| # | What must be true | Why offline cannot reach it | What the walk must show |
+|---|---|---|---|
+| **N1 ⚠** | **The crossing FLOODS.** The aperture's core reaches white and he is delivered THROUGH it. | The gradient stops live inside a `Canvas` closure in `ThroatView`; an assertion would have to re-implement them, which is the tautology §10 forbids. Deliberately not tested. | Any register-to-register crossing, watched to the end: the far point **whitens out** before the new world blooms. **NULL-SHAPED:** a crossing that fades and one that floods both "end". Positive condition: the frame goes NEAR-WHITE at least once. |
+| **N2** | **Every crossing has a middle.** Two soft gates sound inside each 5.4s passage, at the destination's pitch. | `AxisTravel.onGate` firing twice is asserted; that it is AUDIBLE as a middle is not. | One earned crossing: **two soft events between departure and arrival**, distinct from the give at the landing. ⊘ VOID on G1 — one-shot. |
+| **N3** | **Held still at the sky, the instrument says one thing back.** *"This is what you look like from outside."* | The 2.07s dwell threshold is arithmetic; that the line arrives before he moves is a hand. | At the sky, hand OFF the glass, ~2s: the line fades in at H−126. ⊘ VOID on G7 — Low Power throttles the fill. |
+| **N4** | **He arrives at the centre before the reveal begins.** | `z > 9.5` is asserted; that the bloom fills and the chrome goes quiet BEFORE the black is a sequence in time. | Push past the Dance: the particle blooms, **the rail and the ‹ disappear**, and only then does *"Every dot you touched was me"* begin. |
+| **N5** | **The six futures: the Far one is the quietest.** | Colour and radius are asserted as constants; that the floor reads as a SEAM rather than a star is a look. | The Light's choosing: five points in the dawn, and the sixth **low, dimmer, smaller, in stone, with a line struck through it.** |
+| **N6** | **The Chamber's three walls hold their own universes.** | `ChamberWallsTests` proves the mapping and that no two stars share a point. That all eleven are REACHABLE by a finger is a gesture. | World IV: press each of the Rules of Play's **six** in turn — all six respond. Before this pass four sat at one point and three could not be pressed. |
+| **N7** | **The deep door out of world VI sounds.** | The call is one line; that it is the SAME tone as the Universe's mouth is an ear. | World VI's `open the return`, and the Universe's mouth at the bottom of the fall: **the same 126 Hz**, so the two doors are heard as one room. ⊘ VOID on G1. |
+| **N8** | **The Sealing shows one thing at a time.** | `phase == n` is a source fact; that the screen does not accumulate is a watch. | The Rite's Sealing at 0s / 3.6s / 7.6s: **three beats, one on screen at a time.** |
+| **N9 ⚠** | **The Gathering does not tap his wrist.** | An absence. | Movement III, ten minutes: **no haptic pulse.** **NULL-SHAPED:** a build with no haptic and a device with haptics disabled are the same experience. Positive control: another app's haptics work. |
 
 ---
 
