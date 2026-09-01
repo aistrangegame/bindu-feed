@@ -1484,7 +1484,6 @@ struct UniverseView: View {
             if stats.commentCount > stats.archetypes.count + 1 {
                 voices.append(store.ashArchetype?.name ?? "Ash")   // by record, never the string
             }
-            let m = max(1, voices.count)
             for (i, name) in voices.enumerated() {
                 let isAsh = name.lowercased() == "ash"
                 // B5.7 · **EACH KEEPS ITS OWN ORBIT UNTIL THE MOMENT IT SITS.** `:955` — every

@@ -788,7 +788,7 @@ private struct WorldChamber: View {
 
     var body: some View {
         GeometryReader { geo in
-            let W = geo.size.width, H = geo.size.height
+            let W = geo.size.width
             let spread = W * 1.7
             ZStack {
                 // D5.5 · the room is drawn on a clock now, because `pr` MOVES: the hand

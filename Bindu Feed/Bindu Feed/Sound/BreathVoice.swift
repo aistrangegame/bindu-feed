@@ -114,7 +114,12 @@ final class BreathVoice {
         let lfoIncrement = 2.0 * .pi * 0.1 / sampleRate    // 0.1 Hz
         let lfoDepth: Double = 0.12                         // ±12%
         let leftFreq = snap.rootHz
-        let rightFreq = snap.rootHz + snap.binauralHz
+        // The right channel is NOT `snap.rootHz + snap.binauralHz`. It is
+        // `snap.rootHz + curBeat` (below), because C1's laws converge the beat toward its
+        // target rather than jumping — `narrow`/`widen` move it while the voice runs, so a
+        // snapshot taken at voice-build time would freeze the one quantity that must move.
+        // The snapshot version was left behind when the beat became live; removing it is
+        // what the unused-value warning was pointing at, and the live path is the correct one.
         let centerFreq = snap.rootHz
         // `.field` — the fifth, at `fg.gain = 0.16` (`field-sound.js:63`). It is not a second
         // voice; it is the room's own overtone, sitting under the root at a sixth of it.

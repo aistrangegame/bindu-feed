@@ -17,7 +17,12 @@ import QuartzCore
 @MainActor
 final class Breath: ObservableObject {
     /// The canonical period. 0.1 Hz — one full inhale/exhale in 10 seconds.
-    static let period: Double = 10.0
+    /// `nonisolated` because it is an immutable `Double` and the tests, the offline render
+    /// and `exhaleDelay` all read it off the main actor. The isolation it inherited from
+    /// `@MainActor final class Breath` was never protecting anything — there is nothing to
+    /// race on a `let` — and it is the one warning the compiler says outright becomes an
+    /// ERROR in Swift 6 language mode.
+    nonisolated static let period: Double = 10.0
 
     // ─────────────────────────────────────────────────────────────────────────
     // THE ONE-BREATH CONTRACT  (ruled at Pass 0 audit, Aug 21 2026 — settled)

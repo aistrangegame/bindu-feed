@@ -261,8 +261,15 @@ final class RiteRecorder: ObservableObject {
             // Allow record while the bed keeps playing; restored on stop.
             // `.allowBluetooth` is the iOS 8-era spelling; the iOS 26 SDK renamed it to
             // `.allowBluetoothHFP`, but that symbol requires iOS 26 while this app deploys to
-            // iOS 17.6 — so we keep the compatible name and accept its deprecation notice until
-            // the deployment target is raised. Behaviour (HFP Bluetooth mic capture) is identical.
+            // **iOS 18.0** — so we keep the compatible name and accept its deprecation notice
+            // until the deployment target is raised. Behaviour (HFP Bluetooth mic capture) is
+            // identical. (Written 17.6 here until 2026-09-01; the project has been 18.0 in all
+            // six configurations and the first Release archive's MinimumOSVersion corrected it.
+            // The reasoning is unaffected — 18 < 26.)
+            //
+            // THIS IS THE RECORDING SESSION, NOT HEADPHONE DETECTION. Walk gate G5 reads
+            // `SoundEngine.isOnHeadphones`, which matches on the `.bluetoothHFP` PORT TYPE
+            // (`SoundEngine.swift:935`) and is untouched by this option.
             try session.setCategory(.playAndRecord, mode: .default,
                                     options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
             // A UUID suffix keeps two takes started in the same wall-clock second distinct.

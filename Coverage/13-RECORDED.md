@@ -1107,3 +1107,51 @@ assertion that put a transposed constant under two closed rows for four passes.
 
 **Files** — Bindu Feed/Bindu Feed/Sound/SoundEngine.swift:242-276 (setMuted + applyMute, dur 1.4); Bindu Feed/Bindu Feed/Sound/AxisTones.swift:12; Bindu Feed/Bindu Feed/Sound/RiteTones.swift:23,31
 
+
+---
+
+# ADDENDUM · 2026-09-01 — the Xcode Cloud build log's warnings
+
+Surfaced by the first Xcode Cloud build, triaged against the same line. **The build succeeds,
+archives and ships; none of these is an error in the current language mode.**
+
+## Fixed on the spot — 8 warnings
+
+| | |
+|---|---|
+| 4 dead values | `BreathVoice.rightFreq`, `UniverseView.m`, `PointWorlds.H`, `InstrumentView.R0` |
+| `Breath.period` → `nonisolated static let` | **the only warning the compiler said outright becomes an ERROR in Swift 6 language mode.** An immutable `Double`; the isolation it inherited from `@MainActor final class Breath` was never protecting anything. |
+| `BowlVoicing.peak` → `nonisolated static let` | same shape — read by the two `nonisolated` bowl factories that exist so the tests render what SHIPS. |
+
+**`rightFreq` was worth reading rather than deleting on sight.** It is the binaural offset, in
+the voice that produces the binaural pair — the one thing in this app nobody has heard. Had it
+been the live path, an unused-value warning would have meant **no binaural offset at all**. It
+is not: `BreathVoice.swift:287` uses `snap.rootHz + curBeat`, the LIVE beat that C1's laws
+converge toward their target, which is the correct and better version. The snapshot copy was
+left behind when the beat became dynamic. *A dead-value warning inside a mechanism nobody has
+verified by ear is worth one read before it is worth one deletion.*
+
+## Recorded — 13 concurrency warnings, one deprecation
+
+**All 14 are pre-existing** (sampled sites date to 28–30 Aug, before the stop-condition work)
+and **none is a data race.** They are Swift 6 strict-concurrency being unable to prove what is
+true at runtime:
+
+- **The Timer closures** (`LightView:588`, `ReturnView:175`) run on the main run loop —
+  `Timer.scheduledTimer`'s closure parameter simply is not annotated `@MainActor`.
+- **`CeremonyVoice.init` ×5** is reached from `nonisolated static` factories that exist so the
+  tests can build the shipping voices without hopping actors. The app calls them from the main
+  actor.
+- **`FeedStore:828-829`, `RoomFigures:178-179`, `PointLeaving:96`** are the same shape.
+
+**Not fixed before the deploy, deliberately.** Each needs its `nonisolated` boundary audited
+individually, and doing that in the hour before a walk is the wrong trade: the risk of the fix
+exceeds the risk of the warning. **The hazard is a FUTURE one** — if the project is ever moved
+to the Swift 6 language mode these become errors and it stops building. That is a day's work
+with the app in front of you, not a deploy-eve change.
+
+**`allowBluetooth` (deprecated) is deliberate and documented at the call site.** It is the
+RITE'S RECORDING session, not headphone detection — walk gate **G5** reads
+`SoundEngine.isOnHeadphones`, which matches on the `.bluetoothHFP` PORT TYPE
+(`SoundEngine.swift:935`) and is untouched by this option. The replacement symbol requires
+iOS 26; this app deploys to 18.0.

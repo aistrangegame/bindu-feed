@@ -30,7 +30,10 @@ import os
 enum BowlVoicing {
     /// `g.gain.linearRampToValueAtTime(0.075, t+0.09)` — the event ceiling, and the
     /// weight of the fundamental, which carries `1/(0*2.2+1) = 1`.
-    static let peak: Double = 0.075
+    /// `nonisolated` for the same reason as `Breath.period`: an immutable `Double` read by
+    /// the two `nonisolated` bowl factories, which exist so `SoundLayerTests` renders what
+    /// SHIPS rather than a second copy of the numbers.
+    nonisolated static let peak: Double = 0.075
 
     /// `[1, 2.004, 2.98, 4.02].forEach(...)` — inharmonic, which is what makes it a bowl
     /// and not an organ. None of them lands on a harmonic of the fundamental.

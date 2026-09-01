@@ -810,7 +810,8 @@ struct InstrumentView: View {
 
     private var stillnessGate: some View {
         GeometryReader { geo in
-            let R0 = min(geo.size.width, geo.size.height) * 0.5
+            // No `R0` at this level: `MembraneRing.draw` derives its own from the Canvas
+            // size, so a second copy here could only ever disagree with it.
             let still = travel.thin
             ZStack {
                 // C3.6 · the same ring, the opposite gesture. `:3511-3512` — *"the gate does
