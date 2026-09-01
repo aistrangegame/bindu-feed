@@ -562,10 +562,15 @@ struct InstrumentView: View {
         // that opens `0.9*`. So the port had both elements' bases wrong in opposite
         // directions, and each looked like a considered number sitting beside the other.
         //
-        // `(1 − dom)` is the app's own (C2.6): the design hides `#where` outright on `PS.on`
-        // and gives it no afterglow. Kept, because a caption that snaps back on the landing
-        // frame is what C2.6 was opened for — recorded here rather than quietly retained.
-        .opacity(hidden ? 0 : Immersion.whereOpacity(hush: hush, immA: immA) * (1 - dom))
+        // The dominance fade is the app's own (C2.6): Round 1 hides `#where` outright on
+        // `PS.on` and gives it no afterglow. Kept, because a caption that snaps back on the
+        // landing frame is what C2.6 was opened for — recorded here rather than quietly
+        // retained. **Its COEFFICIENT is not app-own**: it was written `(1 − dom)`, and 0.9 is
+        // authored five times across the two rounds while 1.0 is authored nowhere. Deciding
+        // the term exists is a divergence; inventing its constant is not. See
+        // `Immersion.dominanceFade`.
+        .opacity(hidden ? 0 : Immersion.whereOpacity(hush: hush, immA: immA)
+                    * Immersion.dominanceFade(dom: dom))
         .animation(.easeInOut(duration: 1.1), value: here.key)
         .animation(.easeInOut(duration: 1.1), value: hidden)
         .allowsHitTesting(false)
@@ -678,8 +683,11 @@ struct InstrumentView: View {
         }
         .allowsHitTesting(false)
         // `:5646` — `0.9*(1−hush)*(1−immA)`. The 0.9 is this element's, and it had been
-        // transposed onto `#where`; see the note there. `(1 − dom)` is C2.6's, app-own.
-        .opacity(hidden ? 0 : Immersion.pnameOpacity(hush: hush, immA: immA) * (1 - dom))
+        // transposed onto `#where`; see the note there. The dominance fade is C2.6's, app-own
+        // as a TERM — and it carried an invented `1.0` coefficient until the sibling sweep;
+        // `Immersion.dominanceFade` is the one source now.
+        .opacity(hidden ? 0 : Immersion.pnameOpacity(hush: hush, immA: immA)
+                * Immersion.dominanceFade(dom: dom))
         .animation(.easeInOut(duration: 1.0), value: hidden)
     }
 

@@ -178,6 +178,20 @@ import Foundation
         let crossed = Immersion.railOpacity(hush: 0, immA: 0, dom: 1)
         #expect(abs(crossed - 0.1) < 1e-12, "kept \(crossed)")
         #expect(crossed > 0, "the rail never disappears entirely")
+        // AND THE SAME COEFFICIENT ON ALL THREE CHROME ELEMENTS. The sibling sweep found the
+        // identical `(1 − dom)` collapse still standing on `#where` and `#pname` **after** it
+        // had been diagnosed, named in a test and fixed on the rail — because the rail's copy
+        // was inside `railOpacity` where a test could reach it, and the captions' copies were
+        // written inline in the view where `theBaseConstantIsNotTransposed` (which calls two
+        // functions containing no `dom` term) stayed green over them. One source now.
+        for d in stride(from: 0.0, through: 1.0, by: 0.1) {
+            let fade = Immersion.dominanceFade(dom: d)
+            let viaRail = Immersion.railOpacity(hush: 0, immA: 0, dom: d)
+            #expect(abs(viaRail - fade) < 1e-12, "dom \(d): rail \(viaRail) vs fade \(fade)")
+        }
+        #expect(abs(Immersion.dominanceFade(dom: 1) - 0.10) < 1e-12,
+                "a full crossing leaves 0.10, not 0 — got \(Immersion.dominanceFade(dom: 1))")
+
         // And the world layer's coefficient is 0.94 (`:5598`) where the rail's is 0.9
         // (`:5644`) — two different residues at a full crossing, on two elements a reader
         // would reasonably assume share a number. Stated as the residues rather than as the

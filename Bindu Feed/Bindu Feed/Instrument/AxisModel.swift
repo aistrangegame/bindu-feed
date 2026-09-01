@@ -584,11 +584,29 @@ enum Immersion {
     /// leaves 0.10, two residues on two elements a reader would assume share a number.
     static func worldLayer(immA: Double, dom: Double) -> Double { (1 - immA) * (1 - dom * 0.94) }
 
+    /// **THE ONE DOMINANCE COEFFICIENT, so it cannot be `1.0` on one caption and `0.9` on
+    /// another.** `1 − dom*0.9` — the factor the chrome comes back through after a landing.
+    ///
+    /// The `0.9` is authored five times and `1.0` is authored nowhere:
+    /// `The Instrument v3.html:5644` (the rail), and `Claude Design Round 2/comps/The
+    /// Chrome.html:381` (`#where`), `:386` (`#pname`), `:397` (the rail again) and `:294` (the
+    /// shells). Round 1 gives the two captions no `dom` term at all — it hides `#where` on
+    /// `PS.on` and gives `#pname` nothing — so the app HAVING one here is app-own under C2.6.
+    /// **But that is a decision about whether the term exists, not a licence to invent its
+    /// coefficient**, and `(1 − dom)` was an invented one: at a full crossing it takes the
+    /// chrome to zero where every authored version leaves 0.10.
+    ///
+    /// It lives here, and not inline in the view, for the reason stated above this MARK: the
+    /// rail's copy was inside a function and a test caught it; the two captions' copies were
+    /// written inline in `InstrumentView` and the same test was **green over them**, because
+    /// `whereOpacity` and `pnameOpacity` contain no `dom` term for it to reach.
+    static func dominanceFade(dom: Double) -> Double { 1 - dom * 0.9 }
+
     /// `:5644` — `(1−hush*0.85)*(1−immA)*(1−PS.dom()*0.9)`. Without the `0.9` the ladder
     /// hard-zeroes at a full crossing, where the design leaves it faintly there: the rail is
     /// the one thing that says where he is going while he is being carried there.
     static func railOpacity(hush: Double, immA: Double, dom: Double) -> Double {
-        (1 - hush * 0.85) * (1 - immA) * (1 - dom * 0.9)
+        (1 - hush * 0.85) * (1 - immA) * dominanceFade(dom: dom)
     }
 
     /// `:5645` — `(1−hush)*(1−immA)`. **NO BASE CONSTANT.** The `0.9` is `#pname`'s and had

@@ -53,3 +53,15 @@ corrections to `8-ACTION-PLAN.md`'s own rows.
 The audit never read `comps/`. **124 of the 485 in-scope mechanisms are comp-sourced and 37
 are named nowhere in `AUDIT.md`**, so an ID-ordered pass cannot reach them. Stage G runs in
 two lanes. Also: `143 of 254` measures the audit, not the work.
+
+## 12 · `12-SIBLING-CONSTANTS.md` — **READ BEFORE CLOSING ANY ROW ON A NUMBER**
+Where the design gives adjacent elements different constants of one kind, does the app pair
+them the same way? 264 sibling groups enumerated, all checked, all 131 non-matching
+adversarially refuted — **48 of the 131 verdicts changed under attack.**
+
+**106 live findings. 33 sit over a CLOSED row; 72 are unowned by any row at all.** That second
+number is the structural one: `AUDIT.md` is organised by SURFACE and a constant is not a
+surface, so a mis-paired value has nowhere to live unless it happens to break something a
+reader noticed. No `TRANSPOSED` verdict survived — the seed instance (C5.2/C5.6) is repaired
+and no second clean swap exists; what stands is the same porting-by-eye one step less tidy:
+constants COLLAPSED onto one value, and pairs where only one member kept its own.
