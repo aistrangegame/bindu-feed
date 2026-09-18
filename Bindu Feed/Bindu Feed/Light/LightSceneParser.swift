@@ -10,7 +10,7 @@ import Foundation
 // One Airtable row is one scene. Two text fields carry it:
 //
 //   Body     WHOLE / ANCHORS / BEAT / LANDING, split on the caps headers
-//   Excerpt  FAMILY: · BELIEF DISSOLVED: · GESTURE: · MATERIAL:
+//   Excerpt  FAMILY: · BELIEF DISSOLVED: · GESTURE: · ARRIVAL: · MATERIAL: (· NOTE:)
 //
 // ── TWO ABSENCES THAT ARE VALUES, NOT FAILURES ──────────────────────────────────────────
 //
@@ -35,9 +35,14 @@ enum LightSceneParser {
     // is prose, not a section break.
     private static let bodySections = ["WHOLE", "ANCHORS", "BEAT", "LANDING"]
 
-    // The four Excerpt labels. `MATERIAL:` decides which of the Light's two materials a scene
-    // is made of; the other three are E1.15's `kind`, `vector` and `arrival`.
-    private static let excerptLabels = ["FAMILY", "BELIEF DISSOLVED", "GESTURE", "MATERIAL"]
+    // The Excerpt's labels. `MATERIAL:` decides which of the Light's THREE materials a scene is
+    // made of and `ARRIVAL:` its wash; `FAMILY:` and `BELIEF DISSOLVED:` are E1.15's `kind` and
+    // `vector`. `GESTURE:` is carried but drives nothing yet — it is Wave 2's subject.
+    //
+    // `NOTE:` appears on 7 rows and is deliberately absent from this list: it is an authoring
+    // note to a future pass (*"if a future pass makes this scene solemn, the pass is wrong"*),
+    // never anything the app renders. Unlisted labels are skipped, so it costs nothing.
+    private static let excerptLabels = ["FAMILY", "BELIEF DISSOLVED", "GESTURE", "ARRIVAL", "MATERIAL"]
 
     /// The sentinel the design writes where his own carving goes. Matched loosely on the two
     /// words that carry it, because the dash between them is an em-dash in the corpus and the
@@ -109,6 +114,40 @@ enum LightSceneParser {
         return out
     }
 
+    // MARK: - Material and its arrival
+
+    /// `MATERIAL:` → the case. Matched on a substring because the corpus qualifies the value —
+    /// `dawn, at its widest`, `the particle and space, undirected`, `the particle and space,
+    /// joined`. The qualifier is the author's note about that scene; the material is the stem.
+    static func material(from raw: String) -> LightMaterial {
+        let t = raw.lowercased()
+        if t.contains("nave") { return .nave }
+        if t.contains("particle") { return .particleAndSpace }
+        return .dawn
+    }
+
+    /// The wash for a scene whose `ARRIVAL:` is missing or unrecognised.
+    ///
+    /// **THIS EXISTS TO BE CORRECT, NOT TO HIDE A GAP — and the distinction is the whole
+    /// lesson of this pass.** At the time of writing, the arrival pass has not yet run against
+    /// the base: no row carries an `ARRIVAL:` line, so every scene lands here. Falling back to
+    /// the material's own form is right in both worlds — stone gets the nave, the particle and
+    /// space gets `dissolve`, the open sky gets stillness — and none of them gets a wash
+    /// belonging to a scene it is not.
+    ///
+    /// What it must never do is make the gap invisible. The previous fallback did exactly
+    /// that: it was also material-derived, it was also defensible, and it silently absorbed a
+    /// field the authoring pass had never written. **The guard is not in this function — it is
+    /// that `LightSceneParserTests` measures the fallback RATE against real corpus rows, so a
+    /// corpus that stops supplying arrivals fails a test instead of quietly going grey.**
+    static func fallbackArrival(for material: LightMaterial) -> LightArrivalKind {
+        switch material {
+        case .nave:             return .nave
+        case .particleAndSpace: return .dissolve
+        case .dawn:             return .stillness
+        }
+    }
+
     // MARK: - The scene
 
     /// Build a scene, or return nil when the row cannot be one.
@@ -149,14 +188,23 @@ enum LightSceneParser {
         let landingSource = rawLanding.isEmpty ? fromClosing : rawLanding
         let landing = isNone(landingSource) ? "" : landingSource
 
-        let material: LightMaterial =
-            (lab["MATERIAL"] ?? "").lowercased().contains("nave") ? .nave : .dawn
+        let material = material(from: lab["MATERIAL"] ?? "")
 
-        // `arrival` drives the wash. An unrecognised value falls to the material's own form —
-        // stillness in the dawn, the nave in stone — rather than to one named scene's wash,
-        // which is what the key-switch did.
-        let arrival = LightArrivalKind(rawValue: (lab["GESTURE"] ?? "").lowercased())
-            ?? (material == .nave ? .nave : .stillness)
+        // THE WASH COMES FROM `ARRIVAL:`. It used to come from `GESTURE:`, and that parsed
+        // **0 of 70** — measured against the corpus, not assumed. The two are different axes
+        // and the authoring pass only wrote one of them:
+        //
+        //   ARRIVAL  the VISUAL WASH — a closed set of seven, reused across many scenes
+        //   GESTURE  the PHYSICAL interaction — *"rising — lift the phone and the view
+        //            widens"* — unique per scene by design, and Wave 2's subject
+        //
+        // A unique-per-scene field can never satisfy a closed vocabulary, so reading the wash
+        // off `GESTURE:` sent every base scene to `.stillness` — which shares a branch with
+        // `.nave` and draws morning's wash: **the exact output the old key-switch produced.**
+        // The mechanism changed and the pixels did not. `GESTURE:` is still parsed and still
+        // carried; it is simply not this.
+        let arrival = LightArrivalKind(rawValue: (lab["ARRIVAL"] ?? "").lowercased())
+            ?? fallbackArrival(for: material)
 
         return LightScene(
             key: key,

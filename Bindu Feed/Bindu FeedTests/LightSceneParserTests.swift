@@ -36,7 +36,8 @@ import Foundation
     private let excerpt = """
         FAMILY: Future
         BELIEF DISSOLVED: force → surrender
-        GESTURE: stillness
+        GESTURE: the hand that does not close — kept here because a real row always has one
+        ARRIVAL: stillness
         MATERIAL: dawn
         """
 
@@ -144,29 +145,156 @@ import Foundation
 
     // MARK: - the Excerpt, and E1.15
 
-    @Test("the arrival drives the wash, and an unknown one falls to its material's own form")
-    func arrivalRatherThanKey() {
-        // E1.15. The wash used to switch on the scene's literal KEY — indistinguishable from
-        // correct with six hand-written scenes whose keys ARE their arrivals, and wrong for
-        // every one of the seventy that followed.
-        let turning = LightSceneParser.scene(
-            key: "anything-at-all", title: "T",
-            body: body(whole: "W", anchors: ["A"], beat: "B", landing: "L"),
-            excerpt: "FAMILY: Future\nBELIEF DISSOLVED: a → b\nGESTURE: turning\nMATERIAL: dawn",
-            closingLine: nil)
-        #expect(turning?.arrival == .turning, "the key says nothing; the gesture says everything")
-        #expect(turning?.kind == "Future")
-        #expect(turning?.vector == "a → b")
+    // MARK: - the arrival, measured against rows from the base
+    //
+    // **THESE TWO SCENES ARE VERBATIM FROM THE BASE, NOT WRITTEN HERE.** That is the whole
+    // point of them. The previous version of this suite asserted `GESTURE: turning → .turning`
+    // against a fixture this build authored itself; the corpus never emits that value, so the
+    // test could not fail, and `arrival` parsed 0 of 70 in production while the suite was
+    // green. A fixture written by the same pass that wrote the parser proves only that the
+    // parser agrees with itself.
+    //
+    //   recGJPACSwNNX2hUu · sort 712 · Light — company      qualified material · blank carving · [none]
+    //   recO9Df9wmu1mHOGG · sort 715 · Light — forgetting   qualified material · ordinary beat · landing
 
-        // An unrecognised gesture falls to the material's own form — stillness in the dawn,
-        // the nave in stone — never to one named scene's wash.
-        let unknown = LightSceneParser.scene(
-            key: "x", title: "X",
-            body: body(whole: "W", anchors: ["A"], beat: "B", landing: "L"),
-            excerpt: "GESTURE: something nobody has written yet\nMATERIAL: nave",
-            closingLine: nil)
-        #expect(unknown?.arrival == .nave)
-        #expect(unknown?.material == .nave)
+    private let companyExcerpt = """
+        FAMILY: Essence
+        BELIEF DISSOLVED: I arrived alone.
+        GESTURE: palm up — the phone held flat and face-up, an open hand rather than a grip. They cannot be moved toward; they come to a hand that is not closed.
+        MATERIAL: the particle and space, joined
+        """
+
+    private let companyBody = """
+        WHOLE
+
+        You did not come here alone, and you did not meet them by chance.
+
+        ANCHORS
+
+        Open your hand. Hold it flat. Do not reach.
+
+        This one said: I will be the weight under you.
+
+        BEAT
+
+        [blank — his own carving]
+
+        LANDING
+
+        [none]
+        """
+
+    private let forgettingExcerpt = """
+        FAMILY: Collective
+        BELIEF DISSOLVED: judgment — the pattern is someone's fault.
+        GESTURE: not singling out — touch one light and it resolves into a person, a name, a grievance, and the rest of the field goes dark. Take the hand back and the whole field returns.
+        MATERIAL: dawn, at its widest
+        """
+
+    private let forgettingBody = """
+        WHOLE
+
+        From here it is one field.
+
+        ANCHORS
+
+        You are far enough out that no single light is larger than another.
+
+        BEAT
+
+        I love the whole game, including the part of it that is me.
+
+        LANDING
+
+        You were never the exception. That is the good news.
+        """
+
+    @Test("a qualified MATERIAL resolves to its stem, not to dawn by default")
+    func qualifiedMaterialsFromTheCorpus() {
+        // The corpus qualifies the value — `the particle and space, joined`, `dawn, at its
+        // widest`, `the particle and space, undirected`. Eight of the seventy do. No fixture
+        // in this suite contained one before, which is exactly why the class was invisible.
+        let company = LightSceneParser.scene(key: "company", title: "company",
+                                             body: companyBody, excerpt: companyExcerpt,
+                                             closingLine: nil)
+        #expect(company?.material == .particleAndSpace,
+                "`the particle and space, joined` is that material with the author's note on it")
+
+        let forgetting = LightSceneParser.scene(key: "forgetting", title: "forgetting",
+                                                body: forgettingBody, excerpt: forgettingExcerpt,
+                                                closingLine: "You were never the exception. That is the good news.")
+        #expect(forgetting?.material == .dawn, "`dawn, at its widest` is still dawn")
+    }
+
+    @Test("GESTURE is never a source for the wash, however it reads")
+    func gestureIsNotTheArrival() {
+        // `company`'s GESTURE is *"palm up — the phone held flat and face-up…"*. It is unique
+        // to that scene by design, so it can never satisfy a closed vocabulary. If a future
+        // pass re-points the wash at it, this reds.
+        let company = LightSceneParser.scene(key: "company", title: "company",
+                                             body: companyBody, excerpt: companyExcerpt,
+                                             closingLine: nil)
+        #expect(company?.arrival == .dissolve,
+                "with no ARRIVAL line, the wash comes from the MATERIAL — never from GESTURE")
+        // And the GESTURE text itself is not silently smuggled in anywhere.
+        #expect(company?.vector == "I arrived alone.")
+        #expect(company?.kind == "Essence")
+    }
+
+    @Test("ARRIVAL decides the wash, and it is not merely the fallback wearing a label")
+    func arrivalIsReadAndChangesTheOutcome() {
+        // THE ASSERTION THAT WOULD HAVE CAUGHT THE ORIGINAL BUG. `forgetting`'s material is
+        // dawn, so its fallback is `.stillness` — and the arrival pass assigns it
+        // `convergence`. The two differ ON PURPOSE: if the parser ignored ARRIVAL entirely,
+        // this test reds, where a scene whose authored arrival happened to equal its fallback
+        // would have stayed green and proved nothing.
+        let withArrival = forgettingExcerpt.replacingOccurrences(
+            of: "MATERIAL: dawn, at its widest",
+            with: "ARRIVAL: convergence\nMATERIAL: dawn, at its widest")
+        let parsed = LightSceneParser.scene(key: "forgetting", title: "forgetting",
+                                            body: forgettingBody, excerpt: withArrival,
+                                            closingLine: nil)
+        #expect(parsed?.arrival == .convergence)
+        #expect(LightSceneParser.fallbackArrival(for: .dawn) == .stillness,
+                "and the fallback it had to override is genuinely a different value")
+    }
+
+    @Test("the fallback is the material's own form, for every material")
+    func theFallbackIsNamedForEachMaterial() {
+        // Stone gets the nave, the particle and space gets dissolve, the open sky gets
+        // stillness. No material may fall to a wash belonging to a scene it is not.
+        #expect(LightSceneParser.fallbackArrival(for: .nave) == .nave)
+        #expect(LightSceneParser.fallbackArrival(for: .particleAndSpace) == .dissolve)
+        #expect(LightSceneParser.fallbackArrival(for: .dawn) == .stillness)
+    }
+
+    @Test("an unrecognised ARRIVAL falls back rather than inventing a case")
+    func theVocabularyIsClosed() {
+        // The seven values are the whole set. A row carrying anything else is a row to fix in
+        // the base, and the app must render something honest in the meantime.
+        let bogus = companyExcerpt.replacingOccurrences(
+            of: "MATERIAL:", with: "ARRIVAL: shimmering\nMATERIAL:")
+        let parsed = LightSceneParser.scene(key: "x", title: "X", body: companyBody,
+                                            excerpt: bogus, closingLine: nil)
+        #expect(parsed?.arrival == .dissolve, "unknown value → the material's own form")
+    }
+
+    @Test("a real row's blank carving and absent landing both survive the reader")
+    func theQuietRowFromTheBase() {
+        // `company` carries both absences at once, verbatim. This is the contract the whole
+        // design rests on, asserted against the actual row rather than a paraphrase of it.
+        let s = LightSceneParser.scene(key: "company", title: "company",
+                                       body: companyBody, excerpt: companyExcerpt,
+                                       closingLine: "")
+        #expect(s != nil, "the quietest real row is still a scene")
+        #expect(s?.carvingIsHis == true)
+        #expect(s?.beat.isEmpty == true)
+        #expect(s?.hasLanding == false)
+        for line in (s?.whole ?? []) + (s?.anchors ?? []) + (s?.beat ?? []) {
+            #expect(!LightSceneParser.isBlankCarving(line), "the sentinel leaked: \(line)")
+        }
+        // NOTE: on seven rows is an authoring note to a future pass and must never be read.
+        #expect(s?.anchors.contains(where: { $0.hasPrefix("NOTE:") }) == false)
     }
 
     @Test("ungripOnly is derived from the arrival, not stored beside it")
@@ -174,7 +302,7 @@ import Foundation
         let r = LightSceneParser.scene(
             key: "x", title: "X",
             body: body(whole: "W", anchors: ["A"], beat: "B", landing: "L"),
-            excerpt: "GESTURE: release\nMATERIAL: dawn", closingLine: nil)
+            excerpt: "ARRIVAL: release\nMATERIAL: dawn", closingLine: nil)
         #expect(r?.ungripOnly == true)
         #expect(LightCanon.scenes.filter(\.ungripOnly).map(\.key) == ["release"],
                 "and the canon six still agree with their own arrivals")

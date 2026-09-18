@@ -37,7 +37,8 @@ import Foundation
         let d = freshDefaults("shape")
         let today = LightDraw.today(from: pool(), now: "2026-09-18", defaults: d)
         #expect(today.count == 6)
-        #expect(today.filter { $0.material == .dawn }.count == LightDraw.dawnCount)
+        #expect(today.filter { $0.material != .nave }.count == LightDraw.dawnCount,
+                "the five are everything that is NOT nave — not everything that is dawn")
         #expect(today.filter { $0.material == .nave }.count == LightDraw.naveCount)
         #expect(today.last?.material == .nave, "the Far one is last — it is place index 5")
     }
@@ -90,6 +91,37 @@ import Foundation
         let overlap = Set(after.filter { $0.material == .dawn }.map(\.key))
             .intersection(last.filter { $0.material == .dawn }.map(\.key))
         #expect(overlap.isEmpty, "the exclusion is the last day DRAWN, not the calendar day before")
+    }
+
+    @Test("a scene made of the particle and space can be met")
+    func theThirdMaterialIsReachable() {
+        // **THE FILTER THAT WOULD HAVE MADE SEVEN SCENES UNREACHABLE.** The draw read
+        // `material == .dawn` while there were two materials, where it was the same thing as
+        // "not nave". With three, an equality test silently excludes `the particle and space`
+        // from both filters — never drawn, on any day, ever. That is not a scene going unmet,
+        // which the register allows; it is a scene that CANNOT be met.
+        let d = freshDefaults("third")
+        let pool = (0..<7).map { scene("essence-\($0)", .particleAndSpace) }
+                 + (0..<3).map { scene("nave-\($0)", .nave) }
+        var met = Set<String>()
+        for day in 0..<40 {
+            for s in LightDraw.today(from: pool, now: "2026-03-\(day)", defaults: d) { met.insert(s.key) }
+        }
+        #expect(met.count == 10, "every scene is reachable; none is excluded by construction")
+        let today = LightDraw.today(from: pool, now: "2026-05-01", defaults: d)
+        #expect(today.count == 6, "five in the sky and one in stone, whatever the five are made of")
+        #expect(today.last?.material == .nave, "and only a nave scene stands in the Far place")
+    }
+
+    @Test("with no nave scene at all, the dawn is still five and the Far place is simply empty")
+    func theFarPlaceCanBeAbsent() {
+        // This is the base as it stands TODAY: 63 dawn, 7 the particle and space, 0 nave. The
+        // draw must not invent a sixth, and must not collapse — N5's walk criterion is the
+        // thing that fails here, and it fails visibly rather than by exception.
+        let d = freshDefaults("nonave")
+        let today = LightDraw.today(from: pool(dawn: 20, nave: 0), now: "2026-09-18", defaults: d)
+        #expect(today.count == 5, "five stand; nothing is fabricated to fill the stone")
+        #expect(today.allSatisfy { $0.material != .nave })
     }
 
     // MARK: - the collapse guard

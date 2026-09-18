@@ -36,7 +36,7 @@ import Foundation
 // is owed.
 enum LightDraw {
 
-    /// Five in the dawn and one in stone — `canon/spine-light.js:104-121`. The geometry places
+    /// Five in the sky and one in stone — `canon/spine-light.js:104-121`. The geometry places
     /// exactly this many and `hit()` reaches exactly this many, so the draw's size is the
     /// design's, not a number chosen here.
     static let dawnCount = 5
@@ -81,9 +81,20 @@ enum LightDraw {
 
     /// The roll itself. `Int.random`, not a hash.
     static func draw(from pool: [LightScene], excluding recent: Set<String>) -> [LightScene] {
-        let dawn = pick(pool.filter { $0.material == .dawn }, dawnCount, recent)
-        let nave = pick(pool.filter { $0.material == .nave }, naveCount, recent)
-        return dawn + nave
+        // **THE FIVE TAKE EVERYTHING THAT IS NOT NAVE, and the inverted test is the point.**
+        // This read `$0.material == .dawn` while there were two materials, where it was the
+        // same thing. There are three now, and an equality test would have made the seven
+        // `the particle and space` scenes permanently undrawable — in neither filter, in no
+        // day's six, ever. That is not a scene going unmet, which the register allows; it is a
+        // scene that CANNOT be met, which is a hole.
+        //
+        // The nave slot stays an equality test because the Far one is a place in the geometry
+        // — `place()` puts exactly one scene low and in stone — and only a nave scene belongs
+        // in it. Everything else stands in the sky, whatever it is made of; the material
+        // governs how the SCENE renders once he is inside it, not where its point sits.
+        let near = pick(pool.filter { $0.material != .nave }, dawnCount, recent)
+        let far  = pick(pool.filter { $0.material == .nave }, naveCount, recent)
+        return near + far
     }
 
     /// `n` distinct scenes, preferring ones he did not last meet.

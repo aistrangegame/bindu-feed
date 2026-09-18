@@ -7,7 +7,23 @@ import SwiftUI
 // `nave` (Far). Each scene: whole → anchors (2nd person, one per touch) → beat
 // (1st person, carved) → landing.
 
-enum LightMaterial { case dawn, nave }
+/// **THREE MATERIALS NOW, AND THE THIRD SUPERSEDES CANON'S OWN COUNT.**
+///
+/// `canon/spine-light.js:15-16` says it plainly — *"the sixth, the Far scene, is the nave:
+/// enclosed stone, the carved floor. **Two materials for two kinds of scene, exactly as
+/// ruled.**"* That was true of the six. The seventy authored into the base carry a third:
+/// `MATERIAL: the particle and space`, on seven scenes whose family is Essence.
+///
+/// It is not a decoration. The dawn has a horizon and a ground — a low warmth at `y = 1.02`
+/// and stars in the upper 0.7 of the frame. The nave has walls. **The particle and space has
+/// neither: no horizon, no ground, only the point.** Rendering those seven as dawn puts a
+/// floor under a scene whose whole claim is that there isn't one, which is why this is a case
+/// and not a flag.
+///
+/// Superseding canon is allowed here for the same reason §10's *authored once* line was
+/// amended: the corpus grew past the ruling. Recorded rather than left for a reader to infer
+/// from a mismatch between `spine-light.js:16` and this enum.
+enum LightMaterial { case dawn, nave, particleAndSpace }
 
 /// E1.15 · `arrival` — `canon/spine-light.js:32-96`, one per scene.
 ///
@@ -18,12 +34,23 @@ enum LightMaterial { case dawn, nave }
 /// through to the default and renders `morning`'s wash. Canon names the quantity outright and
 /// the model simply never carried it: *"Every one of them arrives by a form of NOT forcing —
 /// stillness, convergence, warmth, turning, release"* (`:6-8`).
+///
+/// **`dissolve` IS THE SIXTH, AND IT IS NEW.** Canon names five ways of not-forcing plus the
+/// nave; the arrival pass of 2026-09-18 adds `dissolve` for the seven `the particle and space`
+/// scenes — *everything falls away to the point*. It is listed here rather than inferred,
+/// because the vocabulary is CLOSED: seven values, and a row carrying anything else is a row
+/// to fix in the base, never a case to add here.
+///
+/// **AND THE AXIS THIS IS NOT.** `GESTURE:` is the PHYSICAL interaction — *"rising — lift the
+/// phone and the view widens"* — unique per scene by design, and it was never a valid source
+/// for a closed-vocabulary wash. Reading the wash off it parsed 0 of 70. See `LightSceneParser`.
 enum LightArrivalKind: String {
     case stillness    = "stillness"
     case convergence  = "convergence"
     case warmth       = "warmth"
     case turning      = "turning"
     case release      = "release"
+    case dissolve     = "dissolve"
     case nave         = "the nave"
 }
 

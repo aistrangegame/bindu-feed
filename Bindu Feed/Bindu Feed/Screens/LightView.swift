@@ -186,6 +186,29 @@ struct LightView: View {
                     LightDawnArrival(arrival: scene.arrival, p: arrivalProgress).ignoresSafeArea()
                 }
             }
+        case .particleAndSpace:
+            // **NO HORIZON AND NO GROUND.** The dawn puts a low warmth at `y = 1.02` and keeps
+            // its stars in the upper 0.7 of the frame — both are a floor, and a floor is the
+            // one thing these seven scenes deny. So there is no ground gradient here and the
+            // stars fill the whole frame: space in every direction, and the particle in it.
+            //
+            // The particle is the app's own, not a new colour — `BinduParticle.core`, the same
+            // ember the Instrument rests on. These scenes are the Essence family; the point
+            // they fall away to is the point the whole app is named for.
+            ZStack {
+                Color(hex: "#050408").ignoresSafeArea()
+                LightStars(material: .particleAndSpace, breath: breath.value)
+                Circle()
+                    .fill(RadialGradient(
+                        colors: [BinduParticle.core.opacity(0.50 + 0.18 * breath.value),
+                                 BinduParticle.deep.opacity(0)],
+                        center: .center, startRadius: 0, endRadius: 44))
+                    .frame(width: 88, height: 88)
+                    .allowsHitTesting(false)
+                if stage == .scene {
+                    LightDawnArrival(arrival: scene.arrival, p: arrivalProgress).ignoresSafeArea()
+                }
+            }
         case .nave:
             ZStack {
                 Color(hex: "#0A0A0C").ignoresSafeArea()
@@ -903,6 +926,21 @@ private struct LightDawnArrival: View {
                     ctx.stroke(UniGeo.ringPath(W * 0.5, H * 0.5, W * (0.16 + Double(i) * 0.10)),
                                with: .color(col(bone, A * 0.22 * ok)), lineWidth: 0.7)
                 }
+            case .dissolve:                                       // everything falls away to the point
+                // The seven Essence scenes. Not an arrival OF light — a subtraction of
+                // everything that is not the point: the field darkens from the edges inward as
+                // `p` fills, and the point alone brightens. Drawn as a vignette that closes
+                // rather than a glow that opens, which is the inverse of every other case here
+                // and is exactly what "falls away" has to mean if it is to mean anything.
+                for i in 0..<9 {
+                    let t = Double(i) / 8
+                    ctx.stroke(UniGeo.ringPath(W * 0.5, H * 0.5, max(W, H) * (0.34 + t * 0.52)),
+                               with: .color(col([5, 4, 8], A * 0.30 * p * (0.35 + t * 0.65))),
+                               lineWidth: max(W, H) * 0.075)
+                }
+                rect([.init(color: col([229, 83, 60], A * 0.30 * p), location: 0),
+                      .init(color: col([229, 83, 60], 0), location: 1)],
+                     CGPoint(x: W * 0.5, y: H * 0.5), W * (0.26 - p * 0.13))
             case .stillness, .nave:                               // morning: the dawn thins toward him
                 vrect([.init(color: col([255, 238, 214], A * 0.20 * p), location: 0),
                        .init(color: col([255, 238, 214], 0), location: 1)],
@@ -924,13 +962,24 @@ private struct LightStars: View {
 
     var body: some View {
         Canvas { ctx, size in
-            let hex = material == .dawn ? "#EDE3CE" : "#FBF9F4"
-            let base = material == .dawn ? 0.55 : 0.35
-            let count = material == .dawn ? 26 : 8
+            // Three materials, three skies. The nave's eight are a seam glimpsed through
+            // stone; the dawn's twenty-six sit in the upper 0.7 because the lower third is
+            // ground. **The particle and space has no ground, so its stars fill the frame** —
+            // `span = 1.0`, the same as the nave, but many more of them and dimmer, because
+            // the point is what he is looking at.
+            let hex: String
+            let base: Double
+            let count: Int
+            let span: Double
+            switch material {
+            case .dawn:             hex = "#EDE3CE"; base = 0.55; count = 26; span = 0.7
+            case .nave:             hex = "#FBF9F4"; base = 0.35; count = 8;  span = 1.0
+            case .particleAndSpace: hex = "#DCE3F0"; base = 0.42; count = 40; span = 1.0
+            }
             for i in 0..<count {
                 let r = rnd(Double(i) * 1.7)
                 let x = rnd(Double(i) * 3.1) * size.width
-                let y = rnd(Double(i) * 5.3) * size.height * (material == .dawn ? 0.7 : 1.0)
+                let y = rnd(Double(i) * 5.3) * size.height * span
                 let tw = 0.3 + 0.5 * abs(sin(breath * .pi + r * 6))
                 let sz = material == .dawn ? (1.0 + r * 1.6) : 1.4
                 ctx.fill(Path(ellipseIn: CGRect(x: x - sz, y: y - sz, width: sz * 2, height: sz * 2)),
