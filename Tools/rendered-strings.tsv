@@ -989,7 +989,10 @@ NON-UI	<no body>	Bindu Feed/Bindu Feed/Services/AirtableService.swift:806
 NON-UI	Airtable HTTP ...: ...	Bindu Feed/Bindu Feed/Services/AirtableService.swift:25
 NON-UI	airtable_token	Bindu Feed/Bindu Feed/Services/AirtableService.swift:47
 NON-UI	Ash spoke on this story.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:493
+NON-UI	BELIEF DISSOLVED	Bindu Feed/Bindu Feed/Light/LightSceneParser.swift:40
 NON-UI	bindu.door.lastKind	Bindu Feed/Bindu Feed/Store/FeedStore.swift:383
+NON-UI	bindu.light.draw....	Bindu Feed/Bindu Feed/Light/LightDraw.swift:45
+NON-UI	bindu.light.draw.lastDay	Bindu Feed/Bindu Feed/Light/LightDraw.swift:46
 NON-UI	bindu.met....	Bindu Feed/Bindu Feed/Store/FeedStore.swift:623
 NON-UI	bindu.rite.dismissed....	Bindu Feed/Bindu Feed/Store/FeedStore.swift:624
 NON-UI	bindu.threshold.lastShownId	Bindu Feed/Bindu Feed/Services/AirtableService.swift:48
@@ -998,16 +1001,17 @@ NON-UI	Could not construct Airtable URL.	Bindu Feed/Bindu Feed/Services/Airtable
 NON-UI	Decoding error: ...	Bindu Feed/Bindu Feed/Services/AirtableService.swift:26
 NON-UI	Fallback Breath	Bindu Feed/Bindu Feed/Models/Models.swift:547
 NON-UI	First resonance on this story.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:561
-NON-UI	Inward to the one.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:956
+NON-UI	Inward to the one.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1064
 NON-UI	Last Activity Date	Bindu Feed/Bindu Feed/Services/AirtableService.swift:9
 NON-UI	Link to Feed	Bindu Feed/Bindu Feed/Services/AirtableService.swift:604
 NON-UI	mirror.draw.....drawn	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:231
 NON-UI	mirror.draw.....idx	Bindu Feed/Bindu Feed/Screens/MirrorView.swift:232
 NON-UI	paste token	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swift:49
 NON-UI	point.descent....	Bindu Feed/Bindu Feed/Point/PointWorldView.swift:210
-NON-UI	Stillness opened the Light.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:946
-NON-UI	The Light -- stood inside	Bindu Feed/Bindu Feed/Store/FeedStore.swift:945
-NON-UI	The Point -- walked to the centre	Bindu Feed/Bindu Feed/Store/FeedStore.swift:955
+NON-UI	Stillness opened the Light -- ….	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1053
+NON-UI	Stillness opened the Light.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1054
+NON-UI	The Light -- stood inside	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1052
+NON-UI	The Point -- walked to the centre	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1063
 NON-UI	The story was met in the Rite.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:606
 AUTHORED-INTERPOLATED	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353
 AUTHORED-INTERPOLATED	In reply to …	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:325

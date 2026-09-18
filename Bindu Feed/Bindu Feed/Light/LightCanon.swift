@@ -9,6 +9,24 @@ import SwiftUI
 
 enum LightMaterial { case dawn, nave }
 
+/// E1.15 · `arrival` — `canon/spine-light.js:32-96`, one per scene.
+///
+/// **THIS IS THE FIELD THE ARRIVAL WASH WAS ALWAYS SUPPOSED TO SWITCH ON.** `L.draw`'s wash
+/// branch (`:205-248`) reads as a switch on scene IDENTITY, and the port copied that shape —
+/// `LightDawnArrival` in `LightView` switched on the literal key. With six hand-written scenes
+/// the two are indistinguishable; with seventy-six they are not, because every new key falls
+/// through to the default and renders `morning`'s wash. Canon names the quantity outright and
+/// the model simply never carried it: *"Every one of them arrives by a form of NOT forcing —
+/// stillness, convergence, warmth, turning, release"* (`:6-8`).
+enum LightArrivalKind: String {
+    case stillness    = "stillness"
+    case convergence  = "convergence"
+    case warmth       = "warmth"
+    case turning      = "turning"
+    case release      = "release"
+    case nave         = "the nave"
+}
+
 struct LightScene: Identifiable {
     let key: String
     let title: String
@@ -17,7 +35,39 @@ struct LightScene: Identifiable {
     let anchors: [String]      // 2nd person, surface one at a time on the breath
     let beat: [String]         // 1st person, the carved Declaration
     let landing: String        // "Carry the …"
-    let ungripOnly: Bool       // `release` advances only on the hand opening
+
+    // E1.15 · the three canon fields the model never carried.
+    let vector: String              // `force → surrender` — the belief dissolved
+    let kind: String                // `Future` ×5 · `Far` ×1 — the family
+    let arrival: LightArrivalKind   // what form of NOT forcing this one arrives by
+
+    /// **THE DECLARATION HE HAS NOT CARVED YET.** `beat` is empty and that is a VALUE, never a
+    /// failure: seven of the seventy-six scenes carry `[blank — his own carving]`, meaning the
+    /// Declaration is authored by him at runtime, in his own voice. Nothing may default it,
+    /// fill it, or log it as malformed — **if anything ever substitutes a line here the core
+    /// design is broken**, and the substitution would be invisible because it would read as
+    /// content.
+    let carvingIsHis: Bool
+
+    /// The Airtable record id, when the scene came from the base. **Nil for the canon six**,
+    /// which have no row to point at.
+    ///
+    /// Carried because the sky derives a star's brightness from `Veil Lifted` pulses, and a
+    /// pulse is attributed by `Link to Feed` — **the record id, never a soft key**. §10 records
+    /// what a soft key costs: `logStoryMet` resolved by `codexId`, 15+ Live stories carry a
+    /// blank one, and both rows already in the base were wrong, one each way.
+    var recordId: String? = nil
+
+    /// `release` alone advances on the hand OPENING — `:142-144`, *"it does not respond to his
+    /// reaching. Nothing here does."* Derived rather than stored: it was a hand-set Bool that
+    /// happened to be true for exactly the scene whose `arrival` is `release`, which is the
+    /// duplicated-contract shape §10 records five times. One source now.
+    var ungripOnly: Bool { arrival == .release }
+
+    /// `landing` is optional in the widened corpus — `[none]` with an empty Closing Line. Also
+    /// not an error; the scene simply ends on the Declaration.
+    var hasLanding: Bool { !landing.isEmpty }
+
     var id: String { key }
 }
 
@@ -145,7 +195,8 @@ enum LightCanon {
                 "The energy knows its own pace.",
             ],
             landing: "Carry the pace, not the words.",
-            ungripOnly: false
+            vector: "force → surrender", kind: "Future", arrival: .stillness,
+            carvingIsHis: false
         ),
         LightScene(
             key: "converge", title: "The one who was watching all of them", material: .dawn,
@@ -166,7 +217,8 @@ enum LightCanon {
                 "Nothing has to be gathered. It was never apart.",
             ],
             landing: "Carry the one who watches, not the many it watched.",
-            ungripOnly: false
+            vector: "fragmentation → one awareness", kind: "Future", arrival: .convergence,
+            carvingIsHis: false
         ),
         LightScene(
             key: "warmth", title: "The day you let yourself feel", material: .dawn,
@@ -187,7 +239,8 @@ enum LightCanon {
                 "I am allowed to be the one who feels this.",
             ],
             landing: "Carry the feeling, not the management of it.",
-            ungripOnly: false
+            vector: "managing → feeling", kind: "Future", arrival: .warmth,
+            carvingIsHis: false
         ),
         LightScene(
             key: "kindness", title: "The one you stopped correcting", material: .dawn,
@@ -208,7 +261,8 @@ enum LightCanon {
                 "What I made was made with love, and it shows.",
             ],
             landing: "Carry the appreciation, not the correction.",
-            ungripOnly: false
+            vector: "self-correction → appreciation", kind: "Future", arrival: .turning,
+            carvingIsHis: false
         ),
         LightScene(
             key: "release", title: "The hand that opened", material: .dawn,
@@ -229,7 +283,8 @@ enum LightCanon {
                 "I open my hand, and it is all still here.",
             ],
             landing: "Carry the trust, not the grip.",
-            ungripOnly: true          // answers ONLY the hand opening — three ungrips
+            vector: "effort → trust", kind: "Future", arrival: .release,
+            carvingIsHis: false
         ),
         LightScene(
             key: "floor", title: "The floor", material: .nave,
@@ -246,7 +301,8 @@ enum LightCanon {
                 "I am the road remembering itself.",
             ],
             landing: "Nothing was added to you. Something was removed.",
-            ungripOnly: false
+            vector: "building the mirror → living as what it reflects", kind: "Far", arrival: .nave,
+            carvingIsHis: false
         ),
     ]
 }

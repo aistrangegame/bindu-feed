@@ -36,6 +36,11 @@ final class FeedStore: ObservableObject {
 
     @Published var signals: [Signal] = []
 
+    /// The Light's scenes, read from the base. EMPTY IS A REAL STATE — no token, no network, a
+    /// filter that matches nothing — and `LightView` falls back to `LightCanon.scenes` rather
+    /// than trapping on an empty array. See `LightView.pool`.
+    @Published var lightScenes: [LightScene] = []
+
     /// The Gaia seed's own pool — NOT Signals. See CLAUDE.md §8.
     @Published var gaiaSeeds: [GaiaSeed] = []
 
@@ -91,6 +96,7 @@ final class FeedStore: ObservableObject {
         storyStats = [:]
         mirrorCards = []
         signals = []
+        lightScenes = []
         gaiaSeeds = []
         metStoryIDs = []
         practiceInvitations = []
@@ -332,6 +338,17 @@ final class FeedStore: ObservableObject {
     func loadGaiaSeeds() async {
         do {
             self.gaiaSeeds = try await service.fetchGaiaSeeds()
+            self.error = nil
+        } catch {
+            self.error = error
+        }
+    }
+
+    /// Lazy, not bootstrap: most opens never reach the Light, and the Mirror's
+    /// `loadIfNeeded` shape is the precedent (`MirrorView:171-175`).
+    func loadLightScenes() async {
+        do {
+            self.lightScenes = try await service.fetchLightScenes()
             self.error = nil
         } catch {
             self.error = error
@@ -1015,11 +1032,26 @@ final class FeedStore: ObservableObject {
     }
 
     /// The Light was entered — a pulse into App Activity (never a count).
-    func logVeilLifted() async {
+    ///
+    /// **THE LINK IS WHAT MAKES IT A RECORD RATHER THAN A TALLY.** This wrote no
+    /// `Link to Feed`, so no pulse could be attributed to the scene he actually stood in —
+    /// every visit to the Light was one anonymous row. The sky derives a star's brightness
+    /// from these pulses (never from a stored counter — §10: *a derived glow reads as texture;
+    /// a stored counter eventually asks to be raised*), so without the link there is nothing
+    /// to derive FROM.
+    ///
+    /// Passed now, before the sky exists, because a record only accumulates forward: linking
+    /// it the day the sky is built would give the sky an empty history to read.
+    ///
+    /// `sceneId` is the scene's Airtable record id — **the record, never a soft key** (§10's
+    /// `logStoryMet` rule). Nil for the canon six, which have no row to point at.
+    func logVeilLifted(sceneId: String? = nil, sceneTitle: String? = nil) async {
         _ = try? await service.logActivity(
             type: .veilLifted,
+            feedRecordId: sceneId,
             activityName: "The Light — stood inside",
-            detail: "Stillness opened the Light.",
+            detail: sceneTitle.map { "Stillness opened the Light — \($0)." }
+                ?? "Stillness opened the Light.",
             excerpt: nil
         )
     }

@@ -82,6 +82,21 @@ LIMITS, NAMED SO THEY ARE NOT REDISCOVERED AS BUGS. Function references are matc
 so a same-named method on another type masks an unwired one; value references are matched as
 `Owner.member`, so a reference through a typealias or an instance is missed. Both directions
 are MISSES, never false reds — and the fourth quadrant is the one that walks you backwards.
+
+**AND ONE THAT IS A FALSE RED, WHICH IS A DIFFERENT AND WORSE CLASS. Measured 2026-09-18.**
+A function passed as a VALUE — `contains(where: f)`, `map(f)`, `sorted(by: f)` — is recognised
+only in its QUALIFIED form. The bare-reference alternative at `[:,(]\s*Owner\s*\.\s*name`
+exists for `Owner.f`, but the unqualified local pattern below it requires a following `(`, so
+`f` referenced bare INSIDE ITS OWN TYPE reads as uncalled. `LightSceneParser.isBlankCarving`
+reported BUILT-BUT-UNCALLED while the app called it on every scene it parsed.
+
+**It was not loosened here, deliberately.** Dropping the required `(` from the local pattern
+would make a bare identifier enough, and a bare identifier matches a mention in a comment, a
+parameter label and the declaration's own name — turning a false RED into silent false GREENS
+across all 743 functions. A gate that over-reports costs one hand-check; a gate that
+under-reports is the fourth quadrant. So the call site was qualified instead, which also makes
+the app's use of that guard findable by a plain grep. **If this red appears again, look for a
+bare function reference before believing the symbol is unreached.**
 """
 import re, sys, pathlib
 

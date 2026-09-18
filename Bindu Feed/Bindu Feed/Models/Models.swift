@@ -346,6 +346,33 @@ struct MirrorCard: Identifiable, Hashable {
     }
 }
 
+/// A Light scene, read from the base — `Type = 'Light'`, sort band 701–776.
+///
+/// The Light used to be authored once and shipped as a Swift copy. It accumulates now, so it
+/// is read the way the Mirror and the Signal are; `LightCanon.scenes` stays as the fallback,
+/// the `FieldSound.fallbackBreath` pattern (§15's never-silent safety net).
+///
+/// Returns nil for a row that is not a scene. **Never for a scene that is quiet** — see
+/// `LightSceneParser` on the blank carving and the absent landing.
+extension LightScene {
+    init?(from record: AirtableRecord) {
+        let f = record.fields
+        let (key, title) = LightSceneParser.split(name: f.name ?? "")
+        guard !key.isEmpty else { return nil }
+        // Defensive body read, as every other content model does — the underlying field
+        // (fldnN9WykhzLpVJQG) answers to either name depending on its current Airtable label.
+        guard let built = LightSceneParser.scene(
+            key: key,
+            title: title,
+            body: f.commentBody ?? f.body ?? "",
+            excerpt: f.excerpt ?? "",
+            closingLine: f.closingLine
+        ) else { return nil }
+        self = built
+        self.recordId = record.id
+    }
+}
+
 struct Signal: Identifiable, Hashable {
     let id: String
     let name: String

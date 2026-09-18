@@ -36,6 +36,8 @@ struct LightView: View {
     @State private var sceneIndex = 0
     /// Which of the six is under the hand, named but not yet entered.
     @State private var armed: Int?
+    /// One fetch per visit to the register.
+    @State private var loaded = false
 
     // Stillness gate
     @State private var stillMs: Double = 0
@@ -81,7 +83,28 @@ struct LightView: View {
     private let gateMs: Double = 4600
     private let idleMs: Double = 340
 
-    private var scene: LightScene { LightCanon.scenes[sceneIndex] }
+    /// Today's six, drawn from the base — or the canon six when the base has said nothing.
+    ///
+    /// **THE FALLBACK IS THE CRASH FIX, NOT A CONVENIENCE.** `scene` is read in `body`, in
+    /// `material`, and in both timers, and it used to be `LightCanon.scenes[sceneIndex]` — an
+    /// unguarded subscript. That was safe only while the array was a Swift literal of six. Once
+    /// it can come from the network it can be empty (no token, no network, a filter that
+    /// matches nothing), and an empty array would trap on the first frame of the register.
+    ///
+    /// Falling back to the canon six is the `FieldSound.fallbackBreath` pattern (§15): the
+    /// Breath must never go silent, and the Light must never be a crash. It also means the
+    /// six that were authored once still stand when nothing else can be reached.
+    private var pool: [LightScene] {
+        let drawn = LightDraw.today(from: store.lightScenes)
+        return drawn.isEmpty ? LightCanon.scenes : drawn
+    }
+
+    private var scene: LightScene {
+        let p = pool
+        // Still not a bare subscript: `sceneIndex` comes from `LightPlaces.hit` (0…5) and the
+        // pool is normally six, but a short pool must bend rather than trap.
+        return p.indices.contains(sceneIndex) ? p[sceneIndex] : (p.first ?? LightCanon.scenes[0])
+    }
     private var still: Double { min(1, stillMs / gateMs) }
 
     // How far the scene's arrival has come (0→1): release answers the hand opening (ungrips/3);
@@ -130,6 +153,15 @@ struct LightView: View {
         }
         .navigationBarBackButtonHidden(true)
         .onAppear(perform: begin)
+        // Lazy, like the Mirror's (`MirrorView:171-175`) — not `bootstrap()`, because most
+        // opens never reach the Light and the approach's 4600ms gate is ample cover for a
+        // fetch. `loaded` guards the re-entry; `foundationLoaded` is the same precondition
+        // every content surface waits on.
+        .task {
+            guard !loaded, store.foundationLoaded else { return }
+            await store.loadLightScenes()
+            loaded = true
+        }
         .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate() }
         .sonicContext(.base)
     }
@@ -151,7 +183,7 @@ struct LightView: View {
                 // behind onto what he built, release's rings brightening one-per-ungrip, morning
                 // thinning toward him. Only during the scene, keyed on its arrival progress.
                 if stage == .scene {
-                    LightDawnArrival(key: scene.key, p: arrivalProgress).ignoresSafeArea()
+                    LightDawnArrival(arrival: scene.arrival, p: arrivalProgress).ignoresSafeArea()
                 }
             }
         case .nave:
@@ -257,8 +289,13 @@ struct LightView: View {
                 let places = LightPlaces.place(W, H, t)
                 ZStack(alignment: .topLeading) {
                     Color.clear
-                    ForEach(Array(LightCanon.scenes.enumerated()), id: \.offset) { i, sc in
-                        let p = i < places.count ? places[i] : .zero
+                    ForEach(Array(pool.enumerated()), id: \.offset) { i, sc in
+                        // No `.zero` fallback. It used to read `i < places.count ? … : .zero`,
+                        // which is how seventy scenes would have stacked invisibly in the
+                        // top-left under the leave button rather than failing loudly. The draw
+                        // seeds exactly as many as `place()` positions, so a mismatch is a bug
+                        // to see, not to absorb.
+                        let p = places[min(i, places.count - 1)]
                         let far = sc.material == .nave
                         let br = 0.72 + 0.28 * RoomGeo.breath(t + Double(i) * 1.7)
                         // ONE NAME AT A TIME. The design places POINTS — `place()` spaces the
@@ -318,6 +355,12 @@ struct LightView: View {
                     }
                     if armed == k {
                         sceneIndex = k
+                        // Stood inside — one pulse, carrying the scene it was stood in.
+                        let chosen = pool.indices.contains(k) ? pool[k] : nil
+                        Task {
+                            await store.logVeilLifted(sceneId: chosen?.recordId,
+                                                      sceneTitle: chosen?.title)
+                        }
                         soundEngine.blip(hz: 174)          // `:5873` — `B.blip(174)`, and now actually a blip
                         withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
                     } else {
@@ -396,7 +439,9 @@ struct LightView: View {
             Spacer()
             // The whole — arrives with the light, then settles as the anchors take over.
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(scene.whole, id: \.self) { line in
+                // Indexed, not `id: \.self`: two identical lines in one WHOLE collide and
+                // SwiftUI drops one. Six hand-checked scenes never hit it; seventy-six might.
+                ForEach(Array(scene.whole.enumerated()), id: \.offset) { _, line in
                     Text(line)
                         .loraSize(LightType.wholeSize(alone: wholeIsAlone))
                         .tracking(LightType.wholeTracking(alone: wholeIsAlone))
@@ -444,9 +489,14 @@ struct LightView: View {
 
                 if landed {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text(scene.landing)
-                            .font(.loraItalic(LightType.landingSize)).lineSpacing(LightType.landingLeading)
-                            .foregroundStyle(settledInk)
+                        // `[none]` is an authored value, not a missing one: some scenes end on
+                        // the Declaration and carry nothing out. An empty `Text` would leave a
+                        // silent gap above the way out; drawing nothing is what the row says.
+                        if scene.hasLanding {
+                            Text(scene.landing)
+                                .font(.loraItalic(LightType.landingSize)).lineSpacing(LightType.landingLeading)
+                                .foregroundStyle(settledInk)
+                        }
                         Button {
                             // `The Light v2.html:801` — `const leave = () => {
                             // Sound.closeTheRoom(6); Sound.darkReturns(); onLeave(); }`.
@@ -527,6 +577,23 @@ struct LightView: View {
 
     private var beatActive: Bool { shownAnchors >= scene.anchors.count }
     private var moreBeat: Bool { beatLine + 1 < scene.beat.count }
+
+    /// **THE SCENE WHOSE DECLARATION IS HIS TO WRITE.** Seven of the seventy-six carry
+    /// `[blank — his own carving]`, and the parser holds that as `beat: []` + `carvingIsHis`.
+    ///
+    /// The subscript at the carve was never the danger — `moreBeat` is false on an empty beat,
+    /// so nothing traps. **The danger was a dead end:** `landed` false and `moreBeat` false
+    /// means no cue, no landing and no way on but `‹ leave`, which reads as a broken scene
+    /// rather than an authored silence.
+    ///
+    /// So a blank carving completes on its anchors and goes to its landing. **Nothing is
+    /// substituted** — the Declaration is simply not the app's to write, and the app does not
+    /// pretend one arrived.
+    ///
+    /// OWED (Wave 3): the surface where he carves it. That is almost certainly the same
+    /// surface as the Light's recognition — his voice, kept, landing after the scene — and
+    /// building two would be building one twice. Recorded rather than approximated here.
+    private var awaitingHisCarving: Bool { beatActive && scene.carvingIsHis && !landed }
 
     // A press ASKS for the next anchor (the exhale answers); once the anchors are done,
     // a press-and-hold DRAWS the next Declaration line in. Releasing early lets it sink.
@@ -611,6 +678,13 @@ struct LightView: View {
             if arrive >= 1 && beatActive && moreBeat && !carved {
                 drew = LightCanon.LightBeat.draw(drew, dt: dt)
             }
+            // A blank carving has no Declaration to draw in, so the scene would otherwise sit
+            // at the last anchor with nothing on offer. It completes on the anchors instead —
+            // and completes SILENTLY, because the one thing that must never happen here is a
+            // line arriving where his own words go.
+            if arrive >= 1 && awaitingHisCarving {
+                withAnimation(.easeInOut(duration: Breath.period * 1.6)) { landed = true }
+            }
             if arrive >= 1 && !wholeDelivered {
                 wholeDelivered = true
                 withAnimation(.easeInOut(duration: 1.2)) { }
@@ -625,7 +699,11 @@ struct LightView: View {
         soundEngine.lightBreathIn(dur: 6)
         gate?.invalidate()
         startSceneTick()
-        Task { await store.logVeilLifted() }
+        // The pulse used to fire HERE, at the gate — before he had chosen anything, so it
+        // recorded "the Light was opened" and could name no scene. It fires on entering a
+        // scene now (`choosingBody`'s second touch), because *stood inside* is what the
+        // activity says and what the sky's brightness is derived from. Opening the gate and
+        // walking back out is not a visit to a scene.
         // Stand in the shaft first (the Hold), then the aperture opens into the scene.
         withAnimation(.easeInOut(duration: 1.0)) { stage = .hold }
     }
@@ -769,9 +847,17 @@ struct LightView: View {
 
 // A few quiet points of light — stars in the dawn, a dim seam in the nave.
 // The Future scenes' distinct arrivals (spine-light.js draw()), each its own way in. Additive
-// over the base dawn, keyed on the scene and its arrival progress `p`.
+// over the base dawn, keyed on HOW THE SCENE ARRIVES and its progress `p`.
+//
+// E1.15 · **THIS SWITCHED ON THE SCENE'S KEY AND THAT WAS A LATENT BUG.** `L.draw`'s wash
+// branch (`:205-248`) reads as a switch on identity, and the port copied the shape — which is
+// indistinguishable from correct while there are six hand-written scenes whose keys ARE their
+// arrivals. With seventy-six from the base, every unknown key falls to `default:` and renders
+// `morning`'s stillness wash over a scene that arrives by turning, or by release. Canon names
+// the quantity in its own header — *"Every one of them arrives by a form of NOT forcing —
+// stillness, convergence, warmth, turning, release"* — and the model simply never carried it.
 private struct LightDawnArrival: View {
-    let key: String
+    let arrival: LightArrivalKind
     let p: Double
 
     var body: some View {
@@ -786,19 +872,19 @@ private struct LightDawnArrival: View {
                 ctx.fill(Path(CGRect(x: 0, y: 0, width: W, height: H)),
                          with: .linearGradient(Gradient(stops: stops), startPoint: s, endPoint: e))
             }
-            switch key {
-            case "converge":                                      // scattered motes drift into one field
+            switch arrival {
+            case .convergence:                                      // scattered motes drift into one field
                 for i in 0..<40 {
                     let ang = rnd(Double(i)) * .pi * 2
                     let d0 = max(W, H) * 0.62 * (1 - p) * (0.5 + rnd(Double(i) * 1.7) * 0.8)
                     let px = W * 0.5 + cos(ang) * d0, py = H * 0.44 + sin(ang) * d0
                     ctx.fill(UniGeo.ringPath(px, py, 1.1), with: .color(col(bone, A * (0.20 + p * 0.45))))
                 }
-            case "warmth":                                        // the heat reaches the hand before the eye
+            case .warmth:                                        // the heat reaches the hand before the eye
                 rect([.init(color: col([255, 206, 150], A * 0.30 * p), location: 0),
                       .init(color: col([255, 206, 150], 0), location: 1)],
                      CGPoint(x: W * 0.5, y: H * 0.86), W * (0.30 + p * 0.80))
-            case "kindness":                                      // light rises from behind, onto what he built
+            case .turning:                                      // light rises from behind, onto what he built
                 vrect([.init(color: col([255, 232, 200], A * 0.16 * p), location: 0),
                        .init(color: col([255, 232, 200], 0), location: 1)],
                       CGPoint(x: W * 0.5, y: H), CGPoint(x: W * 0.5, y: H * 0.12))
@@ -807,7 +893,7 @@ private struct LightDawnArrival: View {
                     ctx.fill(Path(CGRect(x: W * 0.5 - rw / 2, y: ry, width: rw, height: 1.4)),
                              with: .color(col([255, 236, 208], A * 0.10 * p * (1 - Double(i) / 11))))
                 }
-            case "release":                                       // brightens one ring per opened hand
+            case .release:                                       // brightens one ring per opened hand
                 rect([.init(color: col([255, 244, 226], A * 0.24 * p), location: 0),
                       .init(color: col([255, 244, 226], 0), location: 1)],
                      CGPoint(x: W * 0.5, y: H * 0.5), max(W, H) * 0.70)
@@ -817,7 +903,7 @@ private struct LightDawnArrival: View {
                     ctx.stroke(UniGeo.ringPath(W * 0.5, H * 0.5, W * (0.16 + Double(i) * 0.10)),
                                with: .color(col(bone, A * 0.22 * ok)), lineWidth: 0.7)
                 }
-            default:                                              // morning: the dawn thins toward him
+            case .stillness, .nave:                               // morning: the dawn thins toward him
                 vrect([.init(color: col([255, 238, 214], A * 0.20 * p), location: 0),
                        .init(color: col([255, 238, 214], 0), location: 1)],
                       CGPoint(x: W * 0.5, y: H * 0.86), CGPoint(x: W * 0.5, y: H * 0.20))

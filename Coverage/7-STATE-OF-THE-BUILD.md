@@ -109,7 +109,7 @@ Checked against the repo, four of its items were wrong:
 
 - **The five instructional-string rulings are already done.** `descend onto this star` is at `PointWorldView.swift:330`.
 - **The z:0 `open the rite` door is correctly absent.** The design declares three doors and filters that one out at its only render site (`The Instrument v3.html:5104`).
-- **The Light's six scenes are the canon's number**, not a shortfall — `canon/spine-light.js:13`, *"Six scenes, one family."* A seventh would be invented content.
+- **RETIRED 2026-09-18 — the Light has seventy-six scenes** (seventy in the base, `Type='Light'`, band 701–776; the canon six remain as the offline fallback). Six is still what STANDS IN THE DAWN each day, drawn from the pool. The retired ruling read: ~~**The Light's six scenes are the canon's number**, not a shortfall — `canon/spine-light.js:13`, *"Six scenes, one family."* A seventh would be invented content.~~
 - **`#carry` and `#seam` are fully built.**
 
 And one thing no list contained at all: the bowl at 4× the ceiling.

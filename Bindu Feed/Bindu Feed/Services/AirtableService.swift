@@ -214,6 +214,22 @@ final class AirtableService {
         return records.map(Signal.init(from:))
     }
 
+    /// THE LIGHT'S SCENES. Six were authored once and shipped in Swift; seventy more live
+    /// here, and the register accumulates from now on (§10 amended 2026-09-18).
+    ///
+    /// Sort band 701–776. The band is a contract in prose only — nothing in this app reads
+    /// 201/301/401/501/601, and only `900+` has enforcement behind it — so the sort below is
+    /// what actually orders them, and the band's meaning lives in the base.
+    func fetchLightScenes() async throws -> [LightScene] {
+        let records = try await fetch(
+            filter: "AND({Type}='Light',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        // `compactMap`, not `map`: a row that is not a scene drops out and the rest of the
+        // register still stands, the same resilience `ResilientPage` gives a malformed record.
+        return records.compactMap(LightScene.init(from:))
+    }
+
     /// The Gaia seed's own pool. Until 2026-08-27 the Door borrowed `fetchSignals()`,
     /// which is how twelve Codex/business-ontology rows reached the threshold — roughly
     /// one app open in seven. Its own Type closes that at the source.
