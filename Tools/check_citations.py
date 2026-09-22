@@ -41,6 +41,7 @@ DOCS = [ROOT/"Bindu Feed"/"CLAUDE.md", ROOT/"HANDOFF-NOTE.md", ROOT/"OPEN-ITEMS.
         # claims about the app, and a ruling nobody can re-resolve is the documentation-drift
         # class with a decision resting on it. Their first inclusion is expected to find things.
         ROOT/"Coverage"/"14-LIGHT-GESTURES.md", ROOT/"Coverage"/"15-HOURS.md",
+        ROOT/"Coverage"/"16-LIGHT-WALK.md",
         ] + sorted((ROOT/"Bindu Feed"/"Bindu FeedTests").glob("*.swift"))
 # THE TEST SUITE IS IN SCOPE, ADDED 2026-08-29. A test that cites a design line is making the
 # same kind of claim a ledger row makes, and nothing checked it — `theRootIs1361` pinned a

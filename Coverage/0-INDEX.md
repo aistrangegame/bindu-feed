@@ -89,3 +89,12 @@ to the landing already present; each entry is its own amount; and nothing may ma
 solemn. Names what it rules out in the code as it stands — `startSceneTick` accumulates `dt`
 inside a `Timer` that does not fire in the background, which is the pause the ruling forbids and
 which would look entirely correct. **The amount itself is authored and still owed.**
+
+## 16 · `16-LIGHT-WALK.md` — **THE FIRST WALK OF THE WIDENED LIGHT**
+2026-09-21, simulator, real fetch. Seven of ten named checks PASS by eye: six stand; the sixth is
+a seam with a rule struck through it (N5's criterion); arm-then-name gives the authored slug; a
+base NAVE row (`hole`, 761) renders with the nave material and byte-exact wording; anchors arrive
+one per touch; the day's six hold across re-entry. **Three not reached — dissolve, blank carving,
+`[none]` landing** — because the five dawn points drift ≈2.4 pt/s against a 30 pt hit radius and
+the simulator round-trip ran 15–60 s under a load average of 295. Seeded draw left in place for
+the retry. Screenshots under `Coverage/evidence/`.
