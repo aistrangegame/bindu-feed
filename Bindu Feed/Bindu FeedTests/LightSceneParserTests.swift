@@ -154,13 +154,20 @@ import Foundation
     // green. A fixture written by the same pass that wrote the parser proves only that the
     // parser agrees with itself.
     //
-    //   recGJPACSwNNX2hUu · sort 712 · Light — company      qualified material · blank carving · [none]
-    //   recO9Df9wmu1mHOGG · sort 715 · Light — forgetting   qualified material · ordinary beat · landing
+    //   recGJPACSwNNX2hUu · sort 712 · Light — company      dissolve    · qualified material · blank carving · [none]
+    //   recO9Df9wmu1mHOGG · sort 715 · Light — forgetting   convergence · qualified material · ordinary beat  · landing
+    //
+    // **RE-TAKEN 2026-09-21, AFTER THE ARRIVAL PASS RAN.** Both rows carried no `ARRIVAL:` line
+    // when they were first embedded, so the test that needed one had to INSERT it — which made
+    // the input half-authored by this file, the very thing the rule forbids. The pass added the
+    // line to all seventy; these are the rows as they now stand. **The corpus moving is a
+    // reason to re-take a fixture, not a reason to patch one.**
 
     private let companyExcerpt = """
         FAMILY: Essence
         BELIEF DISSOLVED: I arrived alone.
         GESTURE: palm up — the phone held flat and face-up, an open hand rather than a grip. They cannot be moved toward; they come to a hand that is not closed.
+        ARRIVAL: dissolve
         MATERIAL: the particle and space, joined
         """
 
@@ -188,6 +195,7 @@ import Foundation
         FAMILY: Collective
         BELIEF DISSOLVED: judgment — the pattern is someone's fault.
         GESTURE: not singling out — touch one light and it resolves into a person, a name, a grievance, and the rest of the field goes dark. Take the hand back and the whole field returns.
+        ARRIVAL: convergence
         MATERIAL: dawn, at its widest
         """
 
@@ -228,35 +236,68 @@ import Foundation
 
     @Test("GESTURE is never a source for the wash, however it reads")
     func gestureIsNotTheArrival() {
-        // `company`'s GESTURE is *"palm up — the phone held flat and face-up…"*. It is unique
-        // to that scene by design, so it can never satisfy a closed vocabulary. If a future
-        // pass re-points the wash at it, this reds.
+        // `company`'s GESTURE is *"palm up — the phone held flat and face-up…"* — unique to
+        // that scene by design, so it can never satisfy a closed vocabulary. The row now
+        // carries `ARRIVAL: dissolve`, and that is what must decide.
         let company = LightSceneParser.scene(key: "company", title: "company",
                                              body: companyBody, excerpt: companyExcerpt,
                                              closingLine: nil)
-        #expect(company?.arrival == .dissolve,
-                "with no ARRIVAL line, the wash comes from the MATERIAL — never from GESTURE")
-        // And the GESTURE text itself is not silently smuggled in anywhere.
+        #expect(company?.arrival == .dissolve)
         #expect(company?.vector == "I arrived alone.")
         #expect(company?.kind == "Essence")
+
+        // **AND THE DISCRIMINATING HALF**, which the assertion above cannot make on its own:
+        // strike the ARRIVAL line and the wash must fall to the MATERIAL's own form, never to
+        // anything read out of GESTURE. Both paths land on `.dissolve` for this row — so the
+        // row is asked the question a second way, with a GESTURE that names a real arrival
+        // word and a MATERIAL that does not agree with it.
+        let noArrival = companyExcerpt
+            .split(separator: "\n")
+            .filter { !$0.hasPrefix("ARRIVAL:") }
+            .joined(separator: "\n")
+        #expect(noArrival.contains("GESTURE:"), "the GESTURE line is still there to be misread")
+        let fellBack = LightSceneParser.scene(key: "company", title: "company",
+                                              body: companyBody, excerpt: noArrival,
+                                              closingLine: nil)
+        #expect(fellBack?.arrival == .dissolve, "the particle and space falls to dissolve")
+
+        // The trap: a GESTURE that literally spells an arrival, over a dawn material. If the
+        // parser ever reads GESTURE again this returns `.turning`; the material says
+        // `.stillness` and the material is what must win.
+        let trap = """
+            FAMILY: Mind
+            BELIEF DISSOLVED: x → y
+            GESTURE: turning
+            MATERIAL: dawn
+            """
+        let trapped = LightSceneParser.scene(key: "x", title: "X", body: forgettingBody,
+                                             excerpt: trap, closingLine: nil)
+        #expect(trapped?.arrival == .stillness,
+                "GESTURE spelling an arrival word must still not be read as one")
     }
 
     @Test("ARRIVAL decides the wash, and it is not merely the fallback wearing a label")
     func arrivalIsReadAndChangesTheOutcome() {
-        // THE ASSERTION THAT WOULD HAVE CAUGHT THE ORIGINAL BUG. `forgetting`'s material is
-        // dawn, so its fallback is `.stillness` — and the arrival pass assigns it
-        // `convergence`. The two differ ON PURPOSE: if the parser ignored ARRIVAL entirely,
-        // this test reds, where a scene whose authored arrival happened to equal its fallback
-        // would have stayed green and proved nothing.
-        let withArrival = forgettingExcerpt.replacingOccurrences(
-            of: "MATERIAL: dawn, at its widest",
-            with: "ARRIVAL: convergence\nMATERIAL: dawn, at its widest")
+        // THE ASSERTION THAT WOULD HAVE CAUGHT THE ORIGINAL BUG, and `forgetting` is the row
+        // it is built on for one reason: **its authored arrival and its material fallback are
+        // different values.** The material is dawn, so the fallback is `.stillness`; the base
+        // says `convergence`. A parser that ignored `ARRIVAL:` reds here — where a row whose
+        // authored arrival happened to equal its fallback would stay green and prove nothing.
+        //
+        // No longer synthesised. Until the arrival pass ran, this test had to INSERT the
+        // `ARRIVAL:` line into a pre-pass fixture to have anything to read, which made the
+        // input half-authored by this file. The row carries the line now, so the fixture is
+        // the row.
         let parsed = LightSceneParser.scene(key: "forgetting", title: "forgetting",
-                                            body: forgettingBody, excerpt: withArrival,
+                                            body: forgettingBody, excerpt: forgettingExcerpt,
                                             closingLine: nil)
         #expect(parsed?.arrival == .convergence)
         #expect(LightSceneParser.fallbackArrival(for: .dawn) == .stillness,
                 "and the fallback it had to override is genuinely a different value")
+
+        // The same row's material, to keep both axes visible in one place: `convergence` is
+        // NOT derivable from `dawn, at its widest`, so the two are demonstrably independent.
+        #expect(parsed?.material == .dawn)
     }
 
     @Test("the fallback is the material's own form, for every material")
@@ -273,7 +314,7 @@ import Foundation
         // The seven values are the whole set. A row carrying anything else is a row to fix in
         // the base, and the app must render something honest in the meantime.
         let bogus = companyExcerpt.replacingOccurrences(
-            of: "MATERIAL:", with: "ARRIVAL: shimmering\nMATERIAL:")
+            of: "ARRIVAL: dissolve", with: "ARRIVAL: shimmering")
         let parsed = LightSceneParser.scene(key: "x", title: "X", body: companyBody,
                                             excerpt: bogus, closingLine: nil)
         #expect(parsed?.arrival == .dissolve, "unknown value → the material's own form")

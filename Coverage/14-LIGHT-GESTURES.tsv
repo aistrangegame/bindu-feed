@@ -1,0 +1,70 @@
+707	NOW	drag off-frame + per-send warmth within the standing-in
+708	NOW	elapsed time in scene (dims the longer he stays)
+709	BREATH	the app's Breath clock, not his — needs the ruling below
+710	NOW	touch-absence (LightView:661 idle)
+711	MOTION+	face-down via gravity vector AND audio that survives display sleep
+712	MOTION	gravity vector — flat and face-up
+713	RULE	"fresh anchors each visit" collides with the authored-text law
+714	RULE	"gyroscope read and deliberately ignored" — the eighth shape
+715	NOW	touch then release restores the field
+716	NOW	one touch only, no second
+717	MOTION	flat on a surface and released
+718	BREATH	advances in the gaps between breaths
+719	NOW	drag distance + stopping short
+720	NOW	first gesture stands
+721	NOW	never completes (absence of a completion state)
+722	PRESSURE	press hard resists / no force opens
+723	NOW	requires no gesture at all
+724	API	two touch points — SpatialEventGesture, iOS 18
+725	RULE	standing vs sitting — attitude proxy, or a motion-activity prompt
+726	NOW	beats at its own rate, indifferent to touch
+727	NOW	tolerant path matching
+728	NOW	delayed return keyed on idle
+729	RULE	altitude by arm — pitch proxy, or CMAltimeter which prompts
+730	MOTION	yaw — the source behind, cannot be faced
+731	NOW	silence advances it (absence, no mic)
+732	RULE	"responds to the moment he realises it is responding"
+733	NOW	a long refusal, then it opens anyway
+734	RULE	walking away vs standing over it, watching
+735	NOW	hold duration — lighter the longer he holds
+736	NOW	begins only when he stops doing anything toward it
+737	WAVE5	accretion — derived from pulses, never a stored count
+738	NOW	drag direction — backward only
+739	NOW	pre-authored responses per gesture class
+740	MOTION	pitch — upright along the body's axis
+741	NOW	no acknowledgement (absence; must still progress)
+742	NOW	drag velocity matching
+743	PRESSURE	light contact sustains; too hard stops
+744	API	UIApplication.userDidTakeScreenshotNotification
+745	NOW	gesture whitelist per beat
+746	NOW	drag to the edge
+747	NOW	path following around an empty shape
+748	NOW	fixed slow rate; tolerating it is the gesture
+749	NOW	no fast path exists to find
+750	NOW	approach and pass through
+751	NOW	no memory at all — the counter-example to 737
+752	NOW	silence weighs the same as any reach
+753	NOW	aim returns to him at every angle
+754	CONTENT	the real calendar + authored days that mean something
+755	API	proximity sensor — changes only while covered
+756	NOW	narrows the further in he goes
+757	NOW	exceeds the frame in every direction
+758	NOW	every signal of approach, nothing arrives
+759	NOW	long hold; returns what he already had
+760	NOW	his gesture performed elsewhere by something not him
+761	NOW	a gap nothing closes
+762	NOW	drag down opens; climbing reveals nothing
+763	NOW	evenness lights the field; favouring one dims the rest
+764	WAVE5	an empty day rendered with equal care
+765	CONTENT	two readings per element, never resolved
+766	NOW	already complete before he arrives
+767	NOW	what has not moved becomes visible
+768	NOW	three sources that never reconcile
+769	WAVE3	whatever he names, the scene keeps — needs typed input
+770	RULE	"felt rather than shown" — haptics, which the app has never used
+771	RULE	"any attempt to check first closes it"
+772	WAVE3	it opens on the asking — needs typed input
+773	NOW	stop sorting and they are one
+774	NOW	what carried never stopped moving
+775	NOW	figures who recognise him
+776	RULED	the stated amount — wall-clock, ruled 2026-09-20

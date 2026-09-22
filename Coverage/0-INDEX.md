@@ -73,3 +73,19 @@ remaining rows (OPEN · PARTIAL · NEEDS-JUDGMENT). **44 pass the line (37 after
 recorded here with their findings intact, not closed and not lost.** A recorded item asserts
 something narrower than a CLOSED row: *the app makes the design's claim on this surface, at a
 different value.*
+
+## 14 · `14-LIGHT-GESTURES.md` — **THE WAVE 2 RULING**
+2026-09-21. The Light's seventy `GESTURE:` values, ruled one at a time against what the app can
+actually sense. Counts computed from `14-LIGHT-GESTURES.tsv`, not asserted: **43 buildable
+today · 8 needing a ruling first · 4 Core Motion · 3 an unused system API · 2 each for breath,
+pressure, content, Wave 3 and Wave 5 · 1 ruled.** The headline is that **61 of 70 need no new
+sensing at all** — the Light is blocked on eight decisions and two later waves, not on hardware.
+Corrects a claim this project had been repeating: the portrait lock pins the INTERFACE, not the
+READING, and device attitude costs no permission prompt.
+
+## 15 · `15-HOURS.md` — **THE ONE SCENE ALREADY RULED**
+2026-09-20. `hours` (776) is wall-clock time that nothing pauses; expiry while away returns him
+to the landing already present; each entry is its own amount; and nothing may make the scene
+solemn. Names what it rules out in the code as it stands — `startSceneTick` accumulates `dt`
+inside a `Timer` that does not fire in the background, which is the pause the ruling forbids and
+which would look entirely correct. **The amount itself is authored and still owed.**
