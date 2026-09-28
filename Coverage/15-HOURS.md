@@ -115,7 +115,32 @@ nears, and nothing marks the last ten seconds — *"if a future pass makes this 
 pass is wrong."*
 
 **This is the one value in the register that is the app's and not the author's**, and it is
-marked so: it lives as a single named constant, and changing it is one line and no argument.
-If Ashrey authors an amount, it replaces this and this note goes.
+marked so. If Ashrey authors an amount, it replaces this and this note goes.
+
+## Four minutes is ruled. Do not re-litigate it from the shorter argument.
+
+**RULED 2026-09-28.** This paragraph used to end *"changing it is one line and no argument"* —
+which invited exactly the re-opening it was trying to make cheap. It is struck.
+
+The history matters, because the shorter argument is the one a later pass will find first.
+**Three minutes was proposed, and three minutes was wrong** — not by taste, but against the
+register's own law: *the scene cannot be failed by lingering.* Three minutes sits inside the
+unhurried walk measured above (4.6s gate + hold + **five** anchors surfacing one per touch on
+the breath at `Breath.period * 1.6` ≈ 16s + the Declaration on hold + the landing ≈ **2m30s–3m**),
+so a man who paused on one anchor would run out mid-scene and the scene would have been failed
+by attending to it. **Four minutes is the smallest round number that cannot be.** It is derived
+from the walk, not picked; the five anchors it is derived from are verified against the row.
+
+So: the amount is **four minutes**, and it is settled. A later pass may replace it only with an
+amount **Ashrey authors**, or with a re-measured walk that shows four is no longer the smallest
+round number above it. *"It felt long"* is not a reason, and neither is the three-minute
+proposal, which is recorded here spent rather than open.
+
+**The constant does not exist in the code yet, and this file is deliberately where it lives
+until it does.** `hours` is not built — no Swift file in the register names it (grepped
+2026-09-28). Writing a named constant now that nothing reads would be §10's eleventh shape
+exactly: built, asserted, uncalled. **When the scene is built, this reasoning moves with the
+constant into its doc comment** — that is the point of recording it here rather than in a
+commit message that the next pass will not read.
 
 Everything else above is decided.

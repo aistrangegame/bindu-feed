@@ -1193,5 +1193,14 @@ scene never repeats)"*, so the first exhale delivers a stage direction in second
 `reczh2lA8S5Ingm4G` (737 `ninth`) has a WHOLE of two variant paragraphs, *"(first visit) …"* and
 *"(later) …"*, and the parser renders both, labels included.
 **The parser is right to show them verbatim** — exact wording is load-bearing and a reader that
-filtered parenthetical lines would be editing authored text. The fix is `Status: Draft` on both
-until 713's ruling and Wave 5 land. **That is a base edit, and it is not the app's to make.**
+filtered parenthetical lines would be editing authored text.
+
+**RESOLVED IN THE BASE 2026-09-28, AND THE TWO WERE TREATED DIFFERENTLY.**
+`713 uncertainty` stayed **Live**: the directive moved out of `ANCHORS` into the Excerpt as a
+`NOTE:`, where the schema already puts notes and the parser already ignores them — and **ten more
+anchors were authored**, so the row now holds **fifteen**. *"Never the same twice"* is therefore
+true rather than aspirational, and the ruling above (selection from a pool, never generation) has
+a pool to select from. Verified against the base: 15 anchors, first is *"Here is something you do
+not know."*, no directive in `ANCHORS`, `NOTE:` present.
+`737 ninth` went to **`Status: Draft`** — the one that genuinely cannot work until Wave 5.
+**Live Light rows: 69.**

@@ -78,8 +78,11 @@ different value.*
 2026-09-21. The Light's seventy `GESTURE:` values, ruled one at a time against what the app can
 actually sense. Counts computed from `14-LIGHT-GESTURES.tsv`, not asserted: **43 buildable
 today · 8 needing a ruling first · 4 Core Motion · 3 an unused system API · 2 each for breath,
-pressure, content, Wave 3 and Wave 5 · 1 ruled.** The headline is that **61 of 70 need no new
-sensing at all** — the Light is blocked on eight decisions and two later waves, not on hardware.
+pressure, content, Wave 3 and Wave 5 · 1 ruled.** The headline is that **59 of 69 Live need no
+new sensing at all** — the Light is blocked on eight decisions and two later waves, not on
+hardware. *(This read "61 of 70". Two corrections, 2026-09-28: the figure was **wrong by one
+when written** — the TSV computes 60 of 70, not 61 — and `737 ninth` is now `Status: Draft`,
+which takes a WAVE5 row out of the Live corpus. 70 rows still exist; 69 are Live.)*
 Corrects a claim this project had been repeating: the portrait lock pins the INTERFACE, not the
 READING, and device attitude costs no permission prompt.
 **The eight RULE rows were ruled 2026-09-28** — five need no new sensing, two take Core Motion

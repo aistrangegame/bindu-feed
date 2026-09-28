@@ -769,3 +769,77 @@ accumulation, the membrane's give, the `mem` slip-through under real drift. Thos
 *by construction* an hour ago. The order matters and it is the A3 order — **the harness before
 the work it proves** — so the ten remaining `InstrumentView` rows can be asserted as they
 close instead of being added to the walk and re-reached later.
+
+---
+
+# 14 · THE LIGHT SHIPS WITHOUT ITS GESTURES — written down before it ships, not discovered after
+
+*Recorded 2026-09-28, at Ashrey's instruction, on the build that goes to TestFlight.*
+
+**This section exists so that nobody walks the widened Light, feels that every scene is met the
+same way, and files it as a bug.** It is not a bug. It is a half of the design that has been
+ruled and not built, and the distance between those two words is the whole content of this
+section.
+
+## What ships
+
+**Sixty-nine Light scenes, live from the base** (70 rows of `Type='Light'` exist; `737 ninth` is
+`Status: Draft` and therefore unreachable — see `14-LIGHT-GESTURES.md`). Each one ships with:
+
+- **its authored words, verbatim** — `WHOLE`, `ANCHORS`, `BEAT`, `LANDING`, never paraphrased,
+  regenerated, truncated for layout or re-flowed;
+- **its authored wash** — one of the closed seven (`stillness · convergence · warmth · turning ·
+  release · dissolve · nave`), read from `ARRIVAL:`, **69 of 69 parsing, 0 falling back**;
+- **its authored material** — `dawn` 57 · `the particle and space` 7 · `nave` 5;
+- **the two content mechanisms that are built**: the **7 blank carvings** (`BEAT` is
+  `[blank — his own carving]`; the scene completes on its anchors and lands, and no line ever
+  appears where his carving goes) and the **6 `[none]` landings** (no empty block above the way
+  out).
+
+**The visual axis is whole.** A scene authored to arrive by dissolving arrives by dissolving.
+
+## What Wave 2 owes: the gestures are NOT BUILT
+
+**`GESTURE:` is authored on all seventy rows, parsed, and thrown away.** This is not an
+inference — it is three facts in the code:
+
+| | |
+|---|---|
+| `LightScene` has **no gesture property** | `LightCanon.swift` — the struct's stored members are `key · title · material · whole · anchors · beat · landing · vector · kind · arrival · carvingIsHis · recordId · ungripOnly` |
+| the parsed value is **discarded at the parse site** | `LightSceneParser.swift:241` — *"no gesture field, so `lab["GESTURE"]` is read into the local dictionary and goes no further"* |
+| the one hand-sensing primitive is **unreachable from the base** | `LightCanon.swift:102` — `ungripOnly` is *"Stored now, and **false for every parsed scene**, because gestures are not read from the base"* |
+
+**So every one of the 69 renders its own wash and is then met by the same hands.** The
+interaction falls back to the primitives that already exist in `LightView`: a **touch advances
+one anchor on the breath**, a **hold draws the Declaration**, the choosing is **two-stage
+arm-then-name**, and `‹ leave` returns. The **ungrip** — the only place in the app that senses a
+hand opening — answers the canon `release` scene alone.
+
+**What that costs, stated plainly.** A row that reads *"rising — lift the phone and the view
+widens"* does not widen when the phone is lifted. He touches it, as he touches all the others,
+and the scene proceeds correctly. **Nothing is broken and nothing is missing from the screen;
+what is missing is that the scenes do not yet differ in the hand.**
+
+## The ruling is done, so the build is not blocked on thinking
+
+`14-LIGHT-GESTURES.md` rules all seventy, one line each, grouped by the primitive each needs:
+
+- **59 of the 69 Live need no new sensing at all** (43 NOW · 8 RULE · 2 CONTENT · 2 WAVE3 ·
+  1 WAVE5 · 2 BREATH · 1 RULED). They are buildable on touch-absence accumulation, the 16ms hold
+  loop, breath-phase gating, the ungrip, arm-then-commit, drag direction and distance,
+  hour-of-day, local day-keys and days-since age — **all of which exist today.**
+- **10 need sensing the app has never had**, each costing a first-ever permission prompt or a
+  first-ever framework: 4 MOTION · 3 API · 2 PRESSURE · 1 MOTION+.
+
+**`776 hours` is the sharp case: ruled in full and built not at all.** `15-HOURS.md` settles its
+behaviour and its amount (**four minutes**, derived from the unhurried walk, not picked). No
+Swift file names it. It ships as an ordinary `nave` scene with no clock, and the man is not told
+how long he has — which is the one thing its `GESTURE:` says it tells him. **Recorded here so
+that its absence is read as owed rather than as a regression.**
+
+## The rule this section is keeping
+
+Wave 2 is a build, not a decision. **The thing that makes this honest rather than a promise is
+that the ruling landed first and the count is measured** — 59, 10, 69, from
+`14-LIGHT-GESTURES.tsv`, recomputed rather than re-read. When Wave 2 is built, this section is
+deleted, not amended: a section that says *"not built"* must never survive the building.

@@ -4,6 +4,11 @@
 build + fresh `simctl install` of the tree at `a822406` (Swift identical; only records differ) ·
 a PAT already in the simulator keychain, so the fetch was REAL and the seventy loaded.*
 
+> **The count in that dateline is correct for the day it was walked and wrong today.** All 70
+> rows were `Live` on 2026-09-21. `737 ninth` went to `Status: Draft` on 2026-09-28, so a walk
+> run now loads **69**. The line is left as written — it is a dated observation, not a standing
+> claim — and this note is what keeps it from being read as one.
+
 **Nobody had seen a base scene render before this.** Every earlier Light walk used the six
 hardcoded scenes. This is the first time the draw, the seam, and a scene authored in Airtable
 were on a screen — and it is a SIMULATOR walk, offered as evidence about geometry, count and

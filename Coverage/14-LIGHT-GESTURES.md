@@ -2,6 +2,11 @@
 
 *Written 2026-09-21, against the base as it stands after the arrival pass.*
 
+**SEVENTY ROWS ARE RULED HERE; SIXTY-NINE ARE LIVE.** `737 ninth` went to `Status: Draft` on
+2026-09-28 — it cannot work until Wave 5, because its `WHOLE` is two visit-keyed variants and
+its anchors assume a history that does not exist on a first visit. Its ruling is kept below
+rather than removed: the row still exists and the ruling is what un-drafts it.
+
 **This is a ruling, not a build list.** It says, for each of the seventy scenes, whether its
 `GESTURE:` can be built on primitives this app already has — and where it cannot, what exactly
 is missing and whether the missing thing is a sensor, a ruling, or authored content. Design
@@ -93,9 +98,14 @@ Counts are computed from `Coverage/14-LIGHT-GESTURES.tsv`, not asserted.
 | **MOTION+** | **1** | Core Motion *and* an audio-session ruling |
 | **RULED** | **1** | `hours`, settled 2026-09-20 |
 
-**Sixty-one of seventy need no new sensing at all** (NOW + RULE + CONTENT + WAVE3 + WAVE5 +
-BREATH + RULED), and the single largest group is buildable today. **The Light is not blocked on
-hardware.** It is blocked on eight rulings and two later waves.
+**Sixty of seventy need no new sensing at all** (NOW + RULE + CONTENT + WAVE3 + WAVE5 + BREATH +
+RULED) — **fifty-nine of the sixty-nine that are Live**, since `737`'s WAVE5 row is drafted. The
+single largest group is buildable today. **The Light is not blocked on hardware.** It is blocked
+on eight rulings and two later waves.
+
+*This paragraph said "sixty-one" and that was an arithmetic slip, not a stale number: the TSV
+computes 60. Corrected 2026-09-28 by recomputing from the file rather than re-reading the
+sentence — which is the only way this class of error is ever found.*
 
 ### NOW · 43 scenes
 
