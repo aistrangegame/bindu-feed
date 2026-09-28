@@ -46,6 +46,8 @@ struct LightView: View {
     @State private var gate: Timer?
 
     // Scene
+    /// Latches the blank carving's landing so the 50ms tick cannot re-enter it.
+    @State private var landingScheduled = false
     @State private var shownAnchors = 0
     @State private var ungrips = 0
     /// E1.5+E1.6 · the arrival, as real state rather than a reading of how much has been read.
@@ -94,9 +96,43 @@ struct LightView: View {
     /// Falling back to the canon six is the `FieldSound.fallbackBreath` pattern (§15): the
     /// Breath must never go silent, and the Light must never be a crash. It also means the
     /// six that were authored once still stand when nothing else can be reached.
+    /// **THE VISIT'S SIX ARE DECIDED ONCE AND HELD — this was a computed property and that was
+    /// a blocker.** `pool` called `LightDraw.today(from:)` on EVERY body evaluation, with a
+    /// fresh `localDayString()` and a fresh read of `store.lightScenes`. Three consequences,
+    /// all of them on the surface:
+    ///
+    ///  · **The fetch landing mid-visit replaced the six under him.** `store.lightScenes` is
+    ///    `[]` until the lazy load returns, so the first visit of a launch rendered the CANON
+    ///    six — the approach naming *"The morning that does not push"* — and then swapped to
+    ///    the drawn six mid-gate. A fetch slower than the ~8s gate-and-hold changed the scene
+    ///    he was standing in.
+    ///  · **Local midnight redrew the day under him**, replacing the scene mid-read.
+    ///  · And the swap could TRAP: `sceneBody` subscripts the new scene's `beat` with the old
+    ///    scene's `beatLine`, which is out of range for any scene with fewer Declaration lines
+    ///    — including all seven `[blank — his own carving]` scenes, whose `beat` is empty.
+    ///
+    /// It also ran inside `TimelineView(.animation)`, so a UserDefaults read plus a 70-entry
+    /// dictionary build happened every frame, and the day's first draw performed a UserDefaults
+    /// WRITE from inside view evaluation.
+    ///
+    /// Settled at most once per visit by `settleSix()`, and never re-read after.
+    @State private var sixToday: [LightScene] = []
+
     private var pool: [LightScene] {
+        sixToday.isEmpty ? LightCanon.scenes : sixToday
+    }
+
+    /// Decide the day's six, once. Idempotent by `sixToday.isEmpty`.
+    ///
+    /// `force` is the last moment it can be deferred: the gate completing is when the six stop
+    /// being an implementation detail and become the thing he is looking at. If the fetch has
+    /// not landed by then the canon six stand for this visit — a stable walk on the fallback,
+    /// rather than a correct pool arriving late enough to move the ground.
+    private func settleSix(force: Bool = false) {
+        guard sixToday.isEmpty else { return }
         let drawn = LightDraw.today(from: store.lightScenes)
-        return drawn.isEmpty ? LightCanon.scenes : drawn
+        if !drawn.isEmpty { sixToday = drawn }
+        else if force { sixToday = LightCanon.scenes }
     }
 
     private var scene: LightScene {
@@ -157,10 +193,17 @@ struct LightView: View {
         // opens never reach the Light and the approach's 4600ms gate is ample cover for a
         // fetch. `loaded` guards the re-entry; `foundationLoaded` is the same precondition
         // every content surface waits on.
-        .task {
+        // **`id:` — the precedent this cites carries it and this dropped it.**
+        // `MirrorView:63` is `.task(id: store.foundationLoaded)`. A `.task` with no id runs
+        // once per appearance: if `foundationLoaded` was still false at the instant the Light
+        // appeared, the guard returned and nothing ever re-fired, so the visit stood on the
+        // canon six and the seventy never loaded until he left and came back. Keyed on the
+        // same precondition, it re-runs the moment the foundation lands.
+        .task(id: store.foundationLoaded) {
             guard !loaded, store.foundationLoaded else { return }
             await store.loadLightScenes()
             loaded = true
+            settleSix()          // the six become decidable the instant the rows arrive
         }
         .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate() }
         .sonicContext(.base)
@@ -168,8 +211,25 @@ struct LightView: View {
 
     // MARK: - Material (dawn vs nave)
 
+    /// **WHAT HE IS STANDING IN BEFORE HE HAS CHOSEN IS THE REGISTER, NOT A SCENE.**
+    /// `material` switched on `scene.material`, and `scene` is `pool[sceneIndex]` with
+    /// `sceneIndex` still 0 — so the approach, the hold and the choosing all rendered whatever
+    /// the draw happened to put first. With six hand-written scenes that was always the canon
+    /// morning and always `.dawn`, so the bug could not appear; with seventy it can be one of
+    /// the seven `the particle and space` rows, and the stillness gate then fills over black
+    /// space with a static red glow behind the Bindu, and the six *"standing in the dawn"*
+    /// stand in a sky that is not the dawn. `canon/spine-light.js` is unambiguous that the
+    /// choosing happens in the dawn. Only once he is inside a scene does that scene's material
+    /// take over — and `.out` keeps it, because leaving happens from where he was.
+    private var standingMaterial: LightMaterial {
+        switch stage {
+        case .scene, .out: return scene.material
+        default:           return .dawn
+        }
+    }
+
     @ViewBuilder private var material: some View {
-        switch scene.material {
+        switch standingMaterial {
         case .dawn:
             ZStack {
                 Color(hex: "#08070B").ignoresSafeArea()
@@ -197,7 +257,11 @@ struct LightView: View {
             // they fall away to is the point the whole app is named for.
             ZStack {
                 Color(hex: "#050408").ignoresSafeArea()
+                // The falling-away, drawn where subtraction is possible: outside the additive
+                // Canvas. As the arrival fills, the sky goes and the point stays — which is
+                // what `dissolve` says, and what the additive wash above cannot do alone.
                 LightStars(material: .particleAndSpace, breath: breath.value)
+                    .opacity(1 - 0.88 * arrivalProgress)
                 Circle()
                     .fill(RadialGradient(
                         colors: [BinduParticle.core.opacity(0.50 + 0.18 * breath.value),
@@ -705,8 +769,21 @@ struct LightView: View {
             // at the last anchor with nothing on offer. It completes on the anchors instead —
             // and completes SILENTLY, because the one thing that must never happen here is a
             // line arriving where his own words go.
-            if arrive >= 1 && awaitingHisCarving {
-                withAnimation(.easeInOut(duration: Breath.period * 1.6)) { landed = true }
+            // **THE SAME NUMBER AS THE CARVED PATH, ON THE WRONG PARAMETER.** `:828` waits
+            // `Breath.period * 1.6` (16s) and THEN dissolves the landing in over 1.0s, which is
+            // the comp's `setTimeout(…, breathMs*1.6)`. This used that number as the fade's
+            // DURATION with no wait, so the landing and `walk back out ›` began appearing while
+            // the last anchor was still arriving, and took sixteen seconds to do it. A sibling
+            // transposition — the right constant, the wrong parameter, and it reads as
+            // considered precisely because the neighbour carries the same number (§10).
+            //
+            // And it had no latch, so a 50ms tick re-entered `withAnimation` twenty times a
+            // second for the rest of the scene.
+            if arrive >= 1 && awaitingHisCarving && !landingScheduled {
+                landingScheduled = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + Breath.period * 1.6) {
+                    withAnimation(.easeInOut(duration: 1.0)) { landed = true }
+                }
             }
             if arrive >= 1 && !wholeDelivered {
                 wholeDelivered = true
@@ -721,6 +798,10 @@ struct LightView: View {
         soundEngine.lightOpenTheRoom(dur: 8.5)
         soundEngine.lightBreathIn(dur: 6)
         gate?.invalidate()
+        // THE LAST MOMENT THE SIX CAN BE DEFERRED. Past here he is looking at them, so they
+        // stop moving: if the fetch has not landed, the canon six stand for this visit rather
+        // than the ground changing under him a second later.
+        settleSix(force: true)
         startSceneTick()
         // The pulse used to fire HERE, at the gate — before he had chosen anything, so it
         // recorded "the Light was opened" and could name no scene. It fires on entering a
@@ -861,6 +942,18 @@ struct LightView: View {
         holdWork.forEach { $0.cancel() }
         stillMs = 0; shownAnchors = 0; ungrips = 0; arrive = 0; wholeDelivered = false
         drew = 0; carved = false
+        // **`landingScheduled` AND `armed` BOTH BELONG HERE, AND NEITHER WAS.**
+        // `landingScheduled` is the latch added to stop the 50ms tick re-entering the blank
+        // carving's landing — and a latch with no reset is a one-shot for the lifetime of the
+        // view. Left out, the SECOND visit to any of the seven `[blank — his own carving]`
+        // scenes could never reach `landed`: no landing, no `walk back out ›`, only `‹ leave`.
+        // **Exactly the dead end the latch's own comment says the mechanism exists to prevent**,
+        // reintroduced by the fix for it, and invisible on any first walk.
+        //
+        // `armed` is older and the same shape: it survived `restart()`, so re-approaching found
+        // a point already armed and already named, and one tap entered it — collapsing the
+        // two-stage arm-then-commit that §10 records as this register's whole affordance.
+        landingScheduled = false; armed = nil
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
         wants = 0; lastDelivered = -1; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }
@@ -927,20 +1020,22 @@ private struct LightDawnArrival: View {
                                with: .color(col(bone, A * 0.22 * ok)), lineWidth: 0.7)
                 }
             case .dissolve:                                       // everything falls away to the point
-                // The seven Essence scenes. Not an arrival OF light — a subtraction of
-                // everything that is not the point: the field darkens from the edges inward as
-                // `p` fills, and the point alone brightens. Drawn as a vignette that closes
-                // rather than a glow that opens, which is the inverse of every other case here
-                // and is exactly what "falls away" has to mean if it is to mean anything.
-                for i in 0..<9 {
-                    let t = Double(i) / 8
-                    ctx.stroke(UniGeo.ringPath(W * 0.5, H * 0.5, max(W, H) * (0.34 + t * 0.52)),
-                               with: .color(col([5, 4, 8], A * 0.30 * p * (0.35 + t * 0.65))),
-                               lineWidth: max(W, H) * 0.075)
-                }
-                rect([.init(color: col([229, 83, 60], A * 0.30 * p), location: 0),
+                // **THIS CANVAS IS ADDITIVE — `.blendMode(.plusLighter)` below — SO NOTHING
+                // DRAWN HERE CAN EVER DARKEN.** The first version of this case stroked
+                // nine near-black rings (`[5,4,8]`) to close a vignette from the edges inward,
+                // and additive blending contributed at most ~2/255: the field never dimmed, the
+                // forty stars of the space sky stayed at full brightness for the whole scene,
+                // and the only thing that happened was a red radial shrinking. A subtraction
+                // written in a medium that can only add. It was a no-op that read as a wash.
+                //
+                // The falling-away is expressed where it CAN be — the sky's own stars fade with
+                // `p` in the `.particleAndSpace` material — and what is left here is the only
+                // half additive blending can carry: the point, gathering as everything else
+                // goes. Tightening as it brightens, so the light concentrates rather than
+                // spreads.
+                rect([.init(color: col([229, 83, 60], A * (0.16 + 0.34 * p)), location: 0),
                       .init(color: col([229, 83, 60], 0), location: 1)],
-                     CGPoint(x: W * 0.5, y: H * 0.5), W * (0.26 - p * 0.13))
+                     CGPoint(x: W * 0.5, y: H * 0.5), W * (0.30 - p * 0.17))
             case .stillness, .nave:                               // morning: the dawn thins toward him
                 vrect([.init(color: col([255, 238, 214], A * 0.20 * p), location: 0),
                        .init(color: col([255, 238, 214], 0), location: 1)],

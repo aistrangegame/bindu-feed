@@ -86,10 +86,23 @@ struct LightScene: Identifiable {
     var recordId: String? = nil
 
     /// `release` alone advances on the hand OPENING — `:142-144`, *"it does not respond to his
-    /// reaching. Nothing here does."* Derived rather than stored: it was a hand-set Bool that
-    /// happened to be true for exactly the scene whose `arrival` is `release`, which is the
-    /// duplicated-contract shape §10 records five times. One source now.
-    var ungripOnly: Bool { arrival == .release }
+    /// reaching. Nothing here does."*
+    ///
+    /// **THIS WAS DERIVED FROM `arrival` AND THAT LEAKED ONE AXIS INTO THE OTHER.** It read
+    /// `arrival == .release`, on the reasoning that a hand-set Bool true for exactly the scene
+    /// whose arrival is `release` is the duplicated-contract shape §10 records five times. That
+    /// reasoning was sound for SIX scenes, where the two axes could not be told apart — and
+    /// wrong the moment `arrival` started arriving from the base, because **`ARRIVAL:` is the
+    /// visual wash and `GESTURE:` is the physical interaction, and they are different axes by
+    /// law.** Ten of the seventy rows carry `ARRIVAL: release`, and each of them carries its own
+    /// distinct `GESTURE:` — so deriving handed all ten the canon release scene's MECHANICS: the
+    /// whole withheld until three hand-openings, anchors advancing only on lift, `axisUngrip`
+    /// sounding on each. A wash decided how the hand works.
+    ///
+    /// Stored now, and **false for every parsed scene**, because gestures are not read from the
+    /// base yet — that is Wave 2 (`Coverage/14-LIGHT-GESTURES.md`). The single-source instinct
+    /// was right about the six and is the wrong shape across two axes.
+    var ungripOnly: Bool = false
 
     /// `landing` is optional in the widened corpus — `[none]` with an empty Closing Line. Also
     /// not an error; the scene simply ends on the Declaration.
@@ -311,7 +324,7 @@ enum LightCanon {
             ],
             landing: "Carry the trust, not the grip.",
             vector: "effort → trust", kind: "Future", arrival: .release,
-            carvingIsHis: false
+            carvingIsHis: false, ungripOnly: true
         ),
         LightScene(
             key: "floor", title: "The floor", material: .nave,

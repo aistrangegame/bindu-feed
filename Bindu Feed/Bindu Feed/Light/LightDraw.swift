@@ -54,7 +54,13 @@ enum LightDraw {
                       defaults: UserDefaults = .standard) -> [LightScene] {
         guard !pool.isEmpty else { return [] }
 
-        let byId = Dictionary(uniqueKeysWithValues: pool.map { ($0.key, $0) })
+        // **`uniqueKeysWithValues` WOULD TRAP THE REGISTER ON A DUPLICATE SLUG**, and the keys
+        // come from the base: `Name` tails that lower-case and hyphenate to the same string.
+        // Two such rows would `fatalError` on the Light's first frame — the exact crash the
+        // canon fallback was built to prevent, reintroduced one layer down. `fetchLightScenes`
+        // deliberately drops a bad row and lets the register stand; this must not be stricter
+        // than the fetch. First wins, so the day's saved draw keeps resolving to what it drew.
+        let byId = Dictionary(pool.map { ($0.key, $0) }, uniquingKeysWith: { first, _ in first })
 
         // Already drawn today? Return it — but only if every scene it names still exists.
         // A scene retired in the base must not leave a hole in the dawn.

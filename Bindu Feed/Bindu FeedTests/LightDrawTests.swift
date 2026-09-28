@@ -115,7 +115,14 @@ import Foundation
 
     @Test("with no nave scene at all, the dawn is still five and the Far place is simply empty")
     func theFarPlaceCanBeAbsent() {
-        // This is the base as it stands TODAY: 63 dawn, 7 the particle and space, 0 nave. The
+        // **THE CORPUS FACT THIS USED TO STATE WAS TRUE FOR ONE DAY AND IS NOW FALSE.** It read
+        // "the base as it stands TODAY: 63 dawn, 7 the particle and space, 0 nave" — written
+        // before the arrival pass, which flipped 741, 756, 761, 762 and 776 to `MATERIAL: nave`.
+        // Measured after it: **58 dawn · 7 the particle and space · 5 nave**, so the Far place
+        // resolves from the base on every real walk and this is no longer the live state.
+        // It is kept because the LAW still needs asserting — a pool with no nave must yield
+        // five and fabricate nothing — but it is a synthetic pool now, not a description of
+        // the base, and saying so is the difference between a test and a stale claim. The
         // draw must not invent a sixth, and must not collapse — N5's walk criterion is the
         // thing that fails here, and it fails visibly rather than by exception.
         let d = freshDefaults("nonave")
@@ -171,19 +178,40 @@ import Foundation
     @Test("nothing favours a scene for having been neglected")
     func noBalancing() {
         // The brief forbids weighting, rotation and balancing by name — all three are forms of
-        // managing the future on his behalf. Over many days every scene should appear with
-        // roughly equal frequency and NONE should be starved or pushed.
+        // managing the future on his behalf.
+        //
+        // **THE ASSERTION THIS REPLACES WAS A TAUTOLOGY, AND A DOUBLE ONE.** It read
+        // `(max − min) < 200` over 200 days, under a comment saying *"a hard rotation would be
+        // exactly equal"*. Two independent reasons it could never fail: over 200 days `max ≤ 200`
+        // and `min ≥ 0`, so the difference is at most 200 by arithmetic — and `counts.count == 10`
+        // on the line above already forces `min ≥ 1`, so it is at most 199. **It was satisfied by
+        // the very thing it named**, because a hard rotation makes the counts IDENTICAL, and
+        // identical counts have a spread of zero, which is comfortably under 200.
+        //
+        // And the pool made it worse: 10 dawn scenes with 5 slots means excluding yesterday's
+        // five leaves exactly five fresh, so `pick` must return the exact complement every day —
+        // a strict alternation, which is the defect, running underneath a green test.
+        //
+        // So: a pool where the exclusion CANNOT force the answer (12 choose 5, leaving 7 fresh),
+        // and the property a rotation actually violates — **the counts must not all be equal.**
         let d = freshDefaults("flat")
         var counts: [String: Int] = [:]
-        let p = pool(dawn: 10, nave: 2)
+        let p = pool(dawn: 12, nave: 2)
         for day in 0..<200 {
             for s in LightDraw.today(from: p, now: "2026-01-\(day)", defaults: d)
             where s.material == .dawn { counts[s.key, default: 0] += 1 }
         }
-        let seen = counts.values
-        #expect(counts.count == 10, "every dawn scene appears; none is starved")
-        // A rotation would make these identical; a weighting would skew them. Neither.
-        #expect((seen.max() ?? 0) - (seen.min() ?? 0) < 200,
-                "spread \(seen.min() ?? 0)…\(seen.max() ?? 0) — a hard rotation would be exactly equal")
+        #expect(counts.count == 12, "every dawn scene appears; none is starved")
+        // A hard rotation visits each scene the same number of times, so its counts are all
+        // equal. Random sampling over 200 days effectively never is. **This can fail** — plant a
+        // rotation in `pick` and it does.
+        #expect(Set(counts.values).count > 1,
+                "every scene drawn exactly \(counts.values.first ?? 0) times — that is a rotation, \(counts)")
+        // And no scene is pushed: nothing should run away with it either.
+        let expected = 200.0 * 5.0 / 12.0
+        for (k, n) in counts {
+            #expect(Double(n) > expected * 0.5 && Double(n) < expected * 1.6,
+                    "\(k) drawn \(n) times against ~\(Int(expected)) expected — weighted?")
+        }
     }
 }

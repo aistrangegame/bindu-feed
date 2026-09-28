@@ -126,20 +126,55 @@ enum LightSceneParser {
         return .dawn
     }
 
+    /// `ARRIVAL:` → the case, across BOTH spellings the corpus and canon use.
+    ///
+    /// **FIVE OF SEVENTY ROWS DID NOT PARSE AND NOTHING SAID SO.** `LightArrivalKind.nave` takes
+    /// its rawValue from canon, which writes *"the nave"*; every nave row in the base writes
+    /// `ARRIVAL: nave`, which is also how the content brief's own vocabulary table spells it. So
+    /// `init(rawValue:)` returned nil on 741, 756, 761, 762 and 776, and `fallbackArrival(for:
+    /// .nave)` supplied `.nave` — **the right pixels down the path that exists for when the
+    /// authoring is missing.** Green by coincidence: the fallback happened to agree.
+    ///
+    /// **AND MY OWN VERIFICATION INSTRUMENT HID IT.** The python that measured *"70 of 70 parse,
+    /// 0 fall back"* for `Coverage/1-AUDIT-254.md` accepted BOTH spellings while Swift accepts
+    /// one — a model more permissive than the code it modelled, reporting a number the build
+    /// could not produce. §10's rule, for the fourth time: *the tool you measure with belongs
+    /// inside the audit.* A simulation of a parser must share the parser's vocabulary or it is
+    /// measuring a different program.
+    static func arrival(from raw: String) -> LightArrivalKind? {
+        let t = raw.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return nil }
+        // Both spellings are authored, in two places that are each authoritative for their own
+        // corpus. Accepting both is not widening the closed set — it is the same seven values.
+        return LightArrivalKind(rawValue: t) ?? LightArrivalKind(rawValue: "the " + t)
+    }
+
     /// The wash for a scene whose `ARRIVAL:` is missing or unrecognised.
     ///
     /// **THIS EXISTS TO BE CORRECT, NOT TO HIDE A GAP — and the distinction is the whole
-    /// lesson of this pass.** At the time of writing, the arrival pass has not yet run against
-    /// the base: no row carries an `ARRIVAL:` line, so every scene lands here. Falling back to
-    /// the material's own form is right in both worlds — stone gets the nave, the particle and
-    /// space gets `dissolve`, the open sky gets stillness — and none of them gets a wash
-    /// belonging to a scene it is not.
+    /// lesson of this pass.** Falling back to the material's own form is right — stone gets
+    /// the nave, the particle and space gets `dissolve`, the open sky gets stillness — and none
+    /// of them gets a wash belonging to a scene it is not.
+    ///
+    /// **THE SENTENCE THAT STOOD HERE WAS AN EXPIRED STAND-IN, AND IT EXPIRED THE SAME DAY IT
+    /// WAS WRITTEN.** It read *"the arrival pass has not yet run against the base: no row
+    /// carries an `ARRIVAL:` line, so every scene lands here"* — true for about an hour. The
+    /// pass ran; all 70 rows carry one; this function is now reached by **none of them** once
+    /// both authored spellings parse. §10's thirteenth shape exactly: a proxy documented
+    /// honestly at the time, which becomes a false statement the moment the thing it stood in
+    /// for arrives, with nothing to mark the transition.
     ///
     /// What it must never do is make the gap invisible. The previous fallback did exactly
     /// that: it was also material-derived, it was also defensible, and it silently absorbed a
-    /// field the authoring pass had never written. **The guard is not in this function — it is
-    /// that `LightSceneParserTests` measures the fallback RATE against real corpus rows, so a
-    /// corpus that stops supplying arrivals fails a test instead of quietly going grey.**
+    /// field the authoring pass had never written.
+    ///
+    /// **THIS COMMENT USED TO NAME A GUARD THAT DID NOT EXIST** — *"`LightSceneParserTests`
+    /// measures the fallback RATE against real corpus rows"*. No such test was ever written, and
+    /// the very case it was described as catching then happened: five nave rows spelled
+    /// `ARRIVAL: nave`, fell to this function, and were counted as parsed. A named guard is
+    /// worse than no guard, because it tells the next reader the question is already answered.
+    /// The guard that exists now is `arrivalAcceptsBothAuthoredSpellings` in
+    /// `LightSceneParserTests`, which asserts the exact strings the corpus writes.
     static func fallbackArrival(for material: LightMaterial) -> LightArrivalKind {
         switch material {
         case .nave:             return .nave
@@ -202,8 +237,15 @@ enum LightSceneParser {
         // off `GESTURE:` sent every base scene to `.stillness` — which shares a branch with
         // `.nave` and draws morning's wash: **the exact output the old key-switch produced.**
         // The mechanism changed and the pixels did not. `GESTURE:` is still parsed and still
-        // carried; it is simply not this.
-        let arrival = LightArrivalKind(rawValue: (lab["ARRIVAL"] ?? "").lowercased())
+        // carried in the row and read here — **but it is NOT put on the model**: `LightScene` has
+        // no gesture field, so `lab["GESTURE"]` is read into the local dictionary and goes no
+        // further. That is deliberate and it is Wave 2's to change (`Coverage/14-LIGHT-GESTURES.md`
+        // rules all seventy), but two comments in this file used to say the value was "carried",
+        // which a reader planning Wave 2 would take to mean it already reaches the model.
+        // Qualified deliberately, as `isBlankCarving` is, and for the recorded reason: a
+        // same-type call written bare is invisible to `check_wired`'s owner-qualified form and
+        // to anyone grepping for the app's use of it. Second instance this session.
+        let arrival = LightSceneParser.arrival(from: lab["ARRIVAL"] ?? "")
             ?? fallbackArrival(for: material)
 
         return LightScene(

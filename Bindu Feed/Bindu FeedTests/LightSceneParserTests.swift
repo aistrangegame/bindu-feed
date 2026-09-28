@@ -147,7 +147,14 @@ import Foundation
 
     // MARK: - the arrival, measured against rows from the base
     //
-    // **THESE TWO SCENES ARE VERBATIM FROM THE BASE, NOT WRITTEN HERE.** That is the whole
+    // **THE EXCERPTS ARE VERBATIM FROM THE BASE; THE BODIES ARE ABRIDGED TO THE LINES THESE
+    // ASSERTIONS NEED** — `company` has 7 anchors in the base and 2 here, `forgetting` 6 and 1.
+    // The header used to call both halves verbatim, which was false for the Body half and is
+    // exactly the kind of claim this suite exists to stop being made. The record ids are given
+    // so anyone can read the rest. What matters for the argument below is that the EXCERPT —
+    // the half these tests actually discriminate on — is the row's own, unedited.
+    //
+    // **THE TWO SCENES ARE FROM THE BASE, NOT WRITTEN HERE.** That is the whole
     // point of them. The previous version of this suite asserted `GESTURE: turning → .turning`
     // against a fixture this build authored itself; the corpus never emits that value, so the
     // test could not fail, and `arrival` parsed 0 of 70 in production while the suite was
@@ -300,6 +307,36 @@ import Foundation
         #expect(parsed?.material == .dawn)
     }
 
+    @Test("ARRIVAL parses in both authored spellings — the corpus writes one, canon the other")
+    func arrivalAcceptsBothAuthoredSpellings() {
+        // **THE GUARD THE PARSER NAMED AND NOBODY WROTE.** `LightArrivalKind.nave` takes its
+        // rawValue from canon (*"the nave"*); all five nave rows in the base write `nave`, as
+        // does the content brief's own vocabulary table. `init(rawValue:)` returned nil on
+        // every one of them and the material fallback supplied the same value — so the wash was
+        // right, the parse was not, and `Coverage/1-AUDIT-254.md` recorded "70 of 70 parse, 0
+        // fall back" on a measurement that could not see it.
+        //
+        // These are the literal strings the base writes. If the enum's rawValue is ever the
+        // only spelling accepted again, this reds.
+        #expect(LightSceneParser.arrival(from: "nave") == .nave)
+        #expect(LightSceneParser.arrival(from: "the nave") == .nave)
+        for v in ["stillness", "convergence", "warmth", "turning", "release", "dissolve"] {
+            #expect(LightSceneParser.arrival(from: v) != nil, "\(v) is in the closed set")
+        }
+        // The set stays closed: "the " is not a licence to invent.
+        #expect(LightSceneParser.arrival(from: "shimmering") == nil)
+        #expect(LightSceneParser.arrival(from: "the shimmering") == nil)
+        #expect(LightSceneParser.arrival(from: "") == nil)
+
+        // And end to end, on the row as the base writes it.
+        let nave = LightSceneParser.scene(
+            key: "hole", title: "hole", body: forgettingBody,
+            excerpt: "FAMILY: Structural\nBELIEF DISSOLVED: x\nGESTURE: the gap that stays\nARRIVAL: nave\nMATERIAL: nave",
+            closingLine: nil)
+        #expect(nave?.arrival == .nave)
+        #expect(nave?.material == .nave)
+    }
+
     @Test("the fallback is the material's own form, for every material")
     func theFallbackIsNamedForEachMaterial() {
         // Stone gets the nave, the particle and space gets dissolve, the open sky gets
@@ -313,11 +350,18 @@ import Foundation
     func theVocabularyIsClosed() {
         // The seven values are the whole set. A row carrying anything else is a row to fix in
         // the base, and the app must render something honest in the meantime.
-        let bogus = companyExcerpt.replacingOccurrences(
-            of: "ARRIVAL: dissolve", with: "ARRIVAL: shimmering")
-        let parsed = LightSceneParser.scene(key: "x", title: "X", body: companyBody,
+        // **ON `forgetting`, NOT `company`, AND THE ROW CHOICE IS THE ASSERTION.** `company`'s
+        // material is the particle and space, whose fallback IS `.dissolve` — the same value its
+        // authored ARRIVAL carries. Run on that row, this test passes identically whether the
+        // unknown value falls back OR `ARRIVAL:` is never read at all, so it discriminated
+        // nothing. `forgetting` is dawn: authored `convergence`, fallback `.stillness`. Two
+        // different values, so the assertion can tell the two builds apart.
+        let bogus = forgettingExcerpt.replacingOccurrences(
+            of: "ARRIVAL: convergence", with: "ARRIVAL: shimmering")
+        let parsed = LightSceneParser.scene(key: "x", title: "X", body: forgettingBody,
                                             excerpt: bogus, closingLine: nil)
-        #expect(parsed?.arrival == .dissolve, "unknown value → the material's own form")
+        #expect(parsed?.arrival == .stillness, "unknown value → the material's own form")
+        #expect(parsed?.arrival != .convergence, "and NOT the value the row authored")
     }
 
     @Test("a real row's blank carving and absent landing both survive the reader")
@@ -334,19 +378,43 @@ import Foundation
         for line in (s?.whole ?? []) + (s?.anchors ?? []) + (s?.beat ?? []) {
             #expect(!LightSceneParser.isBlankCarving(line), "the sentinel leaked: \(line)")
         }
-        // NOTE: on seven rows is an authoring note to a future pass and must never be read.
-        #expect(s?.anchors.contains(where: { $0.hasPrefix("NOTE:") }) == false)
+        // **THE NOTE: GUARD THAT STOOD HERE WAS TRUE BY CONSTRUCTION.** It asserted no ANCHOR
+        // begins `NOTE:` — and `NOTE:` lives in the EXCERPT, while `anchors` is built only from
+        // the Body's ANCHORS section, so the two can never meet however the parser behaves. A
+        // guard aimed at a collection the thing it guards against cannot enter.
+        //
+        // The real question is whether an unlisted Excerpt label can reach any rendered field,
+        // so it is asked of the Excerpt: a row carrying `NOTE:` must parse exactly as the same
+        // row without it. This one can fail — widen `excerptLabels` to admit NOTE and it does.
+        let withNote = companyExcerpt + "\nNOTE: if a future pass makes this scene solemn, the pass is wrong."
+        let noted = LightSceneParser.scene(key: "company", title: "company",
+                                           body: companyBody, excerpt: withNote, closingLine: "")
+        #expect(noted?.arrival == s?.arrival)
+        #expect(noted?.material == s?.material)
+        #expect(noted?.kind == s?.kind, "NOTE: must not become the family")
+        #expect(noted?.vector == s?.vector, "nor the belief dissolved")
+        #expect(noted?.anchors == s?.anchors)
+        #expect(noted?.whole == s?.whole)
     }
 
-    @Test("ungripOnly is derived from the arrival, not stored beside it")
-    func ungripIsDerived() {
+    @Test("a base scene never inherits the canon release scene's hand-mechanics")
+    func ungripIsNotDerivedFromTheWash() {
         let r = LightSceneParser.scene(
             key: "x", title: "X",
             body: body(whole: "W", anchors: ["A"], beat: "B", landing: "L"),
             excerpt: "ARRIVAL: release\nMATERIAL: dawn", closingLine: nil)
-        #expect(r?.ungripOnly == true)
+        // **THIS ASSERTED `== true`, AND THAT WAS THE LEAK.** `ungripOnly` was derived as
+        // `arrival == .release`, so every base row carrying `ARRIVAL: release` — ten of the
+        // seventy — inherited the canon release scene's MECHANICS: the whole withheld until
+        // three hand-openings, anchors advancing only on lift. `ARRIVAL:` is the visual wash
+        // and `GESTURE:` is the physical interaction; they are different axes by law, and each
+        // of those ten rows carries its own distinct GESTURE. A wash was deciding how the hand
+        // works, and this test was holding it there.
+        #expect(r?.ungripOnly == false,
+                "a parsed scene has no gesture yet — that is Wave 2, not a reading of its wash")
+        #expect(r?.arrival == .release, "while the WASH is still release, which is what it names")
         #expect(LightCanon.scenes.filter(\.ungripOnly).map(\.key) == ["release"],
-                "and the canon six still agree with their own arrivals")
+                "and the ungrip stays exactly where it was authored: the canon release scene")
     }
 
     // MARK: - what is not a scene
