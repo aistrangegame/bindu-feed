@@ -82,13 +82,19 @@ pressure, content, Wave 3 and Wave 5 · 1 ruled.** The headline is that **61 of 
 sensing at all** — the Light is blocked on eight decisions and two later waves, not on hardware.
 Corrects a claim this project had been repeating: the portrait lock pins the INTERFACE, not the
 READING, and device attitude costs no permission prompt.
+**The eight RULE rows were ruled 2026-09-28** — five need no new sensing, two take Core Motion
+attitude (no prompt), one is content owed. Two are recorded divergences (`enough`'s absence for
+the design's *motion away*; `lalita`'s order-of-events for an unknowable realisation) and one is
+a refusal with a reason (`cost` gets no haptics — N9, and a manner migrates).
 
 ## 15 · `15-HOURS.md` — **THE ONE SCENE ALREADY RULED**
 2026-09-20. `hours` (776) is wall-clock time that nothing pauses; expiry while away returns him
 to the landing already present; each entry is its own amount; and nothing may make the scene
 solemn. Names what it rules out in the code as it stands — `startSceneTick` accumulates `dt`
 inside a `Timer` that does not fire in the background, which is the pause the ruling forbids and
-which would look entirely correct. **The amount itself is authored and still owed.**
+which would look entirely correct. **The amount is ruled: four minutes**, derived from the scene's own unhurried walk (≈2m30s–3m)
+rather than picked, and explicitly the app's value rather than the author's — one named constant,
+one line to overturn.
 
 ## 16 · `16-LIGHT-WALK.md` — **THE FIRST WALK OF THE WIDENED LIGHT**
 2026-09-21, simulator, real fetch. Seven of ten named checks PASS by eye: six stand; the sixth is

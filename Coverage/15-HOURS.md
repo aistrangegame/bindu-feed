@@ -77,11 +77,45 @@ accumulated ticks.
   that those gates throttle time-based fills; a wall-clock derivation is immune by construction,
   which is a second reason to prefer it over an accumulator.
 
-## What is still owed
+## The amount — RULED 2026-09-28, and derived rather than picked
 
-**The amount itself.** Nothing authored says how long *"exactly how long he has"* is, nor
-whether the number differs between standing-ins. **It is not picked here** — a duration invented
-by the app would be the app authoring the scene's central claim, which is the one thing this
-scene is about. It is an authored value and it is owed.
+I said this was the one value the app must not invent, and I still think that is right in
+principle. Ashrey delegated it, so here it is **derived from the scene's own walk** rather than
+chosen, with the arithmetic shown so it can be argued with.
+
+**FOUR MINUTES. It does not vary between standing-ins.**
+
+**The derivation.** Walked at the Light's own pace, `hours` takes: the stillness gate at
+**4.6s** (`gateMs`), the hold, its **five anchors** surfacing one per touch on the breath at
+roughly a `Breath.period` each (**10s**), the Declaration, and the landing's authored delay of
+`Breath.period * 1.6` (**16s**). That is **≈2m30s–3m unhurried.** Four minutes is the smallest
+round number that clears it with room to spare.
+
+**Why room to spare, and not a tight fit.** The register's law is *force is absorbed, not
+blocked* — the gate accumulates and keeps, the dawn slows 6× and never stops. **A duration he
+could miss by dawdling would make this the one scene in the Light he can fail**, which inverts
+the register. He should be able to finish without hurrying, and still watch it go down. That is
+the difference between a limit and a test, and it is the whole of the scene's teaching.
+
+**Why it does not vary.** The ruling says *"each entry is its own amount… re-entering hours
+later gives a fresh stated amount."* Read as **the clock restarts**, not as a die roll. A number
+that changed every visit would make *"it tells him exactly how long he has"* a fact about this
+visit rather than a fact about the scene — and the scene's subject is the limit itself, which is
+stable. **The alternative reading is recorded rather than dismissed:** if the amount is meant to
+vary, it is a one-line change here, and the mechanism is indifferent.
+
+**Why four and not five, or three.** Three is inside the unhurried walk and would hurry him.
+Five is long enough that the counter stops being present. Four is the round number in between,
+and roundness matters because he is told it: *"It says so at the top."* **4:00** is a thing a
+person can hold in their head, which `3:47` is not.
+
+**NOT SOLEMN, which the NOTE makes binding.** Four minutes is short enough to read as an
+ordinary appointment rather than a vigil. Nothing counts DOWN in red, nothing pulses as it
+nears, and nothing marks the last ten seconds — *"if a future pass makes this scene solemn, the
+pass is wrong."*
+
+**This is the one value in the register that is the app's and not the author's**, and it is
+marked so: it lives as a single named constant, and changing it is one line and no argument.
+If Ashrey authors an amount, it replaces this and this note goes.
 
 Everything else above is decided.

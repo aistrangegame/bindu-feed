@@ -189,6 +189,88 @@ history 737 needs is already accumulating.**
 **764** empty — *"an empty day rendered with exactly the same attention as a full one"* needs to
 know a day was empty, which is the same derivation read the other way.
 
+### THE EIGHT, RULED — 2026-09-28
+
+Ashrey delegated these. Each is decided against a law this build already holds, not against
+taste, and each says what would overturn it. **Five need no new sensing at all**; two take Core
+Motion attitude, which costs no prompt; one is content.
+
+**713 `uncertainty` — SELECTION FROM AN AUTHORED POOL, NEVER GENERATION. And the pool is owed.**
+*"Its anchors are drawn fresh at each visit."* The standing law is absolute — **the remembering
+is never generated**, and exact wording is load-bearing — so "fresh" can only mean the scene
+holds MORE anchors than it shows and shows a different few each visit. That is selection, which
+this app does in three places already (`LightDraw`, the Mirror's draw, the Practice Door's
+weighted pick), and `LightDraw`'s own law transfers unchanged: `Int.random`, exclude the last
+set as a PREFERENCE, count honoured first, **no weighting and no rotation**. The parser already
+returns every anchor; the VIEW picks. **CONTENT OWED: the scene shows five and needs perhaps
+twelve to fifteen to be genuinely unrepeatable.** Until they are authored it shows all it has,
+which is honest rather than broken. *Overturned by:* a ruling that "fresh" means generated —
+which would contradict the law, so only the law changing could do it.
+
+**714 `origin` — NO SENSOR. Implement as absence, and the absence is the content.**
+*"The gyroscope is read and deliberately ignored: every direction shows the same thing."*
+Reading-then-ignoring and never-reading are **observationally identical**, so §10's eighth shape
+applies: *nothing instead of WHAT?* Nothing instead of the parallax every other spatial scene
+gives. The design states the OBSERVABLE (*every direction shows the same thing*), not the
+mechanism, and that is exactly when absence is the correct implementation. What the scene does
+need is to LOOK turnable — a field with no landmark, no horizon, no up — which is what
+`particleAndSpace` already is. *Overturned by:* the scene needing to acknowledge the attempt,
+which would make the reading observable after all.
+
+**725 `soles` — CORE MOTION ATTITUDE + STILLNESS. No prompt, and the limit is named.**
+Standing-versus-sitting is activity classification (`CMMotionActivityManager`), which prompts.
+But read the GESTURE again: *"the scene grounds when he is upright and still."* **Upright and
+still is attitude plus stillness** — it is the stated condition, not an approximation of one.
+Lying down is detectable by attitude too. **The one case it cannot see is sitting upright with a
+still phone, which reads as standing — accepted, rather than paid for with the app's first
+permission prompt.** *Overturned by:* a decision that the app may prompt.
+
+**729 `crow` — INTEGRATED USER-ACCELERATION OVER A SHORT WINDOW, NOT ALTITUDE.**
+*"Lift the phone and the view widens… altitude is given by the arm, not by a control."* True
+altitude is `CMAltimeter`, which prompts and is barometric — useless at arm's length. Double
+integration drifts, and drift is a problem over MINUTES; a lift is a **three-second gesture**.
+So: integrate user acceleration since the last still moment, and reset the origin whenever he
+goes still. Drift cannot accumulate across the scene because the zero keeps being re-established.
+**It measures a LIFT, not a height, and that is what the arm gives.** *Overturned by:* the scene
+needing absolute height, which nothing in its wording asks for.
+
+**732 `lalita` — THE ORDER IS THE CONTENT. It moves first, and answers his next touch, once.**
+*"It responds to the moment he realises it is responding."* Realisation is interior and
+**unknowable**; every proxy is a guess about his mind, and this build does not guess about him.
+But there is an honest reading that keeps the sentence: the scene moves **unprompted**, and then
+answers the very next thing he does. He experiences it as being noticed because the ORDER is
+inverted — it moved before he did — and no claim is made about what he realised. Latched, so it
+happens exactly once. *Overturned by:* nothing short of being able to read him, which is not a
+thing this app will ever do.
+
+**734 `enough` — SUSTAINED ABSENCE, and a recorded divergence.**
+*"Motion away from the device advances it; standing over it, watching, stops it."* **The device
+cannot sense a body walking away from it** — that needs a camera and a prompt, and the phone
+stays put in the scene's own description. The nearest true thing: he SETS IT DOWN and LEAVES —
+the device still, no touch, for a sustained stretch — and any touch stops it. That reads as
+*he left* and refuses to pretend it can watch him go. **Recorded as a divergence, because the
+design's sentence is about his motion and the implementation is about his absence.**
+*Overturned by:* a camera, which is a bigger decision than this scene.
+
+**770 `cost` — NO HAPTICS. "Felt" is resistance to the hand.**
+*"Two weights — every object carries two, felt rather than shown."* **The Light does not tap his
+wrist.** `Coverage/10-OWED.md` N9 is an acceptance row asserting the Gathering does not, and a
+manner introduced on one surface migrates — this build has watched that happen. And "felt" has a
+reading already native to the instrument: **differential resistance**, the vocabulary
+`AxisTravel`'s membrane and world IV's press already speak. An object that is heavier answers
+the hand more slowly. **Haptics were considered and refused, recorded here so the next pass does
+not re-open it as though it were an oversight.** *Overturned by:* a ruling that the whole
+instrument may use haptics — which is an instrument-wide decision, not this scene's.
+
+**771 `red` — CHECKING IS LEAVING THE APP.**
+*"Opens only while nothing has been verified. Any attempt to check first closes it."* Of the
+candidates — backgrounding, a screenshot, scrolling back — **backgrounding is the only one that
+is unambiguously going to look something up**, and it is the one he would recognise as having
+done. `scenePhase` is already handled at `ContentCoordinator.swift:81`. A screenshot is
+explicitly NOT checking: 744 `telling` already owns the screenshot, and overloading it would
+blur two scenes into one gesture. **It closes; it does not scold.** Re-entering finds it
+unopened, which is the register's own law — force is absorbed, never punished.
+
 ### RULED · 1
 
 **776** hours — the stated amount. Wall-clock, nothing pauses it, expiry while away returns him
