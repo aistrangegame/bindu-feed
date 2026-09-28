@@ -131,6 +131,33 @@ import Foundation
         #expect(today.allSatisfy { $0.material != .nave })
     }
 
+    @Test("two rows whose slugs collide do not trap the register")
+    func aDuplicateSlugIsSurvivable() {
+        // **THE GUARD THIS ASSERTS WAS ADDED WITH NOTHING TO HOLD IT.** `today()` builds its
+        // lookup from the pool's keys, and those keys come from the base: `Name` tails that
+        // lower-case and hyphenate to the same string. `Dictionary(uniqueKeysWithValues:)`
+        // has a uniqueness PRECONDITION — two such rows `fatalError` on the Light's first
+        // frame. That is the exact crash the canon fallback exists to prevent, one layer
+        // down, and a reader would meet it as a dead register rather than a message.
+        //
+        // The fetch path is deliberately more forgiving than this was: `fetchLightScenes`
+        // `compactMap`s, so a row that is not a scene drops out and the register still
+        // stands. The draw must not be stricter than the fetch that feeds it.
+        //
+        // Without this test a revert to `uniqueKeysWithValues:` is green.
+        let d = freshDefaults("dupe")
+        let dupes = [scene("hours", .dawn), scene("hours", .dawn), scene("reach", .dawn),
+                     scene("before", .dawn), scene("we", .dawn), scene("lit", .dawn),
+                     scene("hole", .nave)]
+        let today = LightDraw.today(from: dupes, now: "2026-09-27", defaults: d)
+        #expect(today.count == 6, "the day still stands: five and the Far one")
+        #expect(today.last?.material == .nave)
+        // And it survives the RESTORE path too, which resolves saved keys back through the
+        // same lookup on the next entry of the day.
+        let again = LightDraw.today(from: dupes, now: "2026-09-27", defaults: d)
+        #expect(again.map(\.key) == today.map(\.key), "the saved draw still resolves")
+    }
+
     // MARK: - the collapse guard
 
     @Test("with one scene in stone, that one stands every day")

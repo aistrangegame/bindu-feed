@@ -1155,3 +1155,43 @@ RITE'S RECORDING session, not headphone detection — walk gate **G5** reads
 `SoundEngine.isOnHeadphones`, which matches on the `.bluetoothHFP` PORT TYPE
 (`SoundEngine.swift:935`) and is untouched by this option. The replacement symbol requires
 iOS 26; this app deploys to 18.0.
+
+---
+
+## 2026-09-28 · the Light review — four recorded, not built
+
+An adversarial review of `dd8045d..2a26add` (six lenses, three refuters each) produced ten
+faults that were fixed in `e3977d0` and these four, which are recorded because **none of them
+changes what a surface says or does.** Each carries the measurement that decided it.
+
+**1 · `carved` is never set to true, and the latch it ports has nothing left to guard.**
+`LightView` sets `carved = false` at `:59`, `:896` and `:944`; nothing sets it true. Canon does
+— `canon/spine-light.js:179` is `this.carved=true` inside `carve()`, and `:171` refuses to
+advance until it is. **The app FUSES the two calls**: `lockCarveLine` (`:894-896`) does
+`beatLine += 1` AND `drew = 0` AND `carved = false` in one step, so the advance happens inside
+the carve and cannot precede it. `mayCarve`'s `!carved` term and `:765`'s `!carved` are both
+inert. **Verdict: a vestigial parameter, not a missing mechanism** — the outcome is identical
+because the fusion makes the guard unnecessary. Removing it is §10's *make the wrong thing
+unrepresentable*, but it changes `mayCarve`'s signature and a test, so it is its own pass.
+
+**2 · `places[min(i, places.count - 1)]` absorbs what its own comment says it refuses to.**
+`LightView:385`. The comment above records that the `.zero` fallback was removed so *"a
+mismatch is a bug to see, not to absorb"* — and the replacement absorbs it differently: every
+scene past index 5 would stack exactly on the Far point rather than failing. Dormant, because
+the draw yields six; the comment overstates the code.
+
+**3 · `GESTURE:` is parsed and then dropped.** `LightScene` has no gesture field, so
+`lab["GESTURE"]` is read into a local dictionary and goes no further. That is correct for now —
+gestures are Wave 2 (`Coverage/14-LIGHT-GESTURES.md` rules all seventy) — but two comments said
+the value was *"carried"*, which a reader planning Wave 2 would take to mean it reaches the
+model. Corrected at the site in `e3977d0`.
+
+**4 · CONTENT, FOR ASHREY — two rows carry authoring directives inside `Body`.**
+Measured over all 70: exactly **2 rows, 3 lines.**
+`reckpkF7I0RnQkiwq` (713 `uncertainty`) opens its ANCHORS with *"(drawn fresh each visit — the
+scene never repeats)"*, so the first exhale delivers a stage direction in second person.
+`reczh2lA8S5Ingm4G` (737 `ninth`) has a WHOLE of two variant paragraphs, *"(first visit) …"* and
+*"(later) …"*, and the parser renders both, labels included.
+**The parser is right to show them verbatim** — exact wording is load-bearing and a reader that
+filtered parenthetical lines would be editing authored text. The fix is `Status: Draft` on both
+until 713's ruling and Wave 5 land. **That is a base edit, and it is not the app's to make.**

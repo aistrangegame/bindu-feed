@@ -140,7 +140,30 @@ def load(d):
 
 app_raw, test_raw = load(APP), load(TEST)
 app  = {p: strip_code(t) for p, t in app_raw.items()}
-test = {p: strip_code(t) for p, t in test_raw.items()}
+def _resolve_typealiases(text):
+    """**A TEST REFERENCE MADE THROUGH A `typealias` WAS INVISIBLE, AND THAT MADE A WHOLE TYPE'S
+    "none" VERDICT UNEARNED.** For a static value or func, `patterns_for` matches only the
+    OWNER-QUALIFIED form (`Owner.member`) — deliberately, because bare-name matching once
+    masked an entire API. But a test that writes `private typealias A = LightCanon.LightArrival`
+    and then says `A.fromUngrips(...)` never writes the owner at all, so every member of that
+    type read as tests = 0. Zero app refs AND zero test refs is the one case this checker passes
+    in silence (see the header), so the symbols vanished from BOTH ends at once.
+
+    Measured 2026-09-27: both Light suites reach `LightCanon.LightArrival` and
+    `LightCanon.LightBeat` exclusively through `private typealias A` / `B`, and
+    `LightCanon.LightBeat.drawnAtSeconds` — no app caller, one tautological assertion — sat
+    unreported because of it. The checker was not wrong about the file; it could not see it.
+
+    Rewriting `Alias.` to `Owner.` in the test haystack costs nothing and closes it. Scoped to
+    the tests: the app may alias too, but app references resolve through `homes_for`, which is
+    a different question."""
+    for m in re.finditer(r'\btypealias\s+(\w+)\s*=\s*([\w.]+)', text):
+        alias, target = m.group(1), m.group(2)
+        if alias != target:
+            text = re.sub(r'(?<![\w.])' + re.escape(alias) + r'\s*\.', target + '.', text)
+    return text
+
+test = {p: _resolve_typealiases(strip_code(t)) for p, t in test_raw.items()}
 
 for _p, _raw in app_raw.items():
     if _raw.count("\n") != app[_p].count("\n"):

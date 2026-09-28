@@ -201,8 +201,6 @@ enum LightCanon {
         static func mayCarve(drew: Double, carved: Bool) -> Bool {
             !carved && drew >= 0.9
         }
-        /// `:174` — advancing past a beat resets the draw for the next one.
-        static let drawnAtSeconds: Double = 1 / 0.85
     }
 
     static let beatCue = "hold to mean it"          // the beat's one instruction (canonical)

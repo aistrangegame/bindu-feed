@@ -81,7 +81,17 @@ import Foundation
         var d = 0.0, t = 0.0
         while d < 1 && t < 5 { d = B.draw(d, dt: 1.0 / 60); t += 1.0 / 60 }
         #expect(t > 1.0 && t < 1.4, "the Declaration drew in over \(t)s, not ≈1.18s")
-        #expect(abs(B.drawnAtSeconds - 1 / 0.85) < 1e-12)
+        // **`drawnAtSeconds` WAS DELETED AND THIS ASSERTED IT, VACUOUSLY.** It was
+        // `abs(B.drawnAtSeconds - 1 / 0.85) < 1e-12` against `static let drawnAtSeconds = 1/0.85`
+        // — both sides the same literal, unable to fail in any build that writes the constant
+        // the same way twice. The value had no app caller either, and its citation (`:174`)
+        // points at `if(this.at()==='beat')this.drew=0` — advancing resetting the draw, which is
+        // a different mechanism entirely. So: no consumer, a wrong citation, and a tautology
+        // guarding it.
+        //
+        // Nothing is lost. The line above ALREADY measures the real property by running
+        // `draw()` to completion — ≈1.18s at 0.85/s — and that assertion can fail. A derived
+        // convenience whose content is already asserted elsewhere is weight, not coverage.
     }
 
     @Test("ONE press carves, and not before it is there to be meant")
