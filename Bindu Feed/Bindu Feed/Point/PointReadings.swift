@@ -604,8 +604,10 @@ private struct ReadParting: View {
     /// the app had no `open`; E3 gave it one, so *"holding it open"* — the word for the moment
     /// before the first section arrives — is restored with the rest.
     private var partWord: String {
-        if part == nil { return "part it with your hand · and hold it open" }
-        if s.revealed == 0 { return "nothing here yet" }
+        if part == nil || !holding { return "part it with your hand · and hold it open" }
+        // SLICE 4 · walked: an open reading said "nothing here yet" — the word
+        // `world-three.js:237` gives a hand holding the veil where NO star is (`!this.reading`).
+        // Inside a reading there is always a star, so the design's own next words apply.
         if s.revealed >= 4 { return "handed back" }
         if open < 0.30 { return "holding it open" }
         return s.revealed < 2 ? "it is thinning" : "thinner"
@@ -650,6 +652,12 @@ private struct ReadParting: View {
                         }
                     }
                 }
+                // SLICE 4 · the Lalita Pass — words never dim on their own. While the veil is
+                // being parted, the gauze over the reading IS the world (presence decides
+                // what can be read); once all four sections are given the veil is "handed
+                // back" (`world-three.js:238`) and lifts off the words he now holds.
+                .opacity(s.done ? 0 : 1)
+                .animation(.easeInOut(duration: 2.4), value: s.done)
                 .ignoresSafeArea().allowsHitTesting(false)
 
                 // `world-three.js:238-241`. Replaced "part it where you are", invented.
