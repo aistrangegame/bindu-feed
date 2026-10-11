@@ -531,9 +531,12 @@ final class AxisTravel: ObservableObject {
             // Meaning it counts from the moment the surface is felt at all.
             if toward && t > 0.02 && fce != 0 {
                 push = Swift.min(1, push + abs(fce) * K)
-            } else if !down {
-                push = Swift.max(0, push - dt * 0.18)
             }
+            // SLICE 2 · DIVERGENCE (Ashrey: *"remove any restrictive provisions"*) — `push`
+            // drained at 0.18/s off the hand, so a surface had to be meant in one unbroken
+            // lean or the meaning bled away. What he has leaned into it now stays leaned:
+            // a second lean continues the first. (`push` still resets when he moves to a
+            // different surface — `curS` above.)
             if push >= 1 {                               // it gives
                 mem[s] = true; flash = 1; gave = s
                 return 0

@@ -284,6 +284,14 @@ struct PointReading: View {
             default: ReadCompany(s: state, hue: hue, onClose: onClose)
             }
         }
+        // SLICE 2 · A TOUCH ALWAYS RECEIVES. Ashrey's ruling (2026-10-10): *"remove any
+        // restrictive provisions"* — the reading should be gathered and read at his pace. Each
+        // world keeps its own gesture (stay still, travel out, hold it open, bear, turn, send,
+        // keep pace) and every one of them still gives; but none of them is a GATE any more.
+        // A plain touch on any reading hands over the next section. The world's gesture is the
+        // invitation; it is never the price of the words.
+        .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture().onEnded { state.give() })
         // Level 3 is shared by all seven, in the design too — the descent, and its fallback.
         // Plain `.overlay`, not `.overlay(alignment: .bottom)` — the descent needs the whole
         // frame to cover, and the door aligns itself to the bottom from inside it.

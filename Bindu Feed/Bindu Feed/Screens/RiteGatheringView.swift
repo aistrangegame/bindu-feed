@@ -186,6 +186,7 @@ struct RiteGatheringView: View {
 
         // Intro beat, then the first presence.
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
+            guard phase == .intro else { return }      // a touch already began it
             withAnimation(.easeInOut(duration: 1.0)) { phase = .playing }
             enter(0)
         }
@@ -212,7 +213,9 @@ struct RiteGatheringView: View {
     private func tap() {
         switch phase {
         case .intro:
-            return
+            // SLICE 2 · the intro no longer holds him for 2.4s — a touch begins the round.
+            withAnimation(.easeInOut(duration: 1.0)) { phase = .playing }
+            enter(0)
         case .resolving:
             onDone()
         case .playing:
