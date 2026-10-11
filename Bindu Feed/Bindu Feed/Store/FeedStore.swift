@@ -348,11 +348,30 @@ final class FeedStore: ObservableObject {
     /// `loadIfNeeded` shape is the precedent (`MirrorView:171-175`).
     func loadLightScenes() async {
         do {
-            self.lightScenes = try await service.fetchLightScenes()
+            let sources = try await service.fetchLightSources()
+            self.lightScenes = sources.compactMap(LightSceneSource.scene(from:))
+            // Slice 3 · the sky is kept on the device, so offline it is still the whole sky.
+            if !sources.isEmpty, let data = try? JSONEncoder().encode(sources) {
+                UserDefaults.standard.set(data, forKey: Self.lightSourcesKey)
+            }
             self.error = nil
         } catch {
+            if let data = UserDefaults.standard.data(forKey: Self.lightSourcesKey),
+               let kept = try? JSONDecoder().decode([LightSceneSource].self, from: data) {
+                self.lightScenes = kept.compactMap(LightSceneSource.scene(from:))
+            }
             self.error = error
         }
+    }
+
+    private static let lightSourcesKey = "bindu.light.sources"
+
+    /// Slice 3 · how often he has stood in each light, by scene record id (`Veil Lifted`).
+    @Published var lightVisits: [String: Int] = [:]
+
+    func loadLightVisits() async {
+        let counts = await service.fetchVeilLiftedCounts()
+        if !counts.isEmpty { self.lightVisits = counts }
     }
 
     func loadSignals() async {

@@ -220,14 +220,69 @@ final class AirtableService {
     /// Sort band 701–776. The band is a contract in prose only — nothing in this app reads
     /// 201/301/401/501/601, and only `900+` has enforcement behind it — so the sort below is
     /// what actually orders them, and the band's meaning lives in the base.
-    func fetchLightScenes() async throws -> [LightScene] {
+    /// The rows the scenes are parsed from, kept as plain values so the sky can be held on the
+    /// device (`FeedStore.loadLightScenes`) and an offline Light never shrinks to the six.
+    func fetchLightSources() async throws -> [LightSceneSource] {
         let records = try await fetch(
             filter: "AND({Type}='Light',{Status}='Live')",
             sort: [(field: "Sort Order", direction: "asc")]
         )
-        // `compactMap`, not `map`: a row that is not a scene drops out and the rest of the
-        // register still stands, the same resilience `ResilientPage` gives a malformed record.
-        return records.compactMap(LightScene.init(from:))
+        return records.map(LightSceneSource.init(record:))
+    }
+
+    /// Slice 3 · HOW OFTEN HE HAS STOOD IN EACH LIGHT — counted from the `Veil Lifted` pulses,
+    /// by the scene record each one links. Every page is followed: the count is the whole
+    /// history, not a window. Fail-safe: an error returns what was counted so far, so a light
+    /// can read smaller than it is but never larger.
+    func fetchVeilLiftedCounts() async -> [String: Int] {
+        guard !token.isEmpty else { return [:] }
+        var out: [String: Int] = [:]
+        var offset: String?
+        var pages = 0
+        repeat {
+            var comps = URLComponents(string: appActivityURLString)
+            var q = [
+                URLQueryItem(name: "filterByFormula", value: "{Activity Type}='Veil Lifted'"),
+                URLQueryItem(name: "pageSize", value: "100"),
+                URLQueryItem(name: "fields[]", value: "Activity Type"),
+                URLQueryItem(name: "fields[]", value: "Link to Feed"),
+            ]
+            if let offset { q.append(URLQueryItem(name: "offset", value: offset)) }
+            comps?.queryItems = q
+            guard let url = comps?.url else { break }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            do {
+                let (data, response) = try await session.data(for: req)
+                try Self.validate(response: response, data: data)
+                let page = try decoder.decode(ActivityLinkPage.self, from: data)
+                for r in page.records where r.fields.type == "Veil Lifted" {
+                    for id in r.fields.link ?? [] { out[id, default: 0] += 1 }
+                }
+                offset = page.offset
+            } catch {
+                #if DEBUG
+                print("[AirtableService] fetchVeilLiftedCounts stopped early: \(error)")
+                #endif
+                break
+            }
+            pages += 1
+        } while offset != nil && pages < 50
+        return out
+    }
+
+    private struct ActivityLinkPage: Decodable {
+        let records: [Row]
+        let offset: String?
+        struct Row: Decodable { let fields: Fields }
+        struct Fields: Decodable {
+            let type: String?
+            let link: [String]?
+            enum CodingKeys: String, CodingKey {
+                case type = "Activity Type"
+                case link = "Link to Feed"
+            }
+        }
     }
 
     /// The Gaia seed's own pool. Until 2026-08-27 the Door borrowed `fetchSignals()`,

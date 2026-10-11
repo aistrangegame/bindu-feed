@@ -354,6 +354,35 @@ struct MirrorCard: Identifiable, Hashable {
 ///
 /// Returns nil for a row that is not a scene. **Never for a scene that is quiet** — see
 /// `LightSceneParser` on the blank carving and the absent landing.
+/// Slice 3 · a Light row as plain values — what the parser needs and nothing else — so the
+/// whole sky can be kept on the device and parsed again offline.
+struct LightSceneSource: Codable {
+    let id: String
+    let name: String
+    let body: String
+    let excerpt: String
+    let closingLine: String?
+
+    init(record: AirtableRecord) {
+        let f = record.fields
+        id = record.id
+        name = f.name ?? ""
+        body = f.commentBody ?? f.body ?? ""
+        excerpt = f.excerpt ?? ""
+        closingLine = f.closingLine
+    }
+
+    static func scene(from src: LightSceneSource) -> LightScene? {
+        let (key, title) = LightSceneParser.split(name: src.name)
+        guard !key.isEmpty,
+              var built = LightSceneParser.scene(key: key, title: title, body: src.body,
+                                                 excerpt: src.excerpt, closingLine: src.closingLine)
+        else { return nil }
+        built.recordId = src.id
+        return built
+    }
+}
+
 extension LightScene {
     init?(from record: AirtableRecord) {
         let f = record.fields

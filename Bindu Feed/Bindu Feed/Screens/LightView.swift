@@ -96,43 +96,40 @@ struct LightView: View {
     /// Falling back to the canon six is the `FieldSound.fallbackBreath` pattern (§15): the
     /// Breath must never go silent, and the Light must never be a crash. It also means the
     /// six that were authored once still stand when nothing else can be reached.
-    /// **THE VISIT'S SIX ARE DECIDED ONCE AND HELD — this was a computed property and that was
-    /// a blocker.** `pool` called `LightDraw.today(from:)` on EVERY body evaluation, with a
-    /// fresh `localDayString()` and a fresh read of `store.lightScenes`. Three consequences,
-    /// all of them on the surface:
-    ///
-    ///  · **The fetch landing mid-visit replaced the six under him.** `store.lightScenes` is
-    ///    `[]` until the lazy load returns, so the first visit of a launch rendered the CANON
-    ///    six — the approach naming *"The morning that does not push"* — and then swapped to
-    ///    the drawn six mid-gate. A fetch slower than the ~8s gate-and-hold changed the scene
-    ///    he was standing in.
-    ///  · **Local midnight redrew the day under him**, replacing the scene mid-read.
-    ///  · And the swap could TRAP: `sceneBody` subscripts the new scene's `beat` with the old
-    ///    scene's `beatLine`, which is out of range for any scene with fewer Declaration lines
-    ///    — including all seven `[blank — his own carving]` scenes, whose `beat` is empty.
-    ///
-    /// It also ran inside `TimelineView(.animation)`, so a UserDefaults read plus a 70-entry
-    /// dictionary build happened every frame, and the day's first draw performed a UserDefaults
-    /// WRITE from inside view evaluation.
-    ///
-    /// Settled at most once per visit by `settleSix()`, and never re-read after.
-    @State private var sixToday: [LightScene] = []
+    /// (History: the visit's six were once drawn per day by `LightDraw` and held; that draw
+    /// is retired by Slice 3 — see `LightSky.swift`.)
+    /// Slice 3 · THE WHOLE SKY — every light, the canon six and every scene in the base.
+    /// The six come first and keep their places; the base's scenes are added after them and
+    /// never replace one (keys unique, first wins). Re-settled whenever the rows arrive, but
+    /// never once he is inside a scene, so a fetch landing late cannot move the ground under
+    /// him — the blocker the old per-frame draw was. Because the canon galaxies are laid out
+    /// first, the base arriving only ADDS galaxies; nothing already in the sky moves.
+    @State private var sky: [LightScene] = []
 
     private var pool: [LightScene] {
-        sixToday.isEmpty ? LightCanon.scenes : sixToday
+        sky.isEmpty ? LightCanon.scenes : sky
     }
 
-    /// Decide the day's six, once. Idempotent by `sixToday.isEmpty`.
-    ///
-    /// `force` is the last moment it can be deferred: the gate completing is when the six stop
-    /// being an implementation detail and become the thing he is looking at. If the fetch has
-    /// not landed by then the canon six stand for this visit — a stable walk on the fallback,
-    /// rather than a correct pool arriving late enough to move the ground.
-    private func settleSix(force: Bool = false) {
-        guard sixToday.isEmpty else { return }
-        let drawn = LightDraw.today(from: store.lightScenes)
-        if !drawn.isEmpty { sixToday = drawn }
-        else if force { sixToday = LightCanon.scenes }
+    private func settleSky() {
+        guard stage != .scene, stage != .out else { return }
+        var seen = Set<String>()
+        var all: [LightScene] = []
+        for s in LightCanon.scenes + store.lightScenes where !seen.contains(s.key) {
+            seen.insert(s.key); all.append(s)
+        }
+        sky = all
+    }
+
+    /// He stands inside a light — one visit counted on the device, one pulse into the base
+    /// linked to the scene's own record (what the sky's sizes are read from).
+    private func enter(_ k: Int) {
+        guard pool.indices.contains(k) else { return }
+        sceneIndex = k
+        let chosen = pool[k]
+        LightVisits.record(chosen)
+        Task { await store.logVeilLifted(sceneId: chosen.recordId, sceneTitle: chosen.title) }
+        soundEngine.blip(hz: 174)          // `The Instrument v3.html:5873` — `B.blip(174)`
+        withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
     }
 
     private var scene: LightScene {
@@ -201,9 +198,11 @@ struct LightView: View {
         // same precondition, it re-runs the moment the foundation lands.
         .task(id: store.foundationLoaded) {
             guard !loaded, store.foundationLoaded else { return }
+            settleSky()
             await store.loadLightScenes()
             loaded = true
-            settleSix()          // the six become decidable the instant the rows arrive
+            settleSky()          // the sky fills the instant the rows arrive
+            await store.loadLightVisits()
         }
         .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate() }
         .sonicContext(.base)
@@ -302,10 +301,8 @@ struct LightView: View {
                 // STAYS.** It fades to a FLOOR of 0.45, never to nothing: he is going still in
                 // front of a named thing, and the name is the last thing to go because it is
                 // the only thing on the screen that says where he is.
-                Text(scene.title)
-                    .font(.lora(20)).italic()
-                    .foregroundStyle(BinduTheme.inkSecondary.opacity(1 - still * 0.55))
-                    .multilineTextAlignment(.center).padding(.horizontal, 40)
+                // Slice 3 · no scene is named here any more — he has not chosen one yet, and the
+                // whole sky is what the stillness opens onto.
                 Spacer()
                 if still > 0.18 {
                     Text(LightCanon.gateLine)
@@ -369,94 +366,7 @@ struct LightView: View {
     // KEPT, and app-own: the two-stage arm/name. The design places POINTS and the app must
     // place titles too — see the note at the `VStack` below.
     private var choosingBody: some View {
-        GeometryReader { geo in
-            TimelineView(.animation) { tl in
-                let t = tl.date.timeIntervalSinceReferenceDate
-                let W = Double(geo.size.width), H = Double(geo.size.height)
-                let places = LightPlaces.place(W, H, t)
-                ZStack(alignment: .topLeading) {
-                    Color.clear
-                    ForEach(Array(pool.enumerated()), id: \.offset) { i, sc in
-                        // No `.zero` fallback. It used to read `i < places.count ? … : .zero`,
-                        // which is how seventy scenes would have stacked invisibly in the
-                        // top-left under the leave button rather than failing loudly. The draw
-                        // seeds exactly as many as `place()` positions, so a mismatch is a bug
-                        // to see, not to absorb.
-                        let p = places[min(i, places.count - 1)]
-                        let far = sc.material == .nave
-                        let br = 0.72 + 0.28 * RoomGeo.breath(t + Double(i) * 1.7)
-                        // ONE NAME AT A TIME. The design places POINTS — `place()` spaces the
-                        // six by 0.058·H, which is ample for a light and nowhere near enough
-                        // for a two-line title. Hanging all six titles under them was my
-                        // addition and it collided three of them into one another.
-                        //
-                        // So the same two stages the Rooms' marks use: the first touch arms
-                        // and NAMES, the second enters. It fits this register especially —
-                        // he approaches one of six futures and it tells him what it is before
-                        // he commits to it — and it adds no instruction, only a name.
-                        // `:193` — `al = a*(far?0.40:0.62)`; the arm factor is the app's.
-                        let material = Color(hex: far ? LightCanon.pool : LightCanon.hex)
-                        let al = (far ? 0.40 : 0.62) * br * (armed == i ? 1.25 : 1)
-                        let halo = far ? 16.0 : 22.0            // `:195` — the Far one SMALLER
-                        VStack(spacing: 9) {
-                            ZStack {
-                                // `:196` — the wash, `al*0.55` at the centre to nothing.
-                                Circle()
-                                    .fill(RadialGradient(
-                                        colors: [material.opacity(al * 0.55), material.opacity(0)],
-                                        center: .center, startRadius: 0, endRadius: halo))
-                                    .frame(width: halo * 2, height: halo * 2)
-                                // `:198-199` — the point itself, `rr + br*0.5`, at full `al`.
-                                Circle()
-                                    .fill(material.opacity(al))
-                                    .frame(width: ((far ? 2.0 : 2.6) + br * 0.5) * 2,
-                                           height: ((far ? 2.0 : 2.6) + br * 0.5) * 2)
-                                // `:200-202` — *"the Far one is a seam, not a star — stone,
-                                // below."* A horizontal rule through it, and the only thing
-                                // in the dawn that is not a point of light.
-                                if far {
-                                    Rectangle()
-                                        .fill(Color(hex: LightCanon.pool).opacity(al * 0.30))
-                                        .frame(width: W * 0.26, height: 0.7)
-                                }
-                            }
-                            .frame(width: halo * 2, height: halo * 2)
-                            if armed == i {
-                                Text(sc.title)
-                                    .font(.loraItalic(12.5))
-                                    .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.78))
-                                    .multilineTextAlignment(.center)
-                                    .frame(maxWidth: 150)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                    .transition(.opacity)
-                            }
-                        }
-                        .position(x: p.x, y: p.y)
-                    }
-                }
-                .contentShape(Rectangle())
-                .onTapGesture { loc in
-                    // `The Instrument v3.html:5872` — `if(k && LT.select(k)) { liteRender(); B.blip(174); }`
-                    guard let k = LightPlaces.hit(loc, W, H, t) else {
-                        withAnimation(.easeInOut(duration: 0.6)) { armed = nil }; return
-                    }
-                    if armed == k {
-                        sceneIndex = k
-                        // Stood inside — one pulse, carrying the scene it was stood in.
-                        let chosen = pool.indices.contains(k) ? pool[k] : nil
-                        Task {
-                            await store.logVeilLifted(sceneId: chosen?.recordId,
-                                                      sceneTitle: chosen?.title)
-                        }
-                        soundEngine.blip(hz: 174)          // `:5873` — `B.blip(174)`, and now actually a blip
-                        withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
-                    } else {
-                        withAnimation(.easeInOut(duration: 0.7)) { armed = k }
-                    }
-                }
-            }
-        }
-        .ignoresSafeArea()
+        LightSkyView(scenes: pool, remoteVisits: store.lightVisits, onEnter: enter)
     }
 
     private var holdBody: some View {
@@ -617,10 +527,21 @@ struct LightView: View {
                     // it` over a six-press beat is authored copy on the wrong mechanism, which
                     // passes every checker and reads as fixed.
                     Text(LightCanon.beatCue)
-                        .spaceMonoTracked(9, em: 2 / 9)
-                        .foregroundStyle(BinduTheme.inkTertiary)
+                        .spaceMonoTracked(10, em: 2 / 10)
+                        .foregroundStyle(BinduTheme.inkSecondary.opacity(0.75))
                         .modifier(RiteBreathe())
                         .padding(.top, 8)
+                    // Slice 3 · the hold made visible — a ring fills under the press, so he can
+                    // see the line being meant before it locks.
+                    ZStack {
+                        Circle().stroke(Color(hex: LightCanon.hex).opacity(0.14), lineWidth: 1)
+                        Circle().trim(from: 0, to: drawing)
+                            .stroke(Color(hex: LightCanon.hex).opacity(0.8),
+                                    style: StrokeStyle(lineWidth: 1.4, lineCap: .round))
+                            .rotationEffect(.degrees(-90))
+                    }
+                    .frame(width: 34, height: 34)
+                    .padding(.top, 10)
                 }
             }
             Spacer()
@@ -646,8 +567,8 @@ struct LightView: View {
         .overlay(alignment: .bottom) {
             if stage == .scene, !beatActive, !breathCue.isEmpty {
                 Text(breathCue)
-                    .spaceMonoTracked(9, em: 3 / 9)
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.55))
+                    .spaceMonoTracked(10, em: 3 / 10)
+                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.6))
                     .padding(.bottom, 26)
             }
         }
@@ -781,7 +702,7 @@ struct LightView: View {
             // second for the rest of the scene.
             if arrive >= 1 && awaitingHisCarving && !landingScheduled {
                 landingScheduled = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + Breath.period * 1.6) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {   // Slice 3 · was a breath and a half (16s) of waiting
                     withAnimation(.easeInOut(duration: 1.0)) { landed = true }
                 }
             }
@@ -798,10 +719,7 @@ struct LightView: View {
         soundEngine.lightOpenTheRoom(dur: 8.5)
         soundEngine.lightBreathIn(dur: 6)
         gate?.invalidate()
-        // THE LAST MOMENT THE SIX CAN BE DEFERRED. Past here he is looking at them, so they
-        // stop moving: if the fetch has not landed, the canon six stand for this visit rather
-        // than the ground changing under him a second later.
-        settleSix(force: true)
+        settleSky()          // the sky he is about to see
         startSceneTick()
         // The pulse used to fire HERE, at the gate — before he had chosen anything, so it
         // recorded "the Light was opened" and could name no scene. It fires on entering a
@@ -831,7 +749,10 @@ struct LightView: View {
             ungrips += 1
             soundEngine.axisUngrip()              // the field answers the opened hand
         } else {
-            wants = min(2, wants + 1)             // `:759` — a second ask is kept
+            // Slice 3 · THE TOUCH IS ANSWERED, NOT QUEUED FOR THE EXHALE. Walked: a line asked
+            // for could wait up to a whole breath (~10s) before it came — the screen setting
+            // the pace of the reading. It now arrives at once, on its own soft fade.
+            revealAnchor()
         }
     }
 
@@ -900,13 +821,14 @@ struct LightView: View {
         if beatLine >= scene.beat.count - 1 {
             let declaration = scene.beat.joined(separator: " ")
             Task { await store.writeVow(text: declaration) }
+            LightVisits.markCarved(scene)     // Slice 3 · the light carries a ring in the sky
             // E1.8 · `Claude Design Round 1/comps/The Light v2.html:792` —
             // `setTimeout(…, breathMs*1.6)`, and `breathMs` is the true breath: **16 000ms**,
             // not 1.6 seconds. The comment said *"a breath and a half later"* and the number
             // said a breath and a half of nothing — a tenth of the wait, so the landing
             // arrived while the last line was still settling instead of after it had been sat
             // with. The unit was dropped, and the prose kept describing the intent.
-            DispatchQueue.main.asyncAfter(deadline: .now() + Breath.period * 1.6) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {   // Slice 3 · was a breath and a half (16s) of waiting
                 withAnimation(.easeInOut(duration: 1.0)) { landed = true }
             }
         }
@@ -953,7 +875,7 @@ struct LightView: View {
         // `armed` is older and the same shape: it survived `restart()`, so re-approaching found
         // a point already armed and already named, and one tap entered it — collapsing the
         // two-stage arm-then-commit that §10 records as this register's whole affordance.
-        landingScheduled = false; armed = nil
+        landingScheduled = false; armed = nil; settleSky()
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
         wants = 0; lastDelivered = -1; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }
