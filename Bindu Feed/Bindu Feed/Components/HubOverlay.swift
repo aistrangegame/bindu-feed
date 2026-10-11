@@ -60,6 +60,19 @@ extension View {
             }
             .padding(.horizontal, BinduTheme.space16)
             .padding(.vertical, 6)
+            // SLICE 4 · the Lalita Pass — walked: a story's paragraphs scrolled up under the
+            // clock and behind ‹ and the hub, type over type. The chrome now stands on the
+            // page's own ground, which fades out below it, so the words go quiet before they
+            // reach it (the Rite's Reading does the same with its top mask).
+            .background(alignment: .top) {
+                LinearGradient(stops: [.init(color: BinduTheme.bgDeep, location: 0),
+                                       .init(color: BinduTheme.bgDeep, location: 0.55),
+                                       .init(color: BinduTheme.bgDeep.opacity(0), location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+                    .padding(.bottom, -22)
+                    .ignoresSafeArea(edges: .top)
+                    .allowsHitTesting(false)
+            }
         }
     }
 }

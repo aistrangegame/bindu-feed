@@ -166,9 +166,18 @@ struct ApertureView: View {
                     }
                     Color.clear.frame(height: 80)
                 }
-                .padding(.horizontal, 30).padding(.top, 68)
+                // SLICE 4 · DIVERGENCE from `#plate`'s 68 — walked: the caption sat on the
+                // same line as the app's own "‹ leave" (the comp draws no way out; this app
+                // keeps one on every surface), and the two read as one run of letters. The
+                // plate starts below the way out, and what scrolls up fades before it.
+                .padding(.horizontal, 30).padding(.top, 112)
             }
             .scrollIndicators(.hidden)
+            .mask(VStack(spacing: 0) {
+                LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 108)
+                Color.black
+            })
             // `#plate{padding:68px 30px 92px}` — from the phone's own edges.
             .ignoresSafeArea()
 

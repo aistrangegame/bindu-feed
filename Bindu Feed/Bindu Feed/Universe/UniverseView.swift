@@ -812,6 +812,11 @@ struct UniverseView: View {
         // just veiled over). Colour flattens toward bone as lens→1.
         let litDim = 1 - lens * 0.55
         let armA = max(0, min(1, (2.6 - zoom) / 1.6)) * 0.72 * litDim   // uni-sky.js:220
+        // SLICE 4 · the Lalita Pass — walked: at the whole sky the thirteen names sat on one
+        // another in a clump. Each name now takes the first of below / above its region that
+        // no earlier name occupies, and waits for the camera to make room otherwise. The
+        // Light's sky (`LightSkyLayout`) places its names the same way.
+        var placedNames: [CGRect] = []
         for (ri, rm) in uniRooms.enumerated() {
             let c = regionCenter(rm, size, zoom: zoom, focus: focus)
             let color = Color(hex: rm.hex)
@@ -852,9 +857,17 @@ struct UniverseView: View {
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
             let nameShow = max(0, min(1, (0.60 - zoom) / 0.24))          // uni-sky.js:320-330
             if nameShow > 0.02 {
-                ctx.draw(Text.spaceMono(rm.id, 9, .upper)
-                            .foregroundStyle(color.opacity(0.44 * nameShow)),
-                         at: CGPoint(x: c.x, y: c.y + rm.r * zoom / 980 * W * 0.10 + 4))
+                let off = rm.r * zoom / 980 * W * 0.10 + 4
+                let w = Double(rm.id.count) * 7.6 + 6
+                let spot = [c.y + off, c.y - off - 6]
+                    .map { CGRect(x: c.x - w / 2, y: $0 - 7, width: w, height: 14) }
+                    .first { r in !placedNames.contains { $0.intersects(r) } }
+                if let spot {
+                    placedNames.append(spot)
+                    ctx.draw(Text.spaceMono(rm.id, 9, .upper)
+                                .foregroundStyle(color.opacity(0.44 * nameShow)),
+                             at: CGPoint(x: spot.midX, y: spot.midY))
+                }
             }
             // its stars — from the cache (no per-frame filtering / hashing / archetype scans)
             if ri < starsByRegion.count {

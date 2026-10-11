@@ -1067,7 +1067,13 @@ private struct WorldChamber: View {
                     // at d = 0.18 … 0.81, so `sc` runs 0.64 → 0.29: a 2.2× size ratio the design
                     // draws and the app rendered as four identical discs.
                     // `:204` — `al = A·(0.44 + lit·0.56)·(0.72 + pt[2]·0.7)`, brightness by depth.
-                    StarMark(placed: p, hue: hue, compact: quiet, onTap: quiet ? nil : { onOpen(p.star) })
+                    // SLICE 4 · the Lalita Pass — walked: the Vessel's four titles lay on one
+                    // another down the left wall. `world-four.js:231-236` strikes a niche's
+                    // title only while that niche is borne (`mine && press > 0.05`); the wall
+                    // otherwise holds its marks. So a title appears as it is pressed into.
+                    StarMark(placed: p, hue: hue,
+                             compact: quiet || !(pressing == p.id && press > 0.05),
+                             onTap: quiet ? nil : { onOpen(p.star) })
                         .scaleEffect(nicheScale, anchor: .leading)
                         .opacity(nicheAlpha)
                         // `:238` — `rad = max(26, rim·0.15·pt[2] + 22)`. A near niche is easier
