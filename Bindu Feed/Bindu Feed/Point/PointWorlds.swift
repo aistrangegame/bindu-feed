@@ -171,6 +171,10 @@ struct PointWorld: View {
     var onLaw: (PointLawSignal) -> Void = { _ in }
 
     var body: some View {
+        worlds.environment(\.pointWorldQuiet, quiet)
+    }
+
+    @ViewBuilder private var worlds: some View {
         switch dimensionN {
         case 1: WorldPoint(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet)
         case 2: WorldTurn(stars: stars, hue: hue, onOpen: onOpen, quiet: quiet, onLaw: onLaw)
@@ -277,10 +281,26 @@ struct PointUniversesView: View {
 // inventing an instructional string; it requires porting the authored one. The eight-string
 // grep never saw them because they were not among the eight anyone remembered — which is
 // the whole argument for `Tools/authored-strings.tsv`.
+private struct PointWorldQuietKey: EnvironmentKey { static let defaultValue = false }
+extension EnvironmentValues {
+    /// SLICE 2 · the world is drawn BEHIND a reading — its cue must not speak there too.
+    var pointWorldQuiet: Bool {
+        get { self[PointWorldQuietKey.self] }
+        set { self[PointWorldQuietKey.self] = newValue }
+    }
+}
+
 private struct WorldCue: View {
     let text: String
     @EnvironmentObject private var breath: Breath
+    @Environment(\.pointWorldQuiet) private var worldQuiet
     var body: some View {
+        // SLICE 2 · walked: under an open reading the world's cue said its line a second
+        // time, at the foot of the screen, beneath the reading that already says it. `quiet`
+        // drops the star labels; it now drops the cue as well.
+        if !worldQuiet { cue }
+    }
+    private var cue: some View {
         VStack { Spacer()
             Text(text)
                 .spaceMonoTracked(8.5, em: 0.2)

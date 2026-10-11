@@ -529,7 +529,11 @@ struct PointDescentDoor: View {
         if let d = deeper {
             let st = stages(d)
             ZStack(alignment: .top) {
-                Color(red: 7 / 255, green: 8 / 255, blue: 13 / 255).opacity(0.965).ignoresSafeArea()
+                // SLICE 2 · opaque. At the design's 0.965 the reading beneath ghosted through —
+                // its title under "‹ ascend", its lines between the descent's: type over type.
+                // The design hides the register content outright (`feed.style.opacity=0`, `:1242`);
+                // the overlay being fully dark is how that reads here.
+                Color(red: 7 / 255, green: 8 / 255, blue: 13 / 255).ignoresSafeArea()
 
                 ScrollView {
                     VStack(spacing: 0) {

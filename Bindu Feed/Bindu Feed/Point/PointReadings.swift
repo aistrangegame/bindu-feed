@@ -310,7 +310,25 @@ struct PointReading: View {
         .onChange(of: state.revealed) { _, r in onReveal(r) }
         .onAppear { onReveal(state.revealed) }
         .overlay {
-            if state.done { PointDescentDoor(star: star, hue: hue) }
+            if state.done {
+                ZStack(alignment: .bottom) {
+                    // SLICE 2 · THE ACTIONS STAND ON THEIR OWN GROUND. Walked: take it up, let it
+                    // go and the descend door sat directly over the reading's lower lines. The
+                    // words scroll clear of this zone (`PointReadingLayout.tail`); while they are
+                    // under it, they go to shade rather than collide with the buttons.
+                    LinearGradient(stops: [
+                        .init(color: .clear, location: 0),
+                        .init(color: Color(hex: "#050408").opacity(0.9), location: 0.42),
+                        .init(color: Color(hex: "#050408").opacity(0.97), location: 1)],
+                        startPoint: .top, endPoint: .bottom)
+                        .frame(height: 270)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .ignoresSafeArea(edges: .bottom)
+                        .allowsHitTesting(false)
+                    PointDescentDoor(star: star, hue: hue)
+                }
+                .transition(.opacity)
+            }
         }
     }
 }
