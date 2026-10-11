@@ -675,21 +675,54 @@ final class FeedStore: ObservableObject {
         riteVoices(from: await loadComments(for: story.id).field)
     }
 
+    /// Slice 1 · the Gathering re-composed — the round, not the database's order.
+    ///
+    /// Four things the design draws and the live field lost on the way in:
+    /// - **ORDER.** The design's voice table opens on Bindu —
+    ///   `The Rite v3.html:1193` *"{key:'bindu',name:'Bindu'"* — and closes on
+    ///   Ashrey, the synthesis that names the others back. `Comment Order` is the order the
+    ///   comments were written in, so Ashrey often spoke second — before the voices he
+    ///   gathers. The round is sorted by the canon vantage order (`RiteVoices.all`).
+    /// - **CLOSE.** Each vantage closes on its own glyph (▽ ◆ △ ◯ ◌ ✦ ◇ ◡ ⬡). Every live
+    ///   voice closed on `·`, which is Bindu's — ten voices signing with one hand.
+    /// - **ANSWERING.** Lalita speaks in reply to Sakshi —
+    ///   `The Rite v3.html:1209` *"answering:'Sakshi'"* — restored
+    ///   when both are in the round, never invented when Sakshi is absent.
+    /// - **BREAKS.** A comment surfaces one AUTHORED line per touch — split on the `\n` its
+    ///   author wrote and on nothing else. No splitter derives a break (§8: *"the break is the
+    ///   form"*); a comment with no authored break arrives whole, as it was written.
+    ///
+    /// Bindu's live comment is the bare point `·`. As a line it would render the dot twice
+    /// over an empty reading, so a Bindu whose only words are the dot is the canon Bindu —
+    /// the voice that opens the round.
     private func riteVoices(from field: [FieldComment]) -> [RiteVoice] {
-        var voices: [RiteVoice] = []
+        let order = RiteVoices.all.map(\.key)
+        func rank(_ key: String) -> Int { order.firstIndex(of: key) ?? order.count }
+        var drafts: [(key: String, a: Archetype, lines: [String])] = []
         var seen = Set<String>()
         for c in field {
             let key = c.archetype.lowercased()
             guard !key.isEmpty, !seen.contains(key), let a = archetype(named: c.archetype) else { continue }
-            let lines = field.filter { $0.archetype == c.archetype }.map { $0.body }.filter { !$0.isEmpty }
+            let lines = field.filter { $0.archetype == c.archetype }
+                .flatMap { $0.body.components(separatedBy: "\n") }
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
             guard !lines.isEmpty else { continue }
+            if key == "bindu" && lines.allSatisfy({ $0 == "\u{00B7}" }) { continue }
             seen.insert(key)
-            let ref = RiteVoices.voice(key)
-            voices.append(RiteVoice(key: key, name: a.name, hex: a.hexColor, glyph: a.glyph,
-                                    role: a.role, verb: ref?.verb ?? "", lines: lines,
-                                    passing: lines.first ?? "", close: "\u{00B7}", hz: ref?.hz ?? 220, answering: nil))
+            drafts.append((key, a, lines))
         }
-        if !seen.contains("bindu"), let b = RiteVoices.voice("bindu") { voices.insert(b, at: 0) }
+        let present = Set(drafts.map(\.key))
+        var voices: [RiteVoice] = drafts.map { d in
+            let ref = RiteVoices.voice(d.key)
+            let answers = ref?.answering.flatMap { present.contains($0.lowercased()) ? $0 : nil }
+            return RiteVoice(key: d.key, name: d.a.name, hex: d.a.hexColor, glyph: d.a.glyph,
+                             role: d.a.role, verb: ref?.verb ?? "", lines: d.lines,
+                             passing: d.lines.first ?? "", close: ref?.close ?? d.a.glyph,
+                             hz: ref?.hz ?? 220, answering: answers)
+        }
+        if !present.contains("bindu"), let b = RiteVoices.voice("bindu") { voices.append(b) }
+        voices.sort { rank($0.key) < rank($1.key) }
         return voices.isEmpty ? RiteVoices.all : voices
     }
 

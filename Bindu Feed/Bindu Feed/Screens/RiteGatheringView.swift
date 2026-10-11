@@ -240,15 +240,54 @@ struct RiteGatheringView: View {
 }
 
 // MARK: - The per-presence text overlay (surfacing)
+//
+// Slice 1 · THE GROUND RETURNS TO THE WORDS. The design lays its gradient on the text block
+// alone — `The Rite v3.html:1387` *"rgba(5,4,8,0.55) 32%"* — and the figure above stays clear. The port put a `Spacer` inside the block
+// that carries the gradient, so the dark ran the whole height of the screen and every vantage's
+// figure sat under a third of it at its own centre (`H × 0.30`): the ground dimmed the ground.
+// §10 — *"the ground dims, the chrome hides"* — and the figure is neither; it is the vantage.
+//
+// And the design's own gradient protected its weakest type least: it begins transparent at the
+// top of the block, which is exactly where the 9pt mono caption sits. So the block's gradient
+// now begins `captionLead` points ABOVE the caption, and the caption reads on shade while the
+// figure above it stays clear. Same stops as the design (clear · 0.55 at 32% · 0.9), started
+// higher. The role line returns to the design's 9 — the port had 8:
+// `The Rite v3.html:1395` *"<Mono size={9}>{v.role}</Mono>"*
 
 private struct VoiceText: View {
     let voice: RiteVoice
     let lines: [String]
     let shown: Int
 
+    /// How far above the caption the words' ground begins.
+    private static let captionLead: CGFloat = 72
+
     var body: some View {
+        VStack(spacing: 0) {
+            Spacer(minLength: 0)
+            block
+                .padding(.horizontal, 34)
+                .padding(.top, voice.isCenter ? 0 : Self.captionLead)
+                .padding(.bottom, voice.isCenter ? 210 : 118)
+                .frame(maxWidth: .infinity)
+                .background(alignment: .bottom) {
+                    if !voice.isCenter {
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: Color(hex: "#050408").opacity(0.55), location: 0.32),
+                                .init(color: Color(hex: "#050408").opacity(0.9), location: 1),
+                            ],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                        .ignoresSafeArea(edges: .bottom)
+                    }
+                }
+        }
+    }
+
+    private var block: some View {
         VStack(alignment: voice.isCenter ? .center : .leading, spacing: 14) {
-            Spacer()
             // Header: name · verb, avatar chip.
             HStack(spacing: 10) {
                 Text(voice.glyph)
@@ -261,7 +300,7 @@ private struct VoiceText: View {
                         .font(.lora(13)).italic()
                         .foregroundStyle(voice.color)
                     Text(voice.role)
-                        .spaceMonoTracked(8, em: 0.15)
+                        .spaceMonoTracked(9, em: 0.15)
                         .foregroundStyle(BinduTheme.inkTertiary)
                     // "answering Sakshi" — the one who speaks in reply (comp The Rite v3).
                     if let answering = voice.answering {
@@ -297,14 +336,5 @@ private struct VoiceText: View {
                     .padding(.top, 4)
             }
         }
-        .padding(.horizontal, 34)
-        .padding(.bottom, voice.isCenter ? 210 : 118)
-        .background(
-            voice.isCenter ? nil :
-                LinearGradient(
-                    colors: [.clear, Color(hex: "#050408").opacity(0.55), Color(hex: "#050408").opacity(0.9)],
-                    startPoint: .top, endPoint: .bottom
-                ).ignoresSafeArea()
-        )
     }
 }
