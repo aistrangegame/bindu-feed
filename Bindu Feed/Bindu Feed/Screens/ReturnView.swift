@@ -606,9 +606,9 @@ struct ReturnView: View {
     private var sealing: some View {
         centered {
             Text("◉ you, now · today").spaceMonoTracked(9, em: 0.5 / 9).foregroundStyle(ReturnCanon.ashColor)
-            if sealPhase == 0 {
-                Text(ReturnCanon.sealPlain).font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary).multilineTextAlignment(.center)
-            }
+            // SLICE 4 · the plain line no longer leaves when the ring is added — it is the
+            // ring he is looking at, and words never leave on their own.
+            Text(ReturnCanon.sealPlain).font(.loraItalic(14)).foregroundStyle(BinduTheme.inkSecondary).multilineTextAlignment(.center)
             if sealPhase >= 1 {
                 Text(ReturnCanon.sealAdded).font(.lora(17, weight: .medium)).foregroundStyle(BinduTheme.inkPrimary).transition(.opacity)
                 keptWords
@@ -633,9 +633,22 @@ struct ReturnView: View {
                 .transition(.opacity)
             }
         }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4.2) { withAnimation(.easeInOut(duration: 1.2)) { sealPhase = 1 } }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 8.6) { withAnimation(.easeInOut(duration: 1.4)) { sealPhase = 2 } }
+        // SLICE 4 · THE LALITA PASS — the Sealing turned at 4.2s and 8.6s, the fault Slice 2
+        // took out of the Rite's Sealing and left standing in its sibling. He turns it now,
+        // with the Rite's own `touch to continue`.
+        .overlay(alignment: .bottom) {
+            if sealPhase < 2 {
+                Text(RiteWord.promptContinue)
+                    .spaceMonoTracked(10, em: 2 / 10)
+                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.6))
+                    .padding(.bottom, 30)
+                    .transition(.opacity)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard sealPhase < 2 else { return }
+            withAnimation(.easeInOut(duration: 1.3)) { sealPhase += 1 }
         }
     }
 

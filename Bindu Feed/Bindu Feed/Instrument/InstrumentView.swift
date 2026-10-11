@@ -129,6 +129,9 @@ struct InstrumentView: View {
     // It is a floor now, not a replacement. The band still keeps the four Universe registers
     // continuously lit (which is its whole job); it can no longer take a register below the
     // presence it would have had on its own.
+    /// SLICE 4 · past 9.5 at the centre — `:5647`'s `doSplit` threshold.
+    private var centreRevealed: Bool { here.key == "centre" && travel.z > 9.5 }
+
     private var contentOpacity: Double {
         let presence = Axis.presence(here.i, z)
         guard inUniverse else { return presence }
@@ -208,6 +211,22 @@ struct InstrumentView: View {
 
             // The particle's self-name at this scale (#pname), floated just beneath it.
             particleNameLabel
+
+            // SLICE 4 · THE LALITA PASS — THE LANDING, SEEN. Walked 2026-10-11: past 9.5 the
+            // screen was the bloom and nothing else. The reveal was mounted inside `content`,
+            // whose opacity carries `worldLayer = (1−immA)(1−dom·0.94)`, and at the centre
+            // `immA` → 1 — so *"Every dot you touched was me"*, *"Now — go play"* and the door
+            // were all drawn at zero. It is Slice 2's red dot again, at the one place the whole
+            // walk lands. In the design the reveal is its own sheet over the bloom
+            // (`The Point v9.html` `#reveal`), so here it is too: above the particle, outside
+            // every immersion factor.
+            ZStack {
+                if centreRevealed {
+                    PointRevealView(path: $path, onAgain: { travel.stepOut(to: 1) })
+                        .transition(.opacity)
+                }
+            }
+            .animation(.easeInOut(duration: 2.4), value: centreRevealed)
 
             // The ladder (#rail) — where he is on the fifteen-register axis, and it stops
             // existing past 9.5. C5.10 · `:5647` → `doSplit`.
@@ -1019,9 +1038,11 @@ struct InstrumentView: View {
             // The design holds it until 9.5, inside the 9.62 overshoot: past the bloom filling
             // the frame, past the chrome going quiet. The register still mounts at 8.5 — he is
             // AT the centre, and the particle blooms — but the reveal waits for the push.
-            if travel.z > 9.5 {
-                PointRevealView(path: $path)
-            }
+            //
+            // SLICE 4 · the reveal is no longer mounted HERE — see `centreReveal`. Inside
+            // `content` it took `worldLayer`, which is 0 once the bloom fills the frame, so the
+            // ending was drawn and never seen.
+            EmptyView()
         case "gate":
             AxisGateView()
         case "sky", "region", "world", "fall":

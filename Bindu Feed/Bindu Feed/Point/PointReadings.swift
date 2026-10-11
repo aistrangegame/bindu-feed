@@ -767,6 +767,11 @@ private struct ReadPressing: View {
     /// `world-four.js:272-274`, verbatim. `press` is the design's own `this.press`.
     private var pressWord: String {
         if s.revealed >= 4 { return "struck" }
+        // SLICE 4 · walked: a star opened by touch arrived on an empty reading whose only
+        // word was "bearing" — the state word for a press, shown with no hand on the wall,
+        // so nothing named the gesture that admits him. `world-four.js:267-269` draws
+        // the ask while he is NOT pressing (`!this.on`) and the state words only while he is.
+        if !holding { return "press a wall · and bear it" }
         if press < 0.22 { return "bearing" }
         if press < 0.50 { return "it is taking" }
         if press < 0.76 { return "deeper" }

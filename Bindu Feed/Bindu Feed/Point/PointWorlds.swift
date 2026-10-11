@@ -234,15 +234,23 @@ struct PointUniversesView: View {
                     .buttonStyle(.plain)
                     .position(pts[min(i, pts.count - 1)])
                 }
-                VStack(spacing: 6) {
-                    Text("\(dim.roman) · \(dim.name.uppercased())")
-                        .spaceMonoTracked(9, em: 2.5 / 9).foregroundStyle(hue)
+                // SLICE 4 · THE LALITA PASS — each world's first words, whole. Walked: the
+                // voice sat at 46pt, under the Dynamic Island, cut to two lines (*"the vessel
+                // came with eq…"*) so as not to meet `#where` below it, with a label above it
+                // naming the world `#where` names again a line later. The design gives the
+                // voice its own paragraph, never truncated (`The Point v9.html:28`, `.voice`,
+                // `max-width:320px`). So it stands once, whole, beneath `#where`'s title.
+                VStack(spacing: 0) {
                     Text(dim.voice)
-                        .font(.loraItalic(12)).foregroundStyle(BinduTheme.inkSecondary)
-                        .multilineTextAlignment(.center).lineLimit(2).padding(.horizontal, 44)
+                        .font(.loraItalic(13)).lineSpacing(4)
+                        .foregroundStyle(BinduTheme.inkSecondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: 320)
                     Spacer()
                 }
-                .padding(.top, 46).allowsHitTesting(false)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 168).allowsHitTesting(false)
                 VStack {
                     Spacer()
                     // Canon — The Point v9.html:890. The slot exists; the invented line

@@ -8,6 +8,8 @@ import SwiftUI
 
 struct PointRevealView: View {
     @Binding var path: [FeedRoute]
+    /// SLICE 4 · the Lalita Pass — `again?` carries him back to the gate, the walk fresh.
+    var onAgain: () -> Void = {}
     @EnvironmentObject private var store: FeedStore
     @EnvironmentObject private var breath: Breath
     @EnvironmentObject private var soundEngine: SoundEngine
@@ -56,26 +58,62 @@ struct PointRevealView: View {
             .ignoresSafeArea()
             .allowsHitTesting(false)
 
-            VStack(spacing: 18) {
-                Spacer()
-                if collapsed && !lines.isEmpty {
-                    ForEach(0...min(line, lines.count - 1), id: \.self) { i in
-                        let emph = i >= narrationCount            // the verbatim close
-                        let isFinal = i == lines.count - 1        // "Now — go play…"
-                        Text(lines[i])
-                            .font(emph && !isFinal ? .loraItalic(16)
-                                                   : .lora(isFinal ? 18 : 16, weight: isFinal ? .medium : .regular))
-                            .lineSpacing(6)
-                            .foregroundStyle(emph && !isFinal ? BinduParticle.core : BinduTheme.inkPrimary)
-                            .multilineTextAlignment(.center).transition(.opacity)
-                    }
-                    if line >= lines.count - 1 {
-                        Button { $path.popToRootDissolve() } label: {
-                            Text("OM · 136.1").spaceMonoTracked(10, em: 0.3).foregroundStyle(Color(hex: "#D4A94B"))
+            // SLICE 4 · the lines accumulate, and the walk's narration can run long — the
+            // design's `#reveal` scrolls (`revealEl.scrollTop = revealEl.scrollHeight`), so
+            // this does too: the newest line is always in view, and what rises fades before
+            // it reaches the point.
+            GeometryReader { geo in
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 18) {
+                            if collapsed && !lines.isEmpty {
+                                ForEach(0...min(line, lines.count - 1), id: \.self) { i in
+                                    let emph = i >= narrationCount            // the verbatim close
+                                    let isFinal = i == lines.count - 1        // "Now — go play…"
+                                    Text(lines[i])
+                                        .font(emph && !isFinal ? .loraItalic(16)
+                                                               : .lora(isFinal ? 18 : 16, weight: isFinal ? .medium : .regular))
+                                        .lineSpacing(6)
+                                        .foregroundStyle(emph && !isFinal ? BinduParticle.core : BinduTheme.inkPrimary)
+                                        .multilineTextAlignment(.center).transition(.opacity)
+                                }
+                                if line >= lines.count - 1 {
+                                    // SLICE 4 · THE LALITA PASS — *"Now — go play"* is answered by the
+                                    // design's one door, `again?` (`Claude Design Round 1/comps/The Point v9.html:912`,
+                                    // `.lnk` in `--red`), whose click scrolls the walk back to the gate
+                                    // (`again2.onclick` → `window.PT.scrollTo(0)`). The app had put its own
+                                    // label here and sent him to the app's root: the game finished and did
+                                    // not offer itself again. The door now carries him back up the axis to
+                                    // the gate, the walk fresh; staying, or putting the phone down, are
+                                    // still his.
+                                    Button(action: onAgain) {
+                                        Text("again?").spaceMonoTracked(9.5, em: 0.2)
+                                            .foregroundStyle(Color(hex: "#C0392B"))
+                                            .padding(.vertical, 12).padding(.horizontal, 20)
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.top, 4).transition(.opacity)
+                                }
+                            }
+                            Color.clear.frame(height: 1).id("end")
                         }
-                        .padding(.top, 12).transition(.opacity)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, geo.size.height * 0.44)
+                        .padding(.bottom, 90)
+                    }
+                    .scrollIndicators(.hidden)
+                    .mask(LinearGradient(stops: [.init(color: .clear, location: 0.30),
+                                                 .init(color: .black, location: 0.42)],
+                                         startPoint: .top, endPoint: .bottom))
+                    .onChange(of: line) { _, _ in
+                        withAnimation(.easeInOut(duration: 1.2)) { proxy.scrollTo("end", anchor: .bottom) }
                     }
                 }
+            }
+            .padding(.horizontal, 40)
+
+            VStack {
                 Spacer()
                 if collapsed && line < lines.count - 1 {
                     Text("touch").spaceMonoTracked(8, em: 0.25).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.3 * breath.value))
