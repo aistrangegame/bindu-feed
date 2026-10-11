@@ -204,6 +204,13 @@ enum PointStatusLabel {
     }
 }
 
+/// SLICE 2 · the room at the foot of every reading. The actions that follow a reading —
+/// take it up, let it go, descend onto this star — stand in the bottom ~200pt, so the words
+/// must be able to scroll clear of them. At 90 the last lines sat under the buttons.
+enum PointReadingLayout {
+    static let tail: CGFloat = 236
+}
+
 // MARK: - one section, in the shared type
 
 private struct SectionBlock: View {
@@ -284,14 +291,19 @@ struct PointReading: View {
             default: ReadCompany(s: state, hue: hue, onClose: onClose)
             }
         }
-        // SLICE 2 · A TOUCH ALWAYS RECEIVES. Ashrey's ruling (2026-10-10): *"remove any
-        // restrictive provisions"* — the reading should be gathered and read at his pace. Each
-        // world keeps its own gesture (stay still, travel out, hold it open, bear, turn, send,
-        // keep pace) and every one of them still gives; but none of them is a GATE any more.
-        // A plain touch on any reading hands over the next section. The world's gesture is the
-        // invitation; it is never the price of the words.
-        .contentShape(Rectangle())
-        .simultaneousGesture(TapGesture().onEnded { state.give() })
+        // SLICE 2 · THE GESTURE IS THE DOORWAY; THE READING IS HIS. Walked against the first
+        // principles (2026-10-10): each world's gesture had been the price of EVERY section, so
+        // he was holding the veil open with one hand while trying to read with his attention.
+        // Now the world's own gesture admits him once — it gives the first section exactly as
+        // before — and the rest of the reading follows on its own, gently, and stays.
+        .task(id: state.revealed >= 1) {
+            guard state.revealed >= 1 else { return }
+            while !state.done {
+                try? await Task.sleep(for: .milliseconds(900))
+                guard !Task.isCancelled else { return }
+                state.give()
+            }
+        }
         // Level 3 is shared by all seven, in the design too — the descent, and its fallback.
         // Plain `.overlay`, not `.overlay(alignment: .bottom)` — the descent needs the whole
         // frame to cover, and the door aligns itself to the bottom from inside it.
@@ -388,7 +400,7 @@ private struct ReadStillness: View {
                         .frame(maxWidth: .infinity)
                     }
                     ReadingFooter(star: s.star, hue: hue)
-                    Color.clear.frame(height: 90)
+                    Color.clear.frame(height: PointReadingLayout.tail)
                 }
                 .padding(.horizontal, 32).padding(.top, 20)
             }
@@ -504,7 +516,7 @@ private struct ReadFollowing: View {
                                 .frame(maxWidth: .infinity)
                         }
                         ReadingFooter(star: s.star, hue: hue)
-                        Color.clear.frame(height: 90)
+                        Color.clear.frame(height: PointReadingLayout.tail)
                     }
                     .padding(.horizontal, 32).padding(.top, 20)
                 }
@@ -590,7 +602,7 @@ private struct ReadParting: View {
                                 .transition(.opacity)
                         }
                         ReadingFooter(star: s.star, hue: hue)
-                        Color.clear.frame(height: 90)
+                        Color.clear.frame(height: PointReadingLayout.tail)
                     }
                     .padding(.horizontal, 32).padding(.top, 20)
                 }
@@ -799,7 +811,7 @@ private struct ReadPressing: View {
                         .onDisappear { PressClaim.release(Self.claimant) }
                     }
                     ReadingFooter(star: s.star, hue: hue)
-                    Color.clear.frame(height: 90)
+                    Color.clear.frame(height: PointReadingLayout.tail)
                 }
                 .padding(.horizontal, 32).padding(.top, 20)
             }
@@ -990,7 +1002,7 @@ private struct ReadTurning: View {
                             .frame(maxWidth: .infinity)
                     }
                     ReadingFooter(star: s.star, hue: hue)
-                    Color.clear.frame(height: 90)
+                    Color.clear.frame(height: PointReadingLayout.tail)
                 }
                 .padding(.horizontal, 32).padding(.top, 20)
             }
@@ -1140,7 +1152,7 @@ private struct ReadSending: View {
                         .buttonStyle(.plain).frame(maxWidth: .infinity)
                     }
                     ReadingFooter(star: s.star, hue: hue)
-                    Color.clear.frame(height: 90)
+                    Color.clear.frame(height: PointReadingLayout.tail)
                 }
                 .padding(.horizontal, 32).padding(.top, 20)
             }
@@ -1324,7 +1336,7 @@ private struct ReadCompany: View {
                         }
                     }
                     ReadingFooter(star: s.star, hue: hue)
-                    Color.clear.frame(height: 90)
+                    Color.clear.frame(height: PointReadingLayout.tail)
                 }
                 .padding(.horizontal, 32).padding(.top, 20)
             }

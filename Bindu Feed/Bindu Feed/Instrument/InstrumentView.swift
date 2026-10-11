@@ -175,8 +175,15 @@ struct InstrumentView: View {
             // The register content, brightening as he settles into it. The Universe band
             // (−4…−1) stays continuously present as one camera (fading only at its feed/light
             // edges) so the flowing camera doesn't pulse dim between the four registers.
+            // SLICE 2 · THE RED DOT, AT ITS ROOT. In the design the reading is its own sheet,
+            // OUTSIDE `:5598`'s world layer, so `(1−immA)` takes the world away and leaves the
+            // words. Here the reading is mounted INSIDE `content`, so the same factor took the
+            // words too: a reading fully given → `immA` → 1 → the reading, the world and every
+            // caption faded out, leaving the yantra and the particle. While a piece is open the
+            // register content keeps its own brightness; the world behind the reading already
+            // recedes by `PointRecede`, and the shells, field and chrome still immerse.
             content
-                .opacity(contentOpacity * worldLayer)
+                .opacity(contentOpacity * (travel.pieceOpen ? 1 : worldLayer))
                 // No opacity threshold. `content` is a `switch` on `here.key`, so exactly ONE
                 // register is ever mounted and it is always the nearest — and with the floor
                 // above, a mounted register is never dimmer than 0.494. There is no state in
@@ -206,6 +213,7 @@ struct InstrumentView: View {
             // existing past 9.5. C5.10 · `:5647` → `doSplit`.
             if !Immersion.chromeSilenced(z: z) {
                 ladderRail
+                railRungs
             }
 
             // The seam — the two directions, named, at the Feed's own scale.
@@ -642,6 +650,38 @@ struct InstrumentView: View {
         // disappears entirely instead of staying faintly there while he crosses.
         .opacity(Immersion.railOpacity(hush: hush, immA: immA, dom: dom))
         .animation(.easeInOut(duration: 0.5), value: here.i)
+    }
+
+    /// SLICE 2 · THE LADDER IS ALSO A WAY THERE. Walked against the first principles: leaning
+    /// through each surface is the felt way between registers, and it stays — but it was the
+    /// ONLY way, so reaching the Dance meant meaning eight surfaces in a row, and a tired hand
+    /// was stranded. A touch on a rung now carries him there in one passage. The lean remains
+    /// the ceremony; this is the path he can always take instead. Same geometry as the rail
+    /// above (`step` 21, centred, `right:13`), and it stands down while a reading is open or a
+    /// passage is already under way.
+    private var railRungs: some View {
+        GeometryReader { g in
+            let regs = Axis.registers
+            let step = 21.0
+            let railH = Double(regs.count - 1) * step
+            let top = (Double(g.size.height) - railH) / 2
+            Color.clear
+                .frame(width: 44, height: railH + 21)
+                .contentShape(Rectangle())
+                .gesture(SpatialTapGesture().onEnded { v in
+                    guard !travel.crossing, !PointYantra.shared.readingOpen,
+                          !PointYantra.shared.descending else { return }
+                    // the frame starts 10.5 above the top rung; rung i sits at top + railH − i·step
+                    let yInRail = Double(v.location.y) - 10.5
+                    let i = Int(((railH - yInRail) / step).rounded())
+                    guard let reg = regs.first(where: { $0.i == max(0, min(regs.count - 1, i)) }),
+                          reg.i != Axis.nearest(z).i else { return }
+                    travel.stepOut(to: Double(reg.z))
+                })
+                // positioned AFTER the gesture, so only the 44pt column takes touches
+                .position(x: Double(g.size.width) - 22, y: top + railH / 2)
+        }
+        .ignoresSafeArea()
     }
 
     // The particle's self-name at the current scale (v3 Spine.bindu.name — 9 strings by Z, not

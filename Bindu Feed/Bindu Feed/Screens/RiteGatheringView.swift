@@ -46,6 +46,14 @@ struct RiteGatheringView: View {
     private func dim(_ v: RiteVoice) -> Double {
         tiers[v.key] == .passing ? 0.42 : 1.0
     }
+    private var currentHint: String? {
+        switch phase {
+        case .playing: return current.map(hintText)
+        case .resolving: return RiteWord.promptContinue
+        case .intro: return nil
+        }
+    }
+
     private func hintText(_ v: RiteVoice) -> String {
         if tiers[v.key] == .passing { return RiteWord.promptPassing }
         if shown >= lines(v).count { return RiteWord.promptNext }
@@ -88,16 +96,28 @@ struct RiteGatheringView: View {
 
                 // The touch hint — it changes with state (comp The Rite v3): passing voices
                 // say "touch to move on", a finished voice "the next presence", else "continue".
-                if phase == .playing, let v = current {
-                    Text(hintText(v))
-                        .spaceMonoTracked(9, em: 2 / 9)
-                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.28 + 0.28 * breath.value))
+                // SLICE 2 · legible. It breathed between 0.28 and 0.56 of the tertiary ink at 9pt
+                // — the one line that says what a touch will do was the hardest thing to read.
+                if let hint = currentHint {
+                    Text(hint)
+                        .spaceMonoTracked(10, em: 2 / 10)
+                        .foregroundStyle(BinduTheme.inkSecondary.opacity(0.55 + 0.2 * breath.value))
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .padding(.bottom, 30)
                 }
             }
             .contentShape(Rectangle())
             .onTapGesture { tap() }
+            // SLICE 2 · WORDS NEVER LEAVE ON THEIR OWN — AND NEVER FOR GOOD. A touch only ever
+            // went forward, so a line or a whole presence tapped past was gone with no way back
+            // (a double touch lost Sakshi). A swipe to the right steps back: one line, then the
+            // presence before, then out of the resolve into the last voice. Forward is still
+            // the touch.
+            .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded { v in
+                if v.translation.width > 50, abs(v.translation.height) < v.translation.width {
+                    back()
+                }
+            })
         }
         .onAppear(perform: begin)
     }
@@ -233,10 +253,34 @@ struct RiteGatheringView: View {
     private func resolve() {
         resolveStart = Date()
         withAnimation(.easeInOut(duration: 1.4)) { phase = .resolving }
-        // The bed holds; the field has resolved to the one breath. Hand off after
-        // the ember has settled (a touch also advances — see tap()).
-        DispatchQueue.main.asyncAfter(deadline: .now() + 4.5) {
-            if phase == .resolving { onDone() }
+        // The bed holds; the field has resolved to the one breath. SLICE 2 · it no longer
+        // hands him on after 4.5s — nothing moves him on. He stays with the ember as long as
+        // he likes; a touch continues to the Recognition, a swipe back returns to the last voice.
+    }
+
+    /// SLICE 2 · one step back — a line, then the presence before, then out of the resolve.
+    private func back() {
+        switch phase {
+        case .intro:
+            return
+        case .resolving:
+            guard let last = speaking.indices.last else { return }
+            withAnimation(.easeInOut(duration: 1.0)) {
+                phase = .playing
+                idx = last
+                shown = lines(speaking[last]).count
+                sceneStart = Date().addingTimeInterval(-10)     // its figure is already drawn
+            }
+        case .playing:
+            if shown > 1 {
+                withAnimation(.easeInOut(duration: 0.8)) { shown -= 1 }
+            } else if idx > 0 {
+                withAnimation(.easeInOut(duration: 1.0)) {
+                    idx -= 1
+                    shown = lines(speaking[idx]).count
+                    sceneStart = Date().addingTimeInterval(-10)
+                }
+            }
         }
     }
 
@@ -266,6 +310,23 @@ private struct VoiceText: View {
     private static let captionLead: CGFloat = 72
 
     var body: some View {
+        // SLICE 2 · A LONG VOICE SCROLLS. The live field's comments run far longer than the
+        // design's two or three short lines, and the block was pinned to the foot with no
+        // scroll, so a long presence ran off the top of the screen. When it fits it sits
+        // exactly where it did; when it doesn't, it becomes a reading he can scroll, on a
+        // ground dark enough to read over the figure.
+        ViewThatFits(in: .vertical) {
+            placed
+            ScrollView {
+                placed.padding(.top, 110)
+            }
+            .scrollIndicators(.hidden)
+            .defaultScrollAnchor(.bottom)
+            .background(Color(hex: "#050408").opacity(0.72).ignoresSafeArea())
+        }
+    }
+
+    private var placed: some View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
             block
