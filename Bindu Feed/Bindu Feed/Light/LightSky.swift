@@ -116,17 +116,17 @@ struct LightSkyLayout {
             let n = Double(members.count)
             let R = members.count == 1 ? 18 : 52 + 24 * n.squareRoot()
             let ring = gi == 0 ? 0 : 230 * (Double(gi) + 0.35).squareRoot()
-            let a = Double(gi) * golden + hash(name) * 0.6
+            let a = Double(gi) * golden + Self.hash(name) * 0.6
             let c = CGPoint(x: cos(a) * ring, y: sin(a) * ring)
             ext = max(ext, ring + R)
-            let seed = hash(name) * .pi * 2
+            let seed = Self.hash(name) * .pi * 2
             for (j, idx) in members.enumerated() {
                 let frac = (Double(j) + 0.5) / n
-                let r = members.count == 1 ? 0 : R * frac.squareRoot() * (0.82 + 0.3 * hash(scenes[idx].key))
+                let r = members.count == 1 ? 0 : R * frac.squareRoot() * (0.82 + 0.3 * Self.hash(scenes[idx].key))
                 let th = Double(j) * golden + seed + (r / max(R, 1)) * 1.9      // the arms wind
                 offs[idx] = CGPoint(x: cos(th) * r, y: sin(th) * r)
             }
-            let tint = Color(hex: Self.tints[Int(hash(name) * Double(Self.tints.count)) % Self.tints.count])
+            let tint = Color(hex: Self.tints[Int(Self.hash(name) * Double(Self.tints.count)) % Self.tints.count])
             gals.append(Galaxy(name: name, center: c, radius: R, members: members, tint: tint))
         }
         galaxies = gals
@@ -348,7 +348,7 @@ struct LightSkyView: View {
         for g in L.galaxies where near || g.members.count == 1 {
             for i in g.members {
                 let p = screen(L.position(i, galaxy: g, t: t), size, c, z)
-                let d = hypot(p.x - loc.x, p.y - loc.y)
+                let d = Double(hypot(p.x - loc.x, p.y - loc.y))
                 if d < 34, d < (best?.1 ?? .infinity) { best = (i, d) }
             }
         }
