@@ -86,6 +86,12 @@ private struct StarMark: View {
     let placed: PlacedStar
     let hue: Color
     var compact: Bool = false
+    /// SLICE 2 · A TOUCH ON A STAR OPENS IT, IN EVERY WORLD. Ashrey's ruling (2026-10-10):
+    /// *"remove any restrictive provisions"*. Four worlds opened a star only once their own
+    /// gesture was satisfied — the veil parted past 0.4, the niche borne long enough, the pane
+    /// turned first, the star caught in its lane. The gestures stay and still open; this is
+    /// the plain door beside them. Simultaneous, so it never takes a drag from the world.
+    var onTap: (() -> Void)? = nil
     var body: some View {
         HStack(spacing: 7) {
             marker
@@ -95,6 +101,9 @@ private struct StarMark: View {
                     .lineLimit(2).frame(maxWidth: 96, alignment: .leading)
             }
         }
+        .frame(minWidth: onTap == nil ? 0 : 44, minHeight: onTap == nil ? 0 : 44)
+        .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture().onEnded { onTap?() }, including: onTap == nil ? .none : .all)
     }
     @ViewBuilder private var marker: some View {
         switch placed.status {
@@ -306,7 +315,7 @@ private struct WorldPoint: View {
                         let rad = (0.20 + seed * 0.24) * (1 - still * 0.55) + 0.05 * sin(t * 0.05 + seed * 6.28)
                         let x = geo.size.width * (0.5 + cos(ang) * rad)
                         let y = geo.size.height * (0.5 + sin(ang) * rad * 1.15)
-                        StarMark(placed: p, hue: hue, compact: quiet || dwell != p.id)
+                        StarMark(placed: p, hue: hue, compact: quiet || dwell != p.id, onTap: quiet ? nil : { onOpen(p.star) })
                             .scaleEffect(dwell == p.id ? 1.35 : 1)
                             .opacity(0.5 + 0.5 * breath.value)
                             .position(x: x, y: y)
@@ -425,7 +434,7 @@ private struct WorldTurn: View {
                         let r = byId[p.id]
                         let f = (following == p.id) ? max(0.06, travel) : 1.0
                         let q = r.map { PointRays.point($0, f: f, cx: cx, cy: cy, rim: rim, t: t) }
-                        StarMark(placed: p, hue: hue, compact: quiet)
+                        StarMark(placed: p, hue: hue, compact: quiet, onTap: quiet ? nil : { onOpen(p.star) })
                             .opacity(r.map { PointRays.dim(following: following, ray: $0) } ?? 1)
                             .position(x: q?.x ?? cx, y: q?.y ?? cy)
                     }
@@ -573,12 +582,14 @@ private struct WorldVeil: View {
                     }
                     ForEach(stars) { p in
                         let seed = PointWorlds.hash(p.id)
-                        StarMark(placed: p, hue: hue, compact: quiet || part < 0.5)
+                        StarMark(placed: p, hue: hue, compact: quiet || part < 0.5,
+                                 onTap: quiet ? nil : { onOpen(p.star) })
                             .opacity(0.18 + 0.82 * Double(part))
                             .blur(radius: (1 - Double(part)) * 7)          // behind the gauze, out of focus; sharpens as it parts
                             .position(x: geo.size.width * (0.16 + seed * 0.68),
                                       y: geo.size.height * (0.16 + PointWorlds.hash(p.id + "y") * 0.68))
-                            .allowsHitTesting(false)   // D5.4 · the HAND chooses; see below
+                            // SLICE 2 · was `.allowsHitTesting(false)` (D5.4 · the hand chooses) —
+                            // a touch on the star now chooses too.
                     }
                     // `world-three.js:235` — TWO-STATE on `this.back.length`, the zones already
                     // parted: the world stops asking for the first parting once one has been
@@ -1028,7 +1039,7 @@ private struct WorldChamber: View {
                     // at d = 0.18 … 0.81, so `sc` runs 0.64 → 0.29: a 2.2× size ratio the design
                     // draws and the app rendered as four identical discs.
                     // `:204` — `al = A·(0.44 + lit·0.56)·(0.72 + pt[2]·0.7)`, brightness by depth.
-                    StarMark(placed: p, hue: hue, compact: quiet)
+                    StarMark(placed: p, hue: hue, compact: quiet, onTap: quiet ? nil : { onOpen(p.star) })
                         .scaleEffect(nicheScale, anchor: .leading)
                         .opacity(nicheAlpha)
                         // `:238` — `rad = max(26, rim·0.15·pt[2] + 22)`. A near niche is easier
@@ -1303,7 +1314,8 @@ private struct WorldMirrors: View {
             .rotation3DEffect(.radians(angleOf(row: row, k: k)),
                               axis: (x: 0, y: 1, z: 0), perspective: 0.5)
             .position(x: x, y: y)
-            .onTapGesture { if turned.contains(p.id) { onOpen(p.star) } }
+            // SLICE 2 · it opened only once turned; a touch opens it now, turned or not.
+            .onTapGesture { onOpen(p.star) }
     }
 }
 
@@ -1370,7 +1382,7 @@ private struct WorldReturn: View {
                 ForEach(Array(stars.enumerated()), id: \.element.id) { i, p in
                     let strat = Double(i) / Double(max(stars.count - 1, 1))
                     let y = geo.size.height * (0.14 + strat * 1.1) - settle      // deeper stars, revealed by settling
-                    StarMark(placed: p, hue: hue, compact: quiet)
+                    StarMark(placed: p, hue: hue, compact: quiet, onTap: quiet ? nil : { onOpen(p.star) })
                         .saturation(1 - strat * 0.5).opacity(1 - strat * 0.35)   // deeper = aged
                         .position(x: geo.size.width * (0.5 + (i % 2 == 0 ? -0.22 : 0.22))
                                      + (holding == p.id ? aimX : 0),
@@ -1519,7 +1531,7 @@ private struct WorldDance: View {
                         let inLane = stars.filter { $0.uni == sp.uni }.count
                         let p = DanceLanes.point(index: nth, of: inLane, universe: sp.uni, t: bt)
                         let rr = min(geo.size.width, geo.size.height)
-                        StarMark(placed: sp, hue: hue, compact: true)
+                        StarMark(placed: sp, hue: hue, compact: true, onTap: quiet ? nil : { onOpen(sp.star) })
                             .position(x: cx + p.x * rr, y: cy + p.y * rr)
                     }
                     // D5.8 · **THE PACE WORD IS THIS WORLD'S CUE, AND THE REST IS AUTHORED

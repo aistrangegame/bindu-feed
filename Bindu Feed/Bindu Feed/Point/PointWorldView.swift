@@ -212,6 +212,9 @@ struct PointWorldView: View {
                 // material (Amendment §7.3: the universe, drawn inside the figure).
                 PointWorld(dimensionN: dimensionN, liveZ: liveZ, stars: PointWorlds.placed(u), hue: hue,
                            onOpen: { s in
+                    // SLICE 2 · a touch on a star and the world's own gesture can both open it
+                    // from one hand; the second is the same arrival, not a new one.
+                    guard openStar?.key != s.key else { return }
                     // `world-five.js:49-50` — *"at the exact instant every other star sounds
                     // its arrival, this one is silent: a true null, the only deliberate
                     // silence in the Point. Sakshi's register — it witnesses, it does not
