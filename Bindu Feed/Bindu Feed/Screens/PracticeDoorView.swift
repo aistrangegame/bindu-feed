@@ -254,8 +254,9 @@ struct PracticeDoorView: View {
     private var tapHint: some View {
         Text("TAP TO CROSS")
             .spaceMonoTracked(9, em: 0.18)
-            .foregroundColor(BinduTheme.inkTertiary)
-            .opacity(0.24 + 0.31 * breath.value)   // the one master breath
+            // SLICE 4 · legible at the bottom of its breath — it ran 8%–19% and vanished.
+            .foregroundColor(BinduTheme.inkSecondary)
+            .opacity(0.50 + 0.30 * breath.value)   // the one master breath
     }
 
     private func centeredItalic(_ text: String, color: Color, maxWidth: CGFloat? = nil) -> some View {

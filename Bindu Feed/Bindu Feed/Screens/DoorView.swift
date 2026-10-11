@@ -136,9 +136,12 @@ struct DoorView: View {
                     store.markRiteDismissedToday()   // your choice — not forced today
                     onComplete()
                 } label: {
+                    // SLICE 4 · the calm way past the Rite, legible — it sat at 17% and read
+                    // as texture, so the only visible door was the one into the ceremony.
                     Text("not today · enter the field ›")
-                        .spaceMonoTracked(8, em: 0.25)
-                        .foregroundStyle(BinduTheme.inkTertiary.opacity(0.5))
+                        .spaceMonoTracked(9, em: 0.25)
+                        .foregroundStyle(BinduTheme.inkSecondary.opacity(0.62))
+                        .padding(.vertical, 10).contentShape(Rectangle())
                 }
                 .padding(.top, 14).padding(.bottom, 40)
             }

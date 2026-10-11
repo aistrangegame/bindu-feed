@@ -15,13 +15,19 @@ struct RootView: View {
     // array — so each change cross-fades (see Navigation.swift).
     var body: some View {
         ZStack {
+            // SLICE 4 · the Lalita Pass (Neev's seat) — every level stays mounted, and only
+            // the top took touches, but every level stayed in the ACCESSIBILITY tree: VoiceOver
+            // read the Feed's cards through the axis, and an accessibility press on the rail
+            // opened the story card lying underneath it. What can't be touched isn't spoken.
             feedScreen
                 .allowsHitTesting(path.isEmpty)
+                .accessibilityHidden(!path.isEmpty)
 
             ForEach(Array(path.enumerated()), id: \.offset) { index, route in
                 destination(for: route)
                     .zIndex(Double(index + 1))
                     .allowsHitTesting(index == path.count - 1)
+                    .accessibilityHidden(index != path.count - 1)
                     .transition(.opacity)
             }
         }
