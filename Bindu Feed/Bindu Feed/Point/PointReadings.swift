@@ -550,8 +550,11 @@ private struct ReadFollowing: View {
             // VERTICAL and sits outside the scroll. That is II and III, and only those.
             .simultaneousGesture(DragGesture(minimumDistance: 2)
                 .onChanged { v in
-                    // going outward is what gives; stopping gives nothing
-                    let d = -Double(v.translation.height) / Double(geo.size.height) * 1.6
+                    // going outward is what gives; stopping gives nothing. SLICE 2 · walked:
+                    // only an UPWARD drag counted, and nothing on screen says which way "out" is.
+                    // Travel in any direction carries him out along the ray.
+                    let dx = Double(v.translation.width), dy = Double(v.translation.height)
+                    let d = (dx * dx + dy * dy).squareRoot() / Double(geo.size.height) * 1.6
                     travelled = min(1, max(0, travelled + max(0, d) * 0.06))
                     let want = Int(travelled * 4.0)
                     if want > s.revealed { s.give() }
