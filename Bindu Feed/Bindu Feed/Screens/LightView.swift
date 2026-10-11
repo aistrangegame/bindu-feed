@@ -552,8 +552,11 @@ struct LightView: View {
         .animation(.easeInOut(duration: 1.2), value: columnLift)
         .mask(
             LinearGradient(stops: [
+                // Slice 3 · walked: the lifted column's first line met "‹ leave". The top
+                // stays clear for the way out; the words fade before they reach it.
                 .init(color: .clear, location: 0),
-                .init(color: .black, location: 0.10),
+                .init(color: .clear, location: 0.12),
+                .init(color: .black, location: 0.22),
                 .init(color: .black, location: 0.88),
                 .init(color: .clear, location: 1.0),
             ], startPoint: .top, endPoint: .bottom)

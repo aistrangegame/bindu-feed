@@ -114,7 +114,7 @@ struct LightSkyLayout {
         for (gi, name) in order.enumerated() {
             let members = groups[name] ?? []
             let n = Double(members.count)
-            let R = members.count == 1 ? 18 : 52 + 24 * n.squareRoot()
+            let R = members.count == 1 ? 18 : 64 + 30 * n.squareRoot()
             let ring = gi == 0 ? 0 : 230 * (Double(gi) + 0.35).squareRoot()
             let a = Double(gi) * golden + Self.hash(name) * 0.6
             let c = CGPoint(x: cos(a) * ring, y: sin(a) * ring)
@@ -122,8 +122,8 @@ struct LightSkyLayout {
             let seed = Self.hash(name) * .pi * 2
             for (j, idx) in members.enumerated() {
                 let frac = (Double(j) + 0.5) / n
-                let r = members.count == 1 ? 0 : R * frac.squareRoot() * (0.82 + 0.3 * Self.hash(scenes[idx].key))
-                let th = Double(j) * golden + seed + (r / max(R, 1)) * 1.9      // the arms wind
+                let r = members.count == 1 ? 0 : R * frac.squareRoot() * (0.92 + 0.12 * Self.hash(scenes[idx].key))
+                let th = Double(j) * golden + seed + (r / max(R, 1)) * 0.9      // the arms wind, gently enough to keep the lights apart
                 offs[idx] = CGPoint(x: cos(th) * r, y: sin(th) * r)
             }
             let tint = Color(hex: Self.tints[Int(Self.hash(name) * Double(Self.tints.count)) % Self.tints.count])
@@ -322,7 +322,7 @@ struct LightSkyView: View {
                         .position(x: gc.x, y: gc.y - g.radius * z * 1.05 - (g.members.count == 1 ? 6 : 0))
                 }
                 if near && g.members.count > 1 {
-                    ForEach(g.members, id: \.self) { i in
+                    ForEach(Self.namedLights(g, L, size, c, z, t, counts, armed: armed, screen: screen), id: \.self) { i in
                         let p = screen(L.position(i, galaxy: g, t: t), size, c, z)
                         Text(scenes[i].title)
                             .font(.loraItalic(11))
@@ -336,6 +336,30 @@ struct LightSkyView: View {
             }
         }
         .allowsHitTesting(false)
+    }
+
+    /// Walked: two names ran into each other inside a galaxy. Names are placed greedily —
+    /// the light he has brought forward first, then the most visited — and a name that would
+    /// land on one already placed waits until he comes nearer. The light itself stays.
+    private static func namedLights(_ g: LightSkyLayout.Galaxy, _ L: LightSkyLayout, _ size: CGSize,
+                                    _ c: CGPoint, _ z: Double, _ t: Double, _ counts: [Int],
+                                    armed: Int?,
+                                    screen: (CGPoint, CGSize, CGPoint, Double) -> CGPoint) -> [Int] {
+        let order = g.members.sorted { a, b in
+            if a == armed { return true }
+            if b == armed { return false }
+            return counts[a] > counts[b]
+        }
+        var kept: [CGRect] = []
+        var out: [Int] = []
+        for i in order {
+            let p = screen(L.position(i, galaxy: g, t: t), size, c, z)
+            let r = CGRect(x: p.x - 60, y: p.y + 4, width: 120, height: 30)
+            if i == armed || !kept.contains(where: { $0.intersects(r) }) {
+                kept.append(r); out.append(i)
+            }
+        }
+        return out
     }
 
     // MARK: Touch
