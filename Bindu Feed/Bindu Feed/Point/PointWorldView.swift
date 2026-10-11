@@ -36,6 +36,7 @@ struct PointWorldView: View {
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var selectedUniverse: PointUniverse?   // the middle tier: dimension → universe → star
     @State private var openStar: PointStar?
+    @ObservedObject private var yantra = PointYantra.shared
     /// `#carry.done` — this reading has been taken up; the label dims and stops asking.
     @State private var carryDone = false
     @State private var goodnight = false
@@ -65,6 +66,13 @@ struct PointWorldView: View {
     //     offline render can walk them. This is exactly the boundary where a "verified" claim
     //     could go soft, so it is named: **the laws are measured, the wiring is read, and
     //     the walk is owed.**
+    /// The landing tone for the `given`-th section (1…4) of this register's reading.
+    private func landTone(_ given: Int) {
+        let hz: Double? = [1: 285, 2: 396, 3: 417, 7: 852][dimensionN]
+        if let hz { soundEngine.blip(hz: hz) }
+        if given >= 4, [1, 3, 4, 7].contains(dimensionN) { soundEngine.shimmer() }
+    }
+
     private func apply(_ signal: PointLawSignal) {
         switch signal {
         case .admitted(let f):            soundEngine.narrow(f)
@@ -124,16 +132,19 @@ struct PointWorldView: View {
         .animation(.easeInOut(duration: 1.5), value: carryDone)
     }
 
-    /// `:5334-5343`. Push, mark the surface kept, sound it, and let go on its own after
-    /// 2400ms — he does not have to dismiss what he decided to keep.
+    /// `:5334-5343`. Push, mark the surface kept, sound it.
+    ///
+    /// DIVERGENCE (Slice 2, from Ashrey's walk 2026-10-10): the design lets go ON ITS OWN
+    /// 2400ms later — `:5342` *"setTimeout(()=>{if(IMM.on)letGo();},2400);"*. Walked, that
+    /// is the reading being taken away from a man still reading it, and when the descent was
+    /// open above it, the descent went with it. **Nothing closes a reading but his hand.**
+    /// Taking it up marks it kept; the words stay until he lets go or closes.
     private func sealCarry(_ star: PointStar) {
         guard !carryDone else { return }
         PointJourney.carried.append((title: star.t, hue: hue))
         carryDone = true
         soundEngine.carryTone(hz: PointLadder.drone(dimensionN).hz)   // `B.carry(reg.hz)` — the register's own tone
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.4) {
-            if openStar != nil { letGo() }
-        }
+        soundEngine.shimmer()                                         // `:5341` — `B.carry(reg.hz);B.shimmer();`
     }
 
     /// `:5344` — the reading closes and the world comes back. The claim releases here and
@@ -178,10 +189,20 @@ struct PointWorldView: View {
                     .animation(.easeInOut(duration: 1.1), value: revealed)
 
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
+                             initiallyRevealed: revealed,
                              onClose: { park(); withAnimation { openStar = nil }; revealed = 0 },
                              onReveal: { revealed = $0 })
 
-                carryAffordance(star)
+                // SLICE 2 · OFFERED ONLY WHEN THERE IS SOMETHING WHOLE TO TAKE, AND NEVER OVER
+                // THE DESCENT. It was drawn from the reading's first frame, and as a later
+                // sibling than `PointReading` it sat ON TOP of the descent's overlay — so a
+                // hand reading the deeper layer could "take it up" from inside it, and the
+                // reading then closed itself under him. The design gates it on `IMM.on`
+                // (`The Instrument v3.html:5335` *"if(!IMM.on||carryEl.classList.contains('done'))return;"*);
+                // the whole reading is the app's form of that.
+                if revealed >= 4 && !yantra.descending {
+                    carryAffordance(star).transition(.opacity)
+                }
             } else if let star = openStar {
                 // reached without a universe (the debug star hook) — no world to recede
                 PointReading(dimensionN: dimensionN, star: star, hue: hue,
@@ -295,8 +316,16 @@ struct PointWorldView: View {
         // Sent for EVERY register, not only I. A reading is being admitted wherever he is,
         // and `narrow` is the law of the register he is in — I's is the one the design
         // describes, and the others hold their own beat unless their law moves it.
-        .onChange(of: revealed) { _, r in
+        .onChange(of: revealed) { old, r in
             if dimensionN == 1 { apply(.admitted(Double(r) / 4)) }
+            // SLICE 2 · A SECTION LANDS AUDIBLY. `PointReadingState.give()` was silent in all
+            // seven worlds. The design sounds each landing in the register's own tone —
+            // `The Instrument v3.html:5168` *"B.blip(285);"* (I), `:5194` *"B.blip(396);"* (II),
+            // `:5223` *"B.blip(417);"* (III), `:5141` *"B.blip(852);"* (VII) — and a shimmer
+            // when the fourth arrives (`:5169`, `:5224`, `:5251`, `:5143`; IV has only the
+            // shimmer). Fired on `old + 1 == r` only: a reading re-opened by `takeBack` jumps
+            // straight to what it had, and that is a return, not a landing.
+            if r == old + 1, openStar != nil { landTone(r) }
             // `:5498` — `given(pc.m)/4` is `immA`'s target, so the count has to travel too.
             // `syncAxisLock` only fires when a reading OPENS or CLOSES; the four sections in
             // between are exactly the depth `immA` exists to measure.
@@ -475,6 +504,16 @@ struct PointDescentDoor: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        // SLICE 2 · THE RED DOT. `descend()` sets the yantra to `descending` and raises the
+        // shaft; only `ascend()` put them back. Any other way out — the reading closing under
+        // the descent, the register changing — unmounted the overlay and left the figure at
+        // 0.22 with the shaft up: a dark screen and the particle. A claim released only on
+        // the polite path (§10). Every exit releases it now.
+        .onDisappear {
+            guard reached else { return }
+            PointYantra.shared.descending = false
+            PointYantra.shared.shaft = 0
+        }
         // THE DESCENT IS AN OVERLAY OVER EVERYTHING, not a panel inside the reading.
         // `.ovl{position:absolute;inset:0;z-index:12;background:rgba(7,8,13,.965)}` (`:1050`)
         // — it covers the world, the plate and the reading, which is why the register content
@@ -513,7 +552,7 @@ struct PointDescentDoor: View {
                             // `.d-stage` — opacity 0 + translateY(12), 2.4s ease on both
                             .opacity(i < shown ? 1 : 0)
                             .offset(y: i < shown ? 0 : 12)
-                            .animation(.easeInOut(duration: 2.4), value: shown)
+                            .animation(.easeInOut(duration: 1.4), value: shown)
                         }
                     }
                     .frame(maxWidth: .infinity)
@@ -521,33 +560,33 @@ struct PointDescentDoor: View {
                 }
                 .scrollIndicators(.hidden)
 
-                if shown >= st.count {
-                    HStack {
-                        Button { ascend() } label: {
-                            Text("‹ ascend").spaceMonoTracked(8.5, em: 0.2)
-                                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.3)).padding(10)
-                        }.buttonStyle(.plain)
-                        Spacer()
-                    }
-                    .padding(.leading, 24).padding(.top, 8)
-                    .transition(.opacity)
+                // SLICE 2 · THE WAY BACK UP IS ALWAYS THERE. It appeared only after every stage
+                // had surfaced — `700 + n·3400`ms, about seventeen seconds — so the descent held
+                // him under until its clock said he could leave.
+                HStack {
+                    Button { ascend() } label: {
+                        Text("‹ ascend").spaceMonoTracked(8.5, em: 0.2)
+                            .foregroundStyle(BinduTheme.inkPrimary.opacity(0.42)).padding(10)
+                    }.buttonStyle(.plain)
+                    Spacer()
                 }
+                .padding(.leading, 24).padding(.top, 8)
             }
-            // TAP ADVANCES ONE STAGE — it does not skip to the end. `:1256-1260` reveals the
-            // NEXT un-revealed stage and nothing more; only when there is no next does the
-            // ascent appear. He can outrun the 3400ms clock, one stage at a time; he cannot
-            // jump the walk.
+            // SLICE 2 · DIVERGENCE (Ashrey's walk, 2026-10-10) — THE STAGES ARE ALL HIS AT ONCE.
+            // `point-levels.js` surfaces them on a clock (`700 + i*3400`), so the screen sat
+            // dark with a stage or two showing while the rest waited their turn — the
+            // underlying screen setting the pace of a reading. They now surface together in a
+            // short cascade (the stagger is the arrival, not a gate), and a touch completes it.
+            // The words are there to be read at his pace, scrolled, returned to.
             .contentShape(Rectangle())
             .onTapGesture {
-                withAnimation(.easeInOut(duration: 2.4)) { shown = min(st.count, shown + 1) }
+                withAnimation(.easeInOut(duration: 0.9)) { shown = st.count }
             }
             .task(id: st.count) {
-                // `700 + i*3400` (`:1253`), and the ascent at `700 + n*3400` (`:1255`).
                 for i in 0..<st.count {
-                    let due = 700 + i * 3400
-                    try? await Task.sleep(for: .milliseconds(due))
+                    try? await Task.sleep(for: .milliseconds(i == 0 ? 500 : 450))
                     guard !Task.isCancelled else { return }
-                    withAnimation(.easeInOut(duration: 2.4)) { shown = max(shown, i + 1) }
+                    withAnimation(.easeInOut(duration: 1.4)) { shown = max(shown, i + 1) }
                 }
             }
         }
@@ -560,6 +599,8 @@ struct PointDescentDoor: View {
     private func ascend() {
         shown = 0
         deeper = nil
+        reached = false            // the door works again — it was a one-use latch before
+        reaching = false
         PointYantra.shared.descending = false
         withAnimation(.easeInOut(duration: 1.4)) { PointYantra.shared.shaft = 0 }
         soundEngine.setAxisGlide(hz: 0, level: 0)

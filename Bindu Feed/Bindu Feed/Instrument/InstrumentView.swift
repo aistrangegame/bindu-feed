@@ -314,7 +314,12 @@ struct InstrumentView: View {
         // stands down THERE and nowhere else.
         .simultaneousGesture(
             LongPressGesture(minimumDuration: 1.1).onEnded { _ in
-                guard !showRope, !PressClaim.isClaimed else { return }
+                // SLICE 2 · A READING HOLDS THE PRESS TOO. A finger resting on a reading — to
+                // scroll it, to hold world III's veil open — sat still for 1.1s and the rope
+                // rose over the words. The reading's own `‹` is the way out while it is open,
+                // and the descent's `‹ ascend` while that is; the rope waits outside them.
+                guard !showRope, !PressClaim.isClaimed,
+                      !PointYantra.shared.readingOpen, !PointYantra.shared.descending else { return }
                 withAnimation(.easeInOut(duration: 0.8)) { showRope = true }
                 // D2.6 · `point-levels.js:261` sets it inside `openRope()` — where the rope
                 // OPENS, not where it is dismissed, so reaching for it is what counts.

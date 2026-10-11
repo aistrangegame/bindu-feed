@@ -102,6 +102,12 @@ struct DanceCatch {
     /// The caller reads this and drops the star.
     private(set) var releasedByScatter = false
 
+    /// SLICE 2 · start from what is already caught — a reading re-opened, or re-reached
+    /// after a scatter, keeps its sections; only the pace starts again.
+    init(caught: Int = 0, scatter: Double = 0) {
+        self.caught = max(0, min(4, caught)); self.scatter = scatter
+    }
+
     /// `:2253` — the four gates on `sync`, in the order they can be caught.
     static let gates = [0.34, 0.55, 0.74, 0.90]
 

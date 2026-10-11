@@ -268,7 +268,11 @@ private struct VoiceText: View {
             block
                 .padding(.horizontal, 34)
                 .padding(.top, voice.isCenter ? 0 : Self.captionLead)
-                .padding(.bottom, voice.isCenter ? 210 : 118)
+                // SLICE 2 · lowered from 210 / 118. Walked: Bindu's caption sat on the Flower's
+                // lowest rings (they reach `cy + 3R` ≈ H·0.30 + 186) and Lalita's header met her
+                // loop's lower lobe (`1.16·Ro` ≈ 176 under centre). Both still clear the touch
+                // hint at 30.
+                .padding(.bottom, voice.isCenter ? 150 : 96)
                 .frame(maxWidth: .infinity)
                 .background(alignment: .bottom) {
                     if !voice.isCenter {

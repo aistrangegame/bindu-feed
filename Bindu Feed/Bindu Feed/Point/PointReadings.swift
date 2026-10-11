@@ -189,7 +189,10 @@ enum PointStatusLabel {
 @MainActor final class PointReadingState: ObservableObject {
     @Published var revealed = 0          // 0…4 sections given up
     let star: PointStar
-    init(star: PointStar) { self.star = star }
+    /// SLICE 2 · `revealed` starts from what this star had already given (D4.6's `takeBack`).
+    /// It always started at 0 and then reported 0 upward on appear, so the world's restored
+    /// count was overwritten on the first frame — a return was a fresh arrival after all.
+    init(star: PointStar, revealed: Int = 0) { self.star = star; self.revealed = max(0, min(4, revealed)) }
 
     var next: PointSection? { revealed < 4 ? PointSection(rawValue: revealed) : nil }
     var done: Bool { revealed >= 4 }
@@ -262,11 +265,11 @@ struct PointReading: View {
 
     @StateObject private var state: PointReadingState
 
-    init(dimensionN: Int, star: PointStar, hue: Color,
+    init(dimensionN: Int, star: PointStar, hue: Color, initiallyRevealed: Int = 0,
          onClose: @escaping () -> Void, onReveal: @escaping (Int) -> Void = { _ in }) {
         self.dimensionN = dimensionN; self.star = star; self.hue = hue
         self.onClose = onClose; self.onReveal = onReveal
-        _state = StateObject(wrappedValue: PointReadingState(star: star))
+        _state = StateObject(wrappedValue: PointReadingState(star: star, revealed: initiallyRevealed))
     }
 
     var body: some View {
@@ -399,7 +402,11 @@ private struct ReadStillness: View {
                 try? await Task.sleep(nanoseconds: 16_000_000)
                 let dt = 0.016
                 if touching {
-                    still = max(0, still - dt * 0.55)      // acting suspends it
+                    // SLICE 2 · DIVERGENCE — `world-one.js` drains `still` at 0.55/s under a
+                    // touch. Walked, that meant scrolling back to READ what was given undid
+                    // the giving of the next. Touching now PAUSES the stillness and takes
+                    // nothing back — the Light's own temperament (§10: the gate that
+                    // accumulates and keeps). What he has gathered is his.
                 } else {
                     still = min(1, still + dt * 0.30)
                     if s.revealed < 4 && still >= gates[s.revealed] { s.give() }
@@ -681,9 +688,10 @@ private struct ReadParting: View {
                         if let p = part { thinned.append(p) }   // `handBack` — it stays thin
                         s.give()
                     }
-                } else {
-                    open = max(0, open - dt * 0.70)             // it closes behind his hand
                 }
+                // SLICE 2 · DIVERGENCE — `open` fell at 0.70/s off the hand, so each new hold
+                // re-earned the ground the last one had made. It holds its width now: the
+                // veil remembers how far it was parted, as it already remembers the zones.
             }
             running = false
         }
@@ -817,9 +825,11 @@ private struct ReadPressing: View {
                         // `reset` clears press, on, given and easing, and NOT this.
                         PointChamber.strike(s.star.key, to: s.revealed)
                     }
-                } else {
-                    press = max(0, press - dt * PointChamber.relaxRate)
                 }
+                // SLICE 2 · DIVERGENCE — the impression no longer relaxes off the hand
+                // (`PointChamber.relaxRate`). A wall that forgets a half-made press makes the
+                // reader bear down in one unbroken hold; this one keeps what was pressed, so
+                // he can stop, read what was struck, and bear again.
             }
             running = false
         }
@@ -997,7 +1007,9 @@ private struct ReadTurning: View {
             while !Task.isCancelled {
                 let e = Date().timeIntervalSince(t0)
                 bk = MirrorHall.bk()
-                if e >= 3.0 { onClose(); return }
+                // SLICE 2 · the guard's fourth section is no longer closed on him at 3.0s —
+                // the hall still rises and withdraws, and the reading waits for his hand.
+                if e >= 5.4 { return }
                 try? await Task.sleep(for: .milliseconds(33))
             }
         }
@@ -1328,6 +1340,7 @@ private struct ReadCompany: View {
         .onAppear {
             let seven = PointContent.dimensions.first(where: { $0.n == 7 })
             PointDance.floor(universes: seven?.universes.map(\.stars) ?? [])
+            catcher = DanceCatch(caught: s.revealed)     // a return keeps what was caught
             run()
         }
         .onDisappear {
@@ -1365,7 +1378,10 @@ private struct ReadCompany: View {
                     return DanceCatch.keeping(distance: (dx * dx + dy * dy).squareRoot(),
                                               starRadius: 9)
                 }()
-                let landed = catcher.update(dt: dt, holding: reach != nil, held: true,
+                // A star is HELD once the pace has begun — before his first reach in the lane
+                // there is nothing to lose, so nothing can scatter.
+                let landed = catcher.update(dt: dt, holding: reach != nil,
+                                            held: catcher.sync > 0 || (reach != nil && keep),
                                             keep: keep,
                                             laneSpeed: DanceLanes.speed(universe: L.universe))
                 for _ in landed { s.give() }
@@ -1376,10 +1392,13 @@ private struct ReadCompany: View {
                 // **THE SCATTER RELEASES THE STAR** — `:2247` `this.held=null`. Losing the
                 // pace before the fourth takes the reading back; after it, nothing is taken,
                 // which is `caught < 4` and is the whole of *what is caught is kept*.
+                // SLICE 2 · DIVERGENCE — a scatter no longer closes the reading. It closed it on
+                // the FIRST FRAME of every world-VII star: `sync` starts at 0 with the star
+                // already `held`, which is the scatter condition, so the reading vanished
+                // before he could reach. Now a scatter loses only the pace in hand; what was
+                // caught stays caught, and a fresh reach starts again from there.
                 if catcher.releasedByScatter && !s.done {
-                    soundEngine.leaveAll()
-                    await MainActor.run { onClose() }
-                    break
+                    catcher = DanceCatch(caught: s.revealed, scatter: catcher.scatter)
                 }
             }
             dancing = false
