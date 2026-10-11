@@ -582,6 +582,8 @@ private struct WorldVeil: View {
 
         /// D5.4 · the star the hand is over, watched through the parting rather than tapped.
     @State private var reaching: String? = nil
+    /// SLICE 4 · a hand is on the veil right now (`world-three.js` `this.hand`).
+    @State private var handDown = false
 
     /// Each star's normalised spot — the SAME expression the marks are positioned with, so
     /// the hand and the drawing agree about where a star is.
@@ -628,6 +630,10 @@ private struct WorldVeil: View {
                     // in the same breath.
                     if closing.isClosing(at: tl.date), let line = PointLeaving.line(dimension: 3) {
                         WorldCue(text: line).opacity(closing.value(at: tl.date))
+                    } else if handDown {
+                        // SLICE 4 · `world-three.js:237` — the hand is holding the veil and no
+                        // star is under it. Moved here from the reading, where it never applied.
+                        if reaching == nil { WorldCue(text: "nothing here yet") }
                     } else if part < 0.4 {
                         WorldCue(text: partedOnce ? "PART IT AGAIN, SOMEWHERE ELSE"
                                                   : "PART IT WITH YOUR HAND · AND HOLD IT OPEN")
@@ -635,6 +641,7 @@ private struct WorldVeil: View {
                 }
                 .contentShape(Rectangle())
                 .simultaneousGesture(DragGesture().onChanged { v in
+                    handDown = true
                     part = min(1, max(0, abs(v.translation.width) / (geo.size.width * 0.5)))
                     // LATCHED DURING THE GESTURE, NOT AT ITS END. `world-three.js:102-104`
                     // calls `handBack` the moment `open` reaches a gate — mid-drag — so a
@@ -677,6 +684,7 @@ private struct WorldVeil: View {
                     if part > 0.4, let id = reaching,
                        let sp = stars.first(where: { $0.id == id }) { onOpen(sp.star) }
                     reaching = nil
+                    handDown = false
                     PointVeil.release()
                     let held = part > 0.02
                     withAnimation(.easeOut(duration: 1.4)) { part = part > 0.5 ? 1 : 0 }
