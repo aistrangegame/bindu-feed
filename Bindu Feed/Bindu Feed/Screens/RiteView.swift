@@ -245,6 +245,13 @@ private struct RiteReading: View {
                 .animation(.easeInOut(duration: 2.5), value: done)
             }
             .scrollIndicators(.hidden)
+            // SLICE 2 · walked: scrolled paragraphs ran up under the clock and "‹ leave" —
+            // type over type. The top of the page now fades the words out before they get there.
+            .mask(VStack(spacing: 0) {
+                LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                    .frame(height: 110)
+                Color.black
+            }.ignoresSafeArea())
             .contentShape(Rectangle())
             .onTapGesture { advance(proxy) }
             .overlay(alignment: .bottom) {
@@ -339,14 +346,25 @@ private struct RiteSealed: View {
         }
         .padding(.horizontal, 40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // SLICE 2 · HIS OWN WORDS DO NOT LEAVE ON A CLOCK. The beats replaced each other at
+        // 3.6s and 7.6s, so what he had just sealed was taken off the screen before he had
+        // finished looking at it. One thing at a time still (E2.4) — but he turns each beat.
+        .overlay(alignment: .bottom) {
+            if phase < 2 {
+                Text(RiteWord.promptContinue)
+                    .spaceMonoTracked(10, em: 2 / 10)
+                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.6))
+                    .padding(.bottom, 30)
+                    .transition(.opacity)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard phase < 2 else { return }
+            withAnimation(.easeInOut(duration: 1.4)) { phase += 1 }
+        }
         .onAppear {
             soundEngine.riteBowl(hz: 220)   // struck once, the bed holds
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3.6) {
-                withAnimation(.easeInOut(duration: 1.4)) { phase = 1 }
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 7.6) {
-                withAnimation(.easeInOut(duration: 1.6)) { phase = 2 }
-            }
         }
     }
 }
