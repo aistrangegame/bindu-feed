@@ -724,7 +724,7 @@ final class AirtableService {
         }
         // SLICE 5 · whose threshold this was, so the suite can surface it in the right voice.
         // An existing option only (Gaia/Bindu/Sakshi/Higher Self/Lalita) — never invented.
-        if let voice { fieldsDict["Voice"] = voice }
+        if let voice { fieldsDict["fldhnzXPqnxYHTJv5"] = voice }   // `Voice`, by id: a rename can't drop the row
 
         let payload: [String: Any] = [
             "records": [["fields": fieldsDict]],

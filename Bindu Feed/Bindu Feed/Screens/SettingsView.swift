@@ -327,8 +327,7 @@ struct SettingsView: View {
     private func roadRow(_ title: String, sub: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .spaceMonoTracked(11)
-                .tracking(2.4)
+                .spaceMonoTracked(11, em: 0.22)
                 .foregroundColor(BinduTheme.inkSecondary)
             Text(sub)
                 .font(.loraItalic(11))

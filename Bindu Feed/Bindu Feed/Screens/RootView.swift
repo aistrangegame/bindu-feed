@@ -238,8 +238,10 @@ struct RootView: View {
     private func arriveByLink() {
         guard let url = store.pendingLink else { return }
         store.pendingLink = nil
-        guard let route = store.route(for: url) else { return }
-        $path.pushDissolve(route)
+        Task {
+            guard let route = await store.resolveLink(url) else { return }
+            $path.pushDissolve(route)
+        }
     }
 
     private func reloadFeed() async {

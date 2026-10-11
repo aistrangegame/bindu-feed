@@ -968,6 +968,18 @@ final class FeedStore: ObservableObject {
         }
     }
 
+    /// `route(for:)`, but a story the loaded page doesn't hold (a room filter is on, or the
+    /// link names a story from another room) is looked up across the whole field before the
+    /// link is let go. Never a guess: an id that isn't a live story arrives nowhere.
+    func resolveLink(_ url: URL) async -> FeedRoute? {
+        if let r = route(for: url) { return r }
+        guard (url.host ?? "").lowercased() == "story",
+              let id = url.pathComponents.filter({ $0 != "/" }).first,
+              let all = try? await service.fetchStories(room: nil, sort: .mostActive),
+              let s = all.first(where: { $0.id == id }) else { return nil }
+        return .story(s)
+    }
+
     // MARK: - the sky's light-wells
 
     /// The room the Universe is looking at, so the shader can wear ITS weather.
