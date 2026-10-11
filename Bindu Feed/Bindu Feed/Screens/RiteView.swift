@@ -65,9 +65,10 @@ struct RiteView: View {
                 VStack {
                     HStack {
                         Button(action: leave) {
+                            // SLICE 4 · the calm way out, legible (it sat at 21%).
                             Text("‹ leave")
                                 .spaceMonoTracked(9, em: 2 / 9)
-                                .foregroundStyle(BinduTheme.inkTertiary.opacity(0.6))
+                                .foregroundStyle(BinduTheme.inkSecondary.opacity(0.7))
                                 .padding(16)
                         }
                         Spacer()
@@ -247,9 +248,15 @@ private struct RiteReading: View {
             .scrollIndicators(.hidden)
             // SLICE 2 · walked: scrolled paragraphs ran up under the clock and "‹ leave" —
             // type over type. The top of the page now fades the words out before they get there.
+            // SLICE 4 · walked with the field live: at 110pt from the screen's edge the
+            // gradient still let a line sit at a third of its brightness under the clock.
+            // Clear through the status bar and "‹ leave", then fade in.
             .mask(VStack(spacing: 0) {
-                LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
-                    .frame(height: 110)
+                LinearGradient(stops: [.init(color: .clear, location: 0),
+                                       .init(color: .clear, location: 0.5),
+                                       .init(color: .black, location: 1)],
+                               startPoint: .top, endPoint: .bottom)
+                    .frame(height: 150)
                 Color.black
             }.ignoresSafeArea())
             .contentShape(Rectangle())
