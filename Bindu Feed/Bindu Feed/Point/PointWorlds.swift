@@ -312,7 +312,8 @@ private struct WorldCue: View {
         VStack { Spacer()
             Text(text)
                 .spaceMonoTracked(8.5, em: 0.2)
-                .foregroundStyle(BinduTheme.inkPrimary.opacity(0.38 * (0.7 + breath.value * 0.4)))
+                // 4b · the cue breathes, but never below the measured ink (it read at 27–42%).
+                .foregroundStyle(BinduTheme.inkMuted.opacity(0.85 + 0.15 * breath.value))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 150)

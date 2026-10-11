@@ -116,7 +116,7 @@ struct PointRevealView: View {
             VStack {
                 Spacer()
                 if collapsed && line < lines.count - 1 {
-                    Text("touch").spaceMonoTracked(8, em: 0.25).foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.3 * breath.value))
+                    Text("touch").spaceMonoTracked(8, em: 0.25).foregroundStyle(BinduTheme.inkMuted.opacity(0.85 + 0.15 * breath.value))
                         .padding(.bottom, 30)
                 }
             }

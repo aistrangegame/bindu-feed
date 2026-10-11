@@ -66,6 +66,27 @@ enum LightVisits {
         if !a.contains(s.key) { a.append(s.key); UserDefaults.standard.set(a, forKey: carvedKey) }
     }
 
+    // SLICE 4b · memory is felt, and can be let go (rupakarshini law 26, padakarshini law 12).
+
+    /// Every light he has stood in (key → times) and every one he carved, as kept on this phone.
+    static func road() -> (visits: [String: Int], carved: [String]) {
+        ((UserDefaults.standard.dictionary(forKey: visitsKey) as? [String: Int]) ?? [:],
+         UserDefaults.standard.stringArray(forKey: carvedKey) ?? [])
+    }
+
+    /// *forget me* — the Light's memory of him on this phone, all of it, at once. What already
+    /// reached the base (its `Veil Lifted` pulses) is not touched from here.
+    /// The moment he let go also stands as a line in time: the base keeps its pulses, but the
+    /// sky reads only the ones after it, so a forgotten light does not grow back by itself.
+    static func forgetAll() {
+        UserDefaults.standard.removeObject(forKey: visitsKey)
+        UserDefaults.standard.removeObject(forKey: carvedKey)
+        UserDefaults.standard.set(Date(), forKey: forgotKey)
+    }
+
+    static var forgottenAt: Date? { UserDefaults.standard.object(forKey: forgotKey) as? Date }
+    private static let forgotKey = "bindu.light.forgotAt"
+
     /// The growth curve. Gentle: the first visit shows, the fifth is unmistakable, the
     /// fiftieth is vast without swallowing the sky.
     static func growth(_ v: Int) -> Double { log2(1 + Double(v)) }

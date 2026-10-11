@@ -101,7 +101,7 @@ struct RiteGatheringView: View {
                 if let hint = currentHint {
                     Text(hint)
                         .spaceMonoTracked(10, em: 2 / 10)
-                        .foregroundStyle(BinduTheme.inkSecondary.opacity(0.55 + 0.2 * breath.value))
+                        .foregroundStyle(BinduTheme.inkMuted.opacity(0.85 + 0.15 * breath.value))   // 4b · measured
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .padding(.bottom, 30)
                 }

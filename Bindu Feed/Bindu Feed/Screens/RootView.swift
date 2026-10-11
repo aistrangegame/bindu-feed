@@ -38,9 +38,18 @@ struct RootView: View {
             // A destination chosen from the launch Door's turn — push it now that
             // the feed is reachable.
             if let route = store.pendingLaunchRoute {
+                // His own turn at the Door outranks a link that was waiting behind it.
                 store.pendingLaunchRoute = nil
+                store.pendingLink = nil
                 $path.pushDissolve(route)
+            } else {
+                arriveByLink()
             }
+        }
+        // SLICE 5 · a link that arrives while he is already inside lands on top of where he
+        // is, so ‹ leave brings him back to it.
+        .onChange(of: store.pendingLink) {
+            if hasLoaded { arriveByLink() }
         }
         .onChange(of: selectedRoom) {
             Task { await store.loadStories(room: selectedRoom, sort: sort) }
@@ -224,6 +233,13 @@ struct RootView: View {
             return .room(room)
         }
         return .base
+    }
+
+    private func arriveByLink() {
+        guard let url = store.pendingLink else { return }
+        store.pendingLink = nil
+        guard let route = store.route(for: url) else { return }
+        $path.pushDissolve(route)
     }
 
     private func reloadFeed() async {

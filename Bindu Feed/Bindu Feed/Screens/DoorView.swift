@@ -140,7 +140,7 @@ struct DoorView: View {
                     // as texture, so the only visible door was the one into the ceremony.
                     Text("not today · enter the field ›")
                         .spaceMonoTracked(9, em: 0.25)
-                        .foregroundStyle(BinduTheme.inkSecondary.opacity(0.62))
+                        .foregroundStyle(BinduTheme.inkMuted)
                         .padding(.vertical, 10).contentShape(Rectangle())
                 }
                 .padding(.top, 14).padding(.bottom, 40)

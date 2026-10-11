@@ -78,6 +78,9 @@ struct ContentCoordinator: View {
                 startSoundEngine()
             }
         }
+        // SLICE 5 · doors in — parked on the store; RootView resolves it once the feed is
+        // reachable (behind the Door on a cold open, at once when he is already inside).
+        .onOpenURL { url in store.pendingLink = url }
         .onChange(of: scenePhase) { _, phase in
             handleScenePhase(phase)
         }

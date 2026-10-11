@@ -279,7 +279,7 @@ struct PointWorldView: View {
                     VStack { Spacer()
                         Text("This depth and that descent are the same room.")
                             .font(.loraItalic(13))
-                            .foregroundStyle(BinduTheme.inkSecondary.opacity(0.66))
+                            .foregroundStyle(BinduTheme.inkMuted)   // 4b · measured
                             .multilineTextAlignment(.center).padding(.horizontal, 32)
                             .padding(.bottom, 9)
                         Button(action: onReturn) {

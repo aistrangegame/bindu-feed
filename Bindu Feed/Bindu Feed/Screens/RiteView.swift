@@ -68,7 +68,7 @@ struct RiteView: View {
                             // SLICE 4 · the calm way out, legible (it sat at 21%).
                             Text("‹ leave")
                                 .spaceMonoTracked(9, em: 2 / 9)
-                                .foregroundStyle(BinduTheme.inkSecondary.opacity(0.7))
+                                .foregroundStyle(BinduTheme.inkMuted)
                                 .padding(16)
                         }
                         Spacer()
@@ -360,7 +360,7 @@ private struct RiteSealed: View {
             if phase < 2 {
                 Text(RiteWord.promptContinue)
                     .spaceMonoTracked(10, em: 2 / 10)
-                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.6))
+                    .foregroundStyle(BinduTheme.inkMuted)
                     .padding(.bottom, 30)
                     .transition(.opacity)
             }

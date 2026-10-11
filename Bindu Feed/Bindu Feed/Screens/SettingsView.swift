@@ -14,6 +14,7 @@ struct SettingsView: View {
     @State private var savedSnapshot: ArrivalSettings = .init()
     @State private var justSaved = false
     @State private var showHub = false
+    @State private var showForgetConfirm = false
     @State private var showClearConfirm = false
 
     @FocusState private var nameFocused: Bool
@@ -70,6 +71,8 @@ struct SettingsView: View {
                     soundToggle
 
                     voiceLink
+
+                    roadSection
 
                     changeTokenLink
 
@@ -287,6 +290,78 @@ struct SettingsView: View {
         }
         .buttonStyle(.plain)
         .transition(.opacity)
+    }
+
+    // MARK: - Your road · SLICE 4b
+
+    /// MEMORY IS FELT, AND CAN BE LET GO. rupakarshini law 26 / padakarshini law 12: whatever the
+    /// instrument keeps about him on this phone, *carry your road* hands him as a dated record he
+    /// holds, and *forget me* lets it all go. The Light is the one place that keeps him on the
+    /// device (the lights he stood in grow; the ones he carved wear a ring), so this is its road.
+    private var roadSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Rectangle().fill(BinduTheme.hairline).frame(height: 0.5).padding(.vertical, 4)
+            Text("YOUR ROAD")
+                .spaceMonoTracked(9, em: 0.2)
+                .foregroundColor(BinduTheme.inkMuted)
+                .padding(.horizontal, BinduTheme.space16)
+
+            ShareLink(item: roadRecord) {
+                roadRow("CARRY YOUR ROAD", sub: "a dated record of the lights you stood in and carved")
+            }
+            .buttonStyle(.plain)
+
+            Button { showForgetConfirm = true } label: {
+                roadRow("FORGET ME", sub: "the Light lets go of you, on this phone")
+            }
+            .buttonStyle(.plain)
+        }
+        .alert("Forget me?", isPresented: $showForgetConfirm) {
+            Button("Keep", role: .cancel) {}
+            Button("Let it go", role: .destructive) { store.forgetLight() }
+        } message: {
+            Text("The lights you stood in and carved forget you on this phone. What already reached your base stays there.")
+        }
+    }
+
+    private func roadRow(_ title: String, sub: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .spaceMonoTracked(11)
+                .tracking(2.4)
+                .foregroundColor(BinduTheme.inkSecondary)
+            Text(sub)
+                .font(.loraItalic(11))
+                .foregroundColor(BinduTheme.inkMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(BinduTheme.space16)
+        .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(BinduTheme.bgInset))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .strokeBorder(BinduTheme.hairline, lineWidth: 0.5))
+    }
+
+    /// The record he carries: where he stood, never how often — a road, not a tally.
+    private var roadRecord: String {
+        let (visits, carved) = LightVisits.road()
+        let titles = Dictionary((LightCanon.scenes + store.lightScenes).map { ($0.key, $0.title) },
+                                uniquingKeysWith: { a, _ in a })
+        let day = AirtableService.dayFormatter(timeZone: .current).string(from: Date())
+        var lines = ["Your road · \(day)", ""]
+        if visits.isEmpty && carved.isEmpty {
+            lines.append("The Light holds nothing of you on this phone yet.")
+        } else {
+            lines.append("Lights you stood in")
+            for k in visits.keys.sorted(by: { (titles[$0] ?? $0) < (titles[$1] ?? $1) }) {
+                lines.append("· \(titles[k] ?? k)")
+            }
+            if !carved.isEmpty {
+                lines.append("")
+                lines.append("Carved")
+                for k in carved { lines.append("· \(titles[k] ?? k)") }
+            }
+        }
+        return lines.joined(separator: "\n")
     }
 
     // MARK: - Change token

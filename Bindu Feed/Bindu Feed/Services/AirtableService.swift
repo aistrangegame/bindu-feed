@@ -36,6 +36,7 @@ enum FeedActivityType: String {
     case storyMet       = "Story Met"     // the Rite — created on first write (typecast)
     case veilLifted     = "Veil Lifted"   // the Light — created on first write (typecast)
     case walkCompleted  = "Walk Completed" // the Point — created on first write (typecast)
+    case returned       = "Return"         // SLICE 5 · a ring sealed in the Return (option already exists)
 }
 
 final class AirtableService {
@@ -234,15 +235,21 @@ final class AirtableService {
     /// by the scene record each one links. Every page is followed: the count is the whole
     /// history, not a window. Fail-safe: an error returns what was counted so far, so a light
     /// can read smaller than it is but never larger.
-    func fetchVeilLiftedCounts() async -> [String: Int] {
+    func fetchVeilLiftedCounts(since: Date? = nil) async -> [String: Int] {
         guard !token.isEmpty else { return [:] }
+        // SLICE 4b · *forget me* — pulses from before he let go do not grow the sky again.
+        var formula = "{Activity Type}='Veil Lifted'"
+        if let since {
+            let iso = ISO8601DateFormatter().string(from: since)
+            formula = "AND(\(formula),IS_AFTER(CREATED_TIME(),'\(iso)'))"
+        }
         var out: [String: Int] = [:]
         var offset: String?
         var pages = 0
         repeat {
             var comps = URLComponents(string: appActivityURLString)
             var q = [
-                URLQueryItem(name: "filterByFormula", value: "{Activity Type}='Veil Lifted'"),
+                URLQueryItem(name: "filterByFormula", value: formula),
                 URLQueryItem(name: "pageSize", value: "100"),
                 URLQueryItem(name: "fields[]", value: "Activity Type"),
                 URLQueryItem(name: "fields[]", value: "Link to Feed"),
@@ -694,7 +701,8 @@ final class AirtableService {
         feedRecordId: String? = nil,
         activityName: String,
         detail: String,
-        excerpt: String?
+        excerpt: String?,
+        voice: String? = nil
     ) async throws -> AirtableRecord {
         guard !token.isEmpty else { throw AirtableError.missingToken }
         guard let url = URL(string: appActivityURLString) else { throw AirtableError.badURL }
@@ -714,6 +722,9 @@ final class AirtableService {
         if let excerpt, !excerpt.isEmpty {
             fieldsDict["Excerpt"] = excerpt
         }
+        // SLICE 5 · whose threshold this was, so the suite can surface it in the right voice.
+        // An existing option only (Gaia/Bindu/Sakshi/Higher Self/Lalita) — never invented.
+        if let voice { fieldsDict["Voice"] = voice }
 
         let payload: [String: Any] = [
             "records": [["fields": fieldsDict]],

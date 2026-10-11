@@ -195,7 +195,7 @@ struct ApertureView: View {
                 HStack {
                     Button { $path.popDissolve() } label: {
                         Text("‹ leave").spaceMonoTracked(9, em: 2 / 9)
-                            .foregroundStyle(hue.opacity(0.6)).padding(16)
+                            .foregroundStyle(BinduTheme.inkMuted).padding(16)   // 4b · measured, not faded
                     }
                     Spacer()
                 }

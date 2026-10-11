@@ -640,7 +640,7 @@ struct ReturnView: View {
             if sealPhase < 2 {
                 Text(RiteWord.promptContinue)
                     .spaceMonoTracked(10, em: 2 / 10)
-                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.6))
+                    .foregroundStyle(BinduTheme.inkMuted)
                     .padding(.bottom, 30)
                     .transition(.opacity)
             }

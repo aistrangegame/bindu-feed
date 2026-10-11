@@ -1012,3 +1012,17 @@ NON-UI	The story was met in the Rite.	Bindu Feed/Bindu Feed/Store/FeedStore.swif
 AUTHORED-INTERPOLATED	… / … · the rest keep their record	Bindu Feed/Bindu Feed/Screens/ReturnView.swift:353
 AUTHORED-INTERPOLATED	In reply to …	Bindu Feed/Bindu Feed/Screens/AshVoiceView.swift:325
 AUTHORED-INTERPOLATED	… · 13 · all rooms	Bindu Feed/Bindu Feed/Screens/GameView.swift:143
+APP-OWN	YOUR ROAD	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:304
+APP-OWN	CARRY YOUR ROAD	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:310
+APP-OWN	a dated record of the lights you stood in and carved	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:310
+APP-OWN	FORGET ME	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:315
+APP-OWN	the Light lets go of you, on this phone	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:315
+APP-OWN	Forget me?	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:319
+APP-OWN	The lights you stood in and carved forget you on this phone. What already reached your base stays there.	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:323
+APP-OWN	Your road · …	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:350
+APP-OWN	The Light holds nothing of you on this phone yet.	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:352
+APP-OWN	Lights you stood in	Bindu Feed/Bindu Feed/Screens/SettingsView.swift:354
+NON-UI	bindu.light.forgotAt	Bindu Feed/Bindu Feed/Light/LightSky.swift:88
+NON-UI	He returned to the story and sealed a ring.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1081
+NON-UI	The Return -- a ring added	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1080
+NON-UI	{Activity Type}='Veil Lifted'	Bindu Feed/Bindu Feed/Services/AirtableService.swift:241

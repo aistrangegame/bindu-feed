@@ -528,7 +528,7 @@ struct LightView: View {
                     // passes every checker and reads as fixed.
                     Text(LightCanon.beatCue)
                         .spaceMonoTracked(10, em: 2 / 10)
-                        .foregroundStyle(BinduTheme.inkSecondary.opacity(0.75))
+                        .foregroundStyle(BinduTheme.inkMuted)
                         .modifier(RiteBreathe())
                         .padding(.top, 8)
                     // Slice 3 · the hold made visible — a ring fills under the press, so he can
@@ -571,7 +571,7 @@ struct LightView: View {
             if stage == .scene, !beatActive, !breathCue.isEmpty {
                 Text(breathCue)
                     .spaceMonoTracked(10, em: 3 / 10)
-                    .foregroundStyle(BinduTheme.inkSecondary.opacity(0.6))
+                    .foregroundStyle(BinduTheme.inkMuted)
                     .padding(.bottom, 26)
             }
         }

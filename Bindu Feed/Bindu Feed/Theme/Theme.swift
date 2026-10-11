@@ -54,6 +54,11 @@ enum BinduTheme {
     static let inkPrimary   = Color(hex: "#EDE8E3")
     static let inkSecondary = Color(hex: "#EDE8E3").opacity(0.60)
     static let inkTertiary  = Color(hex: "#EDE8E3").opacity(0.35)
+    /// SLICE 4b · the MEASURED muted ink (rupakarshini `tokens/worlds/feed.css` `--w-muted`):
+    /// solid #94908F reads 6.15:1 on the field, where `inkTertiary` (35%) measures 2.81:1 and
+    /// is decorative only. Text that must be read — a way out, a hint, a cue — uses this, at
+    /// full strength: *"text in the chrome is full ink or hidden; half ink fails contrast."*
+    static let inkMuted     = Color(hex: "#94908F")
 
     static let colorBindu    = Color(hex: "#E5533C")
     static let colorGaia     = Color(hex: "#4A9E6B")

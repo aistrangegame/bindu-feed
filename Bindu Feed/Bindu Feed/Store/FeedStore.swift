@@ -370,8 +370,15 @@ final class FeedStore: ObservableObject {
     @Published var lightVisits: [String: Int] = [:]
 
     func loadLightVisits() async {
-        let counts = await service.fetchVeilLiftedCounts()
+        let counts = await service.fetchVeilLiftedCounts(since: LightVisits.forgottenAt)
         if !counts.isEmpty { self.lightVisits = counts }
+    }
+
+    /// SLICE 4b · *forget me*. The device lets go at once; the base's older pulses stop
+    /// counting from this moment on (`LightVisits.forgottenAt`).
+    func forgetLight() {
+        LightVisits.forgetAll()
+        lightVisits = [:]
     }
 
     func loadSignals() async {
@@ -648,7 +655,8 @@ final class FeedStore: ObservableObject {
                 feedRecordId: recordId,
                 activityName: "\(title) — met in the Rite",
                 detail: "The story was met in the Rite.",
-                excerpt: nil
+                excerpt: nil,
+                voice: "Sakshi"
             )
         } catch {
             #if DEBUG
@@ -932,6 +940,34 @@ final class FeedStore: ObservableObject {
     /// appear and pushes it once the feed is reachable. Nil clears it.
     @Published var pendingLaunchRoute: FeedRoute?
 
+    /// SLICE 5 · DOORS IN. A `bindufeed://` link from another app in the suite (a Lalita
+    /// morning, the Field, a widget) — parked here until the feed is reachable, then resolved
+    /// by `RootView`. A link ARRIVES AT THE PLACE; it never crosses for him: on a cold open the
+    /// Door still stands first, and nothing is sealed, carved or walked by the link itself.
+    @Published var pendingLink: URL?
+
+    /// Where a link points, or nil when it points nowhere the Feed has. The centre is never a
+    /// destination — it is walked to (`point/n` reaches the seven worlds, no further).
+    ///   bindufeed://rite · return · light · gate · point/1…7 · story/<record id>
+    func route(for url: URL) -> FeedRoute? {
+        guard url.scheme?.lowercased() == "bindufeed" else { return nil }
+        let head = (url.host ?? "").lowercased()
+        let rest = url.pathComponents.filter { $0 != "/" }
+        switch head {
+        case "rite":            return .rite
+        case "return":          return .returnCeremony(nil)
+        case "light":           return .light
+        case "gate":            return .instrument(1)
+        case "point":
+            guard let n = rest.first.flatMap(Int.init) else { return .instrument(1) }
+            return .instrument(min(max(n, 1), 7) + 1)      // world I sits at z 2 … VII at z 8
+        case "story":
+            guard let id = rest.first, let s = stories.first(where: { $0.id == id }) else { return nil }
+            return .story(s)
+        default:                return nil
+        }
+    }
+
     // MARK: - the sky's light-wells
 
     /// The room the Universe is looking at, so the shader can wear ITS weather.
@@ -1036,6 +1072,15 @@ final class FeedStore: ObservableObject {
                                                      archetypeName: who, sortOrder: 900 + index)
             await loadReturnRings()
             await loadStoryStats()        // so Ash's seat re-derives from the new count
+            // SLICE 5 · the crossing, into the suite's shared pulse. Never the answer's words:
+            // the ring is his; the suite learns only that a return was made, and to which story.
+            _ = try? await service.logActivity(
+                type: .returned,
+                feedRecordId: storyId,
+                activityName: "The Return — a ring added",
+                detail: "He returned to the story and sealed a ring.",
+                excerpt: nil
+            )
         } catch {
             // A failed write must never break the ceremony — the ring he added is still his.
             print("[Return] seal failed: \(error)")
@@ -1114,7 +1159,8 @@ final class FeedStore: ObservableObject {
             type: .walkCompleted,
             activityName: "The Point — walked to the centre",
             detail: "Inward to the one.",
-            excerpt: nil
+            excerpt: nil,
+            voice: "Lalita"
         )
     }
 

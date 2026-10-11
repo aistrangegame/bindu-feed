@@ -98,7 +98,7 @@ struct TurnOverlay: View {
                 Spacer()
                 Text("tap anywhere to stay")
                     .spaceMonoTracked(9, em: 2 / 9)
-                    .foregroundStyle(BinduTheme.inkTertiary.opacity(0.4 + 0.4 * breath.value))
+                    .foregroundStyle(BinduTheme.inkMuted.opacity(0.85 + 0.15 * breath.value))   // 4b · measured
                     .padding(.bottom, 40)
             }
         }

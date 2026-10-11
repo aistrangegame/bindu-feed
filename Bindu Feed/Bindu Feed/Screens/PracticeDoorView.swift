@@ -255,8 +255,8 @@ struct PracticeDoorView: View {
         Text("TAP TO CROSS")
             .spaceMonoTracked(9, em: 0.18)
             // SLICE 4 · legible at the bottom of its breath — it ran 8%–19% and vanished.
-            .foregroundColor(BinduTheme.inkSecondary)
-            .opacity(0.50 + 0.30 * breath.value)   // the one master breath
+            .foregroundColor(BinduTheme.inkMuted)
+            .opacity(0.85 + 0.15 * breath.value)   // the one master breath, over the measured ink
     }
 
     private func centeredItalic(_ text: String, color: Color, maxWidth: CGFloat? = nil) -> some View {
