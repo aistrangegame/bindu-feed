@@ -112,7 +112,13 @@ struct TokenEntryView: View {
         .fullScreenCover(isPresented: $showInstrument) {
             ZStack(alignment: .topTrailing) {
                 InstrumentView(path: $demoPath, startZ: demoStartZ)
-                Button { showInstrument = false } label: {
+                // DEBUG harness only · the axis pushes the Light as a route, and this cover has
+                // no RootView to render routes — so "stand inside" went nowhere here, which reads
+                // as a broken door in the walk. The Light, at least, is shown when pushed.
+                if demoPath.last == .light {
+                    LightView(path: $demoPath).transition(.opacity)
+                }
+                Button { showInstrument = false; demoPath = [] } label: {
                     Text("✕").spaceMonoTracked(15)
                         .foregroundColor(BinduTheme.inkSecondary)
                         .padding(16)
