@@ -178,6 +178,8 @@ struct Katha {
 final class Stillness: ObservableObject {
     @Published private(set) var still: TimeInterval = 0
     private var last = Date()
+    /// The live reading, for a running task that must not re-render anything by observing.
+    var stillNow: TimeInterval { Date().timeIntervalSince(last) }
     private var tick: AnyCancellable?
 
     func touched() { last = Date(); if still != 0 { still = 0 } }
@@ -187,7 +189,10 @@ final class Stillness: ObservableObject {
         tick = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
             .sink { [weak self] _ in
                 guard let self else { return }
-                self.still = Date().timeIntervalSince(self.last)
+                // Publish in half-second steps, not every tick: every grammar's threshold is
+                // seconds long, and a ten-a-second publish re-renders whatever observes it.
+                let s = Date().timeIntervalSince(self.last)
+                if s - self.still >= 0.5 { self.still = s }
             }
     }
 

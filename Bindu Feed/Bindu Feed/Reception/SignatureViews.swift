@@ -111,7 +111,7 @@ struct SecondPiece: View {
 struct MissingNote: View {
     let hz: Double
     /// The page's own stillness — a reference, so the running task always reads it live.
-    @ObservedObject var page: Stillness
+    let page: Stillness
     @EnvironmentObject private var soundEngine: SoundEngine
     @State private var lastNote = Date.distantPast
 
@@ -121,7 +121,7 @@ struct MissingNote: View {
                 while !Task.isCancelled {
                     try? await Task.sleep(nanoseconds: 1_000_000_000)
                     let now = Date()
-                    if page.still > 7, now.timeIntervalSince(lastNote) > 24 {
+                    if page.stillNow > 7, now.timeIntervalSince(lastNote) > 24 {
                         soundEngine.fieldThreshold(hz: hz, dur: 7)
                         lastNote = now
                     }

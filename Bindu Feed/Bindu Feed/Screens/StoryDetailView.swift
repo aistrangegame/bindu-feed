@@ -59,7 +59,8 @@ struct StoryDetailView: View {
     @State private var found: (line: String, date: String)?
     @State private var resonanceText: String?
     @State private var memoFirst: String?
-    @StateObject private var pageStill = Stillness()
+    // Held, not observed: the page must never re-render on the clock's tick (it broke scrolling).
+    @State private var pageStill = Stillness()
 
     // The Audio Anchor — one shared player for the whole story; a quiet mark on any Ash entry
     // that kept a voice on this device. The full crossed-into playback lives in the Return.
