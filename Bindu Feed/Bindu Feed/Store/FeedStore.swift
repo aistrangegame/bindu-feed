@@ -363,6 +363,195 @@ final class FeedStore: ObservableObject {
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
 
+    // MARK: - THE REST · the sibling apps, the Rite's word, the suits, the open thread
+
+    static let lastMetRoomKey = "bindu.lastMetRoom"
+    var lastMetRoom: Room? { UserDefaults.standard.string(forKey: Self.lastMetRoomKey).flatMap { room(named: $0) } }
+
+    @Published var fieldTracks: [FieldTrack] = []
+    @Published var mandalaEnergies: [MandalaEnergy] = []
+    private var mandalaMoments: [MandalaMoment] = []
+    private var learningTraces: [LearningTrace] = []
+    private var siblingsLoaded = false
+
+    /// The sibling apps, read once a session — lazily, never on the Door's critical path.
+    func loadSiblings() async {
+        guard !siblingsLoaded else { return }
+        siblingsLoaded = true
+        async let t = service.fetchFieldTracks()
+        async let e = service.fetchMandalaEnergies()
+        async let m = service.fetchMandalaMoments()
+        async let l = service.fetchLearningTraces()
+        let (tt, ee, mm, ll) = await (t, e, m, l)
+        fieldTracks = tt; mandalaEnergies = ee; mandalaMoments = mm; learningTraces = ll
+        if codexDays.isEmpty { await loadCodexDays() }
+    }
+
+    /// EACH STORY REACHES FOR ITS SONG (the Field's carrier law: what the song reaches for and
+    /// does not say). A track whose verb lives in the story, else one by rendezvous on the
+    /// story — never played, never named; only the bed bends to its carrier.
+    func song(for story: Story) -> FieldTrack? {
+        let pool = fieldTracks.filter { $0.carrierHz > 40 }
+        guard !pool.isEmpty else { return nil }
+        let body = story.body.lowercased()
+        let byVerb = pool.filter { !$0.verb.isEmpty && body.contains($0.verb.lowercased()) }
+        let from = byVerb.isEmpty ? pool : byVerb
+        return MirrorDay.pick(from.map(\.id), key: "song·" + story.id).map { from[$0] }
+    }
+
+    /// Today's dance song — a Field track that can actually be heard.
+    func danceSong() -> FieldTrack? {
+        let pool = fieldTracks.filter { $0.audioURL.hasPrefix("http") }
+        return MirrorDay.pick(pool.map(\.id), key: AirtableService.localDayString() + "·dance").map { pool[$0] }
+    }
+
+    private func dayDistance(_ a: String, _ b: String) -> Double {
+        let f = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC")!)
+        guard let x = f.date(from: String(a.prefix(10))), let y = f.date(from: String(b.prefix(10))) else { return .infinity }
+        return abs(x.timeIntervalSince(y)) / 86_400
+    }
+
+    private static let graceShownKey = "bindu.grace.shown"
+    /// GRACE — the co-reader from his other lives. When a Mandala moment or a Learning
+    /// completion fell within three days of the day a story was spoken, one margin note,
+    /// once; then it rests. Silent when nothing fits.
+    func grace(for story: Story) -> String? {
+        let shown = Set((UserDefaults.standard.array(forKey: Self.graceShownKey) as? [String]) ?? [])
+        guard !shown.contains(story.id), !story.sourceDate.isEmpty else { return nil }
+        if let m = mandalaMoments.first(where: { dayDistance($0.day, story.sourceDate) <= 3 }),
+           let e = mandalaEnergies.first(where: { m.shaktiIds.contains($0.id) }) {
+            return "Within days of this, you felt \(e.name) in the Mandala — \(e.quality.lowercased())."
+        }
+        if let l = learningTraces.first(where: { $0.completedDays.contains { dayDistance($0, story.sourceDate) <= 3 } }) {
+            return "Around the days this was spoken, you were completing \(l.topic) in Learning."
+        }
+        return nil
+    }
+
+    func markGraceShown(_ story: Story) {
+        var s = Set((UserDefaults.standard.array(forKey: Self.graceShownKey) as? [String]) ?? [])
+        s.insert(story.id)
+        UserDefaults.standard.set(Array(s), forKey: Self.graceShownKey)
+    }
+
+    private static let teacherShownKey = "bindu.teacher.shown"
+    /// A TEACHER VISITS ONCE — where the memo behind a story is linked from a Learning topic,
+    /// that topic's first persona arrives once, with one sentence, and then recedes.
+    func teacher(for story: Story) -> (topic: String, line: String)? {
+        let shown = Set((UserDefaults.standard.array(forKey: Self.teacherShownKey) as? [String]) ?? [])
+        guard !shown.contains(story.id), !story.codexId.isEmpty,
+              let rec = codexDays.first(where: { $0.number == "(\(story.codexId))" })?.id,
+              let t = learningTraces.first(where: { $0.codexIds.contains(rec) && !$0.persona.isEmpty }) else { return nil }
+        let line = Sentences.split(t.persona).first?.text ?? t.persona
+        return (t.topic, String(line.prefix(260)))
+    }
+
+    func markTeacherShown(_ story: Story) {
+        var s = Set((UserDefaults.standard.array(forKey: Self.teacherShownKey) as? [String]) ?? [])
+        s.insert(story.id)
+        UserDefaults.standard.set(Array(s), forKey: Self.teacherShownKey)
+    }
+
+    // the Rite's word, for the Dance
+    private static func riteWordKey(_ d: String) -> String { "bindu.rite.word.\(d)" }
+    func keepRiteWord(_ text: String) {
+        let words = text.lowercased().components(separatedBy: CharacterSet.letters.inverted)
+            .filter { $0.count >= 4 && !Self.quietWords.contains($0) }
+        guard let w = words.max(by: { $0.count < $1.count }) else { return }
+        UserDefaults.standard.set(w, forKey: Self.riteWordKey(AirtableService.localDayString()))
+    }
+    var riteWordToday: String? { UserDefaults.standard.string(forKey: Self.riteWordKey(AirtableService.localDayString())) }
+
+    // FLASH SUITS (Codex C-1005) — the suit he arrives in; White is never picked, only earned.
+    enum Suit: String, CaseIterable { case red, black, blue, white
+        var hex: String { switch self { case .red: return "#C0392B"; case .black: return "#3A3440"; case .blue: return "#3A6FB0"; case .white: return "#F3EEE6" } }
+    }
+    private static func suitKey(_ d: String) -> String { "bindu.suit.\(d)" }
+    @Published var suitToday: Suit? = UserDefaults.standard.string(forKey: FeedStore.suitKey(AirtableService.localDayString())).flatMap(Suit.init(rawValue:))
+    func cycleSuit() {
+        let order: [Suit] = [.red, .black, .blue]
+        let next: Suit
+        if let s = suitToday, let i = order.firstIndex(of: s) { next = order[(i + 1) % order.count] } else { next = .red }
+        suitToday = next
+        UserDefaults.standard.set(next.rawValue, forKey: Self.suitKey(AirtableService.localDayString()))
+    }
+    /// A Red or Black arrival that ends in a sealed Rite turns White.
+    func sealSuitIfEarned() {
+        guard suitToday == .red || suitToday == .black else { return }
+        suitToday = .white
+        UserDefaults.standard.set(Suit.white.rawValue, forKey: Self.suitKey(AirtableService.localDayString()))
+    }
+
+    // LEELA → ACT → RETURN — a taken seed leaves an open thread until he returns with a line
+    private static let openSeedKey = "bindu.leela.open"
+    @Published var openSeed: String? = UserDefaults.standard.string(forKey: FeedStore.openSeedKey)
+    func returnFromSeed(_ line: String) {
+        let id = openSeed
+        openSeed = nil
+        UserDefaults.standard.removeObject(forKey: Self.openSeedKey)
+        let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task {
+            _ = try? await service.logActivity(type: .note, feedRecordId: id, activityName: "A seed returned",
+                                               detail: "He came back from the act with one line.",
+                                               excerpt: t.isEmpty ? nil : t, voice: "Lalita")
+        }
+    }
+
+    // THE SILENT REPLY (Lalita Family law 5 — silence is a complete reach)
+    private static let silentKey = "bindu.silent"
+    var silentlyHeld: Set<String> { Set((UserDefaults.standard.array(forKey: Self.silentKey) as? [String]) ?? []) }
+    func replyInSilence(to story: Story) {
+        var s = silentlyHeld; s.insert(story.id)
+        UserDefaults.standard.set(Array(s), forKey: Self.silentKey)
+        Task {
+            _ = try? await service.logActivity(type: .silenceHeld, feedRecordId: story.id, activityName: "Answered in silence",
+                                               detail: "He answered the story with silence.", excerpt: nil, voice: "Lalita")
+        }
+    }
+
+    // THE RAW MEMO (rewind · Gaia inversion · the deep page)
+    private var memoCache: [String: String] = [:]
+    func memo(for story: Story) async -> String? {
+        if let m = memoCache[story.codexId] { return m }
+        guard let m = await service.fetchMemo(codexNumber: story.codexId) else { return nil }
+        memoCache[story.codexId] = m.words
+        return m.words
+    }
+
+    // HE DRAWS HIS OWN CONSTELLATIONS — filaments he draws between two stars
+    struct Filament: Hashable { let a: String; let b: String; let day: String }
+    private static let filamentKey = "bindu.filaments"
+    @Published var filaments: [Filament] = (UserDefaults.standard.array(forKey: FeedStore.filamentKey) as? [[String]] ?? [])
+        .compactMap { $0.count == 3 ? Filament(a: $0[0], b: $0[1], day: $0[2]) : nil }
+    func drawFilament(from a: String, to b: String) {
+        guard a != b, !filaments.contains(where: { ($0.a == a && $0.b == b) || ($0.a == b && $0.b == a) }) else { return }
+        let f = Filament(a: a, b: b, day: AirtableService.localDayString())
+        filaments.append(f)
+        UserDefaults.standard.set(filaments.map { [$0.a, $0.b, $0.day] }, forKey: Self.filamentKey)
+        Task {
+            _ = try? await service.createFeedRecord(fields: [
+                "Name": "filament-\(f.day)", "Type": "Filament", "Status": "Live",
+                "Linked Story": [a], "Excerpt": "TO: \(b)", "Source Date": f.day,
+                "Sort Order": 900 + Int(Date().timeIntervalSince1970) % 1_000_000_000,
+            ])
+        }
+    }
+
+    // THE GIFT TRIAD (Codex C-1353) — rarely, the Door offers a story, an energy, a song
+    @Published var giftOpen = false
+    private static let giftKey = "bindu.gift.lastDay"
+    func offerGift() {
+        let f = AirtableService.dayFormatter(timeZone: .current)
+        if let last = UserDefaults.standard.string(forKey: Self.giftKey), let d = f.date(from: last),
+           Date().timeIntervalSince(d) < 3 * 86_400 { return }
+        guard arrivingLetter == nil, fieldNotice == nil, Int.random(in: 0..<6) == 0 else { return }
+        UserDefaults.standard.set(AirtableService.localDayString(), forKey: Self.giftKey)
+        Task {
+            await loadSiblings()
+            if !mandalaEnergies.isEmpty || !fieldTracks.isEmpty { giftOpen = true }
+        }
+    }
+
     // MARK: - SMALLER UPGRADES · the field says what it noticed · Lalita plays
 
     @Published var fieldNotice: FieldNotice?
@@ -785,6 +974,10 @@ final class FeedStore: ObservableObject {
     /// His answer — the act offered, or held in silence. Both complete; neither is scored.
     func answerLeela(_ drop: LeelaDrop, offered: Bool) async {
         activityLinked.insert(drop.id)
+        if offered {
+            openSeed = drop.id
+            UserDefaults.standard.set(drop.id, forKey: Self.openSeedKey)
+        }
         _ = try? await service.logActivity(
             type: offered ? .note : .silenceHeld,
             feedRecordId: drop.id,
@@ -1113,6 +1306,10 @@ final class FeedStore: ObservableObject {
         // hit — the ceremony completed but the day still read "unmet").
         UserDefaults.standard.set(true, forKey: Self.metCacheKey(AirtableService.localDayString()))
         todayMet = true                     // the seam and anything else gated on the day's weather
+        // THE REST · the ground wears the weather — the room of the last story he met
+        if let room = stories.first(where: { $0.id == storyId })?.room {
+            UserDefaults.standard.set(room, forKey: Self.lastMetRoomKey)
+        }
         let recordId = resolveMetRecordId(storyId: storyId)
         do {
             _ = try await service.logActivity(

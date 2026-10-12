@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 // THE UNIVERSE (Z −4…−1) — the outward inversion: everything he has lived, as sky.
@@ -122,6 +123,9 @@ struct UniverseView: View {
 
     // Caches (rebuilt on data change, read every frame). See the UStar/ULane/UDust types above.
     @State private var starsByRegion: [[UStar]] = []
+    /// THE REST · he draws his own constellations — a held star dragged to another
+    @State private var threadFrom: String?
+    @State private var threadTo: CGPoint?
     @State private var lanes: [ULane] = []
     @State private var dust: [UDust] = []
 
@@ -190,6 +194,7 @@ struct UniverseView: View {
             .gesture(
                 DragGesture(minimumDistance: 2)
                     .onChanged { v in
+                        if threadFrom != nil { return }       // drawing a thread, not panning
                         let dx = v.translation.width - lastPan.width
                         let dy = v.translation.height - lastPan.height
                         lastPan = v.translation
@@ -210,6 +215,25 @@ struct UniverseView: View {
                     }
             )
             .simultaneousGesture(SpatialTapGesture().onEnded { v in handleTap(v.location, geo.size) })
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.6, maximumDistance: 6)
+                    .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .local))
+                    .onChanged { v in
+                        guard case .second(true, let drag?) = v else { return }
+                        if threadFrom == nil, let st = starAt(drag.startLocation, geo.size) {
+                            threadFrom = st.id
+                            soundEngine.carryTone(hz: 174)
+                        }
+                        if threadFrom != nil { threadTo = drag.location }
+                    }
+                    .onEnded { v in
+                        defer { threadFrom = nil; threadTo = nil }
+                        guard case .second(true, let drag?) = v, let a = threadFrom,
+                              let b = starAt(drag.location, geo.size), b.id != a else { return }
+                        store.drawFilament(from: a, to: b.id)
+                        soundEngine.carryTone(hz: 261)
+                    }
+            )
         }
         .ignoresSafeArea()
         .onAppear {
@@ -550,6 +574,47 @@ struct UniverseView: View {
 
     private func story(for st: UStar) -> Story? { store.stories.first { $0.id == st.id } }
 
+    /// The star under a point, if any (the same reach the tap uses).
+    private func starAt(_ loc: CGPoint, _ size: CGSize) -> UStar? {
+        let zoom = cam.zoom, focus = CGPoint(x: cam.fx, y: cam.fy)
+        var best: (st: UStar, d: Double)?
+        for arr in starsByRegion {
+            for st in arr {
+                let q = starPlace(st)
+                let sp = worldToScreen(q.0, q.1, size, zoom: zoom, focus: focus)
+                let R = max(18, st.pr * zoom * 1.2)
+                let dd = Double(hypot(sp.x - loc.x, sp.y - loc.y))
+                if dd < R, best == nil || dd < best!.d { best = (st, dd) }
+            }
+        }
+        return best?.st
+    }
+
+    /// His threads, aged by the days since he drew them — fresh is thin and pale, old is gold.
+    private func drawFilaments(_ ctx: GraphicsContext, _ size: CGSize, zoom: Double, focus: CGPoint) {
+        guard !store.filaments.isEmpty || threadFrom != nil else { return }
+        var byId: [String: UStar] = [:]
+        for arr in starsByRegion { for st in arr { byId[st.id] = st } }
+        func screen(_ id: String) -> CGPoint? {
+            guard let st = byId[id] else { return nil }
+            let q = starPlace(st)
+            return worldToScreen(q.0, q.1, size, zoom: zoom, focus: focus)
+        }
+        let f = AirtableService.dayFormatter(timeZone: .current)
+        for fl in store.filaments {
+            guard let a = screen(fl.a), let b = screen(fl.b) else { continue }
+            let days = f.date(from: fl.day).map { Date().timeIntervalSince($0) / 86_400 } ?? 0
+            let age = min(1, days / 120)
+            var p = Path(); p.move(to: a); p.addLine(to: b)
+            ctx.stroke(p, with: .color(Color(red: 0.93 - 0.14 * age, green: 0.89 - 0.26 * age, blue: 0.81 - 0.45 * age).opacity(0.35 + 0.35 * age)),
+                       style: StrokeStyle(lineWidth: 0.7 + 0.9 * age, lineCap: .round))
+        }
+        if let from = threadFrom, let a = screen(from), let b = threadTo {
+            var p = Path(); p.move(to: a); p.addLine(to: b)
+            ctx.stroke(p, with: .color(Color(hex: "#EDE3CE").opacity(0.6)), style: StrokeStyle(lineWidth: 0.9, dash: [3, 4]))
+        }
+    }
+
     /// The canon's sealed words first (the Rite's own gathering for C-1052), then the
     /// Archive's live words for this story. Nil is still a real answer: a presence with no
     /// words of its own here stays silent.
@@ -879,6 +944,7 @@ struct UniverseView: View {
         // ── the deep sky: a coloured ground + three parallax depths of dust, so the sky has
         // thickness (uni-sky.js) — drawn behind everything at the sky/region distances ──
         drawDeepSky(ctx, size, t, focus: focus, zoom: zoom)
+        drawFilaments(ctx, size, zoom: zoom, focus: focus)      // THE REST · his own constellations
 
         // ── region weather: weighted by the band, never gated by an if (uni-sky.js:187-203).
         // It used to snap on at a scale boundary; now it comes up with the region itself. ──

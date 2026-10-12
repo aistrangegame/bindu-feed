@@ -128,7 +128,6 @@ APP-OWN	⟿ walk the Instrument	Bindu Feed/Bindu Feed/Screens/TokenEntryView.swi
 APP-OWN-INSTRUCTIONAL	HOLD -- LET IT RISE	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:254
 APP-OWN-INSTRUCTIONAL	hold for depth	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:414
 APP-OWN-INSTRUCTIONAL	HOLD TO RELEASE INTO THE FIELD	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:255
-APP-OWN-INSTRUCTIONAL	WRITE, THEN HOLD TO RELEASE	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:253
 AUTHORED	"Beliefs shape your reality" sounds like a self-help metaphor -- motivational, not structural.	Bindu Feed/Bindu Feed/Point/PointContent.swift:150
 AUTHORED	"Bindu moves" can sound like this ecosystem's private poetry -- a nice phrase without a lineage.	Bindu Feed/Bindu Feed/Point/PointContent.swift:105
 AUTHORED	"Feel your feelings" sounds like advice for people with spare time -- vague, indulgent, unactionable.	Bindu Feed/Bindu Feed/Point/PointContent.swift:185
@@ -1172,3 +1171,32 @@ NON-UI	bindu.notice.lastDay	Bindu Feed/Bindu Feed/Store/FeedStore.swift:369
 APP-OWN	the field noticed	Bindu Feed/Bindu Feed/Screens/FieldNoticeView.swift:23
 APP-OWN	what it is not sure of	Bindu Feed/Bindu Feed/Screens/FieldNoticeView.swift:5
 APP-OWN	what it showed	Bindu Feed/Bindu Feed/Screens/FieldNoticeView.swift:5
+APP-OWN	-- I said	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:340
+APP-OWN	a song to dance	Bindu Feed/Bindu Feed/Screens/GiftTriadView.swift:49
+APP-OWN	a story to read	Bindu Feed/Bindu Feed/Screens/GiftTriadView.swift:28
+APP-OWN	a teacher, once · …	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:126
+APP-OWN	an energy to appreciate	Bindu Feed/Bindu Feed/Screens/GiftTriadView.swift:34
+NON-UI	Around the days this was spoken, you were completing … in Learning.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:426
+APP-OWN-INSTRUCTIONAL	back to the transmission	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:347
+NON-UI	bindu.gift.lastDay	Bindu Feed/Bindu Feed/Store/FeedStore.swift:542
+NON-UI	bindu.lastMetRoom	Bindu Feed/Bindu Feed/Store/FeedStore.swift:368
+NON-UI	bindu.rite.word.…	Bindu Feed/Bindu Feed/Store/FeedStore.swift:456
+NON-UI	bindu.suit.…	Bindu Feed/Bindu Feed/Store/FeedStore.swift:469
+NON-UI	He answered the story with silence.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:508
+NON-UI	He came back from the act with one line.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:495
+APP-OWN-INSTRUCTIONAL	hold to appreciate	Bindu Feed/Bindu Feed/Screens/GiftTriadView.swift:40
+APP-OWN-INSTRUCTIONAL	read ›	Bindu Feed/Bindu Feed/Screens/ArchiveBookView.swift:92
+NON-UI	song·	Bindu Feed/Bindu Feed/Store/FeedStore.swift:399
+APP-OWN	the archive, as a book ›	Bindu Feed/Bindu Feed/Screens/RootView.swift:124
+APP-OWN	the essence	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:326
+APP-OWN	the middle of the book is a door	Bindu Feed/Bindu Feed/Screens/ArchiveBookView.swift:115
+APP-OWN	the seed you took · come back with a line	Bindu Feed/Bindu Feed/Components/SeedThread.swift:21
+APP-OWN	three gifts, if you want them	Bindu Feed/Bindu Feed/Screens/GiftTriadView.swift:26
+APP-OWN	where this began · … · …	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:335
+NON-UI	Within days of this, you felt … in the Mandala -- ….	Bindu Feed/Bindu Feed/Store/FeedStore.swift:423
+APP-OWN	you answered this in silence	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:147
+NON-UI	{Codex Number Creator}='(…)'	Bindu Feed/Bindu Feed/Services/AirtableService.swift:1374
+NON-UI	{Felt At}!=''	Bindu Feed/Bindu Feed/Services/AirtableService.swift:1345
+NON-UI	{Type of Therapy}=''	Bindu Feed/Bindu Feed/Services/AirtableService.swift:1357
+NON-UI	·dance	Bindu Feed/Bindu Feed/Store/FeedStore.swift:405
+APP-OWN	◌ held in silence	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:422

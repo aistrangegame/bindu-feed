@@ -73,4 +73,5 @@ enum FeedRoute: Hashable {
     case hall(Story)         // WAVE 5 · the hall of perspectives
     case portrait            // WAVE 5 · his walk, drawn
     case weave               // WAVE 5 · his life as cloth
+    case archiveBook         // THE REST · the Archive as a book whose middle page is a door
 }

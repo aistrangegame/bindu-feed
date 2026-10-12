@@ -83,6 +83,18 @@ struct ContentCoordinator: View {
                     .zIndex(25)
             }
 
+            if store.giftOpen {
+                GiftTriadView(onStory: { s in
+                    store.giftOpen = false
+                    store.pendingLaunchRoute = .story(s)
+                }, onDance: {
+                    store.giftOpen = false
+                    store.pendingLaunchRoute = .instrument(8)
+                }, onClose: { withAnimation(.easeInOut(duration: 0.8)) { store.giftOpen = false } })
+                .transition(.opacity)
+                .zIndex(23)
+            }
+
             if let n = store.fieldNotice {
                 FieldNoticeView(notice: n, onClose: { withAnimation(.easeInOut(duration: 0.8)) { store.fieldNotice = nil } })
                     .transition(.opacity)
@@ -165,6 +177,7 @@ struct ContentCoordinator: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     store.offerLetter(at: .door)
                     Task { await store.offerFieldNotice() }   // rarely, the field says what it noticed
+                    store.offerGift()                          // rarely, three gifts
                 }
             }
         }

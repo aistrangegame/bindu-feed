@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 // Phase 9 — Ash's Compose.
@@ -257,7 +258,7 @@ struct AshComposeView: View {
     }
 
     private var hintText: String {
-        if !armed { return "WRITE, THEN HOLD TO RELEASE" }
+        if !armed { return progress > 0.04 ? "HOLD — SILENCE IS A WHOLE REPLY" : "WRITE, THEN HOLD TO RELEASE · OR HOLD IN SILENCE" }
         if progress > 0.04 { return "HOLD — LET IT RISE" }
         return "HOLD TO RELEASE INTO THE FIELD"
     }
@@ -265,7 +266,8 @@ struct AshComposeView: View {
     private var holdGesture: some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { _ in
-                guard armed, phase == .writing, !pressing else { return }
+                // THE REST · THE SILENT REPLY — an empty hold is a whole answer (Lalita's law 5)
+                guard phase == .writing, !pressing else { return }
                 beginPress()
             }
             .onEnded { _ in
@@ -346,6 +348,10 @@ struct AshComposeView: View {
         // Durable: postComment queues + retries on failure, so the comment is never lost
         // even offline. Always flag a refresh — the write landed now, or the retry will
         // surface it on a later load.
+        if body.isEmpty {
+            store.replyInSilence(to: story)
+            return
+        }
         await store.postComment(storyId: story.id, body: body, parentId: nil)
         store.flagStoryRefresh(storyId: story.id)
     }
@@ -413,9 +419,9 @@ struct AshComposeView: View {
                 Spacer()
             }
 
-            Text(body)
-                .font(.lora(16))
-                .foregroundColor(BinduTheme.inkPrimary)
+            Text(body.isEmpty ? "◌  held in silence" : body)
+                .font(body.isEmpty ? .loraItalic(16) : .lora(16))
+                .foregroundColor(body.isEmpty ? accent : BinduTheme.inkPrimary)
                 .lineSpacing(6)
                 .fixedSize(horizontal: false, vertical: true)
         }

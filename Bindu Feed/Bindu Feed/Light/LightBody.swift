@@ -26,6 +26,9 @@ enum LightBody: Equatable {
     case leftAlone         // 734 enough — set down and left (sustained absence; a recorded divergence)
     case uncaptured        // 744 telling — dims when captured; will not be collected
     case unchecked         // 771 red — closes the moment he leaves the app to check
+    case featherTouch      // 722 incarnation — rest with no force at all and it opens; press hard, it resists
+    case evenTouch         // 743 marriage — too hard stops it; letting go entirely stops it
+    case wideReach         // 724 integration — two touches as far apart as the screen allows
 
     /// Which scene asks for which body, by the scene's own slug.
     static func of(_ key: String) -> LightBody? {
@@ -35,6 +38,7 @@ enum LightBody: Equatable {
             ("surge", .upright), ("soles", .uprightStill), ("crow", .lifted),
             ("unweighted", .faceDown), ("axis", .covered), ("enough", .leftAlone),
             ("telling", .uncaptured), ("red", .unchecked),
+            ("incarnation", .featherTouch), ("marriage", .evenTouch), ("integration", .wideReach),
         ]
         return table.first { words.contains($0.0) }?.1
     }
@@ -127,6 +131,19 @@ final class LightBodySense {
         case .covered:      return UIDevice.current.proximityState
         case .leftAlone:    return stillFor > 12 && !touching
         case .uncaptured, .unchecked: return true
+        // PRESSURE, READ AS IT CAN BE (Coverage/14 PRESSURE · a recorded substitution): force
+        // where the screen measures it, otherwise the contact's size — a finger resting with no
+        // weight touches less glass than one pressing. Both are read from TouchSense.
+        case .featherTouch:
+            guard TouchSense.touching else { return false }
+            return TouchSense.force >= 0 ? TouchSense.force < 0.18 : TouchSense.radius < 22
+        case .evenTouch:
+            guard TouchSense.touching else { return false }
+            return TouchSense.force >= 0 ? (TouchSense.force > 0.08 && TouchSense.force < 0.55)
+                                         : (TouchSense.radius >= 14 && TouchSense.radius < 34)
+        case .wideReach:
+            let diag = hypot(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+            return TouchSense.spread > diag * 0.6
         }
     }
 }

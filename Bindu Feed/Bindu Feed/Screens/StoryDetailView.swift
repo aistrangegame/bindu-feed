@@ -44,11 +44,21 @@ struct StoryDetailView: View {
     @State private var choosingParagraph: Int?     // WAVE 2 · a held paragraph, its lines apart
     @State private var seek: (word: String, target: Story)?   // WAVE 4 · the day's clue
     @State private var seekGlow: Double = 0
+    // THE REST
+    @State private var page: PageSize = .transmission      // life as a one-page answer
+    @State private var memo: String?                       // the raw memo, when he goes back to it
+    @State private var rewinding: Double = 0               // the spiral held, 0…1
+    @State private var rewound = false
+    @State private var graceLine: String?
+    @State private var teacherLine: (topic: String, line: String)?
+    @State private var rewindTask: Task<Void, Never>?
     @State private var arrivalSettings: ArrivalSettings = .init()
 
     // The Audio Anchor — one shared player for the whole story; a quiet mark on any Ash entry
     // that kept a voice on this device. The full crossed-into playback lives in the Return.
     @StateObject private var anchor = AudioAnchorPlayer()
+
+    enum PageSize { case essence, transmission, memo }
 
     private enum DepthPhase {
         case closed
@@ -82,15 +92,64 @@ struct StoryDetailView: View {
                         .frame(height: 0.5)
                         .padding(.horizontal, BinduTheme.space20)
 
-                    storyBody
-                        .padding(.horizontal, BinduTheme.space20)
-                        .padding(.top, 22)
+                    Group {
+                        if rewound || page == .memo {
+                            memoPage
+                        } else if page == .essence {
+                            essencePage
+                        } else {
+                            storyBody
+                                .rotationEffect(.degrees(rewinding * -540 * 0.02))
+                                .blur(radius: rewinding * 8)
+                                .opacity(1 - rewinding * 0.6)
+                        }
+                    }
+                    .padding(.horizontal, BinduTheme.space20)
+                    .padding(.top, 22)
+                    // LIFE AS A ONE-PAGE ANSWER — pinch the story to its essence, open it to the memo
+                    .simultaneousGesture(MagnificationGesture().onEnded { m in
+                        withAnimation(.easeInOut(duration: 0.8)) {
+                            if m < 0.8 { page = page == .memo ? .transmission : .essence }
+                            else if m > 1.25 { page = page == .essence ? .transmission : .memo; if page == .memo { loadMemo() } }
+                        }
+                    })
 
                     resonanceAffordance
 
                     FieldGathersMarker(onArrive: triggerFieldArrival)
 
                     fieldComments
+
+                    // THE REST · a teacher visits once; grace from his other lives, once
+                    if let t = teacherLine {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("a teacher, once · \(t.topic)").spaceMonoTracked(8, em: 0.2)
+                                .foregroundColor(Color(hex: "#C9A07A").opacity(0.8))
+                            Text(t.line).font(.loraItalic(15)).foregroundColor(BinduTheme.inkSecondary)
+                                .lineSpacing(5).fixedSize(horizontal: false, vertical: true)
+                        }
+                        .padding(.horizontal, BinduTheme.space20)
+                        .padding(.top, 22)
+                        .transition(.opacity)
+                    }
+                    if let g = graceLine {
+                        Text(g)
+                            .font(.loraItalic(13)).foregroundColor(BinduTheme.inkTertiary)
+                            .padding(.horizontal, BinduTheme.space20 + 14)
+                            .padding(.top, 18)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                            .multilineTextAlignment(.trailing)
+                            .transition(.opacity)
+                    }
+                    if store.silentlyHeld.contains(story.id) {
+                        HStack(spacing: 8) {
+                            Circle().fill(BinduTheme.colorAsh).frame(width: 6, height: 6)
+                            Text("you answered this in silence").spaceMonoTracked(8, em: 0.2)
+                                .foregroundColor(BinduTheme.colorAsh.opacity(0.75))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 16)
+                    }
 
                     if !ashNodes.isEmpty {
                         VStack(spacing: 8) {
@@ -161,6 +220,21 @@ struct StoryDetailView: View {
         }
         .onAppear {
             HeartbeatService.shared.set("story", on: Self.pulseRooms.contains(story.room))   // WAVE 1
+            Task {
+                await store.loadSiblings()
+                if teacherLine == nil, let t = store.teacher(for: story) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 6) {
+                        withAnimation(.easeInOut(duration: 2)) { teacherLine = t }
+                        store.markTeacherShown(story)
+                    }
+                }
+                if graceLine == nil, let g = store.grace(for: story) {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 9) {
+                        withAnimation(.easeInOut(duration: 2.4)) { graceLine = g }
+                        store.markGraceShown(story)
+                    }
+                }
+            }
             // WAVE 4 · read slowly, and a word begins to glow — half a minute on the page
             seek = store.seekClue(in: story)
             if seek != nil {
@@ -180,6 +254,11 @@ struct StoryDetailView: View {
             anchor.stop()
         }
         .sonicContext(storySonicContext)
+        // THE REST · the Gaia inversion — two fingers swept back run the story to its raw memo
+        .onReceive(NotificationCenter.default.publisher(for: CallGestureInstaller.twoFingerBack)) { _ in
+            loadMemo()
+            withAnimation(.easeInOut(duration: 1.4)) { rewound = true }
+        }
         .hubOverlay(open: $showHub, path: $path)
     }
 
@@ -198,6 +277,7 @@ struct StoryDetailView: View {
                     .foregroundColor(BinduTheme.inkTertiary)
             }
 
+            rewindSpiral
             if store.foundStories.contains(story.id) {
                 Text("found ∞").spaceMonoTracked(8, em: 0.2).foregroundColor(Color(hex: "#C9A07A").opacity(0.85))
             }
@@ -237,6 +317,78 @@ struct StoryDetailView: View {
     }
 
     // MARK: - Story body (no animation)
+
+    // MARK: - THE REST · the one-page answer, the rewind, the raw memo
+
+    private var essencePage: some View {
+        let essence = story.excerpt.isEmpty ? (Sentences.split(story.body).prefix(2).map { $0.text }.joined(separator: " ")) : story.excerpt
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("the essence").spaceMonoTracked(8, em: 0.25).foregroundColor(storyRoomColor.opacity(0.8))
+            Text(essence).font(.loraItalic(21)).foregroundColor(BinduTheme.inkPrimary).lineSpacing(9)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var memoPage: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("where this began · \(story.codexId) · \(formattedDate(story.sourceDate))")
+                .spaceMonoTracked(8, em: 0.2).foregroundColor(BinduTheme.colorAsh.opacity(0.85))
+            if let m = memo {
+                Text(m).font(.lora(16)).foregroundColor(BinduTheme.inkPrimary.opacity(0.9)).lineSpacing(9)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("— I said").font(.lora(14)).foregroundColor(BinduTheme.colorAsh)
+            } else {
+                ProgressDot()
+            }
+            Button {
+                withAnimation(.easeInOut(duration: 1.0)) { rewound = false; page = .transmission; rewinding = 0 }
+            } label: {
+                Text("back to the transmission").spaceMonoTracked(8, em: 0.2).foregroundColor(BinduTheme.inkTertiary).padding(.vertical, 8)
+            }
+            .buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// THE REWIND SPIRAL — hold it and the transmission spins back 540° and blurs away to the
+    /// day it was spoken, in his own first person. An early release returns the story.
+    private var rewindSpiral: some View {
+        Canvas { ctx, size in
+            var sp = Path()
+            for k in 0...36 {
+                let t = Double(k) / 36 * 3 * .pi, r = 1 + Double(k) * 0.24
+                let p = CGPoint(x: size.width / 2 + cos(t + rewinding * 9.4) * r, y: size.height / 2 + sin(t + rewinding * 9.4) * r)
+                if k == 0 { sp.move(to: p) } else { sp.addLine(to: p) }
+            }
+            ctx.stroke(sp, with: .color(BinduTheme.colorAsh.opacity(0.5 + 0.5 * rewinding)), lineWidth: 0.9)
+        }
+        .frame(width: 24, height: 24)
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { _ in
+                guard !rewound, rewindTask == nil else { return }
+                loadMemo()
+                let start = Date()
+                rewindTask = Task { @MainActor in
+                    while !Task.isCancelled {
+                        let p = min(1, Date().timeIntervalSince(start) / 2.2)
+                        rewinding = p
+                        if p >= 1 { withAnimation(.easeInOut(duration: 1.2)) { rewound = true }; break }
+                        try? await Task.sleep(nanoseconds: 16_000_000)
+                    }
+                }
+            }
+            .onEnded { _ in
+                rewindTask?.cancel(); rewindTask = nil
+                if !rewound { withAnimation(.easeOut(duration: 0.6)) { rewinding = 0 } }
+            })
+    }
+
+    private func loadMemo() {
+        guard memo == nil else { return }
+        Task { memo = await store.memo(for: story) ?? story.body }
+    }
 
     /// WAVE 4 · a paragraph, with the day's clue word glowing in it once he has read slowly.
     private func paragraphText(_ p: String) -> Text {
@@ -455,6 +607,10 @@ struct StoryDetailView: View {
     // for a well-formed story, but defensive).
     private var storySonicContext: SonicContext {
         if let room = store.room(named: story.room) {
+            // THE REST · each story reaches for its song — its bed bends to a Field carrier
+            if let t = store.song(for: story) {
+                return .song(room: room, carrierHz: t.carrierHz, beatHz: t.beatHz)
+            }
             return .room(room)
         }
         return .base

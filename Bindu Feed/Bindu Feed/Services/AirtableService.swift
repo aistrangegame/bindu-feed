@@ -1242,3 +1242,139 @@ extension AirtableService {
         }
     }
 }
+
+// MARK: - THE REST · the sibling apps, read (Field songs, Mandala, Learning, the raw memo)
+
+struct FieldTrack: Identifiable, Hashable {
+    let id: String
+    let title: String
+    let verb: String
+    let audioURL: String
+    let carrierHz: Double
+    let beatHz: Double
+}
+
+struct MandalaEnergy: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let quality: String
+    let appreciation: String
+}
+
+struct MandalaMoment: Hashable {
+    let day: String
+    let shaktiIds: [String]
+}
+
+struct LearningTrace: Identifiable, Hashable {
+    let id: String
+    let topic: String
+    let persona: String
+    let codexIds: [String]
+    let completedDays: [String]
+}
+
+extension AirtableService {
+    /// One table, by field id, every page — the shared read the sibling surfaces use.
+    func fetchRaw(table: String, filter: String? = nil, fields: [String]) async -> [(id: String, f: [String: Any])] {
+        guard !token.isEmpty else { return [] }
+        var out: [(id: String, f: [String: Any])] = []
+        var offset: String?
+        var pages = 0
+        repeat {
+            var c = URLComponents(string: "https://api.airtable.com/v0/app248ZTWhYJlvQj2/\(table)")
+            var q = [URLQueryItem(name: "pageSize", value: "100"),
+                     URLQueryItem(name: "returnFieldsByFieldId", value: "true")]
+            if let filter { q.append(URLQueryItem(name: "filterByFormula", value: filter)) }
+            for f in fields { q.append(URLQueryItem(name: "fields[]", value: f)) }
+            if let offset { q.append(URLQueryItem(name: "offset", value: offset)) }
+            c?.queryItems = q
+            guard let url = c?.url else { break }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            guard let pair = try? await session.data(for: req),
+                  (try? Self.validate(response: pair.1, data: pair.0)) != nil,
+                  let obj = try? JSONSerialization.jsonObject(with: pair.0) as? [String: Any] else { break }
+            for r in (obj["records"] as? [[String: Any]]) ?? [] {
+                out.append(((r["id"] as? String) ?? "", (r["fields"] as? [String: Any]) ?? [:]))
+            }
+            offset = obj["offset"] as? String
+            pages += 1
+        } while offset != nil && pages < 40
+        return out
+    }
+
+    static func plain(_ v: Any?) -> String {
+        if let s = v as? String { return s }
+        if let d = v as? [String: Any] { return (d["name"] as? String) ?? "" }
+        if let n = v as? NSNumber { return n.stringValue }
+        return ""
+    }
+
+    /// Strip the markdown a rich-text field carries; keep the words.
+    static func unmark(_ s: String) -> String {
+        s.replacingOccurrences(of: "**", with: "").replacingOccurrences(of: "__", with: "")
+            .replacingOccurrences(of: "#", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    func fetchFieldTracks() async -> [FieldTrack] {
+        let rows = await fetchRaw(table: "tblv3WvMZ90Sfhun6", fields: [
+            "fldSgcALwlkQPWDz4", "fldrYExLmEjx4wxVt", "fldUIY8v9p49QyF0B", "fld4oIQGckv2c9DvO", "fld7oCYy1eIWdhE04", "fldoA70yegZzQL7BV"])
+        return rows.compactMap { r in
+            let title = Self.plain(r.f["fldSgcALwlkQPWDz4"]).isEmpty ? Self.plain(r.f["fldoA70yegZzQL7BV"]) : Self.plain(r.f["fldSgcALwlkQPWDz4"])
+            let carrier = (r.f["fld4oIQGckv2c9DvO"] as? NSNumber)?.doubleValue ?? 0
+            guard !title.isEmpty else { return nil }
+            return FieldTrack(id: r.id, title: title, verb: Self.plain(r.f["fldrYExLmEjx4wxVt"]),
+                              audioURL: Self.plain(r.f["fldUIY8v9p49QyF0B"]), carrierHz: carrier,
+                              beatHz: (r.f["fld7oCYy1eIWdhE04"] as? NSNumber)?.doubleValue ?? 0)
+        }
+    }
+
+    /// The Shaktis as energies to appreciate — name, quality and the appreciation phrase only.
+    /// The seed syllables are never read.
+    func fetchMandalaEnergies() async -> [MandalaEnergy] {
+        let rows = await fetchRaw(table: "tblrRwXJD0uP8HU8G", filter: "AND({Appreciation Phrase}!='',{Quality}!='')",
+                                  fields: ["fldJOatnYrw9l6tff", "fldnwcu7zv7uV1ta2", "fldBqEDpBonMc2s1K"])
+        return rows.map { MandalaEnergy(id: $0.id, name: Self.plain($0.f["fldJOatnYrw9l6tff"]),
+                                         quality: Self.plain($0.f["fldnwcu7zv7uV1ta2"]),
+                                         appreciation: Self.plain($0.f["fldBqEDpBonMc2s1K"])) }
+    }
+
+    /// The days he felt a Shakti in Mandala — the day and which, nothing else.
+    func fetchMandalaMoments() async -> [MandalaMoment] {
+        let rows = await fetchRaw(table: "tblrRwXJD0uP8HU8G", filter: "{Felt At}!=''",
+                                  fields: ["fldk4BdikzJQOautw", "fldaDjmaPvu57sJVg"])
+        return rows.compactMap { r in
+            let at = Self.plain(r.f["fldk4BdikzJQOautw"])
+            guard at.count >= 10 else { return nil }
+            return MandalaMoment(day: String(at.prefix(10)), shaktiIds: (r.f["fldaDjmaPvu57sJVg"] as? [String]) ?? [])
+        }
+    }
+
+    /// Learning, as traces — topic, the first persona's voice, the memos it links, the days a
+    /// module completed. Anything marked as therapy is left where it lives.
+    func fetchLearningTraces() async -> [LearningTrace] {
+        let rows = await fetchRaw(table: "tbl5kW1msXYfThGbj", filter: "{Type of Therapy}=''", fields: [
+            "fldFN6tajWlox7qxX", "fldReXkJdhK2xbRtx", "fld5TGbDJg6sb2BCr",
+            "fldAFJIjPNPCkBJFp", "fldsAJ2UiI1XQ6RZN", "fldh43cUFhHPB9a2L", "fldqjeT9nG1s7LODd", "fldifB6qZxitxLeJI"])
+        return rows.compactMap { r in
+            let topic = Self.plain(r.f["fldFN6tajWlox7qxX"])
+            guard !topic.isEmpty else { return nil }
+            let days = ["fldAFJIjPNPCkBJFp", "fldsAJ2UiI1XQ6RZN", "fldh43cUFhHPB9a2L", "fldqjeT9nG1s7LODd", "fldifB6qZxitxLeJI"]
+                .map { Self.plain(r.f[$0]) }.filter { $0.count >= 10 }
+            return LearningTrace(id: r.id, topic: topic, persona: Self.unmark(Self.plain(r.f["fldReXkJdhK2xbRtx"])),
+                                 codexIds: (r.f["fld5TGbDJg6sb2BCr"] as? [String]) ?? [], completedDays: days)
+        }
+    }
+
+    /// The raw memo a story was made from — his own first-person words, by its Codex number.
+    func fetchMemo(codexNumber: String) async -> (words: String, codexRecord: String)? {
+        let n = codexNumber.trimmingCharacters(in: .whitespaces)
+        guard !n.isEmpty else { return nil }
+        let rows = await fetchRaw(table: Self.codexTable, filter: "{Codex Number Creator}='(\(n))'",
+                                  fields: [CodexField.transcript])
+        guard let r = rows.first else { return nil }
+        let w = Self.unmark(Self.plain(r.f[CodexField.transcript]))
+        return w.isEmpty ? nil : (w, r.id)
+    }
+}

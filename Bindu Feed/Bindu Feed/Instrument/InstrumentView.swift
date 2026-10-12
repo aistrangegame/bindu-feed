@@ -548,6 +548,10 @@ struct InstrumentView: View {
             if let w = waveAt { SkyWave(started: w) }
         }
         .overlay {
+            // THE REST · world VII becomes a real Dance — his song under it, the Rite's word at the peak
+            if here.key == "d7" { DanceSongLayer() }
+        }
+        .overlay {
             // SMALLER UPGRADE · Khelo, once a year — on Holi the sky is powder
             if here.key == "sky", Sky.isHoli() { KheloLayer(fling: khelo) }
         }

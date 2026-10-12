@@ -118,6 +118,8 @@ struct RiteView: View {
     }
     private func toSealed(_ text: String, _ audioRef: String?) {
         keptText = text
+        store.keepRiteWord(text)          // THE REST · the word the Dance sings back today
+        store.sealSuitIfEarned()          // THE REST · a Red or Black arrival sealed turns White
         withAnimation(.easeInOut(duration: 1.0)) { movement = .sealed }
         let sid = storyData.storyId
         Task {

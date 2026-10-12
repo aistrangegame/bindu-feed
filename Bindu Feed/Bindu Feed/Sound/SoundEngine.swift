@@ -294,6 +294,14 @@ final class SoundEngine: ObservableObject {
             return baseBreathSnapshot
         case .room(let room):
             return VoiceSnapshot(from: room)
+        case .song(let room, let carrier, let beat):
+            let r = VoiceSnapshot(from: room)
+            // the carrier brought down into the bed's own register (an octave at a time)
+            var hz = carrier
+            while hz > 220 { hz /= 2 }
+            while hz < 70 { hz *= 2 }
+            return VoiceSnapshot(rootHz: hz, binauralHz: beat > 0 && beat < 14 ? beat : r.binauralHz,
+                                 level: r.level, brightness: r.brightness, texture: r.texture)
         case .point(let enclosure):
             // Pitch AND beat from the ladder — `point-sound.js:42` reads `FREQS[i]` and
             // `BEATS[i]` from the same index, so they can never drift apart.

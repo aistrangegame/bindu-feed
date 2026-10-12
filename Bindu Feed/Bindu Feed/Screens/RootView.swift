@@ -65,6 +65,12 @@ struct RootView: View {
         }
         // SLICE 5 · a link that arrives while he is already inside lands on top of where he
         // is, so ‹ leave brings him back to it.
+        // THE REST · a gift taken after the Door lands on top of the Feed
+        .onChange(of: store.pendingLaunchRoute) { _, r in
+            guard hasLoaded, let r else { return }
+            store.pendingLaunchRoute = nil
+            $path.pushDissolve(r)
+        }
         .onChange(of: store.pendingLink) {
             if hasLoaded { arriveByLink() }
         }
@@ -110,6 +116,16 @@ struct RootView: View {
 
                     subtitle
                         .padding(.horizontal, BinduTheme.space16 + 44)  // align under the wordmark, past the hub trigger
+
+                    SeedThread()                                    // THE REST · a taken seed, still open
+                        .padding(.horizontal, BinduTheme.space16 + 44)
+
+                    Button { $path.pushDissolve(FeedRoute.archiveBook) } label: {
+                        Text("the archive, as a book ›").spaceMonoTracked(8, em: 0.2)
+                            .foregroundColor(BinduTheme.inkTertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, BinduTheme.space16 + 44)
 
                     CommunityFilterBar(rooms: store.rooms, selectedRoom: $selectedRoom)
 
@@ -272,6 +288,8 @@ struct RootView: View {
             PortraitView(path: $path)
         case .weave:
             WeaveView(path: $path)
+        case .archiveBook:
+            ArchiveBookView(path: $path)
         }
     }
 

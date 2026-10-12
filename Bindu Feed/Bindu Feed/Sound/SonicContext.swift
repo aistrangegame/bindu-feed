@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 // MARK: - SonicContext
@@ -32,6 +33,9 @@ enum SonicContext: Equatable {
     /// both the pitch and the beat from `PointLadder`; nothing else in the app asks for
     /// `.climbing`, because nothing else is going anywhere.
     case point(enclosure: Int)
+    /// THE REST · each story reaches for its song — the room's own breath, bent to a Field
+    /// track's carrier and beat. Never played, never named.
+    case song(room: Room, carrierHz: Double, beatHz: Double)
 }
 
 // MARK: - View modifier
