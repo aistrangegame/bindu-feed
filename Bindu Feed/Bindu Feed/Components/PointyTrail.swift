@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 // WAVE 4 · POINTY — one living thread (Codex C-1306). The Bindu dot is one continuous

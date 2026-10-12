@@ -1,4 +1,6 @@
+import Combine
 import SwiftUI
+import UIKit
 
 // THE LIGHT — the fifteenth register (Z = −5), reached by STILLNESS, not force.
 // Wave 5. No haptic anywhere (a law of this door).
