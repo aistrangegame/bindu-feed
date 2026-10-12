@@ -30,9 +30,13 @@ private struct UMote {
     let size: Double; let wobble: Bool
     /// B4.3 · Ash alone wears the patina ring once the planet is large enough to hold it.
     let isAsh: Bool
+    /// SLICE 7 · +1 the Father's lens (Sid), −1 the Mother's (Arch), 0 every other voice.
+    var pair: Int = 0
 }
 private struct UStar {
     let id: String
+    /// SLICE 7 · the region it belongs to, so the old story can carry it with its region.
+    let ri: Int
     let wx: Double, wy: Double
     let isMet: Bool
     let depth: Int
@@ -43,6 +47,8 @@ private struct UStar {
     /// light at the sky and the planet you land on are one object at two distances.
     let pr: Double
     let motes: [UMote]
+    /// SLICE 7 · both the Father's and the Mother's lens sat with this world.
+    var convergence: Bool = false
 }
 private struct ULane {
     let awx: Double, awy: Double, bwx: Double, bwy: Double
@@ -58,6 +64,9 @@ struct UniverseView: View {
     /// The live axis Z. THE SCALE. `UniverseCamera.zoom` is derived from it every frame;
     /// nothing here mutates a zoom of its own. See UniverseCamera's header.
     let axisZ: Double
+    /// SLICE 7 · THE OLD STORY, 0…1 — rising only when he is still at the sky after the Light
+    /// has already opened (`AxisTravel.oldStory`). See `arcPlace`.
+    var oldStory: Double = 0
     /// Ask the axis to move — the tap's inward impulse (The Universe v3.html:1664,1668).
     /// The Universe never moves the scale itself; it asks, and the axis travels.
     var onDrawIn: ((Double) -> Void)? = nil
@@ -89,6 +98,11 @@ struct UniverseView: View {
     /// single-slot: touching another closes the first, touching the same one closes it.
     @State private var openWord: (name: String, word: String?)?
     @State private var ringLit: Int?
+    /// SLICE 7 · THE FALL SPEAKS EVERYWHERE. The words each presence actually left on THIS
+    /// story — its live field comment (and his own, for Ash) — keyed by voice. `uni-field.js`'s
+    /// rule stands: *"only where the Archive holds the actual words"*; the field comments ARE
+    /// the Archive's words, so every world he falls into now carries them, not one canon star.
+    @State private var fallWords: [String: String] = [:]
 
 
     @EnvironmentObject private var store: FeedStore
@@ -225,6 +239,11 @@ struct UniverseView: View {
             soundEngine.fieldThreshold(hz: 126, dur: 9)         // `The Universe v3.html:1716`
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) { onFall(story) }
         }
+        // SLICE 7 · when the ring has gathered, the Om sounds once — the Story's held 136.1 under
+        // its Turning, and the Feed's own centre. Once per gathering, never on the way out.
+        .onChange(of: oldStory > 0.97) { _, whole in
+            if whole { soundEngine.fieldThreshold(hz: 136.1, dur: 9) }
+        }
         .onChange(of: store.stories) { rebuild() }
         .onChange(of: store.metStoryIDs) { rebuild() }   // met-ness arrives async; relight
         .onChange(of: store.archetypes.count) { rebuild() }
@@ -255,11 +274,13 @@ struct UniverseView: View {
                     for (v, name) in names.prefix(7).enumerated() {
                         let isL = name.lowercased() == "lalita"
                         let ms = hash(s.id + name)
+                        let lname = name.lowercased()
                         motes.append(UMote(color: store.archetype(named: name)?.color ?? color,
                                            per: 3 + ms * 23, ph: ms * 6.2831 + Double(v) * 0.7,
                                            rr: 1.62 + hash(s.id + name + "rr") * 0.72,
                                            tip: (hash(s.id + name + "tip") - 0.5) * 0.9,
-                                           size: isL ? 1.4 : 1.2, wobble: isL, isAsh: false))
+                                           size: isL ? 1.4 : 1.2, wobble: isL, isAsh: false,
+                                           pair: lname == "sid" ? 1 : (lname == "arch" ? -1 : 0)))
                     }
                     if stats.commentCount > stats.archetypes.count + 1 {
                         let ms = hash(s.id + "ash")
@@ -270,9 +291,11 @@ struct UniverseView: View {
                                            size: 1.5, wobble: false, isAsh: true))
                     }
                 }
-                byRegion[ri].append(UStar(id: s.id, wx: sw.0, wy: sw.1, isMet: isMet,
+                let conv = motes.contains { $0.pair == 1 } && motes.contains { $0.pair == -1 }
+                byRegion[ri].append(UStar(id: s.id, ri: ri, wx: sw.0, wy: sw.1, isMet: isMet,
                                           depth: depth(s), color: color, twSeed: Double(i),
-                                          pr: 7 + hash(s.id + "pr") * 4, motes: motes))
+                                          pr: 7 + hash(s.id + "pr") * 4, motes: motes,
+                                          convergence: conv))
             }
         }
         starsByRegion = byRegion
@@ -330,7 +353,8 @@ struct UniverseView: View {
         var best: (star: UStar, ri: Int, d: Double)?
         for (ri, arr) in starsByRegion.enumerated() {
             for st in arr where st.isMet {
-                let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
+                let q = starPlace(st)
+                let sp = worldToScreen(q.0, q.1, size, zoom: zoom, focus: focus)
                 let dd = Double(hypot(sp.x - cx, sp.y - cy))
                 if best == nil || dd < best!.d { best = (st, ri, dd) }
             }
@@ -340,8 +364,9 @@ struct UniverseView: View {
     // The region nearest the camera centre — drives the region weather + name.
     private func nearestRegionToCenter(_ focus: CGPoint) -> Int {
         var best = 6, bd = Double.greatestFiniteMagnitude
-        for (i, rm) in uniRooms.enumerated() {
-            let nx = (rm.x + 490) / 980, ny = (rm.y + 1030) / 1930
+        for (i, _) in uniRooms.enumerated() {
+            let p = regionPlace(i)
+            let nx = (p.x + 490) / 980, ny = (p.y + 1030) / 1930
             let d = (nx - focus.x) * (nx - focus.x) + (ny - focus.y) * (ny - focus.y)
             if d < bd { bd = d; best = i }
         }
@@ -468,7 +493,7 @@ struct UniverseView: View {
                 switch h.kind {
                 case .presence(_, let name):
                     let story = fallStarID.flatMap { id in store.stories.first { $0.id == id } }
-                    let w = UniWords.word(storyID: story?.id ?? "", voice: name)
+                    let w = fallWord(storyID: story?.id ?? "", voice: name)
                     withAnimation(.easeInOut(duration: 1.1)) {
                         openWord = (openWord?.name == name) ? nil : (name, w)
                     }
@@ -494,7 +519,8 @@ struct UniverseView: View {
         var best: (st: UStar, d: Double)?
         for arr in starsByRegion {
             for st in arr {
-                let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
+                let q = starPlace(st)
+                let sp = worldToScreen(q.0, q.1, size, zoom: zoom, focus: focus)
                 let R = max(16, st.pr * zoom * 1.2)
                 let dd = Double(hypot(sp.x - loc.x, sp.y - loc.y))
                 if dd < R, best == nil || dd < best!.d { best = (st, dd) }
@@ -516,18 +542,41 @@ struct UniverseView: View {
             soundEngine.fieldThreshold(hz: room(story(for: b.st)?.room ?? "").hz, dur: 9)  // `:1545`
             return
         }
-        let nx = (b.st.wx + 490) / 980, ny = (b.st.wy + 1030) / 1930
+        let bq = starPlace(b.st)
+        let nx = (bq.0 + 490) / 980, ny = (bq.1 + 1030) / 1930
         cam.recentre(fx: nx, fy: ny, fraction: 0.7)
         onDrawIn?(0.085)
     }
 
     private func story(for st: UStar) -> Story? { store.stories.first { $0.id == st.id } }
 
+    /// The canon's sealed words first (the Rite's own gathering for C-1052), then the
+    /// Archive's live words for this story. Nil is still a real answer: a presence with no
+    /// words of its own here stays silent.
+    private func fallWord(storyID: String, voice: String) -> String? {
+        UniWords.word(storyID: storyID, voice: voice) ?? fallWords[voice.lowercased()]
+    }
+
     // MARK: - Opening and closing the fall
 
     /// Every way IN. The fall is opened on one chosen star, and the vertical is handed to it.
     private func openFall(_ st: UStar) {
         fallStarID = st.id
+        fallWords = [:]
+        let id = st.id
+        Task {
+            let (field, ash) = await store.loadComments(for: id)
+            var w: [String: String] = [:]
+            // the first thing each voice said here — a whole authored paragraph, never cut
+            for c in field.sorted(by: { $0.commentOrder < $1.commentOrder })
+            where w[c.archetype.lowercased()] == nil && !c.body.isEmpty {
+                w[c.archetype.lowercased()] = c.body.components(separatedBy: "\n\n").first ?? c.body
+            }
+            if let own = ash.first(where: { !$0.body.isEmpty }) {
+                w["ash"] = own.body.components(separatedBy: "\n\n").first ?? own.body
+            }
+            if fallStarID == id { fallWords = w }
+        }
         cam.setInFall(true)
         onHandVertical?(true)
     }
@@ -543,7 +592,7 @@ struct UniverseView: View {
     private func closeFall() {
         guard fallStarID != nil else { return }
         fallStarID = nil
-        fallHits = []; openWord = nil; ringLit = nil
+        fallHits = []; openWord = nil; ringLit = nil; fallWords = [:]
         cam.setInFall(false)
         onHandVertical?(false)
     }
@@ -617,7 +666,8 @@ struct UniverseView: View {
         guard let story = store.stories.first(where: { $0.id == fs.star.id }),
               !story.title.isEmpty else { return nil }
         let R = fs.star.pr * zoom
-        let sp = worldToScreen(fs.star.wx, fs.star.wy, size, zoom: zoom, focus: focus)
+        let fq = starPlace(fs.star)
+        let sp = worldToScreen(fq.0, fq.1, size, zoom: zoom, focus: focus)
         let off = hypot(Double(sp.x) - size.width / 2, Double(sp.y) - size.height * 0.44)
         guard R > 36, off < size.width * 0.42 else { return nil }
         return Doorway(story: story, room: uniRooms[fs.ri])
@@ -733,7 +783,60 @@ struct UniverseView: View {
                        y: size.height * 0.5 + (wy - fy) * s)
     }
     private func regionCenter(_ rm: UniRoom, _ size: CGSize, zoom: Double, focus: CGPoint) -> CGPoint {
-        worldToScreen(rm.x, rm.y, size, zoom: zoom, focus: focus)
+        let ri = uniRooms.firstIndex { $0.id == rm.id } ?? 0
+        let p = regionPlace(ri)
+        return worldToScreen(p.x, p.y, size, zoom: zoom, focus: focus)
+    }
+
+    // MARK: - SLICE 7 · THE OLD STORY UNDER HIS SKY
+    //
+    // A Strange Story's Arc is twelve nodes in a ring with the reader's name at the centre
+    // (aistrangegame v7-framework, the Arc). His thirteen rooms were always that shape: the
+    // twelve chapters, and The Circle — specific love — where the name sits. Nothing here
+    // names a chapter, a node or a room: when he is still at the sky after the Light has
+    // opened, the regions drift, one after another in the Story's own order, into the ring;
+    // the first touch lets them go home. The cosmology is shown as a rhyme of his own sky,
+    // never stated (the house's law against installing a new veil).
+    //
+    // The order is the Arc's: Great Split, Stepping Stones, the Architects, Lemuria,
+    // Atlantis, the Diaspora, the Long Forgetting, the Mirror Race, the Awakening, the
+    // Splitting Prism, the Introduction, Reunion — and the centre.
+    private static let arcOrder = ["A Maya Game", "The Descent", "The Thread", "The Garden",
+                                   "The Forge", "The Body", "The Forgetting", "The Watcher",
+                                   "The Remembering", "The Signal", "The Return", "The Field",
+                                   "The Circle"]
+    /// The ring in world units — the sky's own frame (±490 × ±1030), drawn a little inside it.
+    private static let arcRX = 340.0, arcRY = 720.0, arcCY = 0.0
+    private static let arcScale = 0.55          // each region gathers itself to fit the ring
+
+    private func arcSlot(_ ri: Int) -> (k: Int, x: Double, y: Double) {
+        let id = uniRooms[ri].id
+        let k = Self.arcOrder.firstIndex(of: id) ?? 12
+        guard k < 12 else { return (12, 0, Self.arcCY) }
+        let th = -Double.pi / 2 + Double(k) * 2 * Double.pi / 12
+        return (k, cos(th) * Self.arcRX, Self.arcCY + sin(th) * Self.arcRY)
+    }
+    /// How far region `ri` has travelled into the ring — each in the Story's order, so the
+    /// nodes arrive one after another (V7: the Arc's nodes reveal by dwell, never all at once).
+    private func arcAmt(_ ri: Int) -> Double {
+        guard oldStory > 0.001 else { return 0 }
+        let k = Double(arcSlot(ri).k)
+        let a = max(0, min(1, oldStory * 1.5 - k * 0.04))
+        return a * a * (3 - 2 * a)
+    }
+    private func regionPlace(_ ri: Int) -> (x: Double, y: Double, k: Double) {
+        let rm = uniRooms[ri]
+        let a = arcAmt(ri)
+        guard a > 0 else { return (rm.x, rm.y, 1) }
+        let s = arcSlot(ri)
+        return (rm.x + (s.x - rm.x) * a, rm.y + (s.y - rm.y) * a, 1 - (1 - Self.arcScale) * a)
+    }
+    /// A star's place this frame: its region's place, its own offset gathered with it.
+    private func starPlace(_ st: UStar) -> (Double, Double) {
+        guard oldStory > 0.001 else { return (st.wx, st.wy) }
+        let rm = uniRooms[st.ri]
+        let p = regionPlace(st.ri)
+        return (p.x + (st.wx - rm.x) * p.k, p.y + (st.wy - rm.y) * p.k)
     }
     // The star's world position: strung on its region's own armature (uni-rooms.js place()).
     private func starWorld(_ rm: UniRoom, _ i: Int, _ story: Story) -> (Double, Double) {
@@ -816,11 +919,31 @@ struct UniverseView: View {
         // another in a clump. Each name now takes the first of below / above its region that
         // no earlier name occupies, and waits for the camera to make room otherwise. The
         // Light's sky (`LightSkyLayout`) places its names the same way.
+        // SLICE 7 · the ring itself — a hairline the regions settle onto, and a faint thread
+        // from the centre to each node as it arrives. Bone, never a room's colour: it belongs
+        // to no one room.
+        if oldStory > 0.02 {
+            let cc = worldToScreen(0, Self.arcCY, size, zoom: zoom, focus: focus)
+            let s = W / 980 * zoom
+            let ring = Path(ellipseIn: CGRect(x: cc.x - Self.arcRX * s, y: cc.y - Self.arcRY * s,
+                                              width: Self.arcRX * 2 * s, height: Self.arcRY * 2 * s))
+            ctx.stroke(ring, with: .color(UniGeo.col(UniGeo.BONE, 0.10 * oldStory * (0.8 + 0.2 * b))),
+                       lineWidth: 0.6)
+            for ri in uniRooms.indices where arcSlot(ri).k < 12 {
+                let a = arcAmt(ri)
+                guard a > 0.05 else { continue }
+                let p = regionPlace(ri)
+                var spoke = Path()
+                spoke.move(to: cc)
+                spoke.addLine(to: worldToScreen(p.x, p.y, size, zoom: zoom, focus: focus))
+                ctx.stroke(spoke, with: .color(UniGeo.col(UniGeo.BONE, 0.035 * a)), lineWidth: 0.5)
+            }
+        }
         var placedNames: [CGRect] = []
         for (ri, rm) in uniRooms.enumerated() {
             let c = regionCenter(rm, size, zoom: zoom, focus: focus)
             let color = Color(hex: rm.hex)
-            let armR = rm.r / 980 * W * zoom
+            let armR = rm.r / 980 * W * zoom * regionPlace(ri).k
             let rr = armR * 0.6
             guard c.x > -armR, c.x < W + armR, c.y > -armR, c.y < H + armR else { continue }
             // the nebula wash behind the figure — fades under the lens
@@ -855,7 +978,8 @@ struct UniverseView: View {
             RegionForm.arm(ctx, rm, cx: c.x, cy: c.y, R: armR, t: t, a: regionA,
                            c: UniGeo.mix(rm.rgb, UniGeo.BONE, lens * 0.5))
             // region name — far zoom only, dim (uni-sky.js §wayfinding)
-            let nameShow = max(0, min(1, (0.60 - zoom) / 0.24))          // uni-sky.js:320-330
+            // SLICE 7 · the old story is never labelled: the names step back as it gathers.
+            let nameShow = max(0, min(1, (0.60 - zoom) / 0.24)) * (1 - oldStory)   // uni-sky.js:320-330
             if nameShow > 0.02 {
                 let off = rm.r * zoom / 980 * W * 0.10 + 4
                 let w = Double(rm.id.count) * 7.6 + 6
@@ -872,7 +996,8 @@ struct UniverseView: View {
             // its stars — from the cache (no per-frame filtering / hashing / archetype scans)
             if ri < starsByRegion.count {
                 for st in starsByRegion[ri] {
-                    let sp = worldToScreen(st.wx, st.wy, size, zoom: zoom, focus: focus)
+                    let q = starPlace(st)
+                    let sp = worldToScreen(q.0, q.1, size, zoom: zoom, focus: focus)
                     drawStar(ctx, size, at: sp, star: st, t: t, zoom: zoom, focusId: focusId)
                 }
             }
@@ -912,7 +1037,7 @@ struct UniverseView: View {
                      with: .color(Color(.sRGB, red: 8 / 255, green: 7 / 255, blue: 11 / 255, opacity: 0.20 * lens)))
             // Names read only once you've come in to a region (comp fades them in on zoom-in);
             // at full sky, thirteen labelled beliefs would crowd the whole field.
-            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens, labels: zoom > 0.85 && zoom < 6)
+            drawStructures(ctx, size, t: t, zoom: zoom, focus: focus, lens: lens * (1 - oldStory), labels: zoom > 0.85 && zoom < 6 && oldStory < 0.05)
         }
     }
 
@@ -928,7 +1053,7 @@ struct UniverseView: View {
             let ap = worldToScreen(ln.awx, ln.awy, size, zoom: zoom, focus: focus)
             let bp = worldToScreen(ln.bwx, ln.bwy, size, zoom: zoom, focus: focus)
             let far = ln.local ? 0.0 : 1.0
-            let vis = ln.local ? (B.region * 0.9 + B.world * 0.4) : max(B.sky * 0.9, 0.22)
+            let vis = (ln.local ? (B.region * 0.9 + B.world * 0.4) : max(B.sky * 0.9, 0.22)) * (1 - oldStory)
             if vis < 0.03 { continue }
             if max(ap.x, bp.x) < -60 || min(ap.x, bp.x) > W + 60 || max(ap.y, bp.y) < -60 || min(ap.y, bp.y) > H + 60 { continue }
             let mx = (ap.x + bp.x) / 2, my = (ap.y + bp.y) / 2
@@ -1100,15 +1225,29 @@ struct UniverseView: View {
             // kept expanding past it. Four things were missing from one line: the base, the
             // `tip` tilt, the 0.42 ellipse, and the behind/in-front term.
             let base = max(R, 3.2 + zoom * 1.1)
+            // SLICE 7 · THE CHILD WHO CARRIES BOTH. A Strange Story's Humanity experience is the
+            // Mother's stream, the Father's stream, and the child in whom they are one. Where both
+            // lenses sat with a world, they share one orbit and drift together on the breath —
+            // slowly, about once in three minutes — meet as one gold light, and part again.
+            // Nothing names it.
+            let sep = st.convergence
+                ? Double.pi * 0.5 * (1 + cos(2 * .pi * t / 180 + hash(st.id) * 6.2831))
+                : 0
+            let pairAng = t * (2 * .pi / 17) + hash(st.id + "pair") * 6.2831
+            let pairRR = 1.9
             for m in st.motes {
-                let orr = base * m.rr
+                let paired = st.convergence && m.pair != 0
+                let orr = base * (paired ? pairRR : m.rr)
                 // B4.3 · **LALITA'S WANDER IS ANGULAR, NOT RADIAL.** `uni-field.js` gives her
                 // alone `wob:1` as `ang += sin(t*0.37 + ph)*0.28` — she drifts ALONG the ring,
                 // ahead of the others and then behind. The app multiplied her RADIUS instead,
                 // so she breathed in and out of the planet: a different gesture entirely, and
                 // the one presence whose motion is meant to be a wandering.
-                var ang = t * (2 * .pi / m.per) + m.ph
+                var ang = paired ? pairAng + Double(m.pair) * sep / 2 : t * (2 * .pi / m.per) + m.ph
                 if m.wobble { ang += sin(t * 0.37 + m.ph) * 0.28 }
+                // as they meet, the two colours become one warm gold
+                let meet = paired ? max(0, 1 - sep / 0.35) : 0
+                let mcol = meet > 0 ? Color(hex: "#D4AE4A") : m.color
                 let ct = cos(m.tip), stp = sin(m.tip)
                 let ox = cos(ang) * orr
                 let oy = sin(ang) * orr * 0.42          // seen at an angle, not flat on
@@ -1119,11 +1258,13 @@ struct UniverseView: View {
                 let sz = max(0.9, min(3.0, R * 0.10)) * (m.isAsh ? 1.14 : 1) * (0.86 + breath.value * 0.14)
                 let a0 = moteIn * back
                 // `:820` — a halo out to 5.2× the mote, so a presence has an air around it
+                let hue = meet > 0 ? mcol : m.color
+                let glow = 0.16 + 0.14 * meet
                 ctx.fill(UniGeo.ringPath(mx, my, sz * 5.2),
-                         with: .radialGradient(Gradient(colors: [m.color.opacity(0.16 * a0), m.color.opacity(0)]),
+                         with: .radialGradient(Gradient(colors: [hue.opacity(glow * a0), hue.opacity(0)]),
                                                center: CGPoint(x: mx, y: my), startRadius: 0, endRadius: sz * 5.2))
                 ctx.fill(UniGeo.ringPath(mx, my, sz),
-                         with: .color(m.color.opacity((m.wobble ? 0.8 : 0.7) * a0)))
+                         with: .color(hue.opacity((m.wobble ? 0.8 : 0.7) * a0)))
                 // `:828` — Ash's patina ring, once the planet is big enough to carry it
                 if m.isAsh && R > 18 {
                     ctx.stroke(UniGeo.ringPath(mx, my, sz * 2.1),
@@ -1537,7 +1678,7 @@ struct UniverseView: View {
                                 .foregroundStyle(mc.opacity(0.74 * na)),
                              at: CGPoint(x: px2, y: py2 + 15))
                     // a word waits near the presence, where the Archive holds one
-                    if UniWords.word(storyID: story.id, voice: name) != nil, openWord == nil {
+                    if fallWord(storyID: story.id, voice: name) != nil, openWord == nil {
                         let wy = py2 + 27 + sin(t * 0.24 + Double(i)) * 1.6
                         ctx.draw(Text.spaceMono("touch", 7.5, .asWritten)
                                     .foregroundStyle(BinduTheme.inkPrimary.opacity(0.30 * na)),

@@ -21,6 +21,13 @@ final class AxisTravel: ObservableObject {
     @Published private(set) var z: Double
     @Published private(set) var flash: Double = 0       // the passage flash, 0…1
     @Published private(set) var thin: Double = 0        // the stillness gate filling at the sky, 0…1
+    /// SLICE 7 · THE OLD STORY, 0…1. Stillness at the sky opens the Light — once. After the
+    /// gate has opened, the same stillness at the sky finds what was beneath it: the regions
+    /// gather into A Strange Story's Arc. One breath (10 s) of being still to call it; the
+    /// first touch or drift lets it go. Never announced.
+    @Published private(set) var oldStory: Double = 0
+    private var storyDwell = 0.0
+    private var storyHeld = false
     @Published private(set) var tension: Double = 0     // how hard the near membrane is felt, 0…1
     @Published private(set) var crossing = false        // inside a passage — the camera is out of the hand
     @Published private(set) var passageT: Double = 0     // 0…1 through the passage
@@ -490,6 +497,22 @@ final class AxisTravel: ObservableObject {
             beginPassage(toZ: -5, dir: -1)               // the sky un-collapses; he is in the Light
         }
         thin = mem[GATE] ? 0 : dwell
+
+        // SLICE 7 · the old story — the same velocity-stillness, at the sky only, and only
+        // after the Light's gate has already opened (so it never competes with the passage).
+        let atSky = z > -4.6 && z < -3.4
+        if still && atSky && mem[GATE] && !crossing {
+            storyDwell = Swift.min(1, storyDwell + dt / 10.0)
+        } else {
+            storyDwell = Swift.max(0, storyDwell - dt * 1.30)
+        }
+        if storyDwell >= 1 { storyHeld = true }
+        if !still || !atSky || crossing { storyHeld = false }
+        let storyTarget = storyHeld ? 1.0 : 0.0
+        let rate = storyHeld ? 0.16 : 0.9                 // gathers over a breath; lets go at once
+        let next = oldStory + (storyTarget - oldStory) * Swift.min(1, dt * rate)
+        let settled = abs(storyTarget - next) < 0.002 ? storyTarget : next
+        if settled != oldStory { oldStory = settled }
 
         flash = Swift.max(0, flash - dt / 0.9)
         detectCross()

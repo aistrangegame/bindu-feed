@@ -369,7 +369,15 @@ struct InstrumentView: View {
             let onPoint = travel.z >= 0.5
             soundEngine.setContext(onPoint
                 ? .point(enclosure: Int(PointYantra.focus(forAxisZ: travel.z).rounded()))
-                : .base)
+                : (insideRoomSound ?? .base))
+        }
+        // SLICE 7 · A REGION SOUNDS AS THE ROOM IT IS. Moving through the Universe changed only
+        // the shader's weather; the bed stayed the field's. Close enough to be inside a region
+        // (region, world, fall), the bed is that room's own — the same `.room` context the
+        // Rooms already play — and back out at the sky it is the field again.
+        .onChange(of: store.currentUniRoomId) { _, _ in
+            guard travel.z < 0.5 else { return }
+            soundEngine.setContext(insideRoomSound ?? .base)
         }
         .onChange(of: travel.z) {
             soundEngine.setAxisGlide(hz: hzAt(travel.z), level: min(0.03, travel.speed * 8))
@@ -870,6 +878,13 @@ struct InstrumentView: View {
         .allowsHitTesting(false)
     }
 
+    /// SLICE 7 · the room's own bed when he stands inside a region of the sky, else nil.
+    private var insideRoomSound: SonicContext? {
+        guard ["region", "world", "fall"].contains(here.key),
+              let id = store.currentUniRoomId, let room = store.room(named: id) else { return nil }
+        return .room(room)
+    }
+
     // MARK: - The stillness gate (the sky thins with stillness)
 
     private var stillnessGate: some View {
@@ -1051,6 +1066,7 @@ struct InstrumentView: View {
             // `onDrawIn` is the tap's inward impulse — the Universe asks, the axis travels.
             UniverseView(register: here,
                          axisZ: travel.z,
+                         oldStory: travel.oldStory,
                          onDrawIn: { travel.drawIn($0) },
                          onHandVertical: { travel.handVerticalToRegister($0) },
                          onRegisterDrift: { travel.setRegisterDrifting($0) },
