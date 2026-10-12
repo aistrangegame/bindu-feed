@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Leela on the 33</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#E3E9EA; --paper:#F2F5F4; --ink:#1D2631; --quiet:#56616C; --line:#C5CFD2;
+  --dot:#0F7C7A; --dot-glow:rgba(15,124,122,.28); --arrow:#B08A33; --snake:#6A4C9C;
+  --serif:"Lora", Georgia, "Times New Roman", serif; --sans:"DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --ground:#1B2230; --paper:#232B3A; --ink:#E6ECEE; --quiet:#A3AEB8; --line:#39445A;
+  --dot:#3FB8B4; --dot-glow:rgba(63,184,180,.30); --arrow:#D6B25C; --snake:#A58ADB; } }
+:root[data-theme="dark"]{ --ground:#1B2230; --paper:#232B3A; --ink:#E6ECEE; --quiet:#A3AEB8; --line:#39445A;
+  --dot:#3FB8B4; --dot-glow:rgba(63,184,180,.30); --arrow:#D6B25C; --snake:#A58ADB; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:480px;margin:0 auto;padding:20px 18px 40px}
+h1{font-family:var(--serif);font-weight:500;font-size:30px;line-height:1.15;margin:8px 0 6px}
+.lede{font-family:var(--serif);font-style:italic;color:var(--quiet);margin:0 0 20px;font-size:17px}
+label{display:block;font-weight:500;margin:18px 0 8px}
+textarea{width:100%;min-height:92px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);font:inherit;padding:12px 14px;resize:vertical}
+textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--dot);outline-offset:2px}
+.modes{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:9px 16px;font:inherit;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--dot);box-shadow:inset 0 0 0 1px var(--dot);color:var(--ink)}
+.go{display:block;width:100%;margin-top:22px;border:0;border-radius:14px;padding:15px;background:var(--dot);color:#fff;font:600 17px var(--sans);cursor:pointer}
+.go:disabled{opacity:.45;cursor:default}
+.hint{color:var(--quiet);font-size:14px;margin:10px 0 0}
+.hidden{display:none!important}
+/* board */
+.intent-line{font-family:var(--serif);font-style:italic;color:var(--quiet);font-size:15px;margin:2px 0 12px}
+.board{width:100%;height:auto;display:block}
+.sq text{font-family:var(--sans)}
+.sq .num{font-size:11px;font-weight:600;opacity:.8}
+.sq .nm{font-size:13px;font-weight:500}
+.token{filter:drop-shadow(0 0 6px var(--dot-glow))}
+.dock{display:flex;align-items:center;gap:14px;margin-top:14px}
+.die{flex:0 0 auto;width:74px;height:74px;border-radius:18px;border:1px solid var(--line);background:var(--paper);display:grid;place-items:center;cursor:pointer;padding:0}
+.die svg{width:52px;height:52px}
+.die.rolling svg{animation:tumble .5s ease-in-out}
+@keyframes tumble{0%{transform:rotate(0) scale(1)}50%{transform:rotate(200deg) scale(.86)}100%{transform:rotate(360deg) scale(1)}}
+.status{font-family:var(--serif);font-size:16px;line-height:1.4}
+.status small{display:block;font-family:var(--sans);color:var(--quiet);font-size:13px;margin-top:4px}
+.legend{display:flex;gap:16px;color:var(--quiet);font-size:13px;margin-top:14px;flex-wrap:wrap}
+.legend span::before{content:"";display:inline-block;width:18px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;background:var(--arrow)}
+.legend span.s::before{background:var(--snake)}
+.reset{background:none;border:0;color:var(--quiet);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;padding:0;margin-top:16px}
+/* square sheet */
+.sheet{position:fixed;inset:0;background:rgba(18,22,30,.42);display:flex;align-items:flex-end;justify-content:center;z-index:10}
+.card{width:100%;max-width:520px;max-height:88%;overflow:auto;background:var(--paper);border-radius:22px 22px 0 0;padding:0 0 calc(22px + env(safe-area-inset-bottom,0px))}
+.band{height:10px;border-radius:22px 22px 0 0}
+.card-in{padding:18px 22px 4px}
+.where{color:var(--quiet);font-size:13px;margin:0}
+.card h2{font-family:var(--serif);font-weight:500;font-size:28px;margin:4px 0 2px}
+.sk{color:var(--quiet);font-size:14px;margin:0 0 14px}
+.q{font-family:var(--serif);font-size:20px;line-height:1.35;margin:0 0 14px}
+.via{font-size:14px;color:var(--quiet);margin:0 0 12px}
+.reading{font-family:var(--serif);font-size:17px;line-height:1.55;margin:0 0 14px;white-space:pre-wrap}
+.reading.wait{color:var(--quiet);font-style:italic}
+.move{border-left:3px solid var(--dot);padding:4px 0 4px 12px;margin:0 0 14px}
+.move b{display:block;font-size:13px;font-weight:600;color:var(--quiet);margin-bottom:2px}
+.seed{font-family:var(--serif);font-style:italic;color:var(--quiet);margin:0 0 16px}
+.card a{color:var(--dot)}
+.row{display:flex;gap:10px;padding:0 22px}
+.row button{flex:1}
+.ghost{border:1px solid var(--line);background:none;color:var(--ink);border-radius:14px;padding:14px;font:500 16px var(--sans);cursor:pointer}
+.care{color:var(--quiet);font-size:13px;margin:26px 0 0;font-family:var(--serif);font-style:italic}
+@media (prefers-reduced-motion: reduce){ .die.rolling svg{animation:none} }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <section id="intro">
+    <h1>Leela on the 33</h1>
+    <p class="lede">You cannot lose here. You can only not-yet-arrive.</p>
+    <p>Harish Johari's Leela is the old board game of self-knowledge: you bring a question, the die decides where you land, arrows lift you, snakes return you to a lesson. Here the board is the 33 positions of the spine, each one asking its own question.</p>
+    <label for="intent">What are you bringing to the board?</label>
+    <textarea id="intent" placeholder="A question, a situation, a wall, a wish…"></textarea>
+    <label id="modeLabel">What are you playing for?</label>
+    <div class="modes" role="group" aria-labelledby="modeLabel">
+      <button class="chip" type="button" data-mode="life" aria-pressed="true">My life</button>
+      <button class="chip" type="button" data-mode="build" aria-pressed="false">What I'm building</button>
+    </div>
+    <button class="go" id="enter" type="button" disabled>Enter the board</button>
+    <p class="hint">You begin unborn at 33, where the game also ends. A six brings you in.</p>
+  </section>
+
+  <section id="play" class="hidden" aria-label="The board">
+    <p class="intent-line" id="intentLine"></p>
+    <svg class="board" id="board" viewBox="0 0 360 700" role="img" aria-label="The 33-square board"></svg>
+    <div class="dock">
+      <button class="die" id="die" type="button" aria-label="Throw the die"><svg viewBox="0 0 52 52" id="dieFace"></svg></button>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+    <div class="legend"><span>arrow: a rise</span><span class="s">snake: a lesson</span></div>
+    <button class="reset" id="reset" type="button">Begin again with a new question</button>
+    <p class="care">If today is heavy, the board can wait. Three breaths is a whole game.</p>
+  </section>
+
+</main>
+
+<div class="sheet hidden" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sqName">
+  <div class="card">
+    <div class="band" id="sqBand"></div>
+    <div class="card-in">
+      <p class="where" id="sqWhere"></p>
+      <h2 id="sqName"></h2>
+      <p class="sk" id="sqSk"></p>
+      <p class="q" id="sqQ"></p>
+      <p class="via hidden" id="sqVia"></p>
+      <p class="reading" id="sqReading" aria-live="polite"></p>
+      <div class="move hidden" id="sqMoveBox"><b>One move</b><span id="sqMove"></span></div>
+      <p class="seed" id="sqSeed"></p>
+      <p class="hidden" id="sqLinkP"><a id="sqLink" target="_blank" rel="noopener">Walk this position on aistrangegame.com</a></p>
+    </div>
+    <div class="row"><button class="go" id="back" type="button" style="margin-top:6px">Back to the board</button></div>
+  </div>
+</div>
+
+<script>
+/* ---------- The 33, from The Map (ASG base) ---------- */
+const TOL = "https://aistrangegame.com/tree-of-life/";
+const SQ = [
+ null,
+ {n:"Bindu",sk:"Bindu",sys:"Origin",hex:"#E8C568",q:"What is here before everything else?",v:"RECOGNIZE",sig:"Everything begins as a point. Everything ends as a point. The same point.",p:"Draw a single point, wherever your hand moves. Don't deliberate. The hand knows.",u:TOL+"bindu-practice.html"},
+ {n:"Muladhara",sk:"Muladhara",sys:"Energy",hex:"#B83A3A",q:"Am I safe here?",v:"PRESS",sig:"The earth that holds you was chosen by you.",p:"Stand, feet flat. Press into the floor, slow and full. Feel the ground press back. You are held not by courtesy but by law.",u:TOL+"muladhara-practice.html"},
+ {n:"Svadhisthana",sk:"Svadhisthana",sys:"Energy",hex:"#D47438",q:"What wants?",v:"FLOW",sig:"Every desire was drawing you toward yourself.",p:"Ask what you want, right now. Not what you should want. Feel the pull without managing it.",u:TOL+"svadhisthana-practice.html"},
+ {n:"Manipura",sk:"Manipura",sys:"Energy",hex:"#D4A848",q:"What am I for?",v:"BURN",sig:"The fire that agitated you was building your form.",p:"Draw the navel gently toward the spine and breathe. What has the fire been building in you, and what is it burning that isn't yours?",u:TOL+"manipura-practice.html"},
+ {n:"Anahata",sk:"Anahata",sys:"Energy",hex:"#6B8E4E",q:"Can I receive?",v:"OPEN",sig:"The love that arrived for others was always your own heart opening.",p:"Hand on your chest. Feel the heartbeat through your palm for two minutes. Attention is the water; the heart is already the plant.",u:TOL+"anahata-practice.html"},
+ {n:"Vishuddha",sk:"Vishuddha",sys:"Energy",hex:"#4C7AB8",q:"Will I say what I know?",v:"SPEAK",sig:"What you finally said out loud was what you always knew.",p:"Say something true out loud, small and honest. Notice what happens in your neck when the words leave.",u:TOL+"vishuddha-practice.html"},
+ {n:"Ajna",sk:"Ajna",sys:"Energy",hex:"#5B4E8E",q:"What do I see when I stop looking?",v:"STILL",sig:"You stopped looking and the seeing arrived on its own.",p:"Close your eyes. Don't try to see anything. Wait, and watch what appears, without agenda.",u:TOL+"ajna-practice.html"},
+ {n:"Sahasrara",sk:"Sahasrara",sys:"Energy",hex:"#9A7AC8",q:"Am I alone?",v:"RECEIVE",sig:"The disease that was removed was the belief that you were less than what you are.",p:"Look up. Not at anything, just up. Let the scale of the sky register in your body.",u:TOL+"sahasrara-practice.html"},
+ {n:"Shadow",sk:"Sandhi",sys:"Threshold",hex:"#2A2420",q:"Can I hold what I see without flinching?",v:"LOOK",sig:"The corridor was never a dead end. It was always leading somewhere.",p:"Notice what you avoid. Don't fix it, don't heal it. Just notice it. The noticing is the light.",u:TOL+"shadow-practice.html"},
+ {n:"Soles",sk:"Samkshobhini",sys:"Body",hex:"#7A1515",q:"What is the earth saying through your feet right now?",v:"PRESS",sig:"Your feet. The bottom terminal of everything you are.",p:"Stand. Press. Feel the earth press back. You are held by physics. You are held.",u:TOL+"soles-practice.html"},
+ {n:"Forge",sk:"Mantramayi",sys:"Body",hex:"#6B5800",q:"What is sealed in your center?",v:"TRANSFORM",sig:"Behind the scar: the furnace that makes you, you.",p:"Hand on your navel. Breathe in and let warmth arrive. What experience is your belly still digesting?",u:TOL+"forge-practice.html"},
+ {n:"Prana",sk:"Prana",sys:"Body",hex:"#7A3800",q:"What does the breath know that the mind doesn't?",v:"BREATHE",sig:"The one door that never closes while you're alive.",p:"Take one deliberate breath. Feel the point at the nose where outside becomes inside. The door is always open.",u:TOL+"prana-practice.html"},
+ {n:"Hands",sk:"Priyankari",sys:"Body",hex:"#163D1E",q:"What do your hands already know how to give?",v:"REACH",sig:"The hands carry what the heart can't say.",p:"Rub your palms until warm, hold them apart and feel the field. Then touch something, or someone, with activated hands.",u:TOL+"hands-practice.html"},
+ {n:"Pulse",sk:"Mangalakarini",sys:"Body",hex:"#112E17",q:"What is your heart broadcasting right now?",v:"SUSTAIN",sig:"You are a signal. The question is what you're sending.",p:"Two fingers on the wrist. Don't watch for the pulse; wait for it. The same beat, your whole life.",u:TOL+"pulse-practice.html"},
+ {n:"Sonar",sk:"Dvandvakshayankari",sys:"Body",hex:"#091840",q:"What has been waiting to be said?",v:"SEND",sig:"The precise word. Not the comfortable word. Not the impressive word. The precise one.",p:"Say the precise word for what you feel. Write it down and let it sit there, alone.",u:TOL+"sonar-practice.html"},
+ {n:"Echo",sk:"Jnanamayi",sys:"Body",hex:"#060D30",q:"What do you choose to keep from what you heard?",v:"RECEIVE",sig:"What you choose to keep from what you heard becomes who you are.",p:"Close your eyes and stop sending. Notice the room's own signal, layer under layer.",u:TOL+"echo-practice.html"},
+ {n:"Vision",sk:"Sarvagya",sys:"Body",hex:"#5C4800",q:"What memory holds the frequency you want to bring into now?",v:"SEE",sig:"The complete picture arrives first. Trust the first flash.",p:"Close your eyes and see your front door in full detail, then walk through it. How much could you hold?",u:TOL+"vision-practice.html"},
+ {n:"Axis",sk:"Sarvanandamayi",sys:"Body",hex:"#1A0848",q:"What is on the other side of the blink?",v:"BLINK",sig:"Close your eyes. Open them. What changed? Everything and nothing.",p:"Blink slowly: three seconds closed, then open. The gap between closing and opening is the Axis. Two worlds, one switch.",u:TOL+"axis-practice.html"},
+ {n:"Crow",sk:"Sarvadhara Swarupa",sys:"Body",hex:"#3A0A54",q:"What is the spine connecting right now?",v:"RELEASE",sig:"What's left when the thinking stops is not nothing.",p:"Shake your whole body for thirty seconds, then stop. What is there in the first three seconds of stillness?",u:TOL+"crow-practice.html"},
+ {n:"Armin",sk:"Tat Tvam Asi",sys:"Threshold",hex:"#C9A84C",q:"What does it feel like to have walked all of that?",v:"ONE",sig:"Nothing needed repair. Only arrival.",p:"Sit with three words: that, thou, art. The vast and the specific are the same thing at different scales.",u:TOL+"armin-practice.html"},
+ {n:"Inception",sk:"Bija",sys:"Mind",hex:"#2D2458",q:"What am I entering this with?",v:"ASK",sig:"What you carry in is what you will find.",p:"Name what you are carrying before you enter. An honest inventory before the threshold."},
+ {n:"Intention",sk:"Sankalpa",sys:"Mind",hex:"#3A3670",q:"What are you holding steady even when nothing is moving?",v:"HOLD",sig:"Hold the whole picture before you touch a single piece.",p:"Picture what you are building toward, not the plan. Make it specific. Hold the picture."},
+ {n:"Inspiration",sk:"Utsaha",sys:"Mind",hex:"#3A4880",q:"What is exciting you right now, underneath the noise?",v:"BREATHE IN",sig:"Your excitement is not a distraction. It is the instruction.",p:"Name what pulls you, not what pushes you away. The lighting up is the instruction."},
+ {n:"Insight",sk:"Antardrishti",sys:"Mind",hex:"#403875",q:"What do you see when you remove what you expected to see?",v:"SEE FROM IN",sig:"Move from above it to inside it. The view changes completely.",p:"Move from outside a situation to inside it. What becomes visible only from there?"},
+ {n:"Intuition",sk:"Pratibha",sys:"Mind",hex:"#453870",q:"What do you know before you can prove it?",v:"TRUST",sig:"The knowing that arrives before words is the more reliable one.",p:"Ask: what do I already know? Write the first thing, before the reasoning starts."},
+ {n:"Invention",sk:"Yukti",sys:"Mind",hex:"#4A3368",q:"What becomes possible when you assemble what you know?",v:"ASSEMBLE",sig:"Something new is born every time two things that never touched finally touch.",p:"Name two things that have never been in the same room. What third thing appears when they meet?"},
+ {n:"Incarnation",sk:"Avatara",sys:"Mind",hex:"#522D60",q:"Why did you choose to come back?",v:"CHOOSE",sig:"You chose this. Even that. Even this one.",p:"Name a curiosity under your life. Meet today as if you had chosen it, as material."},
+ {n:"Innocence",sk:"Sahaja",sys:"Mind",hex:"#5A2858",q:"What did you know before anyone told you what to know?",v:"REMEMBER",sig:"You knew this before anyone told you anything.",p:"Write what you knew before anyone taught you. Notice that you knew it."},
+ {n:"Integration",sk:"Samrasya",sys:"Mind",hex:"#5E2448",q:"What has the journey integrated that couldn't have been integrated before?",v:"ARRIVE",sig:"Nothing was ever separate. The separation was the journey's necessary costume.",p:"Name something that has stopped feeling separate."},
+ {n:"Maya",sk:"Maya",sys:"Tree of Life",hex:"#5A3D8A",q:"What would you see if the protection dissolved?",v:"DISSOLVE",sig:"There was never anything to fear. There was only the Bindu, playing.",p:"Name one construction that protected you and that you no longer need. Thank it. Let it complete its role."},
+ {n:"Aatma",sk:"Aatma",sys:"Tree of Life",hex:"#D4A948",q:"What remains when all protection is gone?",v:"KNOW",sig:"You already know. You have always known.",p:"Will, knowledge, action: which did you forget you already had? Make one choice from the deepest knowing."},
+ {n:"Held",sk:"",sys:"Tree of Life",hex:"#3D6B35",sealed:true,q:"",v:"",sig:"This square is held for its own walk.",p:""},
+ {n:"Lalita",sk:"Lalita",sys:"Tree of Life",hex:"#C9A84C",q:"Who is playing?",v:"PLAY",sig:"Knows the game. Plays anyway.",p:"Are you playing? Not performing, not achieving. Playing. From here you do not follow the map. You author it."}
+];
+/* Arrows lift (a rise through what you give); snakes return you to a lesson. First draft, for Ashrey's ruling. */
+const ARROWS = {5:{to:8,why:"The heart's gesture returns at the crown."},13:{to:20,why:"Love leaving through the hands arrives whole."},12:{to:18,why:"The breath's open door becomes the blink."},26:{to:29,why:"What assembles, integrates."}};
+const SNAKES = {30:{to:9,why:"A construction seen through returns you to the corridor: notice."},19:{to:10,why:"When the thinking stops, you are back in your feet."},15:{to:6,why:"The precise word asks again: will I say what I know?"},28:{to:21,why:"Before anyone taught you, you carried something in. Name it."}};
+
+/* ---------- geometry ---------- */
+const COLX=[60,180,300], ROWH=58, BASEY=650;
+function pos(n){ const r=Math.floor((n-1)/3), i=(n-1)%3, c=(r%2===0)?i:2-i; return {x:COLX[c], y:BASEY-r*ROWH}; }
+function lum(hex){ const h=hex.slice(1); const [r,g,b]=[0,2,4].map(k=>parseInt(h.substr(k,2),16)/255).map(v=>v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)); return .2126*r+.7152*g+.0722*b; }
+
+/* ---------- state (kept only on this phone) ---------- */
+const KEY="asg.leela33";
+let S={intent:"",mode:"life",pos:33,born:false,path:[],done:false};
+function load(){ try{ const v=localStorage.getItem(KEY); if(v) S=Object.assign(S,JSON.parse(v)); }catch(e){} }
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+/* ---------- board ---------- */
+const NS="http://www.w3.org/2000/svg";
+const board=document.getElementById("board");
+function el(tag,attrs,parent){ const e=document.createElementNS(NS,tag); for(const k in attrs) e.setAttribute(k,attrs[k]); (parent||board).appendChild(e); return e; }
+let token;
+function drawBoard(){
+  board.innerHTML="";
+  const defs=el("defs",{});
+  const m=el("marker",{id:"ah",viewBox:"0 0 10 10",refX:"8",refY:"5",markerWidth:"7",markerHeight:"7",orient:"auto-start-reverse"},defs);
+  el("path",{d:"M0 0L10 5L0 10z",fill:"var(--arrow)"},m);
+  for(let n=1;n<=33;n++){
+    const s=SQ[n], p=pos(n), g=el("g",{class:"sq"});
+    const light=lum(s.hex)>.35;
+    el("rect",{x:p.x-54,y:p.y-22,width:108,height:44,rx:12,fill:s.hex,opacity:s.sealed?.55:1},g);
+    el("text",{x:p.x-44,y:p.y-5,class:"num",fill:light?"#1D2631":"#F4F6F6"},g).textContent=n;
+    el("text",{x:p.x-44,y:p.y+13,class:"nm",fill:light?"#1D2631":"#F4F6F6"},g).textContent=s.n;
+  }
+  const curve=(a,b,bend)=>{ const A=pos(a),B=pos(b), mx=(A.x+B.x)/2+bend, my=(A.y+B.y)/2; return `M${A.x+30} ${A.y} Q${mx+30} ${my} ${B.x+30} ${B.y}`; };
+  for(const a in ARROWS){ el("path",{d:curve(+a,ARROWS[a].to,34),fill:"none",stroke:"var(--arrow)","stroke-width":2.5,"stroke-linecap":"round","marker-end":"url(#ah)"}); }
+  for(const h in SNAKES){ const A=pos(+h),B=pos(SNAKES[h].to);
+    const mx=(A.x+B.x)/2, my=(A.y+B.y)/2;
+    el("path",{d:`M${A.x-28} ${A.y} C${mx-70} ${A.y+20}, ${mx+50} ${B.y-30}, ${B.x-28} ${B.y}`,fill:"none",stroke:"var(--snake)","stroke-width":3,"stroke-linecap":"round","stroke-dasharray":"1 7"});
+    el("circle",{cx:A.x-28,cy:A.y,r:4.5,fill:"var(--snake)"}); }
+  const t=pos(S.pos);
+  token=el("circle",{cx:t.x+36,cy:t.y,r:10,fill:"var(--dot)",class:"token",opacity:S.born?1:.45});
+}
+function moveToken(n){ const p=pos(n); token.setAttribute("cx",p.x+36); token.setAttribute("cy",p.y); }
+
+/* ---------- die ---------- */
+const PIPS={1:[[26,26]],2:[[16,16],[36,36]],3:[[15,15],[26,26],[37,37]],4:[[16,16],[36,16],[16,36],[36,36]],5:[[15,15],[37,15],[26,26],[15,37],[37,37]],6:[[16,14],[36,14],[16,26],[36,26],[16,38],[36,38]]};
+function face(v){ const f=document.getElementById("dieFace"); f.innerHTML=`<rect x="3" y="3" width="46" height="46" rx="11" fill="none" stroke="var(--line)"/>`+(v?PIPS[v].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="4.3" fill="var(--dot)"/>`).join(""):`<circle cx="26" cy="26" r="4.3" fill="var(--dot)" opacity=".35"/>`); }
+function roll(){ const a=new Uint8Array(1); do{crypto.getRandomValues(a);}while(a[0]>=252); return (a[0]%6)+1; }
+
+/* ---------- status ---------- */
+const status=document.getElementById("status");
+function setStatus(main,sub){ status.innerHTML=main+(sub?`<small>${sub}</small>`:""); }
+function idleStatus(){
+  if(S.done) return setStatus("You arrived at Lalita.","The walk is complete. Begin again whenever you like.");
+  if(!S.born) return setStatus("Unborn at 33.","Throw. A six brings you in.");
+  setStatus(`On ${S.pos} · ${SQ[S.pos].n}`,"Throw when you're ready.");
+}
+
+/* ---------- play ---------- */
+let busy=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,matchMedia("(prefers-reduced-motion: reduce)").matches?0:ms));
+async function hop(from,to){ const step=to>from?1:-1; for(let n=from+step; step>0?n<=to:n>=to; n+=step){ moveToken(n); await sleep(170);} }
+async function onThrow(){
+  if(busy||S.done) return; busy=true;
+  const d=document.getElementById("die"); d.classList.add("rolling");
+  await sleep(480); d.classList.remove("rolling");
+  const v=roll(); face(v);
+  if(!S.born){
+    if(v!==6){ setStatus(`A ${v}.`,"Still unborn at 33. Only a six brings you in."); busy=false; return; }
+    S.born=true; token.setAttribute("opacity",1); moveToken(1); S.pos=1; S.path.push(1); save();
+    setStatus("A six. You are born onto the board.","Bindu. A six also throws again.");
+    await sleep(500); busy=false; return openSquare(1,null,true);
+  }
+  const target=S.pos+v;
+  if(target>33){ setStatus(`A ${v}.`,`The die rests: you need exactly ${33-S.pos} to arrive.`); busy=false; return; }
+  await hop(S.pos,target); S.pos=target;
+  let via=null;
+  if(ARROWS[target]){ via={kind:"arrow",from:target,why:ARROWS[target].why}; await sleep(300); moveToken(ARROWS[target].to); S.pos=ARROWS[target].to; }
+  else if(SNAKES[target]){ via={kind:"snake",from:target,why:SNAKES[target].why}; await sleep(300); moveToken(SNAKES[target].to); S.pos=SNAKES[target].to; }
+  S.path.push(S.pos); if(S.pos===33) S.done=true; save();
+  busy=false;
+  openSquare(S.pos,via,v===6);
+}
+
+/* ---------- the square, and the living reading ---------- */
+const $=id=>document.getElementById(id);
+let ctl=null, samplePromise=(window.claude&&window.claude.use)?window.claude.use("sample"):Promise.resolve(null);
+function lawText(){ return `You are the voice of one square on "Leela on the 33", a board game of self-knowledge played on a phone. The board is 33 positions of the spine from Ashrey's A Strange Game; Harish Johari's Leela is its ancestor. The player brought an intention and the die placed them here.
+Rules you never break: never score, grade, rate, rank, judge or predict the player; never create urgency; offer, never command; no claims of certainty about spiritual matters; speak only from the player's words and this square's own content; warm, plain, second person, no jargon, no exclamation marks. If the intention suggests the player may be in danger or in crisis, set "reading" to a gentle line inviting them to reach someone they trust or local emergency help now, and keep "move" to one grounding breath.`; }
+function modeText(){ return S.mode==="build" ? `The player is playing for what they are building. Read the square as a design question for their build, without leaving the square's own meaning.` : `The player is playing for their life. Read the square against their intention.`; }
+async function livingReading(n,via){
+  const s=SQ[n], out=$("sqReading");
+  const sample=await samplePromise;
+  if(!sample){ return false; }
+  out.textContent="The square is listening…"; out.classList.add("wait");
+  const pathNames=S.path.slice(-6).map(k=>SQ[k].n).join(" → ");
+  const viaLine = via ? (via.kind==="arrow" ? `They rose here by an arrow from square ${via.from} (${SQ[via.from].n}): ${via.why} So "move" is a small act of giving or service, done today.` : `They came down here by a snake from square ${via.from} (${SQ[via.from].n}): ${via.why} This is a lesson, not a fall. So "move" is this square's practice, made small enough to do now.`) : `They arrived by the die. "move" is this square's verb, ${s.v}, made into one small thing to do today.`;
+  const prompt = `${lawText()}
+${modeText()}
+
+The player's intention: "${S.intent}"
+Square ${n}: ${s.n}${s.sk&&s.sk!==s.n?` (${s.sk})`:""}. Its question: "${s.q}" Its line: "${s.sig}" Its practice: "${s.p}"
+${viaLine}
+Their recent path: ${pathNames}
+
+Reply with only one JSON object and nothing else, like {"reading":"...","move":"...","seed":"..."}.
+"reading": at most 60 words, meeting their intention through this square's question.
+"move": at most 20 words, concrete, doable today.
+"seed": at most 12 words, one line to carry, never explained.`;
+  ctl=new AbortController();
+  try{
+    const r=await sample.json(prompt,{modelTier:"quick",signal:ctl.signal,cache:false});
+    out.classList.remove("wait");
+    out.textContent=r.reading||"";
+    if(r.move){ $("sqMove").textContent=r.move; $("sqMoveBox").classList.remove("hidden"); }
+    if(r.seed) $("sqSeed").textContent=r.seed;
+    return true;
+  }catch(e){
+    out.classList.remove("wait");
+    if(e&&e.code==="cancelled") return true;
+    return false;
+  }
+}
+function authored(n,via){
+  const s=SQ[n];
+  $("sqReading").textContent=s.p;
+  const mv = via ? (via.kind==="arrow" ? "Give one small thing to someone today, in the spirit of this square." : s.p.split(".")[0]+".") : `${s.v.charAt(0)+s.v.slice(1).toLowerCase()}, once, today.`;
+  $("sqMove").textContent=mv; $("sqMoveBox").classList.remove("hidden");
+  $("sqSeed").textContent=s.sig;
+}
+async function openSquare(n,via,again){
+  const s=SQ[n];
+  $("sqBand").style.background=s.hex;
+  $("sqWhere").textContent = n===33 ? "Square 33 · the game ends where it began" : `Square ${n} · ${s.sys}`;
+  $("sqName").textContent=s.n;
+  $("sqSk").textContent = s.sk && s.sk!==s.n ? s.sk : "";
+  $("sqQ").textContent=s.q;
+  const viaEl=$("sqVia");
+  if(via){ viaEl.textContent=(via.kind==="arrow"?`An arrow from ${via.from}, ${SQ[via.from].n}. `:`A snake from ${via.from}, ${SQ[via.from].n}. `)+via.why; viaEl.classList.remove("hidden"); } else viaEl.classList.add("hidden");
+  $("sqMoveBox").classList.add("hidden"); $("sqSeed").textContent=""; $("sqReading").textContent="";
+  if(s.u){ $("sqLink").href=s.u; $("sqLinkP").classList.remove("hidden"); } else $("sqLinkP").classList.add("hidden");
+  $("back").textContent = again && n!==33 ? "Throw again" : (n===33 ? "Rest here" : "Back to the board");
+  $("sheet").classList.remove("hidden"); $("back").focus();
+  if(s.sealed){ $("sqReading").textContent=s.sig; $("sqQ").textContent=""; return; }
+  if(n===33){ return closing(); }
+  const live=await livingReading(n,via);
+  if(!live) authored(n,via);
+}
+async function closing(){
+  const out=$("sqReading");
+  const sample=await samplePromise;
+  const names=S.path.map(k=>SQ[k].n).join(" → ");
+  if(sample){
+    out.textContent="The walk is being read back…"; out.classList.add("wait");
+    const prompt=`${lawText()}
+${modeText()}
+The player has arrived at square 33, Lalita: "Knows the game. Plays anyway." The walk ends where it began.
+Their intention was: "${S.intent}"
+Their whole walk: ${names}
+Reply with only one JSON object like {"reading":"...","seed":"..."}.
+"reading": at most 70 words, naming what the walk was doing all along, in the light of their intention. No score, no verdict, nothing about how well they played.
+"seed": at most 12 words, one line for tomorrow.`;
+    try{ const r=await sample.json(prompt,{modelTier:"quick",cache:false}); out.classList.remove("wait"); out.textContent=r.reading||""; $("sqSeed").textContent=r.seed||SQ[33].sig; return; }
+    catch(e){ out.classList.remove("wait"); }
+  }
+  out.textContent="Your walk: "+names+".\n\n"+SQ[33].p; $("sqSeed").textContent=SQ[33].sig;
+}
+$("back").onclick=()=>{ if(ctl) ctl.abort(); $("sheet").classList.add("hidden"); idleStatus(); if($("back").textContent==="Throw again") onThrow(); };
+
+/* ---------- intro ---------- */
+function showPlay(){ $("intro").classList.add("hidden"); $("play").classList.remove("hidden"); $("intentLine").textContent="“"+S.intent+"”"; drawBoard(); face(0); idleStatus(); }
+document.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false")); c.setAttribute("aria-pressed","true"); S.mode=c.dataset.mode; });
+$("intent").oninput=()=>{ $("enter").disabled=!$("intent").value.trim(); };
+$("enter").onclick=()=>{ S={intent:$("intent").value.trim(),mode:S.mode,pos:33,born:false,path:[],done:false}; save(); showPlay(); };
+$("die").onclick=onThrow;
+$("reset").onclick=()=>{ try{localStorage.removeItem(KEY);}catch(e){} S={intent:"",mode:"life",pos:33,born:false,path:[],done:false}; $("intent").value=""; $("enter").disabled=true; $("play").classList.add("hidden"); $("intro").classList.remove("hidden"); };
+load(); if(S.intent) showPlay();
+</script>
+</body>
+</html>
