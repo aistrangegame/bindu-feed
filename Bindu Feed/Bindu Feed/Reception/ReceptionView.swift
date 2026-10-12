@@ -32,7 +32,7 @@ struct ReceptionView: View {
     var body: some View {
         let k = Katha(story: story, color: color)
         ZStack(alignment: .bottom) {
-            BinduTheme.bgDeep.ignoresSafeArea()
+            (grammar == .byTheBody ? Color.black : BinduTheme.bgDeep).ignoresSafeArea()
             if preluding {
                 DotBecomesPlace { withAnimation(.easeInOut(duration: 1.2)) { preluding = false } }
                     .transition(.opacity)
@@ -913,8 +913,17 @@ struct StopTheLine: View {
                 withAnimation(.easeInOut(duration: 1.0)) { proxy.scrollTo(s - 1, anchor: .top) }
             }
         }
+        .contentShape(Rectangle())
+        .onTapGesture { advance() }      // his pace, not only the line's — except at the seam
         .onAppear { run() }
         .onDisappear { runner?.cancel() }
+    }
+
+    private func advance() {
+        guard !halted else { return }
+        if shown >= k.paragraphs.count { runner?.cancel(); done(); return }
+        withAnimation(.easeInOut(duration: 1.0)) { shown += 1 }
+        run()
     }
 
     private func run() {

@@ -169,8 +169,8 @@ struct Katha {
 
     static func words(_ s: String) -> Int { s.split(separator: " ").count }
 
-    /// Unhurried: a dwell long enough to read twice before anything moves on its own.
-    static func dwell(_ s: String) -> Double { 6 + Double(words(s)) / 2.0 }
+    /// Unhurried: a dwell long enough to read it slowly once before anything moves on its own.
+    static func dwell(_ s: String) -> Double { 4 + Double(words(s)) / 2.6 }
 }
 
 /// Stillness, read from the absence of touch — never measured in the body.
