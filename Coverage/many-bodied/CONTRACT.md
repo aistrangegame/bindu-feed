@@ -49,6 +49,7 @@ Write rules (unchanged): field IDs in code, `typecast: true`, batches of ≤15, 
 | Chapter | `fldjt8Z3tV89yItWq` | singleSelect | Great Split · Stepping Stones · Architects · Lemuria · Atlantis · Diaspora · Long Forgetting · Mirror Race · Awakening · Splitting Prism · Introduction · Reunion · Centre (= UniverseView `arcOrder`) |
 | Arc-kind | `fldnyhqTvijcMUIgg` | singleSelect | Accumulation · Rhyme · Activation · Inversion · Cartography · Recognition · Return · Synthesis · Threshold |
 | Codex Game | `fldvTKgKZF63ySyxy` | singleSelect | System · Learning · Work · Maya · Family · Health · Social · Seva · Fire |
+| Shakti | `fldsjkiGt4vG3kjSu` | link → Mandala `tblrRwXJD0uP8HU8G` | the Shakti this katha is (Teller = Shakti); inverse on Mandala `fldFvmoomlj53BiiM` |
 
 All of these are **backstage**. None of their names or values ever appears on screen (GAMEPLAN §2: no suit, grammar, signature, chakra, chapter, position or mechanism words). Every one may be empty on any record; the app treats empty as "unknown" and falls back, never hides the story.
 
@@ -60,6 +61,14 @@ All of these are **backstage**. None of their names or values ever appears on sc
 | Rhymes With | `fldCpLf91KeWoYpJH` | same | the app reads `Rhymes` ∪ `Rhymed By` (falls back to `Rhymes With`). Renamed `Rhymes With OLD` only after the W8 install |
 
 **Lesson recorded:** the Feed fetch decodes by field *name* (no `returnFieldsByFieldId`). Renaming any field the shipped app decodes breaks his phone silently. Track 1 never renames a field the current install reads. Track 2: in W0, move the main fetch to decode by field **ID** (`returnFieldsByFieldId=true`) so names become free to change; record it in CLAUDE.md §6.
+
+### 2.6 Content conventions settled during C0–C3
+- **Story Origin** has only `Codex` and `Belief`. Every new story uses `Codex`; a story told from a memo carries its `Codex ID`, a story told from the skills/readers leaves `Codex ID` empty. That emptiness is how the two are told apart — no new choice.
+- **Closing Line** repeats the body's last paragraph (house convention), except where the room's form forbids a fifth paragraph (the Stack's four bands): there it is stored but not repeated. Grammars that move the landing line (the Ground's *before the drain*) must not show it twice.
+- **Swatches link to their host through `Rhymes`.** `RhymeIndex` (W1) excludes `Type = Swatch` partners from rhyme pairs; the Swatch arrival (W5) reads them.
+- **Marks in use** (scores/W2.md §1.4 plus): `⟪watch: …⟫` (W4 wager's watch-for) · `⟪one more⟫` (W3; one per teller with ≥3 stories — already on His Memo, Cloth, Company, Machine, Land, Object) · `⟪will: …⟫` / `⟪act: …⟫` (W3 circuit) · `⟪ask: …⟫` (W7, stories with a Song) · `⟪telling⟫` (W6 waiting tellings) · `⟪then: …⟫` · `⟪held: …⟫`.
+- **Letter seals:** the Good Morning letter carries `WHEN: before` (W5).
+- **Existing stories with screen flags** (story 81 title names a city, 44 a retailer, 106/109 family crisis, 74 a relative, 72 substances/teachers, 76 a soul-name, 3 a host family and a comment naming a city; backstage fields of 118 and 120; stories 20 and 25 hold family material) — recorded, not edited. They are Live; any edit waits for delivery day (content/DELIVERY-DAY.md) and only with Ashrey's word, because they are his.
 
 ### 2.3 Staged — the single-delivery law in the data
 The build on his phone loads every `Live` record. So **every new record this game creates that is meant to be seen — new Room rows, new stories and their children, Waiting Roles, Interludes, Leela drops — is written with `Status` = `Staged`**, not Live. The installed app ignores Staged; Track 2's builds read `Live` ∪ `Staged` (DEBUG and the W8 release alike). On delivery day, after the W8 build is installed on Neev, Track 1 flips every Staged record to Live in one pass. Staged is a delivery hold, not a gate: nothing in the new game ever reads Status to hide a story from him.
