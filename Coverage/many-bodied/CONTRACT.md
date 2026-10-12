@@ -56,12 +56,18 @@ All of these are **backstage**. None of their names or values ever appears on sc
 
 | Field | ID | Now | When Slice 16 ships |
 |---|---|---|---|
-| Suit | `fldROWFIDFHyfdOxp` | still read by the installed app **by name** (Models.swift CodingKeys) — so its name must not change yet. Description says TO BE OLD | the app reads `Teller` (falls back to `Suit` if Teller is empty); then Track 1 renames the field `Suit OLD` |
-| Rhymes With | `fldCpLf91KeWoYpJH` | same | the app reads `Rhymes` ∪ `Rhymed By` (falls back to `Rhymes With`); then Track 1 renames it `Rhymes With OLD` |
+| Suit | `fldROWFIDFHyfdOxp` | still read by the installed app **by name** (Models.swift CodingKeys) — so its name must not change yet. Description says TO BE OLD | the app reads `Teller` (falls back to `Suit`). Track 1 renames the field `Suit OLD` only **after the W8 build is installed on Neev** |
+| Rhymes With | `fldCpLf91KeWoYpJH` | same | the app reads `Rhymes` ∪ `Rhymed By` (falls back to `Rhymes With`). Renamed `Rhymes With OLD` only after the W8 install |
 
 **Lesson recorded:** the Feed fetch decodes by field *name* (no `returnFieldsByFieldId`). Renaming any field the shipped app decodes breaks his phone silently. Track 1 never renames a field the current install reads. Track 2: in W0, move the main fetch to decode by field **ID** (`returnFieldsByFieldId=true`) so names become free to change; record it in CLAUDE.md §6.
 
-### 2.3 Select choices
+### 2.3 Staged — the single-delivery law in the data
+The build on his phone loads every `Live` record. So **every new record this game creates that is meant to be seen — new Room rows, new stories and their children, Waiting Roles, Interludes, Leela drops — is written with `Status` = `Staged`**, not Live. The installed app ignores Staged; Track 2's builds read `Live` ∪ `Staged` (DEBUG and the W8 release alike). On delivery day, after the W8 build is installed on Neev, Track 1 flips every Staged record to Live in one pass. Staged is a delivery hold, not a gate: nothing in the new game ever reads Status to hide a story from him.
+- The eight new Room rows (record IDs in `scores/W2.md` appendix) are Staged.
+- C0's dressing of existing stories (children, Lalita replies, Resonance Voices) was written Live on purpose: it completes stories he already has, in the form he already knows.
+- Backstage coordinate fields (C0b) are invisible to the installed app and need no hold.
+
+### 2.3a Select choices
 - **Room** (`fld7SeHJhOY1DhkFh`) gains eight choices, created by typecast when Track 1 writes the eight Room rows (before W2): `The Ground` · `The Unwritten` · `The Stack` · `The Counter` · `The Wash` · `The Name` · `The Old Light` · `The Fold`. These exact strings are the **canon keys** for the rooms in Swift and in `canon/`.
 - **Type** (`fldfFRjyasZWodvQC`) gains, by typecast when first written: `Waiting Role` (C6), `Leela` already exists, `Swatch` (three-line arrival stories, C3+), `Interlude` (W0's crossing interlude lines). No other new Types without a line in this file.
 - **App Activity · Activity Type** (`fldXNRBZy6QvIP8yz`) currently has: Chapter Completed · Ceremony Sealed · Wager Resolved · Shakti Recognized · Letter Written · Ash Replied · Story Resonated · Story Met · Walk Completed · Veil Lifted · Silence Held · Ring Crossed · Reach · Return · Been Here · Share With · Note · First Dwelling.
@@ -78,12 +84,14 @@ All of these are **backstage**. None of their names or values ever appears on sc
 | 1000–7303 | the Point (stars, texts, registers) | unchanged |
 | **11001–11999** | **new stories** (C0–C6), assigned in wave order | Track 1 |
 | **12001–12999** | **Waiting Roles** (the Unwritten's Waiting Room) | Track 1 |
+| 1–21 | Room rows (the eight new ones are 14–21; Old Light last, closing the ring onto A Maya Game) | Track 1 |
 | 13001–13099 | the eight new Room rows' children (blurbs, sentences) if any need a band | Track 1 |
+| 13101–13199 | Interlude lines (W0's crossing interludes, Type `Interlude`) | Track 1 |
 
 Children (Field Comment / Resonance Voice) keep using `Comment Order` under their parent, not Sort Order.
 
 ### 2.5 Content each new story carries
-`Name` (title, last) · `Body` · `Excerpt` · `Room` · `Type`=Story · `Status`=Live · `Sort Order` (band) · `Teller` · `Face` · `Verb` · `Rhyme Family` · `Rhymes` (if paired) · `Convergence Line` (host) · `Mirror Line` · `Vertebra` · `Chapter` · `Arc-kind` · `Codex Game` · `Codex ID` / `Trigger Codex Entry` where it came from a memo · `Story Origin` · five children (Field Comment rows linked by `Linked Story`, with `Archetype`, authored line breaks). `Song` is filled in C5.
+`Name` (title, last) · `Body` (may carry the `⟪…⟫` content marks defined in `scores/W2.md` §1.4 — the only place structure inside a story lives) · `Source Date` (the Book needs one) · `Excerpt` · `Room` · `Type`=Story · `Status`=Live · `Sort Order` (band) · `Teller` · `Face` · `Verb` · `Rhyme Family` · `Rhymes` (if paired) · `Convergence Line` (host) · `Mirror Line` · `Vertebra` · `Chapter` · `Arc-kind` · `Codex Game` · `Codex ID` / `Trigger Codex Entry` where it came from a memo · `Story Origin` · five children (Field Comment rows linked by `Linked Story`, with `Archetype`, authored line breaks). `Song` is filled in C5.
 
 ---
 
@@ -143,7 +151,7 @@ One row per piece of persistent state (UserDefaults key, file, Airtable field): 
 
 ## 6 · W0's write proof
 
-For each Activity Type the app codes (the seven never-landed plus every new one added in W0), Track 2 triggers it once in the Simulator against the real base and confirms the row lands (`Source App`=Feed, correct type, link where expected). Those rows are real activity; leave them, and list their record IDs in `STATUS.md`. If a write fails, the HTTP status and body go in `STATUS.md` and the fix goes in the same wave. Same for the Feed-table writes: Filament (FeedStore ~:536), Letter (~:666), Kept (AirtableService ~:541), Codex (~:1132).
+For each Activity Type the app codes (the seven never-landed plus every new one added in W0), Track 2 triggers it once in the Simulator against the real base and confirms the row lands (`Source App`=Feed, correct type, link where expected). Proof rows are marked so they never surface on his phone: App Activity `Detail` and Feed `Name` start with `BUILD PROOF · `, Feed proof rows carry Status `Archived`, and every read that turns activity into a condition skips them (scores/W0.md §15). Never delete them; list their record IDs in `STATUS.md`. If a write fails, the HTTP status and body go in `STATUS.md` and the fix goes in the same wave. Same for the Feed-table writes: Filament (FeedStore ~:536), Letter (~:666), Kept (AirtableService ~:541), Codex (~:1132).
 
 ## 7 · House laws every wave is checked against
 
@@ -155,4 +163,5 @@ For each Activity Type the app codes (the seven never-landed plus every new one 
 - Light tiers apply to map glyphs and stars, never to story text.
 - Sound: two voices at most, ceiling 0.55, sound on first touch never on load, new sound on the 110 / 136.1 roots; the Om under the house at near-zero gain.
 - Accessibility: every story text reachable by VoiceOver even mid-reveal; Reduce Motion keeps order and hold duration; Dynamic Type; dim marks ≥ 3:1.
+- Archetype voices that already exist (including the ones named for family) stay as they are — they were established by Ashrey; no wave renames or removes a voice. New text never *adds* a private name.
 - Lineage: nothing from an earlier build vanishes. Track 2 keeps `LINEAGE.md` (here) — one line per existing feature touched, and where it lives now.
