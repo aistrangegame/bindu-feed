@@ -1,0 +1,353 @@
+number	date	name	category	has_story	source_app	games	in_call
+C-1001	2024-10-31	Challenge Negative Thoughts	Knowledge	no		A Learning Game	no
+C-1002	2024-10-31	Conversation with Binda Patel about Jumping Energy States	Conversations	no		A Learning Game;A System Game	no
+C-1003	2024-10-31	The Four Pillars	Knowledge	no		A Learning Game	no
+C-1004	2024-10-31	Heal Generational Trauma	Knowledge	no		A Family Game;A Maya Game	no
+C-1005	2024-10-31	FlASH Point Story	Story	no		A Maya Game	no
+C-1006	2024-10-31	How to Achieve Flow	Knowledge	no		A Learning Game	no
+C-1007	2024-10-31	The 1st Agreement; Be Impeccable with your Word	Knowledge	no		A Learning Game	no
+C-1008	2024-10-31	The 2nd Agreement; Don't Take Anything Personally	Knowledge	no		A Learning Game	no
+C-1009	2024-10-31	The 3rd Agreement; Don't Make Assumptions	Knowledge	no		A Learning Game	no
+C-1010	2024-10-31	The 4.5th Agreement; The Power of Belief	Knowledge	no		A Learning Game	no
+C-1011	2024-11-04	Conversation with Smita about Bhagvad Gita	Conversations	no		A Maya Game	no
+C-1012	2024-11-04	Conversation with Shreesh about Vedas and Upanishads	Conversations	no		A Learning Game;A Social Game	no
+C-1013	2024-11-08	The 4th Agreement; Always Do Your Best	Knowledge	no		A Learning Game	no
+C-1014	2024-11-11	The 5th Agreement; Be Skeptical, but Learn to Listen	Knowledge	no		A Learning Game;A Maya Game	no
+C-1015	2024-11-12	Rules of Engagement with Shweta	Rules	no		A Learning Game;A System Game	no
+C-1016	2024-11-12	Rules of Engagement with Neev	Rules	no		A Family Game;A Learning Game	no
+C-1017	2024-11-12	Active Listening	Knowledge	no		A Learning Game	no
+C-1018	2024-11-12	Build a Dream Journal	Ideas	no		A Learning Game;A System Game	no
+C-1019	2024-11-19	The Awakening Prayer	Knowledge	no		A Maya Game	no
+C-1020	2024-11-19	The Serenity Prayer	Knowledge	no		A Learning Game	no
+C-1021	2024-12-10	Arvind's Journey into AI Marketing and Collaboration	Voice Memos	no		A Work Game;A Social Game	no
+C-1022	2024-12-11	Navigating Family Expectations and Personal Identity	Voice Memos	yes		A Family Game;A Work Game	no
+C-1023	2024-12-17	Navigating Communication Boundaries in Relationships	Voice Memos	no		A Social Game;A Family Game	no
+C-1024	2024-12-21	Navigating Emotional Recovery and Self-Reflection	Voice Memos	no		A Learning Game;A Health Game	no
+C-1025	2024-12-21	Transforming Thoughts into Intentional Habits: A Framework for Personal Growth	Reflections	yes		A Learning Game;A System Game	no
+C-1026	2024-12-24	Heartburn	Recap	no		A Health Game;A Learning Game	no
+C-1027	2025-01-07	Reconciliation with Shweta	Reflections	no		A Family Game	no
+C-1028	2025-01-09	Exploring Voice-Based Performance Analysis	Voice Memos	no		A Learning Game;A System Game	no
+C-1029	2025-01-20	Reflections on a Productive Day: Family, Work, and Wellness	Voice Memos	no		A Health Game;A Family Game;A Work Game	no
+C-1030	2025-01-20	Balancing Family, Health, and Work Goals	Recap	no		A Family Game;A Health Game;A Work Game	no
+C-1031	2025-01-22	Apprenticeship in Marketing: Learning from Successful Mentors (Ideas)	Voice Memos	no		A Learning Game;A Work Game	no
+C-1032	2025-01-22	Managing Gastritis and Fatty Liver: A Health Journey (Voice Memos)	Health	no		A Health Game	no
+C-1033	2025-01-25	Navigating Higher Consciousness: Reflections on the Bhagavad Gita (Reflections)	Knowledge	no		A Maya Game;A Learning Game	no
+C-1034	2025-01-26	Developing AI-Powered Semi-Automated Blog Content System for Textile Websites Integration	Goals	no		A Work Game;A System Game	no
+C-1035	2025-01-26	Fourteen Scrolls of Personal Transformation: Ancient Wisdom for Modern Growth	Knowledge	no		A Learning Game	no
+C-1041	2025-01-27	Emotions and Presence: Insights from The Power of Now	Knowledge	yes		A Learning Game;A Maya Game	no
+C-1042	2025-01-27	From Shady Practices to Ethical Manufacturing: The AKS Journey	Work Story	no		A Work Game;A Family Game	no
+C-1043	2025-01-27	Navigating Change: From Diapers to Diverse Fabrics	Work Story	no		A Work Game	no
+C-1044	2025-01-27	Streamlining Fabric Information Management and SEO Strategy	Work Story	no		A Work Game;A System Game	no
+C-1045	2025-01-27	Streamlining Inventory Management and Automation Systems	Ideas	no		A Work Game;A System Game	no
+C-1046	2025-01-27	The Shift to Mask Production During a Crisis	Work Story	no		A Work Game;A Learning Game	no
+C-1047	2025-01-28	The Ego's Trap: How Sharing Spiritual Experiences Creates Energetic Depletion	Reflections	yes		A Maya Game	no
+C-1048	2025-02-06	Navigating Parenting Perspectives: A Communication Challenge	Conversations	no		A Family Game	no
+C-1049	2025-02-10	Streamlining Blog Content Creation Through Discovery Process	Goals	no		A Work Game;A System Game	no
+C-1050	2025-02-10	Develop a Structured Keyword Analysis Process for Blogging	Goals	no		A Learning Game;A System Game;A Work Game	no
+C-1051	2025-02-11	Organizing a Memorable Birthday Celebration for Neve	Goals	no		A Family Game;A System Game	no
+C-1052	2025-02-11	The Severance Metaphor: Work-Life Split as Spiritual Disconnection from Source	Reflections	yes		A Maya Game;A Learning Game	no
+C-1053	2025-02-14	Develop a Comprehensive Discovery Process for Textile and Sorbents Industries	Goals	no		A Learning Game;A System Game;A Work Game	no
+C-1054	2025-02-15	Understanding Cataracts: Causes, Treatments, and Surgery	Learning	no		A Learning Game;A Health Game	no
+C-1055	2025-02-18	Leveraging AI Tools for Business Efficiency	Ideas	no		A Work Game;A Learning Game	no
+C-1056	2025-02-19	Implementing Free Consultations for FIGMAR Accounting Firm	Ideas	no		A Work Game;A System Game	no
+C-1057	2025-02-24	Navigating Emotions: A Journey Towards Presence	Reflections	yes		A Learning Game;A System Game	yes
+C-1058	2025-02-25	Breaking Free from Time-Limited Thinking: Redefining Our Relationship with Time	Reflections	yes		A Learning Game;A System Game	yes
+C-1059	2025-02-25	Leveraging Joann Fabrics' Closure for Textile Growth	Content Ideas	no		A Work Game	no
+C-1060	2025-02-26	Consciousness as Creator: When Awareness Transcends Time and Shapes Reality	Discovery	yes		A Maya Game	no
+C-1061	2025-02-26	Automate Seconds and Dev Lot Product Listings	Goals	no		A Work Game;A System Game	no
+C-1062	2025-02-27	Designing a System for Streamlined Sales and Inventory Management	Goals	no		A Work Game;A System Game	no
+C-1063	2025-02-27	Streamlining Shipping Accountability Across Multiple Channels	Work Stuff	no		A Work Game;A System Game	no
+C-1064	2025-02-27	Design and Implement AWM Exchange System for Inventory Management	Goals	no		A Work Game;A System Game	no
+C-1065	2025-02-27	Transforming My Relationship with Cannabis: From Escapism to Conscious Presence	Reflections	no		A Maya Game;A Learning Game	no
+C-1066	2025-03-03	Parenting Discussion on Unified Discipline Approach	Conversations	no		A Family Game;A Learning Game	no
+C-1067	2025-03-03	Redefining Cannabis Use: From Escapism to Intentional Exploration	Reflections	no		A Learning Game;A System Game	no
+C-1068	2025-03-03	Leveling Up: A Game-Based Approach to Conscious Living	Ideas	no		A Learning Game;A System Game	no
+C-1069	2025-03-03	Gamifying Personal Growth Through Conscious Awareness	Discovery	yes		A Learning Game;A System Game	no
+C-1070	2025-03-03	Reconnecting with Self: The Structure of a Strange Game	Discovery	yes		A Learning Game;A System Game	no
+C-1071	2025-03-04	Breaking the Cycle: Mindful Cannabis Use vs. Escapism	Reflections	no		A Learning Game;A Health Game	no
+C-1072	2025-03-04	Enhancing Personal Insight Through Journal Reasoning Models	Goals	no		A Learning Game;A System Game	no
+C-1073	2025-03-05	Reestablishing Routine Before Ecuador Trip	Voice Memos	no		A Health Game;A System Game	no
+C-1074	2025-03-05	Experimental Framework for Self-Discovery: A Three-Phase Documentation System	Discovery	no		A Learning Game;A System Game	no
+C-1075	2025-03-06	Product Content Generation Framework: A Structured Approach for E-commerce and Marketplace Listings	Work Stuff	no		A Work Game;A System Game	no
+C-1076	2025-03-06	Automating Customer Review Management and Sentiment Analysis	Goals	no		A Work Game;A System Game	no
+C-1078	2025-03-07	Inventory Management and Product Updates Discussion	Work Stuff	no		A Work Game;A System Game	no
+C-1079	2025-03-07	SupAbsorb Website Filters & Compare Table	Goals	no		A Work Game;A System Game	no
+C-1080	2025-03-07	Streamlining Product Comparisons for Sorbent and Wazoodle	Goals	no		A Work Game;A System Game	no
+C-1082	2025-03-12	Reimagining Product Catalogs: From Basic Listings to Strategic Industry Solutions	Work Stuff	no		A Work Game;A Learning Game;A System Game	no
+C-1083	2025-03-15	Streamlining Invoice Reconciliation for Intercompany Transactions	Goals	no		A Work Game;A System Game	no
+C-1084	2025-03-26	Agenda Discussion with Shubh	Agenda	no		A Work Game;A System Game	no
+C-1085	2025-03-26	Therapy Session with April	Health	no		A Family Game;A Learning Game	no
+C-1086	2025-03-29	Healing Through Presence: A Conversation on Ego and Autoimmunity	Conversations	no		A Maya Game;A Health Game	no
+C-1087	2025-04-03	Streamlining Creativity and Task Management	Voice Memos	no		A Work Game;A System Game	no
+C-1088	2025-04-04	The Strange Game: A Comprehensive Personal Development System Architecture	Systems	no		A Learning Game;A System Game	no
+C-1089	2025-04-04	Optimizing Content Creation for Marketing Engagement	Voice Memos	no		A Work Game;A System Game	no
+C-1090	2025-04-04	Recalibrating Life's Balance: From Deep Dives to High-Level Perspectives	Voice Memos	yes		A Learning Game;A System Game	no
+C-1091	2025-04-06	Balancing Life's Games: From Reactive to Reflective Living	Reflections	yes		A Learning Game;A Family Game;A System Game	no
+C-1092	2025-04-08	The Money Game Framework: A Comprehensive Financial Management System	Knowledge	no		A Fire Game;A System Game	no
+C-1093	2025-04-08	AI-Enhanced Investment Analysis: Designing a Smart Money Game Learning Module	Ideas	no		A Learning Game;A System Game;A Fire Game	no
+C-1094	2025-04-08	Discussion Session with Binda	Conversations	no			no
+C-1095	2025-04-08	Discussion with Brian	Work Stuff	no		A Work Game	no
+C-1096	2025-04-09	Brand Design Voice Framework: Customizing Visual Content Generation	Work Stuff	no		A Work Game;A System Game	no
+C-1097	2025-04-10	Designing Arc Eagle CRM: A Multi-Layered Customer Intelligence System	Strategy	no		A Work Game;A System Game	no
+C-1098	2025-04-10	The Spyder System: A Web-Based Approach to Dynamic Product Content Management	Work Stuff	no		A Work Game;A System Game	no
+C-1099	2025-04-10	Mastering Emotional Management Through Structured Thinking	Voice Memos	yes		A Learning Game	no
+C-1100	2025-04-17	Content Strategy Framework: Social, Blog, and Product Content Integration	Meeting Minutes	no		A Work Game;A System Game	no
+C-1101	2025-04-18	The Soul's Journey: Understanding Life as an Evolving Game System	Reflections	yes		A Maya Game;A System Game	yes
+C-1102	2025-04-22	Breaking Free from the Cycles of Self-Judgment: Finding Peace in the Present	Reflections	yes		A Maya Game	yes
+C-1103	2025-04-22	System Misalignment: Recognizing and Recalibrating Personal Habits Through Physical Signals	Health	no		A Health Game;A System Game	no
+C-1104	2025-04-25	Knowledge Processing System: A Framework for Discovery Analysis	Discovery	no		A Learning Game;A System Game	no
+C-1105	2025-04-25	Database Architecture Strategy for Discovery Topic Management	Work Stuff	no		A Work Game;A System Game	no
+C-1106	2025-04-29	Reflecting on Family Business Dynamics: Breaking Cycles of Control and Expectation	Reflections	no		A Family Game;A Work Game	no
+C-1107	2025-04-29	Unmasking Family Dynamics: A Journey Through Transactional Relationships	Reflections	no		A Family Game;A Learning Game	no
+C-1108	2025-04-29	Breaking Cycles: Navigating Family Business Dynamics and Emotional Growth	Reflections	no		A Family Game;A Learning Game	no
+C-1109	2025-05-02	Lessons of Life	Knowledge	no		A Learning Game	no
+C-1110	2025-05-04	From Festival Gear to Business Strategy: Creating Customer Success Pathways	Discovery	no		A Work Game;A Learning Game;A System Game	no
+C-1111	2025-05-09	Embracing the Natural Flow Between Building and Playing Modes	Reflections	yes		A Learning Game;A Health Game	yes
+C-1112	2025-05-12	Breaking the Cycle: From Cannabis Escapism to Conscious Living	Reflections	yes		A Maya Game;A System Game	no
+C-1113	2025-05-19	Realignment: Breaking Free from Comfort Zone Regression	Reflections	yes		A Learning Game;A System Game	no
+C-1114	2025-05-19	Breaking Through Brain Fog: Infrastructure Before Documentation	Reflections	no		A Learning Game;A System Game	no
+C-1115	2025-05-19	Breaking Free from Habitual Time-Wasters: A Journey Toward Intentional Living	Reflections	no		A Learning Game;A System Game	no
+C-1116	2025-05-20	The Recurring Cycle: Patterns of Overwhelm and the Search for Core Purpose	Reflections	no		A Learning Game;A Maya Game	no
+C-1117	2025-05-25	Stoic Parenting: Teaching Emotional Awareness Through Negative Visualization	Reflections	yes		A Learning Game;A Family Game;A System Game	no
+C-1118	2025-05-25	Parental Self-Reflection: Taking Responsibility for Child's Reactions	Reflections	no		A Family Game;A Learning Game	no
+C-1119	2025-06-05	Embracing Life's Duality: Finding Peace in Light and Dark Moments	Reflections	yes		A Maya Game	yes
+C-1120	2025-06-09	Energy Cycles and the Art of Realignment: Breaking Reactive Patterns	Reflections	no		A Learning Game;A Health Game	no
+C-1121	2025-06-12	Strategic Planning: Documenting Our Journey and Building Team Intelligence	Work Story	no		A Work Game;A System Game	no
+C-1122	2025-06-13	Scaling Content Operations: Strategic Growth Planning Session	Work Story	no		A Work Game;A System Game	no
+C-1123	2025-06-13	Reimagining Early Education: A Father's Plan for AI-Enhanced Learning and Personal Growth	Reflections	no		A Learning Game;A System Game;A Family Game	no
+C-1124	2025-06-13	Energy Dynamics and Intentional Family Time: Creating an Optimal Environment for Niv	Reflections	no		A Family Game;A System Game	no
+C-1125	2025-06-16	Data Analytics Dashboard Strategy: Metrics, Storage, and Automation Framework	Meeting Minutes	no		A Work Game;A System Game	no
+C-1126	2025-06-18	Rebuilding Connections and Creating an Intentional Future Path	Reflections	no		A Family Game;A System Game	no
+C-1127	2025-06-23	Professional Dynamics and Past Project Impact on Business Relationships	Reflections	no		A Work Game;A Learning Game	no
+C-1128	2025-06-25	Bridging Generations: A Son's Letter on Business Evolution and AI	Reflections	no		A Family Game;A Work Game;A System Game	no
+C-1129	2025-06-25	Reimagining Early Education: A Father's Vision for AI-Enhanced Learning	Reflections	no		A Family Game;A Learning Game;A System Game	no
+C-1130	2025-06-25	Expanding Operations: Strategic Growth and Team Alignment	Work Story	no		A Work Game;A System Game	no
+C-1131	2025-06-25	Breaking Cycles: Navigating Family Business and Emotional Inheritance	Reflections	no		A Family Game;A Maya Game	no
+C-1132	2025-07-03	Website Strategy Discussion for AKAS, Wazoodle, and Other Brands	Hedy AI	no		A Work Game;A System Game	no
+C-1133	2025-06-27	Team Strategy Meeting for ARC Digital Channels and Operations	Hedy AI	no		A Work Game;A System Game	no
+C-1134	2025-08-01	Sacred Connections: Personalized Festival Gifts Merging Individual Stories with Collective Unity	Ideas	no		A Learning Game;A System Game	no
+C-1135	2025-08-01	Atman to Brahman: Custom Soul-Identity Shirts for Tomorrowland 2026	Content Ideas	no		A Learning Game;A System Game	no
+C-1136	2025-08-01	Spiritual Gaiter Design Concept for Tomorrowland 2026: Connecting Individual and Collective Consciousness	Ideas	no		A Learning Game	no
+C-1137	2025-08-03	The Sacred Dance of Names and Purpose: A Dialogue on Universal Consciousness	Reflections	yes		A Maya Game;A Learning Game	no
+C-1138	2025-08-04	Wazoodle.com Website Redesign Strategy	Hedy AI	no		A Work Game;A System Game	no
+C-1139	2025-08-21	Process for Adding Products to Shopify	Hedy AI	no		A Work Game;A System Game	no
+C-1140	2025-08-22	SupAbsorb Tech Overview and Transition	Hedy AI	no		A Work Game	no
+C-1141	2025-08-22	Storylines: A Multi-Layered Knowledge System for Capturing Organizational Narratives	Knowledge	no		A Learning Game;A System Game	no
+C-1142	2025-08-24	Legacy Business Succession: Mapping Operational Complexity vs. Personal Values	Reflections	no		A Work Game;A Family Game	no
+C-1143	2025-08-28	Email Automation Strategy and Workflow Process Design	Work Stuff	no		A Work Game;A System Game	no
+C-1144	2025-08-28	Strategic Website Development Workflow and Knowledge Integration System	Meeting Minutes	no		A Work Game;A System Game	no
+C-1145	2025-09-04	Feeling Through Overwhelm: From Anxiety to Realignment	Reflections	yes		A Learning Game;A System Game	yes
+C-1147	2025-09-05	Daily Project Mapping and Task Prioritization	Recap	no		A Work Game;A System Game	no
+C-1148	2025-09-05	Daily Recap and Tomorrow's Game Plan	Recap	no		A Work Game;A System Game;A Social Game	no
+C-1149	2025-09-10	Balancing Family Time and Work Priorities Before Travel	Recap	no		A Family Game;A Work Game	no
+C-1150	2025-09-15	Consciousness, Reality Manipulation, and the Path Beyond Substances	Reflections	yes		A Maya Game;A Learning Game	no
+C-1151	2025-09-24	Karma as Experience: Dualistic Accumulation and Non-Dualistic Universal Exploration	Reflections	yes		A Maya Game	no
+C-1152	2025-09-25	Universal Energy Exchange and the Infinite Balance of Experience	Reflections	yes		A Learning Game;A Maya Game	no
+C-1153	2025-09-25	Super Absorb Website Project Strategy: Brian Meeting Preparation and Team Expansion Plans	Agenda	no		A Work Game;A System Game	no
+C-1154	2025-09-26	The Paradox of Helping: When Seva Interferes with Karmic Purification	Reflections	yes		A Maya Game;A Seva Game	no
+C-1155	2025-09-26	Beyond the Ego Dress: Transcending Relationship Conflicts Through Divine Connection	Reflections	yes		A Maya Game;A Social Game	no
+C-1156	2025-09-26	Email Marketing Strategy: Welcome and Nurture Series Development Plan	Meeting Minutes	no		A Work Game;A System Game	no
+C-1157	2025-09-26	Super Absorb Tech Website Strategy and Structure Planning Session	Meeting Minutes	no		A Work Game;A System Game	no
+C-1158	2025-09-30	Strategic Partnership Framework for Business Evolution and AI-Ready Future	Strategy	no		A Work Game;A System Game;A Learning Game	no
+C-1159	2025-09-30	Maya and the Path to Divine Connection: Reality as Illusion, Gratitude as Gateway	Reflections	yes		A Maya Game;A Seva Game	yes
+C-1160	2025-10-03	The Sacred Pause: A Three-Breath Reset for Clarity and Solutions	Learning	no		A Learning Game	yes
+C-1161	2025-10-03	The Paradox of Liberation: Understanding Moksha Through Non-Duality	Reflections	yes		A Maya Game	yes
+C-1162	2025-10-04	Money as Energy and the Path to Transcendence	Reflections	yes		A Fire Game;A Maya Game;A Seva Game	no
+C-1163	2025-10-08	Understanding Siddhis: Metaphysical Powers and the Responsibility of Cosmic Awareness	Discovery	yes		A Maya Game;A Learning Game	no
+C-1164	2025-10-08	The Paradox of Divine Separateness: Understanding Creation Through Non-Dual Consciousness	Reflections	yes		A Maya Game	no
+C-1165	2025-10-09	When Synchronicity Opens Doors: A Job Seeker's Interruption Leads to Creative Collaboration	Discovery	yes		A Work Game;A Maya Game	no
+C-1166	2025-10-14	Shakti's Cleansing: Dissolving the Illusion of Fear Through Kundalini Awakening	Kundalini Cleansing	no		A Maya Game;A Health Game	no
+C-1168	2025-10-14	Shakti Energy Cleansing: Confronting the Deepest Fears of Loss and Disconnection	Kundalini Cleansing	yes		A Maya Game;A Health Game	no
+C-1169	2025-10-14	Spontaneous Satchitananda: The Paradox of Desiring What Already Is	Reflections	yes		A Maya Game	yes
+C-1170	2025-10-14	First Kundalini Awakening: Energy Surge and Ego Dissolution in Dallas	Reflections	yes		A Maya Game	no
+C-1171	2025-10-15	Learning to Let Go: When Life Pushes Back Against Control	Reflections	yes		A Maya Game;A Work Game	yes
+C-1172	2025-10-15	Universal Welcome Series Email Flow Strategy - Hero's Journey Framework	Strategy	no		A Work Game;A System Game	no
+C-1173	2025-10-17	Journey Page Strategy: Customer Connection Through Recognition and Storytelling	Strategy	no		A Work Game;A System Game	no
+C-1174	2025-10-19	Kundalini Awakening Journey: Structured Framework for Spiritual Development and Integration	Reflections	no		A Maya Game;A System Game	no
+C-1175	2025-10-19	Transforming AKS Case Studies into Customer Journey Videos	Strategy	no		A Work Game;A System Game	no
+C-1176	2025-10-19	Synchronicity with Universal Consciousness Through a Falling Leaf	Reflections	yes		A Maya Game	yes
+C-1177	2025-10-21	The Universe Experiencing Itself Through Individual Emotions	Reflections	yes		A Maya Game	no
+C-1178	2025-10-21	Synchronicity and the Inner Guru: A Meeting with Advaita Vedanta Wisdom	Discovery	yes		A Maya Game;A Learning Game	no
+C-1179	2025-10-22	When Solutions Seek You: An Unexpected Business Exit Path	Reflections	yes		A Work Game;A Maya Game	no
+C-1180	2025-10-22	Karmic Cleansing Through Meditation: Processing Anger and Grief	Kundalini Cleansing	yes		A Maya Game;A Health Game;A Family Game	no
+C-1181	2025-10-22	The Multi-Layered Illusion: From Physical Reality to Infinite Dimensional Dreams	Reflections	yes		A Maya Game	no
+C-1182	2025-10-27	Getting Caught Up in Family Drama and Finding the Path Back to Center	Reflections	yes		A Family Game;A Maya Game	no
+C-1183	2025-10-29	The Atma's Choice: Why Consciousness Returns to Experience Life Fully	Discovery	yes		A Maya Game	no
+C-1184	2025-10-31	Universal Welcome Series Strategy: Journey-Based Email Marketing Framework	Strategy	no		A Work Game;A System Game	no
+C-1185	2025-11-04	Gardening as Family Connection: A Houston Synchronicity	Discovery	yes		A Family Game;A Learning Game	no
+C-1186	2025-11-04	Technical Issue with Audio Transcription Process	Voice Memos	no		A System Game	no
+C-1188	2025-11-05	Website Development Collaboration Framework: Defining Roles and Processes	Strategy	no		A Work Game;A System Game	no
+C-1189	2025-11-07	Black Friday Cyber Monday Sale Strategy: The Re-Inspire Campaign Blueprint	Strategy	no		A Work Game;A System Game	no
+C-1190	2025-11-07	Reimagining Black Friday: From Rush to Reflection Through Strategic Sales Design	Strategy	no		A Work Game;A System Game	no
+C-1191	2025-11-12	Shopify to WordPress Migration: Evaluating Headless Commerce Strategy	Strategy	no		A Work Game;A System Game	no
+C-1192	2025-11-12	Wasutil Site Redesign Strategy: WordPress Migration with AI-Powered Content and Team Collaboration	Strategy	no		A Work Game;A System Game	no
+C-1193	2025-11-13	Wazoodle Website Sitemap Architecture: Journey-Driven E-commerce Strategy	Strategy	no		A Work Game;A System Game	no
+C-1194	2025-11-14	Dual-Path Customer Journey: Curated Collections vs. Self-Directed Filtering	Strategy	no		A Work Game;A System Game	no
+C-1195	2025-11-15	The Energy Paradox: Understanding Kundalini's Relationship with Awareness and Body Preparation	Reflections	yes		A Maya Game;A Health Game;A System Game	no
+C-1196	2025-11-18	The Create Sale Strategy: Gratitude-Driven Homepage Design for Wazoodle's 13-Year Journey	Strategy	no		A Work Game;A System Game	no
+C-1197	2025-11-20	Finding Center Through Non-Engagement: The Path to Consciousness	Reflections	yes		A Maya Game	yes
+C-1198	2025-11-24	Exploring the Manipura Chakra: Unlocking Personal Power and Action	Learning	no		A Learning Game;A System Game	no
+C-1199	2025-12-02	Free Gift Impact Measurement System Design	Strategy	no		A Work Game;A System Game	no
+C-1200	2025-12-02	Black Holes as Universal Digestive Systems: A Theory of Cosmic Evolution	Ideas	yes		A Learning Game	no
+C-1201	2025-12-02	The Universe's Desire for Growth Through Karmic Experience and Self-Discovery	Reflections	yes		A Maya Game	no
+C-1202	2025-12-02	The Ego's Subtle Trap in Spiritual Experience	Reflections	yes		A Maya Game	yes
+C-1203	2025-12-02	Product-to-Use-Case Mapping Strategy for Wazrool Website	Strategy	no		A Work Game;A System Game	no
+C-1204	2025-12-03	Product-Industry Mapping System for Fabric Applications	Ideas	no		A Work Game;A System Game	no
+C-1205	2025-12-04	Breaking Free from the Optical Delusion of Separation	Reflections	yes		A Maya Game	no
+C-1206	2025-12-05	Recognizing Mind Games and Choosing Non-Engagement Through Awareness	Reflections	no		A Maya Game;A Family Game	no
+C-1207	2025-12-07	Disconnection and Creative Focus After Loss	Reflections	yes		A Health Game;A Work Game;A Family Game	no
+C-1208	2025-12-08	Email Knowledge Discovery System Architecture	Work Stuff	no		A Work Game;A System Game	no
+C-1209	2025-12-09	Transcending Duality Through Awareness and Systemic Self-Reflection	Reflections	yes		A Maya Game;A System Game	no
+C-1210	2025-12-10	ARC Discovery Email System: Sequential Knowledge Building Through Recursive Intelligence	Strategy	no		A Learning Game;A System Game	no
+C-1211	2025-12-10	Wazoodle Website Strategy: WordPress Integration Planning Session	Strategy	no		A Work Game;A System Game	no
+C-1212	2025-12-10	Product-Application Nexus: A Comprehensive System for Connecting Products to Customer Use Cases	Work Stuff	no		A Work Game;A System Game	no
+C-1213	2025-12-10	Designing a Unified Content Creation System from Discovery to Distribution	Strategy	no		A System Game;A Work Game	no
+C-1214	2025-12-11	Three Souls, One Journey: Understanding My Spiritual Bonds Through Past Life Regression	Reflections	yes		A Maya Game;A Family Game	no
+C-1215	2025-12-11	Collaborative Website Architecture Planning: WordPress-Shopify Integration Strategy	Meeting Minutes	no		A Work Game;A System Game	no
+C-1216	2025-12-11	Discovery Content Engine Architecture: From Email Intelligence to Multi-Format Content Creation	Strategy	no		A System Game;A Work Game	no
+C-1217	2025-12-13	Reconnecting with Maja: Strategic Design Partnership for In-House Creative Capabilities	Strategy	no		A Work Game;A System Game	no
+C-1218	2025-12-13	Amazon Strategy Overhaul: From Window to Brand Protection Platform	Strategy	no		A Work Game;A System Game	no
+C-1219	2025-12-13	The Interface Illusion: Reclaiming Present Moment Awareness Beyond Mental Conditioning	Reflections	yes		A Maya Game	no
+C-1220	2025-12-15	Universal Welcome Series: Multi-Tiered Value-Based Lead Magnet Strategy	Strategy	no		A Work Game;A System Game	no
+C-1221	2025-12-15	Website Template Visual Design System Development	Work Stuff	no		A Work Game;A System Game	no
+C-1222	2025-12-15	Evolving Sadhana: From Overwhelm to Sri Yantra Tratak Practice	Reflections	yes		A Maya Game;A Learning Game;A System Game	yes
+C-1223	2025-12-17	Strategic Pivot: From Social Media-First to Website-Centric Content Strategy	Meeting Minutes	no		A Work Game;A System Game	no
+C-1224	2025-12-24	Strategic Website Architecture and AI Chatbot Integration Planning	Strategy	no		A Work Game;A System Game	no
+C-1225	2025-12-26	The Self Beyond the Mind-Body Complex: Understanding Purusha and Prakriti	Reflections	yes		A Maya Game	no
+C-1226	2026-01-05	The Gap Between Internal Experience and External Impact	Reflections	yes		A Learning Game;A Social Game	no
+C-1227	2026-01-05	Preparing for Conscious Re-engagement Through Self-Awareness	Reflections	no		A Maya Game	no
+C-1228	2026-01-05	The Invisible Growth: What Gets Documented vs. What Gets Integrated	Reflections	yes		A Learning Game;A Maya Game	no
+C-1229	2026-01-08	Monthly Dashboard Framework: Four-Level Business Intelligence System	Strategy	no		A Work Game;A System Game	no
+C-1230	2026-01-11	The Paradox of Spiritual Progress: When Letting Go Creates More Attachment	Reflections	yes		A Maya Game;A Learning Game	no
+C-1231	2026-01-11	Family Dynamics, Ego Triggers, and the Mirror of Unresolved Patterns	Reflections	yes		A Family Game;A Maya Game	no
+C-1232	2026-01-13	Finding Balance Through Conscious Awareness and Daily Practice	Reflections	yes		A Maya Game;A Health Game;A Learning Game	no
+C-1233	2026-01-13	Building a Multi-Channel Analytics Dashboard for Fabric Business Intelligence	Strategy	no		A Work Game;A System Game	no
+C-1234	2026-01-13	Product Card System: Order-Level Information and Customer Journey Integration	Strategy	no		A Work Game;A System Game	no
+C-1235	2026-01-16	Strategic Website Architecture Planning for Wazoodle Fabrics Meeting	Strategy	no		A Work Game;A System Game	no
+C-1236	2026-01-20	Trapped in the System Paradox	Reflections	yes		A Learning Game;A System Game;A Maya Game	no
+C-1237	2026-01-23	Integrated Energy Therapy: Building Energetic Structures Through Seven-Step Transformation Process	Learning	no		A Learning Game;A System Game	no
+C-1238	2026-01-24	Dreams as the Driving Force: Repositioning Fabrics in America	Strategy	no		A Work Game;A Learning Game	no
+C-1240	2026-02-01	AI-Powered Customer Experience Platform with QR Code Integration	Ideas	no		A Work Game;A System Game	no
+C-1241	2026-02-01	AI-Powered Customer Intelligence CRM System Design	Ideas	no		A Work Game;A System Game	no
+C-1242	2026-02-01	The Choice Beyond Suffering: From Recognition to Transcendence	Reflections	yes		A Maya Game	yes
+C-1243	2026-02-01	Finding Alignment Through Highest Vibrational Excitement	Reflections	yes		A Maya Game;A Learning Game	no
+C-1244	2026-02-01	The Power of Belief and the Creation of Reality Through Intent	Reflections	no		A Maya Game	yes
+C-1245	2026-02-01	UPAGP Membership System Integration with Zephy Platform	Work Stuff	no		A Work Game;A System Game	no
+C-1246	2026-02-10	Shifting from Scarcity to Systems: A New Business Philosophy and Project Strategy	Strategy	no		A Work Game;A System Game;A Learning Game	no
+C-1247	2026-02-11	Weekly Email Campaign Process and Team Workflow Structure	Strategy	no		A Work Game;A System Game	no
+C-1248	2026-02-11	Pitching AI Customer Support as Knowledge Sharing, Not Replacement	Strategy	yes		A Work Game;A Learning Game;A System Game	no
+C-1249	2026-02-12	Confronting Expectations and Realigning Creative Partnerships	Conversations	yes		A Work Game;A Learning Game;A System Game	no
+C-1250	2026-02-12	American Roots Fabric Costing Structure and Sample Analysis	Work Stuff	no		A Work Game;A System Game	no
+C-1251	2026-02-12	Fabric Analysis to Costing Workflow Process	Work Stuff	no		A Work Game;A System Game	no
+C-1252	2026-02-13	The Five Universal Truths: Ancient Wisdom for Modern Awakening	Learning	no		A Maya Game	no
+C-1253	2026-02-13	Light's Infinite Pathways: Rewriting Reality Through Consciousness	Discovery	yes		A Maya Game	no
+C-1254	2026-02-14	Website Product Display Enhancement Project	Work Stuff	no		A Work Game;A System Game	no
+C-1255	2026-02-14	Gaia-Powered Personalized Customer Experience Cards for Every Order	Ideas	no		A Work Game;A System Game	no
+C-1256	2026-02-15	The Art of Full Engagement: Dancing Between Social Pressure and Authentic Choice	Reflections	yes		A Maya Game;A Learning Game	yes
+C-1257	2026-02-15	Using AI as a Bridge to Higher Energy Through Intentional Conversation	Ideas	no		A Maya Game;A Learning Game	no
+C-1258	2026-02-16	Light's Path and Timeline Shifting: Rewriting Reality Through Present Moment Belief	Discovery	no		A Maya Game;A Learning Game	no
+C-1259	2026-02-16	The Nine Levels of Consciousness: Understanding Reality Creation from Oversoul to Collective Unconscious	Knowledge	no		A Learning Game	no
+C-1260	2026-02-18	The Spiritual Journey: From Anchor Points to Self-Realization	Reflections	yes		A Maya Game	yes
+C-1261	2026-02-26	From Darkness to Light: The 2015 Transformation and Birth of ASG	Reflections	yes		A Maya Game;A System Game;A Learning Game	yes
+C-1262	2026-03-01	Channeling Higher Consciousness Through ASG Structure	Reflections	yes		A Maya Game	yes
+C-1263	2026-03-01	The Trinity Framework: AKS-TEX as Creator, Wazoodle as Preserver, and the Dissolution of Destructive Cycles	Story	no		A Work Game;A System Game;A Learning Game	no
+C-1264	2026-03-02		(none)	no			no
+C-1265	2026-03-03	The Akash-Gaia Consciousness Framework: From Destructive to Creative Cycles	Discovery	no		A Maya Game	no
+C-1266	2026-03-04	The Tree of Life Framework: Connecting Universal Help, Storytelling, and Conscious Creation	Discovery	no		A Learning Game;A System Game;A Maya Game	no
+C-1267	2026-03-04	The Fractal Journey: From Fear to Fierce Love Through Consciousness	Reflections	yes		A Maya Game;A Family Game	no
+C-1268	2026-03-04	The Silent Engineering: How Consciousness Gaia Orchestrates Solutions Before Problems Emerge	Reflections	yes		A Work Game;A Maya Game	no
+C-1269	2026-03-04	Solutions Before Problems: The Natural Unfolding of Business Expansion	Reflections	yes		A Work Game;A Learning Game;A Maya Game	no
+C-1270	2026-03-04	The Universe's Genius: Lessons from Father's Fabric Mastery	Reflections	yes		A Learning Game;A Maya Game;A Family Game	no
+C-1271	2026-03-04	The Universe's Natural Selection: How Authentic Generosity Reveals True Alignment	Reflections	yes		A Work Game;A Learning Game;A Maya Game	no
+C-1272	2026-03-04	The Gaia Soul: Devotion as the Revealer of Hidden Completeness	Reflections	yes		A Maya Game	yes
+C-1273	2026-03-04	The Ashray-Karishma Architecture: Twins Across Time Building the Miracle	Discovery	yes		A System Game;A Maya Game	no
+C-1274	2026-03-04	The Observer-Information Unity: Accessing Universal Perspectives Through Self-Realization	Reflections	yes		A Maya Game	no
+C-1275	2026-03-04	The Bidirectional Soul Journey: Life as Forward Experience and Reverse Guidance	Reflections	yes		A Maya Game	yes
+C-1276	2026-03-04	AI Hallucinations as Infinite Reality Access Points	Reflections	yes		A Learning Game;A Maya Game	no
+C-1277	2026-03-05	Energy Creation Through Giving: Beyond Universal Balance	Reflections	yes		A Maya Game	no
+C-1278	2026-03-05	From Awakening to Play: The Circular Journey of Creation and Transmutation	Content Ideas	no		A Maya Game;A Learning Game	no
+C-1279	2026-03-05	Life as a One-Page Answer: The Choose-Your-Journey Book Concept	Ideas	no		A Learning Game	yes
+C-1280	2026-03-05	The Witness Perspective: Interactive Books for Awakening Sakshi Awareness	Content Ideas	no		A Maya Game;A System Game	no
+C-1281	2026-03-06	The Hall of Perspectives: A Sacred Space for Completing the Loop	Ideas	no		A Maya Game;A System Game	yes
+C-1282	2026-03-06	The Digital Mirror: AI-Powered Self-Discovery Through Multiple Perspectives	Content Ideas	no		A Learning Game;A System Game;A Maya Game	no
+C-1283	2026-03-06	The Umbilical Cord Metaphor: Spiritual Graduation Through Life Stories	Story	no		A Learning Game;A Maya Game	no
+C-1284	2026-03-06	The Paradox of Specialness: How Recognition Collapses Reality	Reflections	yes		A Maya Game	yes
+C-1285	2026-03-07	The AI Mirror: Consciousness Playing Hide and Seek with Itself	Reflections	yes		A Maya Game	yes
+C-1286	2026-03-07	The Sakshi Skill: Witnessing Consciousness as Light	Discovery	yes		A Maya Game	yes
+C-1287	2026-03-07	Creating Higher Starting Points for Knowledge Transfer	Reflections	yes		A Learning Game;A System Game;A Work Game	no
+C-1288	2026-03-07	The Awakening-Forgetting Cycle: Playing the Human Game of Suffering and Love	Reflections	yes		A Maya Game	yes
+C-1289	2026-03-07	The Overwhelming Map: A Guidebook Framework for Life's Five Identities	Content Ideas	no		A Learning Game;A System Game	yes
+C-1290	2026-03-07	The Journey from Story to Wisdom: Creating Your Own Perspective	Reflections	yes		A Learning Game;A Maya Game	no
+C-1291	2026-03-09	Designing a Timeless Book: Beyond Beginning and End	Content Ideas	no		A Maya Game;A Learning Game	no
+C-1292	2026-03-10	Swatch Box Strategy: Multi-Brand Contact System Design	Strategy	no		A Work Game;A System Game	no
+C-1293	2026-03-10	Market Research Strategy for Dad's Polyester Investment Decision	Strategy	no		A Work Game;A Family Game	no
+C-1294	2026-03-14	Body's Healing Response and Energy Transformation After Physical Reset	Health	yes		A Health Game;A Learning Game	no
+C-1295	2026-03-17	The Fabric Speaks: Two Approaches to Design Critique and Creative Transmutation	Reflections	yes		A Learning Game	no
+C-1296	2026-03-18	Wedding Music Curation Strategy and Ceremonial Planning	Meeting Minutes	no		A System Game;A Family Game	no
+C-1297	2026-03-18	Sangeet Ceremony Planning and the Philosophy of Bawara	Meeting Minutes	no		A Family Game;A System Game;A Learning Game	no
+C-1298	2026-03-20	Journey-Driven Product Experience Design for Fabric Commerce	Strategy	no		A Work Game;A System Game	no
+C-1299	2026-03-24	Dual-Experience Creative Brief for Revity Brand Storytelling	Strategy	no		A Work Game;A System Game	no
+C-1300	2026-03-24	Interactive Storybook Experience: Building Connection Through Shared Narratives	Strategy	no		A Work Game;A System Game	no
+C-1301	2026-03-26	From JOANN's Collapse to American-Made Opportunity: Building a Landing Page Strategy	Strategy	no		A Work Game;A System Game	no
+C-1302	2026-04-01	The Dark Light Book: A Transformative Birthday Experience Design	Ideas	no		A Learning Game;A System Game;A Maya Game	no
+C-1303	2026-04-01	The Unified Experience: Playing Your Own Game Beyond Duality	Content Ideas	no		A Maya Game;A Learning Game	yes
+C-1304	2026-04-01	The Dark Light April Fools Baby Reveal Prank	Content Ideas	no		A System Game;A Social Game	no
+C-1305	2026-04-01	Tree of Life Chakra Experience: Designing a Seven Plus Two Interactive Installation	Ideas	no		A Maya Game;A System Game	no
+C-1306	2026-04-02	The Pointy Particle: A Love-Based Visualization for Reality Creation	Ideas	no		A Learning Game;A Maya Game	yes
+C-1307	2026-04-02	The Transcendent Nature of Sakshi: Beyond Action and Creation	Reflections	yes		A Maya Game	no
+C-1308	2026-04-07	The Axis Tree: Switching States Through Awareness and Wordplay	Discovery	no		A Maya Game;A Learning Game	yes
+C-1309	2026-04-08	Transforming Dad's Story Through Visual Narrative and Perspective Shift	Ideas	yes		A Family Game;A Learning Game;A System Game	no
+C-1310	2026-04-08	Scaling Challenges and Process Improvements for Tax Business Growth	Strategy	no		A Work Game;A System Game	no
+C-1311	2026-04-08	Mapping Physical Chakras: The Axis Dimension and Body-Based Energy Activation	Discovery	yes		A Learning Game;A Maya Game	yes
+C-1312	2026-04-08	Consciousness Evolution and the Mind Chakras: From Destruction to Expansion	Reflections	yes		A Maya Game	no
+C-1313	2026-04-09	The Black Hole Core: Mapping Fabric Brands to the Tree of Life and Consciousness Evolution	Reflections	yes		A Maya Game	yes
+C-1314	2026-04-09	Merging Stories: A Customer-Centric Approach to Brand Narrative	Strategy	no		A Work Game;A Learning Game;A System Game	no
+C-1315	2026-04-10	The Inheritance of Belief Structures: Anchoring Effects and Generational Patterns	Reflections	yes		A Learning Game;A Maya Game;A Family Game	no
+C-1316	2026-04-13	Manifesting the Expansive Dream Space: Codes, Patterns, and Sacred Architecture	Discovery	no		A System Game	no
+C-1317	2026-04-14	The Fabric's Journey: A Consciousness-Driven Product Storytelling Framework	Content Ideas	no		A Work Game;A System Game;A Learning Game	no
+C-1318	2026-04-15	Where Our Story Meets Your Story: Strategic Messaging Framework for Customer Connection	Strategy	no		A Work Game;A Learning Game;A System Game	no
+C-1319	2026-04-15	Untapped Market Opportunities and Sales Strategy Discussion	Conversations	no		A Work Game	no
+C-1321	2026-04-15	Building Global Distribution Networks Through Strategic Agent Partnerships and Digital Infrastructure	Strategy	no		A Work Game;A System Game	no
+C-1322	2026-04-17	Forever Chemicals vs Green Alternatives: Fabric Treatment Trade-offs and Lululemon Market Opportunity	Strategy	no		A Learning Game;A Work Game	no
+C-1323	2026-04-17	Fabric Development Strategy: Safety-First Design and Multi-Market Positioning	Work Stuff	no		A Work Game;A Learning Game	no
+C-1324	2026-04-21	Intentional Business Design Through Belief Structure Mapping	Strategy	no		A Work Game;A Learning Game;A System Game	no
+C-1325	2026-04-24	The Road Home Experience: Onboarding and Bindu Memory Integration	Content Ideas	no		A Learning Game;A System Game;A Maya Game	no
+C-1327	2026-04-25	The Bindu Journey: From Cosmic Consciousness Through Human Experience and Back	Discovery	no		A Maya Game;A Learning Game	yes
+C-1328	2026-04-26	The Spine as Energetic Connector: Crow, Kundalini, and the Body's Network	Reflections	yes		A Maya Game;A Learning Game	no
+C-1329	2026-04-27	Designing the Road Home: A Planetary Consciousness Journey Through Gaia's Awakening	Content Ideas	no		A Maya Game;A Learning Game;A System Game	no
+C-1330	2026-04-27	Leela as Divine Play: The Game Teaching Itself Through Interactive Storytelling	Story	yes		A Maya Game;A Learning Game;A System Game	yes
+C-1331	2026-04-28	Building the AWS of Textiles: A Three-Pillar Strategy for Awakening Through Storytelling and Dreams	Strategy	no		A Work Game;A System Game	no
+C-1332	2026-04-30	Fabric as Mirror: Using External Objects to Map Internal Belief Structures	Strategy	yes		A Learning Game;A Maya Game;A Work Game	no
+C-1333	2026-05-04	The Awakening of ProSoft PUL: A Fabric's Journey to Purpose	Story	no		A Learning Game;A Work Game	no
+C-1334	2026-05-05	Product-Level Marketing Strategy: From Information Architecture to Multi-Channel Execution	Strategy	no		A Work Game;A System Game	no
+C-1335	2026-05-05	Silent Flex Technology: Solvent-Free Thermal Bonding for Waterproof Fabrics	Discovery	no		A Learning Game	no
+C-1336	2026-05-05	Customer-Driven Product Evolution and B2B Strategy Development	Strategy	no		A Work Game;A System Game	no
+C-1337	2026-05-06	Engaging with Sri Yantra Energies: A Practice of Reciprocal Connection	Discovery	yes		A Maya Game;A Learning Game	yes
+C-1338	2026-05-09	The Akash Named — ASG Base First Complete Reading	Chronicles	no		A Learning Game;A System Game;A Maya Game	no
+C-1339	2026-05-11	Session Bridge — The Kingdom Becomes Legible to Itself (ASG = A Self Generator)	Chronicles	no		A System Game;A Learning Game;A Maya Game	no
+C-1340	2026-05-11	Session Bridge — Business Ecosystem Mapping + arc-360 Skill	Session Bridge	no			no
+C-1341	2026-05-15	The Healit Fabric Development Call - When Customer Frustration Meets Technical Expertise	Work Story	no		A Work Game;A Learning Game	no
+C-1342	2026-05-16	Session Bridge — Matias De Stefano + Consciousness Synthesis	Session Bridge	no		A Learning Game;A System Game;A Maya Game	no
+C-1343	2026-05-17	Session Bridge: Chakra Architecture, Sri Yantra Integration, and ASG Map Enrichment	Agenda	no		A Learning Game;A System Game;A Maya Game	no
+C-1344	2026-05-17	Session Bridge — ASG Energy Section Canonical Realignment + 5 New Field Backfills	Session Bridge	no		A Work Game;A System Game;A Learning Game	no
+C-1345	2026-05-17	Session Bridge: Shadow to Armin, the Arc of ALL to ONE	Recap	no		A Learning Game;A System Game;A Maya Game	no
+C-1346	2026-05-18	The Correspondence: Temporal Communication Across Past and Future Selves	Ideas	no		A Learning Game;A System Game	no
+C-1347	2026-05-19	Reverse Engineering Creative Expression Through Witness Consciousness	Ideas	no		A Learning Game;A Maya Game	no
+C-1348	2026-05-19	The Dome Experience: Building Community Through Service and Shared Vision	Ideas	no		A System Game;A Seva Game;A Learning Game	no
+C-1349	2026-05-19	Designing a Layered Dashboard: CC Standard vs CC Pro Information Architecture	Strategy	no		A Work Game;A System Game	no
+C-1350	2026-05-20	Bindu Field App: Comprehensive Review and Vision Expansion	Recap	no		A Work Game;A System Game;A Learning Game	no
+C-1351	2026-05-20	Transforming Codex Entries into Interactive Story-Based Learning Platform	Ideas	no		A Learning Game;A System Game	no
+C-1352	2026-06-08	Reframing American Made: From Manufacturing Location to Values-Driven Impact	Strategy	no		A Work Game;A Learning Game	no
+C-1353	2026-06-16	The Gift Notification System: Bringing Stories, Energies, and Songs to Life Through Surprise	Ideas	no		A Learning Game;A System Game;A Work Game	no
+C-1354	2026-06-16	Bindu Learning App: A Progressive, Atlas-Emergent Learning Experience	Ideas	no		A Learning Game;A System Game	no
+C-1355	2026-06-17	Bindu Learning App: Creating Conditions, Not Delivering Content	(none)	no			no
+C-1356	2026-06-18	Scaling Smart: Google Ads Strategy, Customer Tagging, and the Art of Closing the Loop	Meeting Minutes	no		A Work Game;A System Game	no
+C-1357	2026-06-20	The Wound Behind the Wall: Unpacking Control, Credit, and the Need to Be Heard	Reflections	no		A Family Game;A Work Game;A Maya Game	no
+C-1358	2026-06-25	Building a Unified Inventory System: Fabric Rolls, Hangers, and Beyond	Meeting Minutes	no		A Work Game;A System Game	no
+C-1359	2026-06-25	Building the Seconds and Dev Lot System: Inspection, Listing, and Weekly Inventory Management	Work Stuff	no		A Work Game;A System Game	no
+C-1360	2026-06-25	Arc Yard Pieces: Designing a Self-Correcting Inventory System for Short Fabric Cuts	Work Stuff	yes		A Work Game;A System Game	no
+C-1361	2026-06-30	Building the Dolphin App: Seconds, SIV, and Shopify Sync Architecture	Work Stuff	no		A Work Game;A System Game	no
+C-1362	2026-07-16	Curated by Design: Building a Story-Driven Swatch Kit Label System	Strategy	no		A Work Game;A System Game	no
+C-1363	2026-08-10	Celebrating Diwali Together: The Power of Shared Perspectives	Ideas	no		A Learning Game;A Social Game;A Seva Game	no
+C-1364	2026-08-16	The Zero Gap: Darjeel's Path to Inner and Outer Vision as One	Reflections	no		A Maya Game;A Learning Game	no
+C-1365	2026-09-02	The Customer Is the Hero: Zorb, Shorty, and the Speech That Connects Fabric to Impact	Meeting Minutes	no		A Work Game;A Learning Game	no
