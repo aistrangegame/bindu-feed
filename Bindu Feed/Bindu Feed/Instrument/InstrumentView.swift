@@ -375,6 +375,12 @@ struct InstrumentView: View {
         // the shader's weather; the bed stayed the field's. Close enough to be inside a region
         // (region, world, fall), the bed is that room's own — the same `.room` context the
         // Rooms already play — and back out at the sky it is the field again.
+        // SLICE 10 · the turn's depth rows glide this axis rather than stacking another.
+        .onChange(of: store.axisGlide) { _, z in
+            guard let z else { return }
+            store.axisGlide = nil
+            if abs(Double(z) - travel.z) > 0.2 { travel.stepOut(to: Double(z)) }
+        }
         .onChange(of: store.currentUniRoomId) { _, _ in
             guard travel.z < 0.5 else { return }
             soundEngine.setContext(insideRoomSound ?? .base)

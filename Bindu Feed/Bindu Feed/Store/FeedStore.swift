@@ -1029,6 +1029,10 @@ final class FeedStore: ObservableObject {
     /// appear and pushes it once the feed is reachable. Nil clears it.
     @Published var pendingLaunchRoute: FeedRoute?
 
+    /// SLICE 10 · a depth the turn asked the mounted axis to glide to. InstrumentView takes
+    /// it and clears it; nil when nothing is asked.
+    @Published var axisGlide: Int?
+
     /// SLICE 5 · DOORS IN. A `bindufeed://` link from another app in the suite (a Lalita
     /// morning, the Field, a widget) — parked here until the feed is reachable, then resolved
     /// by `RootView`. A link ARRIVES AT THE PLACE; it never crosses for him: on a cold open the

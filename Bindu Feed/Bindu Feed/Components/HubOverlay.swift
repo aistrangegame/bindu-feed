@@ -7,6 +7,7 @@ import SwiftUI
 // always shows (a destination, not the Door's daily nag); axis-depths (Universe/
 // Light/Point) are absorbed until their registers ship (Waves 5/6).
 struct HubOverlay: View {
+    @EnvironmentObject private var store: FeedStore
     @Binding var presented: Bool
     @Binding var path: [FeedRoute]
 
@@ -24,6 +25,18 @@ struct HubOverlay: View {
             switch dest {
             case .rite:            $path.pushDissolve(FeedRoute.rite)
             case .archive:         $path.popToRootDissolve()   // pop to the home feed (the archive)
+            case .route(.instrument(let z)):
+                // SLICE 10 · THE TURN BECOMES THE AXIS, SEEN AS A LIST (padakarshini elements
+                // §6.3). When he is already in the instrument, a depth row does not stack a
+                // second axis on top of the first: whatever lies above the axis comes off and
+                // the camera glides, continuously, to the depth the row named — the list
+                // dissolving into the space it named. Ceremony rows still cross as before.
+                if let i = path.lastIndex(where: { if case .instrument = $0 { return true } else { return false } }) {
+                    withAnimation(.easeInOut(duration: 0.5)) { path.removeSubrange((i + 1)...) }
+                    store.axisGlide = z
+                } else {
+                    $path.pushDissolve(.instrument(z))
+                }
             case .route(let r):    $path.pushDissolve(r)
             case .absorbed:        break                          // an axis-depth, not built yet
             }
