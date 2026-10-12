@@ -108,6 +108,17 @@ struct StoryDetailView: View {
                         }
                     }
 
+                    // WAVE 5 · on a day he has called, the hall of perspectives opens under the voices
+                    if store.calledToday {
+                        Button { $path.pushDissolve(FeedRoute.hall(story)) } label: {
+                            Text("the hall of perspectives ›").spaceMonoTracked(9, em: 0.2)
+                                .foregroundColor(Color(hex: "#C9A07A").opacity(0.85))
+                        }
+                        .buttonStyle(.plain)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 18)
+                    }
+
                     ashEntryArea
                         .padding(.horizontal, BinduTheme.space16)
                         .padding(.top, 12)
@@ -124,6 +135,11 @@ struct StoryDetailView: View {
                         .buttonStyle(.plain)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 28)
+
+                        // WAVE 5 · beneath a sealed story, a door in the floor
+                        FloorDoor(color: storyRoomColor) { $path.pushDissolve(FeedRoute.mirrorFloor(story)) }
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 34)
                     }
 
                     Color.clear.frame(height: 80)

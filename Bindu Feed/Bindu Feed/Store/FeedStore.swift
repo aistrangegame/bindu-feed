@@ -24,6 +24,8 @@ final class FeedStore: ObservableObject {
     /// SLICE 6 · what the Feed's own list shows: the room filter and the sort he chose.
     @Published var feedStories: [Story] = []
     @Published var storyStats: [String: StoryStats] = [:]
+    /// WAVE 5 · the stories he sealed words on (an Ash Comment or a Return answer of his own).
+    @Published var sealedStoryIDs: Set<String> = []
     /// story record id → its rings, in `Ring Index` order. The strata's depth and every
     /// story's age both come from here, and from nothing else.
     @Published var returnRings: [String: [ReturnRing]] = [:]
@@ -260,6 +262,7 @@ final class FeedStore: ObservableObject {
             // The Airtable NAME of the record `rec9BUbHMuylYiVwH`, resolved once per pass —
             // never the literal. If he is renamed in the base this still finds him.
             let ashName = self.ashArchetype?.name ?? "Ash"
+            var sealedHere = Set<String>()
             for c in combined {
                 guard let sid = c.storyId(in: known) else { continue }
                 // `cmts` — EVERY comment on the story, Ash's included. The seat rule measures
@@ -276,6 +279,7 @@ final class FeedStore: ObservableObject {
                 // `fetchAllAshComments`. Adding Return Answers to that fetch is what made it
                 // matter: before, it only mis-sorted a fan; now it moves the arithmetic that
                 // decides whether he is present at all.
+                if c.archetype == ashName { sealedHere.insert(sid) }
                 guard c.archetype != ashName else { continue }
                 if seenArchetypes[sid, default: []].insert(c.archetype).inserted {
                     orderedArchetypes[sid, default: []].append(c.archetype)
@@ -290,6 +294,7 @@ final class FeedStore: ObservableObject {
                 )
             }
             storyStats = result
+            sealedStoryIDs = sealedHere
             error = nil
         } catch {
             self.error = error
@@ -357,6 +362,11 @@ final class FeedStore: ObservableObject {
         self.metStoryIDs = await service.fetchMetStoryIDs()
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
+
+    // MARK: - WAVE 5 · the Portrait
+
+    @Published var activityMarks: [ActivityMark] = []
+    func loadActivityMarks() async { activityMarks = await service.fetchActivityMarks() }
 
     // MARK: - WAVE 4 · Hide-and-seek
 
@@ -668,8 +678,12 @@ final class FeedStore: ObservableObject {
         return MirrorDay.pick(from.map(\.id), key: key).map { from[$0] }
     }
 
+    /// WAVE 5 · the Hall of Perspectives opens only on a day he has called.
+    var calledToday: Bool { UserDefaults.standard.string(forKey: "bindu.calledDay") == AirtableService.localDayString() }
+
     /// Only a wordless pulse reaches the record — never the state, never the passage.
     func logCall() async {
+        UserDefaults.standard.set(AirtableService.localDayString(), forKey: "bindu.calledDay")
         _ = try? await service.logActivity(
             type: .called,
             activityName: "The Call was answered",

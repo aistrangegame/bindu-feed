@@ -1147,3 +1147,56 @@ extension AirtableService {
         return ((obj?["records"] as? [[String: Any]])?.first?["id"] as? String) ?? ""
     }
 }
+
+// MARK: - WAVE 5 · the Portrait's days
+
+/// One thing the Feed recorded on one day — the shape only: what kind, whose voice, which row.
+struct ActivityMark: Hashable {
+    let day: String
+    let type: String
+    let voice: String
+    let link: String?
+}
+
+extension AirtableService {
+    /// Every Feed activity, as marks by day — never the words, only the shape.
+    func fetchActivityMarks() async -> [ActivityMark] {
+        guard !token.isEmpty else { return [] }
+        var out: [ActivityMark] = []
+        var offset: String?
+        var pages = 0
+        repeat {
+            var comps = URLComponents(string: appActivityURLString)
+            var q = [URLQueryItem(name: "pageSize", value: "100"),
+                     URLQueryItem(name: "filterByFormula", value: "{Source App}='Feed'")]
+            for f in ["Activity Date", "Activity Type", "Voice", "Link to Feed"] {
+                q.append(URLQueryItem(name: "fields[]", value: f))
+            }
+            if let offset { q.append(URLQueryItem(name: "offset", value: offset)) }
+            comps?.queryItems = q
+            guard let url = comps?.url else { break }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            do {
+                let (data, response) = try await session.data(for: req)
+                try Self.validate(response: response, data: data)
+                guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { break }
+                for r in (obj["records"] as? [[String: Any]]) ?? [] {
+                    let f = (r["fields"] as? [String: Any]) ?? [:]
+                    func name(_ v: Any?) -> String {
+                        if let s = v as? String { return s }
+                        if let d = v as? [String: Any] { return (d["name"] as? String) ?? "" }
+                        return ""
+                    }
+                    let day = (f["Activity Date"] as? String) ?? ""
+                    guard !day.isEmpty else { continue }
+                    out.append(ActivityMark(day: day, type: name(f["Activity Type"]), voice: name(f["Voice"]),
+                                            link: (f["Link to Feed"] as? [String])?.first))
+                }
+                offset = obj["offset"] as? String
+            } catch { break }
+            pages += 1
+        } while offset != nil && pages < 60
+        return out
+    }
+}

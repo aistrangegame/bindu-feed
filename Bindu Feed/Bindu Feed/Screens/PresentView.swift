@@ -34,6 +34,17 @@ struct PresentView: View {
                 VStack(spacing: 0) {
                     forwardSky
                     nowLine
+                    // WAVE 5 · the walk drawn back, and the life as cloth — both below the NOW
+                    HStack(spacing: 26) {
+                        Button { $path.pushDissolve(FeedRoute.portrait) } label: {
+                            Text("your walk, drawn ›").spaceMonoTracked(8, em: 0.2).foregroundColor(BinduTheme.inkSecondary)
+                        }
+                        Button { $path.pushDissolve(FeedRoute.weave) } label: {
+                            Text("your life as cloth ›").spaceMonoTracked(8, em: 0.2).foregroundColor(BinduTheme.inkSecondary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.bottom, 26)
                     river
                     Color.clear.frame(height: 90)
                 }

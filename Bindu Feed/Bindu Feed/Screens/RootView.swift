@@ -250,6 +250,14 @@ struct RootView: View {
             PresentView(path: $path)
         case .unwinding:
             UnwindingView(path: $path)
+        case .mirrorFloor(let story):
+            MirrorFloorView(path: $path, story: story)
+        case .hall(let story):
+            HallView(path: $path, story: story)
+        case .portrait:
+            PortraitView(path: $path)
+        case .weave:
+            WeaveView(path: $path)
         }
     }
 

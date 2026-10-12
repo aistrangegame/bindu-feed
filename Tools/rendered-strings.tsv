@@ -1133,3 +1133,38 @@ APP-OWN	… of …	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:44
 APP-OWN	let's play	Bindu Feed/Bindu Feed/Point/ShadowCorridorView.swift:6
 APP-OWN	found ∞	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:185
 NON-UI	·seek·	Bindu Feed/Bindu Feed/Store/FeedStore.swift:383
+APP-OWN	carved · it will come back to you some ordinary morning	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:189
+APP-OWN-INSTRUCTIONAL	drag across to turn the cloth	Bindu Feed/Bindu Feed/Screens/WeaveView.swift:40
+APP-OWN	every thread a voice that held the place	Bindu Feed/Bindu Feed/Screens/WeaveView.swift:26
+APP-OWN-INSTRUCTIONAL	hold to add it	Bindu Feed/Bindu Feed/Screens/HallView.swift:133
+APP-OWN-INSTRUCTIONAL	hold to carve it as yours	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:173
+APP-OWN-INSTRUCTIONAL	hold to go down	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:77
+APP-OWN	I already did.	Bindu Feed/Bindu Feed/Screens/HallView.swift:10
+APP-OWN	I carry ….	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:170
+APP-OWN	In the Codex, from here.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:203
+APP-OWN	It is held.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:192
+APP-OWN	leave my own word	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:10
+NON-UI	Letter Sealed	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:25
+NON-UI	Month mirror -- …	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:211
+APP-OWN	months down · rooms across · a knot where you sealed	Bindu Feed/Bindu Feed/Screens/WeaveView.swift:26
+APP-OWN	No walk is drawn for this month.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:112
+APP-OWN	say more	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:9
+APP-OWN	the Atman scarf	Bindu Feed/Bindu Feed/Screens/WeaveView.swift:6
+APP-OWN	the Brahman weave	Bindu Feed/Bindu Feed/Screens/WeaveView.swift:9
+APP-OWN	the floor beneath	Bindu Feed/Bindu Feed/Components/FloorDoor.swift:3
+APP-OWN	the floor gave	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:74
+APP-OWN	the hall of perspectives ›	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:114
+APP-OWN	the month, as a letter	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:180
+APP-OWN	The Portrait	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:32
+APP-OWN	This month the walk kept returning to ….	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:166
+APP-OWN	This month the walk was quiet, and still it was walked.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:168
+APP-OWN	This month the walk went mostly through … and ….	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:164
+APP-OWN	walk out into the sky	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:197
+APP-OWN	What in you was this story about?	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:120
+APP-OWN	You kept no lines this month; the walk was the whole of it.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:195
+APP-OWN	You may carry ….	Bindu Feed/Bindu Feed/Screens/MirrorFloorView.swift:168
+APP-OWN	your life as cloth ›	Bindu Feed/Bindu Feed/Screens/PresentView.swift:43
+APP-OWN-INSTRUCTIONAL	your perspective	Bindu Feed/Bindu Feed/Screens/HallView.swift:128
+APP-OWN	your walk, drawn ›	Bindu Feed/Bindu Feed/Screens/PresentView.swift:40
+APP-OWN-INSTRUCTIONAL	your word for the month	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:205
+APP-OWN	… was the voice that stayed nearest.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:170

@@ -68,4 +68,8 @@ enum FeedRoute: Hashable {
     case codex               // WAVE 3 · the Codex section
     case present             // WAVE 3 · the NOW line, letters and the river
     case unwinding           // WAVE 3 · at the turns, the grip let go
+    case mirrorFloor(Story)  // WAVE 5 · beneath a sealed story
+    case hall(Story)         // WAVE 5 · the hall of perspectives
+    case portrait            // WAVE 5 · his walk, drawn
+    case weave               // WAVE 5 · his life as cloth
 }
