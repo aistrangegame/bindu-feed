@@ -64,7 +64,12 @@ extension FeedStore {
     /// itself on its own turn.
     func revealRhymes() async {
         guard let all = try? await AirtableService.shared.fetchStories(room: nil, sort: .mostActive) else { return }
-        if Set(all.map(\.id)) != Set(stories.map(\.id)) { stories = all }
+        guard Set(all.map(\.id)) != Set(stories.map(\.id)) else { return }
+        stories = all
+        // The river he returns to is already changed: the feed keeps its own filter (one room,
+        // or all of them) and takes the newly revealed rhyme in the place the gate gives it.
+        let rooms = Set(feedStories.map(\.room))
+        feedStories = rooms.count == 1 ? all.filter { rooms.contains($0.room) } : all
     }
 
     /// The Codex memo's first sentence, for the third reading of a story that layers on return.
