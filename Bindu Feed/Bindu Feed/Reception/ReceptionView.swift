@@ -324,14 +324,14 @@ struct ThirdDoor: View {
                 VStack(spacing: 40) {
                     Spacer()
                     HStack(alignment: .bottom, spacing: 26) {
-                        door("open", tint: BinduTheme.inkSecondary, lit: 1) { done() }
+                        door("open", tint: BinduTheme.inkPrimary.opacity(0.85), lit: 1) { done() }
                         if third > 0.01 {
                             door("beneath", tint: k.color, lit: third) {
                                 withAnimation(.easeInOut(duration: 1.6)) { beneath = true }
                             }
                             .transition(.opacity)
                         }
-                        door("pass", tint: BinduTheme.inkSecondary, lit: 1) { pass() }
+                        door("pass", tint: BinduTheme.inkPrimary.opacity(0.85), lit: 1) { pass() }
                     }
                     Spacer()
                 }
