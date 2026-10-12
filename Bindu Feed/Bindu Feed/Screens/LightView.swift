@@ -72,6 +72,7 @@ struct LightView: View {
     @State private var beatLine = -1              // highest locked Declaration line (-1 = none yet)
     @State private var drawing: Double = 0        // the current line's draw-in progress, 0…1
     @State private var carveTimer: Timer?
+    @State private var sealedForward = false     // WAVE 3
     @State private var landed = false             // the last line locked; the landing has arrived
     @State private var pressing = false           // leading-edge guard for the press gesture
 
@@ -515,6 +516,22 @@ struct LightView: View {
                                 .spaceMonoTracked(10, em: 0.2)
                                 .foregroundStyle(Color(hex: "#EDE3CE"))
                         }
+                        // WAVE 3 · SEAL IT FORWARD — a second hold sends the Declaration ahead
+                        // to a season from now; it waits above the NOW line in the Present.
+                        if !sealedForward, !scene.beat.isEmpty {
+                            HoldEmber(duration: 1.6, color: Color(hex: "#C9A07A"), size: 40,
+                                      label: "hold to seal it forward · a season") {
+                                let d = Calendar.current.date(byAdding: .day, value: 90, to: Date()) ?? Date()
+                                store.sealLetter(scene.beat.joined(separator: " "),
+                                                 seal: .date(AirtableService.dayFormatter(timeZone: .current).string(from: d)))
+                                withAnimation(.easeInOut(duration: 0.8)) { sealedForward = true }
+                            }
+                            .padding(.top, 10)
+                        } else if sealedForward {
+                            Text("sealed forward · it waits in the Present")
+                                .spaceMonoTracked(8, em: 0.2).foregroundStyle(Color(hex: "#C9A07A").opacity(0.8))
+                                .padding(.top, 10)
+                        }
                     }
                     .transition(.opacity).padding(.top, 12)
                 } else if moreBeat {
@@ -879,6 +896,7 @@ struct LightView: View {
         // a point already armed and already named, and one tap entered it — collapsing the
         // two-stage arm-then-commit that §10 records as this register's whole affordance.
         landingScheduled = false; armed = nil; settleSky()
+        sealedForward = false
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
         wants = 0; lastDelivered = -1; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }

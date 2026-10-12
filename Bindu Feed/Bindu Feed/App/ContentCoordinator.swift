@@ -73,6 +73,15 @@ struct ContentCoordinator: View {
                     .zIndex(20)
             }
 
+            // WAVE 3 · a letter across time, landing wherever he is
+            if let letter = store.arrivingLetter {
+                LetterArrivalView(letter: letter,
+                                  onOpen: { store.openLetter(letter) },
+                                  onClose: { store.arrivingLetter = nil })
+                    .transition(.opacity)
+                    .zIndex(25)
+            }
+
             if waking {
                 WakingView(onDone: { waking = false })
                     .zIndex(30)
@@ -145,6 +154,8 @@ struct ContentCoordinator: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
                 withAnimation(.easeOut(duration: 0.30)) { lid = 0 } // open onto the field
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) { blinking = false }
+                // WAVE 3 · the Door is where a dated, absent or new-moon letter lands
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { store.offerLetter(at: .door) }
             }
         }
     }
@@ -153,8 +164,10 @@ struct ContentCoordinator: View {
     // Stories isn't in bootstrap — see the loadFieldSounds comment in
     // the data layer commit.
     private func bootstrap() {
+        store.noteOpen()                              // WAVE 3 · was he away?
         Task {
             await store.loadFoundation()
+            if doorCrossed { store.offerLetter(at: .door) }   // letters arrived after the crossing
         }
         Task { await store.loadPracticeInvitations() }
         Task { await store.loadSignals() }

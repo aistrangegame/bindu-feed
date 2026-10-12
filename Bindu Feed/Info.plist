@@ -36,7 +36,11 @@
 		<string>SpaceMono-Regular.ttf</string>
 	</array>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>The Rite keeps your spoken recognition in your own voice.</string>
+	<string>The Rite keeps your spoken recognition in your own voice, and the Codex hears what you speak into it.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>What you speak into the Codex is written down on this phone, in your own words.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>In the Light, your closed eyes open the nave. The camera only notices whether your eyes are closed; nothing is seen, kept or sent.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchScreen</key>

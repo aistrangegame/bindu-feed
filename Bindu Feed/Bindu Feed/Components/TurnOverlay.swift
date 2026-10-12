@@ -28,6 +28,7 @@ struct TurnRow: Identifiable {
     let hex: String
     let dest: TurnDestination
     let unmetOnly: Bool
+    var onlyAtTurns: Bool = false     // WAVE 3 · shown only at a season's turn or the new moon
     var color: Color { Color(hex: hex) }
 }
 
@@ -39,6 +40,9 @@ let turnRows: [TurnRow] = [
     .init(id: "light", name: "The Light", sub: "the future, already underway", glyph: "▷", hex: "#EDE3CE", dest: .route(.instrument(-5)), unmetOnly: false),
     .init(id: "point", name: "The Point", sub: "everything you know, arranged", glyph: "·", hex: "#C0392B", dest: .route(.instrument(1)), unmetOnly: false),
     .init(id: "kept", name: "What You Kept", sub: "every line you held", glyph: "❙", hex: "#C9A07A", dest: .route(.book), unmetOnly: false),
+    .init(id: "present", name: "The Present", sub: "what you sent ahead · the days you spoke", glyph: "—", hex: "#C9A07A", dest: .route(.present), unmetOnly: false),
+    .init(id: "codex", name: "The Codex", sub: "speak it into the source", glyph: "◌", hex: "#7FA88B", dest: .route(.codex), unmetOnly: false),
+    .init(id: "unwinding", name: "The Unwinding", sub: "tonight, the grip can go", glyph: "∿", hex: "#9B6BD6", dest: .route(.unwinding), unmetOnly: false, onlyAtTurns: true),
     .init(id: "players", name: "The Players", sub: "the lenses that read", glyph: "◊", hex: "#3AADA8", dest: .route(.players), unmetOnly: false),
     .init(id: "arrive", name: "How You Arrive", sub: "name, colour, mark", glyph: "◉", hex: "#C47A52", dest: .route(.settings), unmetOnly: false),
 ]
@@ -51,7 +55,10 @@ struct TurnOverlay: View {
     @EnvironmentObject private var breath: Breath
     @State private var appear = false
 
-    private var rows: [TurnRow] { turnRows.filter { !($0.unmetOnly && !unmet) } }
+    private var rows: [TurnRow] {
+        let atTurn = Sky.isNewMoon() || Sky.isSeasonTurn()
+        return turnRows.filter { !($0.unmetOnly && !unmet) && (!$0.onlyAtTurns || atTurn) }
+    }
 
     var body: some View {
         ZStack {
@@ -157,6 +164,24 @@ private struct TurnMark: View {
                     let y = H * (0.28 + Double(i) * 0.22)
                     ctx.fill(Path(CGRect(x: W * 0.32, y: y, width: W * (0.5 - Double(i) * 0.1), height: 1.2)), with: .color(c.opacity(0.75 - Double(i) * 0.15)))
                 }
+            case "present":                     // the NOW line, a light above, a strand below
+                ctx.fill(Path(CGRect(x: W * 0.1, y: H * 0.5, width: W * 0.8, height: 1.1)), with: .color(c.opacity(0.9)))
+                dot(W * 0.5, H * 0.24, 1.8, 0.95)
+                for i in 0..<4 { dot(W * (0.22 + Double(i) * 0.19), H * 0.74, 1.0, 0.55) }
+            case "codex":                       // an open ring, a voice going in
+                var arc = Path()
+                arc.addArc(center: CGPoint(x: W * 0.5, y: H * 0.5), radius: W * 0.28,
+                           startAngle: .degrees(-60), endAngle: .degrees(240), clockwise: false)
+                ctx.stroke(arc, with: .color(c.opacity(0.85)), lineWidth: 1.1)
+                dot(W * 0.5, H * 0.5, 1.8, 0.95)
+            case "unwinding":                   // a spiral opening outward
+                var sp = Path()
+                for k in 0...40 {
+                    let t = Double(k) / 40 * 4 * .pi, r = 1 + Double(k) * 0.22
+                    let p = CGPoint(x: W * 0.5 + cos(t) * r, y: H * 0.5 + sin(t) * r)
+                    if k == 0 { sp.move(to: p) } else { sp.addLine(to: p) }
+                }
+                ctx.stroke(sp, with: .color(c.opacity(0.85)), lineWidth: 0.9)
             case "arrive":                      // ◉ — the mark of arrival
                 ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.24, y: H * 0.24, width: W * 0.52, height: H * 0.52)), with: .color(c.opacity(0.85)), lineWidth: 1.2)
                 dot(W * 0.5, H * 0.5, 2.4, 0.95)

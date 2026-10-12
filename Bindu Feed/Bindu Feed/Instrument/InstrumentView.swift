@@ -27,6 +27,7 @@ struct InstrumentView: View {
     @StateObject private var travel: AxisTravel
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
+    @State private var showCorridor = false     // WAVE 3
     @State private var pointHolds = false      // a Point universe or star reading is open
 
     /// C7.4 · `The Instrument v3.html:5474` — `IMM.on ? 0 : TR.tension*(1 - TR.push*0.35)`.
@@ -226,8 +227,19 @@ struct InstrumentView: View {
             // every immersion factor.
             ZStack {
                 if centreRevealed {
-                    PointRevealView(path: $path, onAgain: { travel.stepOut(to: 1) })
+                    PointRevealView(path: $path, onAgain: {
+                        // WAVE 3 · THE SHADOW CORRIDOR — "again?" is answered by forgetting
+                        withAnimation(.easeInOut(duration: 1.2)) { showCorridor = true }
+                    })
                         .transition(.opacity)
+                }
+                if showCorridor {
+                    ShadowCorridorView(onDone: {
+                        store.forgetToday()
+                        withAnimation(.easeInOut(duration: 1.6)) { showCorridor = false }
+                        travel.stepOut(to: 1)
+                    })
+                    .transition(.opacity)
                 }
             }
             .animation(.easeInOut(duration: 2.4), value: centreRevealed)
@@ -372,6 +384,7 @@ struct InstrumentView: View {
         // Point band the field bed resumes: a room that hums rather than climbs.
         .onChange(of: here.key) { _, key in
             HeartbeatService.shared.set("axis", on: Self.pulseKeys.contains(key))   // WAVE 1 · the pulse
+            if key == "d3" { store.offerLetter(at: .veil) }   // WAVE 3 · a letter sealed for the Veil
             let onPoint = travel.z >= 0.5
             soundEngine.setContext(onPoint
                 ? .point(enclosure: Int(PointYantra.focus(forAxisZ: travel.z).rounded()))

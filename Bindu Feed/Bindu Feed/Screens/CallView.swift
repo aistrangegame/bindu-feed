@@ -345,7 +345,11 @@ struct CallView: View {
     private func close() {
         withAnimation(.easeInOut(duration: 0.9)) { appear = false }
         soundEngine.fieldThreshold(hz: 136.1, dur: 5)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { onClose() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) {
+            onClose()
+            // WAVE 3 · a letter sealed "the next time I call" lands as he surfaces
+            if answer != nil { store.offerLetter(at: .call) }
+        }
     }
 
     private func signerColor(_ a: CallAnswer) -> Color {

@@ -291,6 +291,8 @@ private struct RiteSealed: View {
     let text: String
     let onDoor: () -> Void
     @EnvironmentObject private var soundEngine: SoundEngine
+    @EnvironmentObject private var store: FeedStore
+    @State private var sealedForward = false
     @State private var phase = 0   // 0 entry · 1 "room has changed" · 2 "story is whole"
 
     var body: some View {
@@ -316,6 +318,20 @@ private struct RiteSealed: View {
                             .font(.lora(15)).lineSpacing(6)
                             .foregroundStyle(BinduTheme.inkSecondary)
                             .multilineTextAlignment(.center)
+                        // WAVE 3 · SEAL IT FORWARD — the words he sealed, sent a season ahead
+                        if !sealedForward {
+                            HoldEmber(duration: 1.6, color: Color(hex: "#C9A07A"), size: 38,
+                                      label: "hold to seal it forward") {
+                                let d = Calendar.current.date(byAdding: .day, value: 90, to: Date()) ?? Date()
+                                store.sealLetter(text, seal: .date(AirtableService.dayFormatter(timeZone: .current).string(from: d)))
+                                withAnimation(.easeInOut(duration: 0.8)) { sealedForward = true }
+                            }
+                            .padding(.top, 14)
+                        } else {
+                            Text("it waits in the Present")
+                                .spaceMonoTracked(8, em: 0.2).foregroundStyle(Color(hex: "#C9A07A").opacity(0.8))
+                                .padding(.top, 14)
+                        }
                     }
                 }
                 .transition(.opacity)

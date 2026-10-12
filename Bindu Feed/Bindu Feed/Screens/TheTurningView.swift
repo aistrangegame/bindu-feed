@@ -325,6 +325,8 @@ struct TheTurningView: View {
                     progress = 1.0
                     done = true
                     pressing = false
+                    // WAVE 3 · a letter sealed "when I trace the Turning again" lands here
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { store.offerLetter(at: .turning) }
                     traceTask = nil
                     return
                 }

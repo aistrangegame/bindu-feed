@@ -615,6 +615,104 @@ enum Sentences {
     }
 }
 
+// MARK: - WAVE 3 · Letters across time
+
+/// When a letter sealed forward may open. A condition only ever makes it AVAILABLE; it lands
+/// the first time the condition holds and never before.
+enum LetterSeal: Hashable {
+    case date(String)        // "yyyy-MM-dd"
+    case absence             // after a long absence (seven days or more away)
+    case veil                // when he is in the Veil (Point world III)
+    case turning             // when he traces the Turning again
+    case call                // the next time he calls
+    case newMoon             // at the next new moon
+    case back(String)        // a letter BACK, to the self who spoke on that day (yyyy-MM-dd)
+
+    var excerpt: String {
+        switch self {
+        case .date(let d): return "OPENS: \(d)"
+        case .absence:     return "WHEN: absence"
+        case .veil:        return "WHEN: veil"
+        case .turning:     return "WHEN: turning"
+        case .call:        return "WHEN: call"
+        case .newMoon:     return "WHEN: new moon"
+        case .back(let d): return "BACK: \(d)"
+        }
+    }
+
+    init?(excerpt: String) {
+        let parts = excerpt.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+        guard parts.count == 2 else { return nil }
+        switch (parts[0].uppercased(), parts[1].lowercased()) {
+        case ("OPENS", _):            self = .date(parts[1])
+        case ("BACK", _):             self = .back(parts[1])
+        case ("WHEN", "absence"):     self = .absence
+        case ("WHEN", "veil"):        self = .veil
+        case ("WHEN", "turning"):     self = .turning
+        case ("WHEN", "call"):        self = .call
+        case ("WHEN", "new moon"):    self = .newMoon
+        default: return nil
+        }
+    }
+
+    /// How the seal reads on its light, before it opens.
+    var label: String {
+        switch self {
+        case .date(let d): return "opens \(d)"
+        case .absence:     return "when you have been away"
+        case .veil:        return "when you are in the Veil"
+        case .turning:     return "when you trace the Turning again"
+        case .call:        return "the next time you call"
+        case .newMoon:     return "at the new moon"
+        case .back(let d): return "to the one who spoke on \(d)"
+        }
+    }
+}
+
+/// A letter he wrote across time (`Type = Letter`, band 900+). `Body` is the letter; `Excerpt`
+/// its seal; `Source Date` the day it was sealed; `Last Activity Date` the day it opened.
+struct Letter: Identifiable, Hashable {
+    let id: String
+    let body: String
+    let seal: LetterSeal
+    let sealedOn: String
+    var openedOn: String
+    let storyId: String?
+
+    init?(from record: AirtableRecord) {
+        let f = record.fields
+        guard let seal = LetterSeal(excerpt: f.excerpt ?? "") else { return nil }
+        id = record.id
+        body = (f.body ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        self.seal = seal
+        sealedOn = f.sourceDate ?? ""
+        openedOn = f.lastActivityDate ?? ""
+        storyId = f.linkedStory?.first
+    }
+
+    init(localId: String, body: String, seal: LetterSeal, storyId: String?) {
+        id = localId
+        self.body = body
+        self.seal = seal
+        sealedOn = AirtableService.localDayString()
+        openedOn = ""
+        self.storyId = storyId
+    }
+
+    var isOpen: Bool { !openedOn.isEmpty }
+    var isBack: Bool { if case .back = seal { return true }; return false }
+}
+
+/// WAVE 3 · something he once gripped, offered back at the Unwinding with the inverse of the
+/// gesture that made it.
+struct UnwindItem: Identifiable, Hashable {
+    enum Kind: String { case held, carved, ring }   // held → lift · carved → pinch · ring → unturn
+    let id: String
+    let words: String
+    let kind: Kind
+    let day: String
+}
+
 // MARK: - Story aggregates
 
 struct StoryStats: Hashable {

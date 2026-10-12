@@ -127,11 +127,13 @@ final class FeedStore: ObservableObject {
             // WAVE 1 · his own words ride with it too — the Call must answer on a cold open.
             async let callT: Void = loadCallAnswers()
             async let keptT: Void = loadKept()           // WAVE 2 · his book, on every open
+            async let lettersT: Void = loadLetters()     // WAVE 3 · letters across time
 
             let (r, a, s) = try await (roomsT, archetypesT, sentencesT)
             _ = await leelaT
             _ = await callT
             _ = await keptT
+            _ = await lettersT
             self.rooms = r
             self.archetypes = a
             self.thresholdSentences = s
@@ -354,6 +356,171 @@ final class FeedStore: ObservableObject {
     func loadMetStories() async {
         self.metStoryIDs = await service.fetchMetStoryIDs()
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
+    }
+
+    // MARK: - WAVE 3 · Letters across time
+
+    @Published var letters: [Letter] = []
+    /// A letter whose condition just came true — ContentCoordinator lets it descend.
+    @Published var arrivingLetter: Letter?
+    private static let lastOpenKey = "bindu.lastOpenDay"
+    private static let openedLocallyKey = "bindu.letters.opened"
+    /// True when this open follows seven or more days away (read once, at launch).
+    private(set) var returningFromAbsence = false
+
+    enum LetterMoment { case door, veil, turning, call }
+
+    func loadLetters() async {
+        if let l = try? await service.fetchLetters() {
+            let local = Set((UserDefaults.standard.array(forKey: Self.openedLocallyKey) as? [String]) ?? [])
+            letters = l.map { var x = $0; if local.contains(x.id), x.openedOn.isEmpty { x.openedOn = AirtableService.localDayString() }; return x }
+        }
+    }
+
+    /// Mark today as an open, and remember whether he had been away.
+    func noteOpen() {
+        let today = AirtableService.localDayString()
+        if let last = UserDefaults.standard.string(forKey: Self.lastOpenKey),
+           let a = AirtableService.dayFormatter(timeZone: .current).date(from: last),
+           let b = AirtableService.dayFormatter(timeZone: .current).date(from: today) {
+            returningFromAbsence = b.timeIntervalSince(a) >= 7 * 86_400
+        }
+        UserDefaults.standard.set(today, forKey: Self.lastOpenKey)
+    }
+
+    func sealLetter(_ body: String, seal: LetterSeal, storyId: String? = nil) {
+        let t = body.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        let local = Letter(localId: "local-\(UUID().uuidString)", body: t, seal: seal, storyId: storyId)
+        letters.append(local)
+        var fields: [String: Any] = [
+            "Name": "letter-\(AirtableService.localDayString())",
+            "Type": "Letter",
+            "Status": "Live",
+            "Body": t,
+            "Excerpt": seal.excerpt,
+            "Source Date": AirtableService.localDayString(),
+            "Sort Order": 900 + Int(Date().timeIntervalSince1970) % 1_000_000_000,
+        ]
+        if let storyId { fields["Linked Story"] = [storyId] }
+        Task {
+            if let rec = try? await service.createFeedRecord(fields: fields), let l = Letter(from: rec),
+               let i = letters.firstIndex(where: { $0.id == local.id }) {
+                letters[i] = l
+            }
+            _ = try? await service.logActivity(type: .letterSealed, activityName: "A letter sealed",
+                                               detail: "He sealed a letter across time.", excerpt: nil, voice: "Lalita")
+        }
+    }
+
+    /// The first sealed letter whose condition holds at this moment, if any — offered once.
+    func offerLetter(at moment: LetterMoment) {
+        guard arrivingLetter == nil else { return }
+        let today = AirtableService.localDayString()
+        let due = letters.first { l in
+            guard !l.isOpen else { return false }
+            switch (l.seal, moment) {
+            case (.date(let d), .door):  return today >= d
+            case (.absence, .door):      return returningFromAbsence
+            case (.newMoon, .door):      return Sky.isNewMoon() && l.sealedOn != today
+            case (.veil, .veil):         return true
+            case (.turning, .turning):   return true
+            case (.call, .call):         return l.sealedOn != today
+            default:                     return false
+            }
+        }
+        if let due { arrivingLetter = due }
+    }
+
+    func openLetter(_ l: Letter) {
+        let today = AirtableService.localDayString()
+        if let i = letters.firstIndex(where: { $0.id == l.id }) { letters[i].openedOn = today }
+        var local = (UserDefaults.standard.array(forKey: Self.openedLocallyKey) as? [String]) ?? []
+        local.append(l.id)
+        UserDefaults.standard.set(local, forKey: Self.openedLocallyKey)
+        guard !l.id.hasPrefix("local-") else { return }
+        Task {
+            try? await service.patchFeedRecord(id: l.id, fields: ["Last Activity Date": today])
+            _ = try? await service.logActivity(type: .letterOpened, feedRecordId: l.id, activityName: "A letter opened",
+                                               detail: "A letter he sealed reached him.", excerpt: nil, voice: "Lalita")
+        }
+    }
+
+    // MARK: - WAVE 3 · The Codex section
+
+    @Published var codexDays: [CodexDay] = []
+
+    func loadCodexDays() async {
+        if let d = try? await service.fetchCodexDays() { codexDays = d }
+    }
+
+    /// His words into the Codex, raw, registered as from this app. Returns true on success.
+    func giveToCodex(name: String, words: String) async -> Bool {
+        let w = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !w.isEmpty else { return false }
+        let n = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let title = n.isEmpty ? String(w.split(separator: " ").prefix(7).joined(separator: " ")) : n
+        guard let id = try? await service.writeCodex(name: title, words: w), !id.isEmpty else { return false }
+        codexDays.insert(CodexDay(id: id, date: AirtableService.localDayString(), number: "",
+                                  title: title, category: "", sourceApp: "Bindu Feed"), at: 0)
+        _ = try? await service.logActivity(type: .codexWritten, activityName: "Spoken into the Codex",
+                                           detail: "He gave the Codex a new entry from the Feed.", excerpt: nil, voice: "Gaia")
+        return true
+    }
+
+    // MARK: - WAVE 3 · The Unwinding
+
+    private static let releasedKey = "bindu.released"
+    var released: Set<String> { Set((UserDefaults.standard.array(forKey: Self.releasedKey) as? [String]) ?? []) }
+
+    /// Is the Unwinding open today? Only at a season's turn or the new moon.
+    var unwindingOpen: Bool { Sky.isNewMoon() || Sky.isSeasonTurn() }
+
+    /// Let one grip go. Nothing is deleted — only the grip.
+    func release(_ id: String, kind: String) {
+        var r = released; r.insert(id)
+        UserDefaults.standard.set(Array(r), forKey: Self.releasedKey)
+        Task {
+            _ = try? await service.logActivity(type: .released, feedRecordId: id.hasPrefix("rec") ? id : nil,
+                                               activityName: "Released — \(kind)", detail: "He let the grip go.",
+                                               excerpt: nil, voice: "Sakshi")
+        }
+    }
+
+    /// Up to eight things he once gripped — his sealed words, his carved Declarations, the
+    /// rings he answered, the lines he kept — newest first, never one already released.
+    func unwindingItems() async -> [UnwindItem] {
+        var items: [UnwindItem] = []
+        let gone = released
+        if let ash = try? await service.fetchAllAshComments() {
+            items += ash.filter { !$0.body.isEmpty }.map { UnwindItem(id: $0.id, words: $0.body, kind: .held, day: $0.sourceDate) }
+        }
+        if let cards = try? await service.fetchMirrorCards() {
+            items += cards.filter { $0.sortOrder >= 900 && $0.register == .vow }
+                .map { UnwindItem(id: $0.id, words: $0.body, kind: .carved, day: "") }
+        }
+        if let answers = try? await service.fetchReturnAnswers() {
+            let me = ashArchetype?.name ?? "Ash"
+            items += answers.filter { $0.archetype == me }.map { UnwindItem(id: $0.id, words: $0.body, kind: .ring, day: $0.sealedAt) }
+        }
+        items += kept.map { UnwindItem(id: $0.id, words: $0.line, kind: .held, day: $0.day) }
+        return Array(items.filter { !gone.contains($0.id) }
+            .sorted { $0.day > $1.day }
+            .prefix(8))
+    }
+
+    // MARK: - WAVE 3 · the shadow corridor
+
+    private static let forgottenKey = "bindu.forgotten"
+    /// After the corridor, today's story reads as unread — forgetting made sacred.
+    var forgotToday: Bool { UserDefaults.standard.string(forKey: Self.forgottenKey) == AirtableService.localDayString() }
+    func forgetToday() {
+        UserDefaults.standard.set(AirtableService.localDayString(), forKey: Self.forgottenKey)
+        // the day's story goes dark in the sky again — met, and let go of, so it can be met
+        if let s = storyOfDay(), metStoryIDs.contains(s.id) {
+            metStoryIDs.remove(s.id)
+            rebuildUniSky()
+        }
     }
 
     // MARK: - WAVE 2 · What he kept · where he stayed

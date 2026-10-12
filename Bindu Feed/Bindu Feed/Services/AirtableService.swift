@@ -42,6 +42,10 @@ enum FeedActivityType: String {
     case called         = "Called"         // WAVE 1 · the Call was answered — a wordless pulse (typecast)
     case readByHand     = "Read by Hand"   // WAVE 2 · a story read at his own pace (typecast)
     case kept           = "Kept"           // WAVE 2 · a line held into his book (typecast)
+    case letterSealed   = "Letter Sealed"  // WAVE 3 · a letter across time (typecast)
+    case letterOpened   = "Letter Opened"  // WAVE 3
+    case codexWritten   = "Codex Written"  // WAVE 3 · a Codex entry written from the Feed
+    case released       = "Released"       // WAVE 3 · the Unwinding — a grip let go
 }
 
 final class AirtableService {
@@ -510,6 +514,14 @@ final class AirtableService {
         let records = try await fetch(filter: "AND({Type}='Return',{Status}='Live')",
                                       sort: [(field: "Sort Order", direction: "asc")])
         return records.compactMap(ReturnRing.init(from:))
+    }
+
+    // MARK: - WAVE 3 · letters
+
+    func fetchLetters() async throws -> [Letter] {
+        let records = try await fetch(filter: "AND({Type}='Letter',{Status}='Live')",
+                                      sort: [(field: "Sort Order", direction: "asc")])
+        return records.compactMap(Letter.init(from:))
     }
 
     // MARK: - WAVE 2 · his book
@@ -1033,5 +1045,105 @@ final class AirtableService {
             let body = String(data: data, encoding: .utf8) ?? "<no body>"
             throw AirtableError.http(http.statusCode, body)
         }
+    }
+}
+
+// MARK: - WAVE 3 · THE CODEX, WRITTEN FROM ANY APP
+//
+// Ashrey's ruling (11 Oct 2026): every instrument has a Codex section that writes straight into
+// the Codex table, and each row carries a register of WHICH APP it came from (`Source App`,
+// fldaii08WVwJQA5qP). The Feed writes as "Bindu Feed"; Field, Mandala and Learning take the same
+// three calls with their own name. Rows are written raw — date, name, his words — and left for
+// his own Codex pipeline; the app sets no Status, so no automation runs that he did not run.
+
+/// One day of the Codex river — never the contents, only what a glyph needs.
+struct CodexDay: Identifiable, Hashable {
+    let id: String
+    let date: String
+    let number: String       // "(C-1365)"
+    let title: String
+    let category: String
+    let sourceApp: String
+}
+
+extension AirtableService {
+    static let codexTable = "tblDF4OCMcRoxkQjU"
+    enum CodexField {
+        static let date       = "fldth1fgVdc2HgIyn"
+        static let transcript = "fld459YeVBZBgB8zh"
+        static let name       = "fldxmZqObGiIoHHll"
+        static let number     = "fld7SVzyyytaOx9HM"
+        static let category   = "fldtLOGCLZZjCRNoB"
+        static let author     = "fld1AZInHlVwMynGS"
+        static let sourceApp  = "fldaii08WVwJQA5qP"
+    }
+    /// The categories the river never shows, even as a glyph: the house's private material.
+    static let codexQuiet: Set<String> = ["Health"]
+
+    private var codexURL: String { "https://api.airtable.com/v0/app248ZTWhYJlvQj2/\(Self.codexTable)" }
+
+    /// Every Codex day, as the river needs it (date, number, name, category, source app).
+    func fetchCodexDays() async throws -> [CodexDay] {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        var out: [CodexDay] = []
+        var offset: String?
+        repeat {
+            var c = URLComponents(string: codexURL)
+            var items = [URLQueryItem(name: "pageSize", value: "100"),
+                         URLQueryItem(name: "returnFieldsByFieldId", value: "true"),
+                         URLQueryItem(name: "sort[0][field]", value: CodexField.date),
+                         URLQueryItem(name: "sort[0][direction]", value: "desc")]
+            for f in [CodexField.date, CodexField.name, CodexField.number, CodexField.category, CodexField.sourceApp] {
+                items.append(URLQueryItem(name: "fields[]", value: f))
+            }
+            if let offset { items.append(URLQueryItem(name: "offset", value: offset)) }
+            c?.queryItems = items
+            guard let url = c?.url else { throw AirtableError.badURL }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            let (data, response) = try await session.data(for: req)
+            try Self.validate(response: response, data: data)
+            guard let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { break }
+            for r in (obj["records"] as? [[String: Any]]) ?? [] {
+                let f = (r["fields"] as? [String: Any]) ?? [:]
+                func name(_ v: Any?) -> String {
+                    if let s = v as? String { return s }
+                    if let d = v as? [String: Any] { return (d["name"] as? String) ?? "" }
+                    return ""
+                }
+                let cat = name(f[CodexField.category]).trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !Self.codexQuiet.contains(cat) else { continue }
+                let date = (f[CodexField.date] as? String) ?? ""
+                guard !date.isEmpty else { continue }
+                out.append(CodexDay(id: (r["id"] as? String) ?? UUID().uuidString, date: date,
+                                    number: name(f[CodexField.number]), title: name(f[CodexField.name]),
+                                    category: cat, sourceApp: name(f[CodexField.sourceApp])))
+            }
+            offset = obj["offset"] as? String
+        } while offset != nil
+        return out
+    }
+
+    /// One new Codex row, raw, registered to the app that wrote it.
+    @discardableResult
+    func writeCodex(name: String, words: String, sourceApp: String = "Bindu Feed") async throws -> String {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: codexURL) else { throw AirtableError.badURL }
+        let fields: [String: Any] = [
+            CodexField.date: Self.localDayString(),
+            CodexField.name: name,
+            CodexField.transcript: words,
+            CodexField.author: "Ashrey",
+            CodexField.sourceApp: sourceApp,
+        ]
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: ["records": [["fields": fields]], "typecast": true])
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
+        let obj = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        return ((obj?["records"] as? [[String: Any]])?.first?["id"] as? String) ?? ""
     }
 }

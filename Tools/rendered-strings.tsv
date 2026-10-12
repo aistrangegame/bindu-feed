@@ -1052,3 +1052,82 @@ APP-OWN-INSTRUCTIONAL	touch the line to keep	Bindu Feed/Bindu Feed/Screens/Story
 APP-OWN	what keeps calling	Bindu Feed/Bindu Feed/Screens/BookView.swift:146
 APP-OWN	What You Kept	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41
 APP-OWN	where you stayed	Bindu Feed/Bindu Feed/Screens/ReadByHandView.swift:249
+APP-OWN	-- you, on …	Bindu Feed/Bindu Feed/Screens/LetterArrivalView.swift:49
+NON-UI	A letter he sealed reached him.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:445
+APP-OWN-INSTRUCTIONAL	a name for it (or its first words will be)	Bindu Feed/Bindu Feed/Screens/CodexView.swift:88
+APP-OWN	above the line, what you sent ahead · below it, the days you spoke	Bindu Feed/Bindu Feed/Screens/PresentView.swift:71
+APP-OWN	already reached you	Bindu Feed/Bindu Feed/Screens/PresentView.swift:110
+APP-OWN	at the new moon	Bindu Feed/Bindu Feed/Models/Models.swift:666
+NON-UI	BACK: …	Bindu Feed/Bindu Feed/Models/Models.swift:639
+NON-UI	Bheruṇḍā	Bindu Feed/Bindu Feed/Models/Sky.swift:32
+NON-UI	bindu.lastOpenDay	Bindu Feed/Bindu Feed/Store/FeedStore.swift:366
+NON-UI	Citrā	Bindu Feed/Bindu Feed/Models/Sky.swift:34
+APP-OWN	from Bindu Feed · …	Bindu Feed/Bindu Feed/Screens/CodexView.swift:130
+APP-OWN	given from here	Bindu Feed/Bindu Feed/Screens/CodexView.swift:145
+NON-UI	He gave the Codex a new entry from the Feed.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:467
+NON-UI	He let the grip go.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:485
+NON-UI	He sealed a letter across time.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:412
+APP-OWN-INSTRUCTIONAL	hold the ember and speak, or touch here to write	Bindu Feed/Bindu Feed/Screens/CodexView.swift:72
+APP-OWN-INSTRUCTIONAL	hold to give it	Bindu Feed/Bindu Feed/Screens/CodexView.swift:116
+APP-OWN-INSTRUCTIONAL	hold to seal	Bindu Feed/Bindu Feed/Screens/PresentView.swift:291
+APP-OWN-INSTRUCTIONAL	hold to seal it forward	Bindu Feed/Bindu Feed/Screens/RiteView.swift:324
+APP-OWN-INSTRUCTIONAL	hold to seal it forward · a season	Bindu Feed/Bindu Feed/Screens/LightView.swift:523
+APP-OWN-INSTRUCTIONAL	hold to speak	Bindu Feed/Bindu Feed/Screens/CodexView.swift:112
+APP-OWN	It is in the Codex now.	Bindu Feed/Bindu Feed/Screens/CodexView.swift:128
+APP-OWN	it waits in the Present	Bindu Feed/Bindu Feed/Screens/RiteView.swift:331
+NON-UI	Jvālāmālinī	Bindu Feed/Bindu Feed/Models/Sky.swift:34
+NON-UI	Kulasundarī	Bindu Feed/Bindu Feed/Models/Sky.swift:33
+APP-OWN-INSTRUCTIONAL	let it open	Bindu Feed/Bindu Feed/Screens/PresentView.swift:268
+NON-UI	listening...	Bindu Feed/Bindu Feed/Screens/CodexView.swift:72
+NON-UI	Mahāvajreśvarī	Bindu Feed/Bindu Feed/Models/Sky.swift:33
+NON-UI	new moon	Bindu Feed/Bindu Feed/Models/Models.swift:628
+NON-UI	Nityaklinnā	Bindu Feed/Bindu Feed/Models/Sky.swift:32
+NON-UI	Nityā	Bindu Feed/Bindu Feed/Models/Sky.swift:6
+APP-OWN	Nothing is gripped. Only the point.	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:156
+APP-OWN	Nothing is on its way yet.	Bindu Feed/Bindu Feed/Screens/PresentView.swift:78
+APP-OWN	nothing was deleted · only the grip	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:158
+APP-OWN	Nothing yet. The first thing you give from here starts the register.	Bindu Feed/Bindu Feed/Screens/CodexView.swift:147
+NON-UI	Nīlapatākā	Bindu Feed/Bindu Feed/Models/Sky.swift:34
+APP-OWN	on a day	Bindu Feed/Bindu Feed/Screens/PresentView.swift:236
+APP-OWN	Only the point remains.	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:156
+APP-OWN	opens …	Bindu Feed/Bindu Feed/Models/Models.swift:661
+NON-UI	OPENS: …	Bindu Feed/Bindu Feed/Models/Models.swift:633
+NON-UI	Released -- …	Bindu Feed/Bindu Feed/Store/FeedStore.swift:485
+NON-UI	Sarvamaṅgalā	Bindu Feed/Bindu Feed/Models/Sky.swift:34
+APP-OWN	sealed forward · it waits in the Present	Bindu Feed/Bindu Feed/Screens/LightView.swift:531
+APP-OWN	sealed …	Bindu Feed/Bindu Feed/Screens/PresentView.swift:90
+APP-OWN	sealed … · opened …	Bindu Feed/Bindu Feed/Screens/PresentView.swift:114
+APP-OWN-INSTRUCTIONAL	speak again	Bindu Feed/Bindu Feed/Screens/CodexView.swift:136
+APP-OWN	speak it into the source	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:44
+APP-OWN	Speak it, or write it. It goes into the Codex as you said it.	Bindu Feed/Bindu Feed/Screens/CodexView.swift:42
+APP-OWN	the next time I call	Bindu Feed/Bindu Feed/Screens/PresentView.swift:240
+APP-OWN	the next time you call	Bindu Feed/Bindu Feed/Models/Models.swift:665
+APP-OWN	The phone has not been allowed to hear. Writing works the same.	Bindu Feed/Bindu Feed/Screens/CodexView.swift:93
+APP-OWN	The Unwinding	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:45
+APP-OWN	to the one who spoke on …	Bindu Feed/Bindu Feed/Models/Models.swift:667
+APP-OWN	To the one who will open this	Bindu Feed/Bindu Feed/Screens/PresentView.swift:306
+APP-OWN	tonight, the grip can go	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:45
+NON-UI	Tvaritā	Bindu Feed/Bindu Feed/Models/Sky.swift:33
+NON-UI	Vahnivāsinī	Bindu Feed/Bindu Feed/Models/Sky.swift:32
+NON-UI	Vijayā	Bindu Feed/Bindu Feed/Models/Sky.swift:34
+APP-OWN	What came through the night?	Bindu Feed/Bindu Feed/Screens/CodexView.swift:42
+APP-OWN	what you sent ahead · the days you spoke	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:43
+APP-OWN	when I am in the Veil	Bindu Feed/Bindu Feed/Screens/PresentView.swift:238
+APP-OWN	when I have been away	Bindu Feed/Bindu Feed/Screens/PresentView.swift:237
+APP-OWN	when I trace the Turning again	Bindu Feed/Bindu Feed/Screens/PresentView.swift:239
+APP-OWN	when you are in the Veil	Bindu Feed/Bindu Feed/Models/Models.swift:663
+APP-OWN	when you have been away	Bindu Feed/Bindu Feed/Models/Models.swift:662
+APP-OWN	when you trace the Turning again	Bindu Feed/Bindu Feed/Models/Models.swift:664
+NON-UI	WHEN: absence	Bindu Feed/Bindu Feed/Models/Models.swift:634
+NON-UI	WHEN: call	Bindu Feed/Bindu Feed/Models/Models.swift:637
+NON-UI	WHEN: new moon	Bindu Feed/Bindu Feed/Models/Models.swift:638
+NON-UI	WHEN: turning	Bindu Feed/Bindu Feed/Models/Models.swift:636
+NON-UI	WHEN: veil	Bindu Feed/Bindu Feed/Models/Models.swift:635
+APP-OWN-INSTRUCTIONAL	write back to this day	Bindu Feed/Bindu Feed/Screens/PresentView.swift:213
+APP-OWN-INSTRUCTIONAL	write forward	Bindu Feed/Bindu Feed/Screens/PresentView.swift:100
+APP-OWN-INSTRUCTIONAL	you carved this · pinch it back to a point	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:85
+APP-OWN-INSTRUCTIONAL	you held this · lift it away	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:84
+APP-OWN-INSTRUCTIONAL	you turned this ring · unturn it	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:86
+NON-UI	Śivadūtī	Bindu Feed/Bindu Feed/Models/Sky.swift:33
+APP-OWN	… of …	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:44
+APP-OWN	let's play	Bindu Feed/Bindu Feed/Point/ShadowCorridorView.swift:6

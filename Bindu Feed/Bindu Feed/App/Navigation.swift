@@ -65,4 +65,7 @@ enum FeedRoute: Hashable {
     case aperture        // the live Aperture (was a raw NavigationLink; now a real route)
     case readByHand(Story)   // WAVE 2 · the second door into a story
     case book                // WAVE 2 · what he kept
+    case codex               // WAVE 3 · the Codex section
+    case present             // WAVE 3 · the NOW line, letters and the river
+    case unwinding           // WAVE 3 · at the turns, the grip let go
 }

@@ -241,6 +241,12 @@ struct RootView: View {
             ReadByHandView(path: $path, story: story)
         case .book:
             BookView(path: $path)
+        case .codex:
+            CodexView(path: $path)
+        case .present:
+            PresentView(path: $path)
+        case .unwinding:
+            UnwindingView(path: $path)
         }
     }
 
