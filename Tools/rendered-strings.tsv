@@ -1131,3 +1131,5 @@ APP-OWN-INSTRUCTIONAL	you turned this ring · unturn it	Bindu Feed/Bindu Feed/Sc
 NON-UI	Śivadūtī	Bindu Feed/Bindu Feed/Models/Sky.swift:33
 APP-OWN	… of …	Bindu Feed/Bindu Feed/Screens/UnwindingView.swift:44
 APP-OWN	let's play	Bindu Feed/Bindu Feed/Point/ShadowCorridorView.swift:6
+APP-OWN	found ∞	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:185
+NON-UI	·seek·	Bindu Feed/Bindu Feed/Store/FeedStore.swift:383

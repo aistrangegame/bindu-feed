@@ -41,6 +41,8 @@ struct StoryDetailView: View {
 
     @State private var showHub = false
     @State private var choosingParagraph: Int?     // WAVE 2 · a held paragraph, its lines apart
+    @State private var seek: (word: String, target: Story)?   // WAVE 4 · the day's clue
+    @State private var seekGlow: Double = 0
     @State private var arrivalSettings: ArrivalSettings = .init()
 
     // The Audio Anchor — one shared player for the whole story; a quiet mark on any Ash entry
@@ -142,6 +144,13 @@ struct StoryDetailView: View {
         }
         .onAppear {
             HeartbeatService.shared.set("story", on: Self.pulseRooms.contains(story.room))   // WAVE 1
+            // WAVE 4 · read slowly, and a word begins to glow — half a minute on the page
+            seek = store.seekClue(in: story)
+            if seek != nil {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                    withAnimation(.easeInOut(duration: 6)) { seekGlow = 1 }
+                }
+            }
             arrivalSettings = ArrivalSettings.load()
             if store.consumeStoryRefresh(storyId: story.id) {
                 Task { await forceReloadComments() }
@@ -172,6 +181,9 @@ struct StoryDetailView: View {
                     .foregroundColor(BinduTheme.inkTertiary)
             }
 
+            if store.foundStories.contains(story.id) {
+                Text("found ∞").spaceMonoTracked(8, em: 0.2).foregroundColor(Color(hex: "#C9A07A").opacity(0.85))
+            }
             Text(story.title)
                 .font(.lora(23, weight: .medium))
                 .foregroundColor(BinduTheme.inkPrimary)
@@ -208,6 +220,19 @@ struct StoryDetailView: View {
     }
 
     // MARK: - Story body (no animation)
+
+    /// WAVE 4 · a paragraph, with the day's clue word glowing in it once he has read slowly.
+    private func paragraphText(_ p: String) -> Text {
+        guard let c = seek, seekGlow > 0, let r = p.range(of: c.word, options: [.caseInsensitive]) else { return Text(p) }
+        let gold = Color(hex: "#C9A07A")
+        return Text(String(p[..<r.lowerBound]))
+            + Text(String(p[r])).foregroundColor(gold.opacity(0.55 + 0.45 * seekGlow)).italic()
+            + Text(String(p[r.upperBound...]))
+    }
+
+    private func paragraphHasWord(_ p: String, _ w: String) -> Bool {
+        p.range(of: w, options: [.caseInsensitive]) != nil
+    }
 
     private var storyBody: some View {
         let paragraphs = story.body
@@ -256,11 +281,25 @@ struct StoryDetailView: View {
                     .transition(.opacity)
                 } else {
                     HStack(alignment: .top, spacing: 0) {
-                        Text(p)
+                        paragraphText(p)
                             .font(.lora(17))
                             .foregroundColor(BinduTheme.inkPrimary)
                             .lineSpacing(14)  // approx Lora 17 * (1.82 − 1) = 13.94pt
                             .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        // WAVE 4 · hide-and-seek — the clue's thread, only when he reads slowly
+                        if let c = seek, seekGlow > 0, paragraphHasWord(p, c.word) {
+                            Button {
+                                store.markFound(c.target)
+                                $path.pushDissolve(FeedRoute.story(c.target))
+                            } label: {
+                                Text("∞").font(.lora(15)).foregroundColor(Color(hex: "#C9A07A").opacity(seekGlow))
+                                    .padding(6)
+                            }
+                            .buttonStyle(.plain)
+                            .offset(x: 18, y: -4)
+                        }
                     }
                     .overlay(alignment: .topLeading) {
                         // a line he kept from this paragraph leaves an ember in the margin

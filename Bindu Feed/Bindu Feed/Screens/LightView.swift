@@ -73,6 +73,11 @@ struct LightView: View {
     @State private var drawing: Double = 0        // the current line's draw-in progress, 0…1
     @State private var carveTimer: Timer?
     @State private var sealedForward = false     // WAVE 3
+    // WAVE 4 · the body as the gesture, for the scenes that asked for it
+    @State private var bodySense = LightBodySense()
+    @State private var lastBodyAdvance = Date()
+    @State private var captured = false
+    @Environment(\.scenePhase) private var scenePhase
     @State private var landed = false             // the last line locked; the landing has arrived
     @State private var pressing = false           // leading-edge guard for the press gesture
 
@@ -130,6 +135,8 @@ struct LightView: View {
         LightVisits.record(chosen)
         Task { await store.logVeilLifted(sceneId: chosen.recordId, sceneTitle: chosen.title) }
         soundEngine.blip(hz: 174)          // `The Instrument v3.html:5873` — `B.blip(174)`
+        bodySense.begin(LightBody.of(chosen.key))     // WAVE 4 · the scene that asks for his body
+        lastBodyAdvance = Date()
         withAnimation(.easeInOut(duration: 1.4)) { stage = .scene }
     }
 
@@ -205,7 +212,23 @@ struct LightView: View {
             settleSky()          // the sky fills the instant the rows arrive
             await store.loadLightVisits()
         }
-        .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate() }
+        .onDisappear { gate?.invalidate(); carveTimer?.invalidate(); sceneTick?.invalidate(); bodySense.stop() }
+        // WAVE 4 · 744 telling — captured, it dims; nothing scolds, it simply will not be collected
+        .overlay { Color.black.opacity(captured ? 0.9 : 0).ignoresSafeArea().allowsHitTesting(false) }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.userDidTakeScreenshotNotification)) { _ in
+            guard case .scene = stage, LightBody.of(scene.key) == .uncaptured else { return }
+            withAnimation(.easeIn(duration: 0.3)) { captured = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 9) { withAnimation(.easeOut(duration: 3)) { captured = false } }
+        }
+        // WAVE 4 · 771 red — checking is leaving the app; it closes, and re-entering finds it unopened
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .background, case .scene = stage, LightBody.of(scene.key) == .unchecked else { return }
+            restart()
+        }
+        .overlay(alignment: .bottomTrailing) {
+            // WAVE 4 · the closed eye opens the nave
+            ClosedEyeLayer()
+        }
         .sonicContext(.base)
     }
 
@@ -693,7 +716,16 @@ struct LightView: View {
         sceneTick = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
             guard case .scene = stage else { return }
             let now = Date(); let dt = now.timeIntervalSince(last); last = now
-            if arrive < 1 {
+            if let need = LightBody.of(scene.key), need.gatesProgress {
+                // WAVE 4 · THE BODY IS THE GESTURE. While what the scene asked for holds, the
+                // dawn assembles and the anchors come by themselves; when it lets go, it waits.
+                let held = bodySense.holds(need, touching: touching)
+                if arrive < 1, held { arrive = min(1, arrive + dt / 3.2) }
+                if arrive >= 1, held, !beatActive, now.timeIntervalSince(lastBodyAdvance) > 3.6 {
+                    lastBodyAdvance = now
+                    advanceAnchor()
+                }
+            } else if arrive < 1 {
                 arrive = scene.ungripOnly
                     ? LightCanon.LightArrival.fromUngrips(ungrips)
                     : LightCanon.LightArrival.step(arrive, dt: dt, touching: touching)
@@ -897,6 +929,7 @@ struct LightView: View {
         // two-stage arm-then-commit that §10 records as this register's whole affordance.
         landingScheduled = false; armed = nil; settleSky()
         sealedForward = false
+        bodySense.stop()
         beatLine = -1; drawing = 0; landed = false; holdDimmed = false; pressing = false
         wants = 0; lastDelivered = -1; touching = false; lastInput = Date()
         withAnimation(.easeInOut(duration: 1.0)) { stage = .approach }

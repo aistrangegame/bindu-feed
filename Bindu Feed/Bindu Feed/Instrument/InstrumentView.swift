@@ -28,6 +28,9 @@ struct InstrumentView: View {
     @State private var lastDragY: CGFloat = 0
     @State private var showRope = false
     @State private var showCorridor = false     // WAVE 3
+    @State private var skyShake = SkyShake()     // WAVE 4 · the shake pulse
+    @State private var waveAt: Date?
+    @State private var heartAt: Date?            // WAVE 4 · Pointy, a heart for one beat
     @State private var pointHolds = false      // a Point universe or star reading is open
 
     /// C7.4 · `The Instrument v3.html:5474` — `IMM.on ? 0 : TR.tension*(1 - TR.push*0.35)`.
@@ -117,6 +120,19 @@ struct InstrumentView: View {
     /// WAVE 1 · where the axis goes DOWN, a heartbeat is felt under the hand: the fall
     /// (who sat with it), the Veil, the Chamber, the Mirrors.
     static let pulseKeys: Set<String> = ["fall", "d3", "d4", "d5"]
+
+    /// WAVE 4 · one wave through the sky, each room chiming in its own pitch as it passes.
+    private func shakePulse() {
+        waveAt = Date()
+        let rooms = store.rooms.sorted { $0.sortOrder < $1.sortOrder }
+        for (i, r) in rooms.enumerated() {
+            let hz = (r.rootHz ?? 110) * 2
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.18 * Double(i)) {
+                soundEngine.fieldThreshold(hz: hz, dur: 3.5)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.6) { waveAt = nil }
+    }
     private var atSky: Bool { abs(z + 4) < 0.45 }
     private var inUniverse: Bool { ["sky", "region", "world", "fall"].contains(here.key) }
 
@@ -385,6 +401,17 @@ struct InstrumentView: View {
         .onChange(of: here.key) { _, key in
             HeartbeatService.shared.set("axis", on: Self.pulseKeys.contains(key))   // WAVE 1 · the pulse
             if key == "d3" { store.offerLetter(at: .veil) }   // WAVE 3 · a letter sealed for the Veil
+            // WAVE 4 · the sky answers a shake; Pointy beats once as a heart on reaching the centre
+            if key == "sky" {
+                skyShake.onShake = { shakePulse() }
+                skyShake.start()
+            } else {
+                skyShake.stop()
+            }
+            if key == "centre" {
+                heartAt = Date()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.2) { heartAt = nil }
+            }
             let onPoint = travel.z >= 0.5
             soundEngine.setContext(onPoint
                 ? .point(enclosure: Int(PointYantra.focus(forAxisZ: travel.z).rounded()))
@@ -514,7 +541,15 @@ struct InstrumentView: View {
             travel.start()
             soundEngine.startAxisGlide()
         }
-        .onDisappear { travel.stop(); soundEngine.stopAxisGlide(); HeartbeatService.shared.set("axis", on: false) }
+        .onDisappear { travel.stop(); soundEngine.stopAxisGlide(); HeartbeatService.shared.set("axis", on: false); skyShake.stop() }
+        .overlay {
+            if let w = waveAt { SkyWave(started: w) }
+        }
+        .overlay {
+            if heartAt != nil {
+                PointyTrail(shape: .heart, width: 40, height: 40).transition(.opacity)
+            }
+        }
     }
 
     // MARK: - Travel (the hand feeds AxisTravel; the engine owns the physics)

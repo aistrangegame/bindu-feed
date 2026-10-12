@@ -109,6 +109,10 @@ struct TheTurningView: View {
         }
         .sonicContext(.base)
         .hubOverlay(open: $showHub, path: $path)
+        .overlay(alignment: .bottom) {
+            // WAVE 4 · Pointy, turning the figure eight once the light is up
+            if done { PointyTrail(shape: .infinity, width: 64, height: 24).padding(.bottom, 34).transition(.opacity) }
+        }
     }
 
     // MARK: - Dawn wash

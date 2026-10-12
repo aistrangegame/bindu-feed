@@ -125,6 +125,9 @@ struct RootView: View {
                 .foregroundColor(BinduTheme.inkPrimary)
                 .tracking(-0.3)
 
+            PointyTrail(shape: .line)          // WAVE 4 · Pointy, reading along the line
+                .padding(.top, 10)
+
             Spacer(minLength: 8)
 
             AshMark { $path.pushDissolve(FeedRoute.ash) }

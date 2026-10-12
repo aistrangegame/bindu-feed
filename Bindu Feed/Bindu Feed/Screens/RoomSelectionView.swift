@@ -72,6 +72,8 @@ struct RoomSelectionView: View {
             Text("Each one already alive when you arrive.")
                 .font(.loraItalic(13))
                 .foregroundColor(BinduTheme.inkTertiary)
+            PointyTrail(shape: .circle, width: 22, height: 22)   // WAVE 4 · Pointy, circling the rooms
+                .padding(.top, 4)
         }
     }
 

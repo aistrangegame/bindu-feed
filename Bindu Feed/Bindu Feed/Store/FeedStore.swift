@@ -358,6 +358,39 @@ final class FeedStore: ObservableObject {
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
 
+    // MARK: - WAVE 4 · Hide-and-seek
+
+    private static let foundKey = "bindu.found"
+    var foundStories: Set<String> { Set((UserDefaults.standard.array(forKey: Self.foundKey) as? [String]) ?? []) }
+
+    /// Codex C-1285 — clues consciousness left for itself. In the day's story only, at most one
+    /// word, shared with an OLDER story from another room that he has not met: a thread back to
+    /// where his past self held the same idea. The same word all day; nil on any other story.
+    func seekClue(in story: Story) -> (word: String, target: Story)? {
+        guard storyOfDay()?.id == story.id else { return nil }
+        let words = Set(story.body.lowercased()
+            .components(separatedBy: CharacterSet.letters.inverted)
+            .filter { $0.count >= 6 && !Self.quietWords.contains($0) })
+        let found = foundStories
+        var pairs: [(String, Story)] = []
+        for older in stories where older.id != story.id && older.room != story.room
+            && !metStoryIDs.contains(older.id) && !found.contains(older.id)
+            && !older.sourceDate.isEmpty && older.sourceDate < story.sourceDate {
+            let theirs = Set(older.body.lowercased().components(separatedBy: CharacterSet.letters.inverted))
+            for w in words where theirs.contains(w) { pairs.append((w, older)) }
+        }
+        guard !pairs.isEmpty else { return nil }
+        let key = AirtableService.localDayString() + "·seek·" + story.id
+        let ids = pairs.map { $0.0 + "|" + $0.1.id }
+        guard let i = MirrorDay.pick(ids, key: key) else { return nil }
+        return pairs[i]
+    }
+
+    func markFound(_ story: Story) {
+        var f = foundStories; f.insert(story.id)
+        UserDefaults.standard.set(Array(f), forKey: Self.foundKey)
+    }
+
     // MARK: - WAVE 3 · Letters across time
 
     @Published var letters: [Letter] = []
