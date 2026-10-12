@@ -265,7 +265,8 @@ struct ReadByHandView: View {
             .padding(.horizontal, 30)
 
             VStack(spacing: 8) {
-                Text("This came through you")
+                // SELF-KATHAS · a suit story came through him too — and it is not signed with his name
+                Text(story.isSuit ? "This came through you too" : "This came through you")
                     .font(.lora(15))
                     .foregroundColor(BinduTheme.inkSecondary)
                 Text([story.codexId, spokenOn].filter { !$0.isEmpty }.joined(separator: " · "))
@@ -277,7 +278,7 @@ struct ReadByHandView: View {
             Text("— Ashrey")
                 .font(.lora(15))
                 .foregroundColor(BinduTheme.colorAsh)
-                .opacity(closeStep >= 2 ? 1 : 0)
+                .opacity(closeStep >= 2 && !story.isSuit ? 1 : 0)
 
             Spacer()
             Button { leave() } label: {

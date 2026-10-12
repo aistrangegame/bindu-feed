@@ -397,7 +397,9 @@ final class AirtableService {
             filter: filter,
             sort: [(field: sort.field, direction: "desc")]
         )
-        return records.map(Story.init(from:))
+        // SELF-KATHAS · revealed, never added: a suit story stays hidden until the story of his
+        // it rhymes with has been met or received, and then sits directly after it.
+        return RhymeGate.arrange(records.map(Story.init(from:)))
     }
 
     // Airtable's filterByFormula cannot reliably match a linked-record field

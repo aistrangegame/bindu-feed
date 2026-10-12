@@ -49,6 +49,10 @@ struct RecordFields: Codable {
     var sentenceSource: String?
 
     var closingLine: String?
+    // SELF-KATHAS (12 Oct 2026) · the other suits. `Suit` is backstage only, never rendered;
+    // `Rhymes With` is the record id of the story of his this one rhymes with.
+    var suit: String?
+    var rhymesWith: String?
     var sourceType: String?
     var cardRegister: String?
     let ringIndex: Int?
@@ -96,6 +100,8 @@ struct RecordFields: Codable {
         case sentenceWeight    = "Sentence Weight"
         case sentenceSource    = "Sentence Source"
         case closingLine       = "Closing Line"
+        case suit              = "Suit"
+        case rhymesWith        = "Rhymes With"
         case sourceType        = "Source Type"
         case cardRegister      = "Card Register"
 
@@ -134,10 +140,19 @@ struct Story: Identifiable, Hashable {
     let lastActivityDate: String
     let resonance: Int
     let closingLine: String
+    /// SELF-KATHAS · empty for his own Codex stories; a suit story is told in the first person
+    /// of the cloth, the land, the machine… and is revealed only once its rhyme has been met.
+    let suit: String
+    let rhymesWith: String
+    let sortOrder: Int
+    var isSuit: Bool { !suit.isEmpty }
 
     init(from record: AirtableRecord) {
         let f = record.fields
         self.id = record.id
+        self.suit = f.suit ?? ""
+        self.rhymesWith = (f.rhymesWith ?? "").trimmingCharacters(in: .whitespaces)
+        self.sortOrder = f.sortOrder ?? 0
         self.title = f.name ?? ""
         self.body = f.body ?? ""
         self.excerpt = f.excerpt ?? ""

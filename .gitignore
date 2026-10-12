@@ -33,3 +33,4 @@ fastlane/test_output
 
 # the design bundle ships unzipped; the archive does not
 *.zip
+__pycache__/

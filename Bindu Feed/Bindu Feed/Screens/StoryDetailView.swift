@@ -53,6 +53,13 @@ struct StoryDetailView: View {
     @State private var teacherLine: (topic: String, line: String)?
     @State private var rewindTask: Task<Void, Never>?
     @State private var arrivalSettings: ArrivalSettings = .init()
+    // SELF-KATHAS · reception and signature
+    @State private var received = false
+    @State private var mended = false
+    @State private var found: (line: String, date: String)?
+    @State private var resonanceText: String?
+    @State private var memoFirst: String?
+    @StateObject private var pageStill = Stillness()
 
     // The Audio Anchor — one shared player for the whole story; a quiet mark on any Ash entry
     // that kept a voice on this device. The full crossed-into playback lives in the Return.
@@ -110,9 +117,19 @@ struct StoryDetailView: View {
                     .simultaneousGesture(MagnificationGesture().onEnded { m in
                         withAnimation(.easeInOut(duration: 0.8)) {
                             if m < 0.8 { page = page == .memo ? .transmission : .essence }
-                            else if m > 1.25 { page = page == .essence ? .transmission : .memo; if page == .memo { loadMemo() } }
+                            else if m > 1.25 {
+                                // a suit story has no memo underneath it; it opens no further than itself
+                                page = page == .essence ? .transmission : (story.codexId.isEmpty ? .transmission : .memo)
+                                if page == .memo { loadMemo() }
+                            }
                         }
                     })
+
+                    if received || grammar == nil {
+                        signatureBlock
+                            .padding(.horizontal, BinduTheme.space20)
+                            .padding(.top, 26)
+                    }
 
                     resonanceAffordance
 
@@ -206,11 +223,24 @@ struct StoryDetailView: View {
                 }
             }
             .scrollIndicators(.hidden)
+            .onScrollPhaseChange { _, _ in pageStill.touched() }
             .opacity(storyDim)
 
             if depthOverlayPhase != .closed {
                 depthOverlay
                     .opacity(overlayVisible)
+            }
+
+            // SELF-KATHAS · the story is first received in its room's grammar; the page as it
+            // always was lies underneath and dissolves up the moment the grammar completes.
+            if !received, let g = grammar {
+                ReceptionView(story: story, grammar: g, color: storyRoomColor,
+                              prelude: signature == .dotBecomesPlace,
+                              echo: g == .beforeQuestion ? store.echo(for: story) : nil,
+                              onPass: { $path.popDissolve() },
+                              onReceived: receive)
+                    .transition(.opacity)
+                    .zIndex(2)
             }
         }
         .navigationBarBackButtonHidden(true)
@@ -243,11 +273,16 @@ struct StoryDetailView: View {
                 }
             }
             arrivalSettings = ArrivalSettings.load()
+            // SELF-KATHAS
+            pageStill.start()
+            if grammar == nil || received { received = true }
+            prepareSignature()
             if store.consumeStoryRefresh(storyId: story.id) {
                 Task { await forceReloadComments() }
             }
         }
         .onDisappear {
+            pageStill.stop()
             HeartbeatService.shared.set("story", on: false)
             depthHoldTask?.cancel()
             depthAutoAdvanceTask?.cancel()
@@ -277,7 +312,7 @@ struct StoryDetailView: View {
                     .foregroundColor(BinduTheme.inkTertiary)
             }
 
-            rewindSpiral
+            if !story.codexId.isEmpty { rewindSpiral }
             if store.foundStories.contains(story.id) {
                 Text("found ∞").spaceMonoTracked(8, em: 0.2).foregroundColor(Color(hex: "#C9A07A").opacity(0.85))
             }
@@ -302,6 +337,7 @@ struct StoryDetailView: View {
 
     private var metaLine: String {
         let pretty = formattedDate(story.sourceDate)
+        if story.codexId.isEmpty { return pretty }        // SELF-KATHAS · a suit story carries no Codex number
         return pretty.isEmpty
             ? story.codexId
             : "\(story.codexId) · \(pretty)"
@@ -448,9 +484,11 @@ struct StoryDetailView: View {
                             .onTapGesture { withAnimation { choosingParagraph = nil } }
                     }
                     .transition(.opacity)
+                } else if signature == .everyPath, i == 0 {
+                    EveryPath(text: p, color: storyRoomColor)
                 } else {
                     HStack(alignment: .top, spacing: 0) {
-                        paragraphText(p)
+                        mendedText(p, i)
                             .font(.lora(17))
                             .foregroundColor(BinduTheme.inkPrimary)
                             .lineSpacing(14)  // approx Lora 17 * (1.82 − 1) = 13.94pt
@@ -479,12 +517,110 @@ struct StoryDetailView: View {
                         }
                     }
                     .contentShape(Rectangle())
+                    .onTapGesture { if signature == .alreadyMended, i == mendIndex { mended = true } }
                     .onLongPressGesture(minimumDuration: 0.6) {
                         withAnimation(.easeInOut(duration: 0.5)) { choosingParagraph = i }
                     }
                 }
+                // SELF-KATHAS · foundPage — a dated fragment from long before, mid-story, no comment
+                if signature == .foundPage, i == paragraphs.count / 2, let f = found {
+                    FoundPage(line: f.line, date: f.date)
+                        .padding(.vertical, 10)
+                }
             }
         }
+    }
+
+    // MARK: - SELF-KATHAS · reception and signature
+
+    private var grammar: Grammar? {
+        guard Katha(story: story, color: storyRoomColor).paragraphs.count >= 2 else { return nil }
+        return Grammar(room: story.room)
+    }
+
+    private var signature: Signature? { store.signature(for: story) }
+
+    private func receive() {
+        withAnimation(.easeInOut(duration: 1.4)) { received = true }
+        markReceived()
+    }
+
+    /// Received — by its grammar, read plainly, or read to the end — opens whatever rhymes with it.
+    private func markReceived() {
+        guard !RhymeGate.received.contains(story.id) else { return }
+        RhymeGate.markReceived(story.id)
+        if !story.isSuit { Task { await store.revealRhymes() } }
+    }
+
+    private func prepareSignature() {
+        guard let sig = signature else { return }
+        switch sig {
+        case .foundPage:
+            if found == nil { found = store.foundPage(for: story) }
+        case .secondPiece:
+            if resonanceText == nil {
+                Task { resonanceText = (try? await AirtableService.shared.fetchResonanceVoice(storyId: story.id))?.body }
+            }
+        case .layersOnReturn:
+            if memoFirst == nil { Task { memoFirst = await store.firstMemoLine(for: story) } }
+        default: break
+        }
+    }
+
+    /// The first voice of this name anywhere in the gathering, replies included.
+    private func voice(_ name: String) -> String? {
+        func walk(_ nodes: [CommentNode]) -> String? {
+            for n in nodes {
+                if n.comment.archetype == name, !n.comment.isBinduSilence { return n.comment.body }
+                if let c = walk(n.children) { return c }
+            }
+            return nil
+        }
+        return walk(commentNodes)
+    }
+
+    @ViewBuilder
+    private var signatureBlock: some View {
+        switch signature {
+        case .sealedLastPage:
+            SealedLastPage(witness: voice("Sakshi") ?? story.closingLine, opened: store.calledToday,
+                           color: storyRoomColor) { $path.pushDissolve(FeedRoute.compose(story)) }
+        case .alreadyDid:
+            AlreadyDid(color: storyRoomColor)
+        case .secondPiece:
+            SecondPiece(text: resonanceText)
+        case .missingNote:
+            MissingNote(hz: (store.room(named: story.room)?.rootHz ?? 110) * 2, page: pageStill)
+        case .layersOnReturn:
+            DwellLayers(storyId: story.id, second: voice("Lalita"),
+                        third: memoFirst.map { "\($0) — I said" } ?? (story.excerpt.isEmpty ? nil : story.excerpt),
+                        color: storyRoomColor)
+        case .cordCut:
+            CordCut(color: storyRoomColor) {
+                if let next = store.nextThread(after: story) { $path.pushDissolve(FeedRoute.story(next)) }
+            }
+        case .emptySummit:
+            EmptySummit(color: storyRoomColor)
+        case .zeroGap:
+            if !story.closingLine.isEmpty { ZeroGap(line: story.closingLine, color: storyRoomColor) }
+        case .everyPath, .foundPage, .alreadyMended, .dotBecomesPlace, .none:
+            EmptyView()
+        }
+    }
+
+    /// alreadyMended · one word in the second paragraph carries a crack until he reaches for it —
+    /// and finds it was whole all along.
+    private var mendIndex: Int { 1 }
+
+    private func mendedText(_ p: String, _ i: Int) -> Text {
+        guard signature == .alreadyMended, i == mendIndex, !mended else { return paragraphText(p) }
+        let words = p.split(separator: " ").map { $0.trimmingCharacters(in: .punctuationCharacters) }
+        guard let w = words.filter({ $0.count >= 6 }).max(by: { $0.count < $1.count }),
+              let r = p.range(of: w) else { return paragraphText(p) }
+        return Text(String(p[..<r.lowerBound]))
+            + Text(String(p[r])).foregroundColor(BinduTheme.inkPrimary.opacity(0.5))
+                .strikethrough(true, pattern: .dot, color: BinduTheme.colorBindu.opacity(0.75))
+            + Text(String(p[r.upperBound...]))
     }
 
     // MARK: - Field comments
@@ -553,6 +689,7 @@ struct StoryDetailView: View {
     // MARK: - Triggers & loaders
 
     private func triggerFieldArrival() {
+        markReceived()                    // SELF-KATHAS · read to the end is received
         guard !triggered else { return }
         triggered = true
     }

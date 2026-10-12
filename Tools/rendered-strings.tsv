@@ -1200,3 +1200,14 @@ NON-UI	{Felt At}!=''	Bindu Feed/Bindu Feed/Services/AirtableService.swift:1345
 NON-UI	{Type of Therapy}=''	Bindu Feed/Bindu Feed/Services/AirtableService.swift:1357
 NON-UI	·dance	Bindu Feed/Bindu Feed/Store/FeedStore.swift:405
 APP-OWN	◌ held in silence	Bindu Feed/Bindu Feed/Screens/AshComposeView.swift:422
+APP-OWN	a page for your own	Bindu Feed/Bindu Feed/Reception/SignatureViews.swift:52 · SELF-KATHAS sealedLastPage — VoiceOver label for the blank facing page (C-1279/C-1280)
+NON-UI	bindu.kathas.dwell.…	Bindu Feed/Bindu Feed/Reception/SignatureViews.swift:142 · UserDefaults key, one per story (law 12: one prefix)
+NON-UI	bindu.kathas.garden.away.…	Bindu Feed/Bindu Feed/Reception/ReceptionView.swift:238 · UserDefaults key — The Garden's time away
+NON-UI	bindu.kathas.garden.left.…	Bindu Feed/Bindu Feed/Reception/ReceptionView.swift:239 · UserDefaults key — when he left the page
+NON-UI	prev-…	Bindu Feed/Bindu Feed/Reception/ReceptionView.swift:979 · SwiftUI view id
+APP-OWN-INSTRUCTIONAL	read it plainly	Bindu Feed/Bindu Feed/Reception/ReceptionView.swift:54 · SELF-KATHAS — the one way out of every grammar (padakarshini law 1: one way out, outside the reading)
+NON-UI	Rhymes With	Bindu Feed/Bindu Feed/Models/Models.swift:53 · Airtable field name (fldCpLf91KeWoYpJH)
+APP-OWN	This came through you too	Bindu Feed/Bindu Feed/Screens/ReadByHandView.swift:269 · SELF-KATHAS — a suit story's close in read-by-hand; it came through him too, unsigned
+APP-OWN-INSTRUCTIONAL	turn it over	Bindu Feed/Bindu Feed/Reception/ReceptionView.swift:192 · SELF-KATHAS A Maya Game — the middle page offers the other side
+APP-OWN	wake up	Bindu Feed/Bindu Feed/Reception/SignatureViews.swift · SELF-KATHAS alreadyDid — his own Codex (C-1278, C-1281)
+APP-OWN	… -- I said	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:596 · SELF-KATHAS layersOnReturn — the third reading, his memo's first line; '— I said' already authored on the memo page

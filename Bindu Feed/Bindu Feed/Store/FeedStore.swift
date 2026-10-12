@@ -53,7 +53,9 @@ final class FeedStore: ObservableObject {
 
     /// Feed record ids carrying a `Story Met`. The sky's met-ness, from its specified source
     /// (Brief §8.5) rather than the comment/resonance proxy it used to infer. `A4.1`.
-    @Published var metStoryIDs: Set<String> = []
+    @Published var metStoryIDs: Set<String> = [] {
+        didSet { RhymeGate.met = metStoryIDs }     // SELF-KATHAS · a met story opens its rhymes
+    }
 
     @Published var practiceInvitations: [PracticeInvitation] = []
 
@@ -361,6 +363,7 @@ final class FeedStore: ObservableObject {
     func loadMetStories() async {
         self.metStoryIDs = await service.fetchMetStoryIDs()
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
+        await revealRhymes()     // SELF-KATHAS · a rhyme opened by a meeting surfaces now, not next launch
     }
 
     // MARK: - THE REST · the sibling apps, the Rite's word, the suits, the open thread
