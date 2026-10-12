@@ -1168,3 +1168,7 @@ APP-OWN-INSTRUCTIONAL	your perspective	Bindu Feed/Bindu Feed/Screens/HallView.sw
 APP-OWN	your walk, drawn ›	Bindu Feed/Bindu Feed/Screens/PresentView.swift:40
 APP-OWN-INSTRUCTIONAL	your word for the month	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:205
 APP-OWN	… was the voice that stayed nearest.	Bindu Feed/Bindu Feed/Screens/PortraitView.swift:170
+NON-UI	bindu.notice.lastDay	Bindu Feed/Bindu Feed/Store/FeedStore.swift:369
+APP-OWN	the field noticed	Bindu Feed/Bindu Feed/Screens/FieldNoticeView.swift:23
+APP-OWN	what it is not sure of	Bindu Feed/Bindu Feed/Screens/FieldNoticeView.swift:5
+APP-OWN	what it showed	Bindu Feed/Bindu Feed/Screens/FieldNoticeView.swift:5

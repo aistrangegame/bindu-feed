@@ -31,6 +31,7 @@ struct InstrumentView: View {
     @State private var skyShake = SkyShake()     // WAVE 4 · the shake pulse
     @State private var waveAt: Date?
     @State private var heartAt: Date?            // WAVE 4 · Pointy, a heart for one beat
+    @State private var khelo: KheloFling?        // Holi
     @State private var pointHolds = false      // a Point universe or star reading is open
 
     /// C7.4 · `The Instrument v3.html:5474` — `IMM.on ? 0 : TR.tension*(1 - TR.push*0.35)`.
@@ -545,6 +546,13 @@ struct InstrumentView: View {
         .overlay {
             if let w = waveAt { SkyWave(started: w) }
         }
+        .overlay {
+            // SMALLER UPGRADE · Khelo, once a year — on Holi the sky is powder
+            if here.key == "sky", Sky.isHoli() { KheloLayer(fling: khelo) }
+        }
+        .simultaneousGesture(DragGesture(minimumDistance: 20).onEnded { v in
+            if here.key == "sky", Sky.isHoli() { khelo = KheloFling(from: v.startLocation, by: v.translation) }
+        })
         .overlay {
             if heartAt != nil {
                 PointyTrail(shape: .heart, width: 40, height: 40).transition(.opacity)

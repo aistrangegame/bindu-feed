@@ -48,6 +48,8 @@ struct DoorView: View {
                     .transition(.opacity)
             } else {
                 surface
+                    // THE MOON AS A SECOND CLOCK · on the new moon the Door opens dark
+                    .overlay { if Sky.isNewMoon() { Color.black.opacity(0.5).ignoresSafeArea().allowsHitTesting(false) } }
                     .overlay(alignment: .topLeading) { if weather != .loading { dotMark } }
                     .simultaneousGesture(ropeGesture)
                     .simultaneousGesture(turnPull)

@@ -1200,3 +1200,44 @@ extension AirtableService {
         return out
     }
 }
+
+// MARK: - SMALLER UPGRADES · the field says what it noticed
+
+/// One of Gaia's Mirror Entries — the field's own recognitions, in three honest positions
+/// (ruled usable, 11 Oct 2026).
+struct FieldNotice: Identifiable, Hashable {
+    let id: String
+    let name: String
+    let moment: String
+    let revealed: String
+    let uncertain: String
+}
+
+extension AirtableService {
+    func fetchFieldNotices() async -> [FieldNotice] {
+        guard !token.isEmpty else { return [] }
+        var c = URLComponents(string: "https://api.airtable.com/v0/app248ZTWhYJlvQj2/tbll9fXzLSa44XqUi")
+        var q = [URLQueryItem(name: "pageSize", value: "100"),
+                 URLQueryItem(name: "filterByFormula", value: "{Type}='Mirror Entry'"),
+                 URLQueryItem(name: "returnFieldsByFieldId", value: "true")]
+        for f in ["fldtRWhfZrmegUrBJ", "fldkYxGdvzK2u2eV0", "flddeyNks9XvLvxQ2", "fld4ovnfCXAd8z058"] {
+            q.append(URLQueryItem(name: "fields[]", value: f))
+        }
+        c?.queryItems = q
+        guard let url = c?.url else { return [] }
+        var req = URLRequest(url: url)
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        guard let pair = try? await session.data(for: req),
+              (try? Self.validate(response: pair.1, data: pair.0)) != nil,
+              let obj = try? JSONSerialization.jsonObject(with: pair.0) as? [String: Any] else { return [] }
+        return ((obj["records"] as? [[String: Any]]) ?? []).compactMap { r in
+            let f = (r["fields"] as? [String: Any]) ?? [:]
+            let m = (f["fldkYxGdvzK2u2eV0"] as? String) ?? ""
+            let w = (f["flddeyNks9XvLvxQ2"] as? String) ?? ""
+            let u = (f["fld4ovnfCXAd8z058"] as? String) ?? ""
+            guard !w.isEmpty else { return nil }
+            return FieldNotice(id: (r["id"] as? String) ?? "", name: (f["fldtRWhfZrmegUrBJ"] as? String) ?? "",
+                               moment: m, revealed: w, uncertain: u)
+        }
+    }
+}

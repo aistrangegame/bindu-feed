@@ -363,6 +363,39 @@ final class FeedStore: ObservableObject {
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
 
+    // MARK: - SMALLER UPGRADES · the field says what it noticed · Lalita plays
+
+    @Published var fieldNotice: FieldNotice?
+    private static let noticeDayKey = "bindu.notice.lastDay"
+    private static let noticeShownKey = "bindu.notice.shown"
+
+    /// Rarely — never twice in a week, one open in three after that — the field says what it
+    /// noticed. Offered at the Door only when no letter is landing.
+    func offerFieldNotice() async {
+        guard arrivingLetter == nil, fieldNotice == nil else { return }
+        let f = AirtableService.dayFormatter(timeZone: .current)
+        if let last = UserDefaults.standard.string(forKey: Self.noticeDayKey), let d = f.date(from: last),
+           Date().timeIntervalSince(d) < 7 * 86_400 { return }
+        guard Int.random(in: 0..<3) == 0 else { return }
+        let shown = Set((UserDefaults.standard.array(forKey: Self.noticeShownKey) as? [String]) ?? [])
+        let pool = await service.fetchFieldNotices().filter { !shown.contains($0.id) }
+        guard let n = pool.randomElement() else { return }
+        UserDefaults.standard.set(AirtableService.localDayString(), forKey: Self.noticeDayKey)
+        UserDefaults.standard.set(Array(shown) + [n.id], forKey: Self.noticeShownKey)
+        fieldNotice = n
+    }
+
+    private static let lalitaPlayKey = "bindu.lalita.play"
+    /// Lalita plays with the app — rarely, unannounced: one open in twenty, never within five days.
+    func lalitaMayPlay() -> Bool {
+        let f = AirtableService.dayFormatter(timeZone: .current)
+        if let last = UserDefaults.standard.string(forKey: Self.lalitaPlayKey), let d = f.date(from: last),
+           Date().timeIntervalSince(d) < 5 * 86_400 { return false }
+        guard Int.random(in: 0..<20) == 0 else { return false }
+        UserDefaults.standard.set(AirtableService.localDayString(), forKey: Self.lalitaPlayKey)
+        return true
+    }
+
     // MARK: - WAVE 5 · the Portrait
 
     @Published var activityMarks: [ActivityMark] = []
@@ -1182,6 +1215,14 @@ final class FeedStore: ObservableObject {
         }
         if !present.contains("bindu"), let b = RiteVoices.voice("bindu") { voices.append(b) }
         voices.sort { rank($0.key) < rank($1.key) }
+        // THE MOON AS A SECOND CLOCK · on the full moon Lalita leads the round — she opens
+        // the Gathering instead of answering in it (Mandala's lunar service, ruled 11 Oct 2026).
+        if Sky.isFullMoon(), let i = voices.firstIndex(where: { $0.key == "lalita" }) {
+            let l = voices.remove(at: i)
+            voices.insert(RiteVoice(key: l.key, name: l.name, hex: l.hex, glyph: l.glyph, role: l.role,
+                                    verb: l.verb, lines: l.lines, passing: l.passing, close: l.close,
+                                    hz: l.hz, answering: nil), at: 0)
+        }
         return voices.isEmpty ? RiteVoices.all : voices
     }
 

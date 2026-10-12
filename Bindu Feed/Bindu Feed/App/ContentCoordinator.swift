@@ -82,6 +82,12 @@ struct ContentCoordinator: View {
                     .zIndex(25)
             }
 
+            if let n = store.fieldNotice {
+                FieldNoticeView(notice: n, onClose: { withAnimation(.easeInOut(duration: 0.8)) { store.fieldNotice = nil } })
+                    .transition(.opacity)
+                    .zIndex(24)
+            }
+
             if waking {
                 WakingView(onDone: { waking = false })
                     .zIndex(30)
@@ -155,7 +161,10 @@ struct ContentCoordinator: View {
                 withAnimation(.easeOut(duration: 0.30)) { lid = 0 } // open onto the field
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.32) { blinking = false }
                 // WAVE 3 · the Door is where a dated, absent or new-moon letter lands
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { store.offerLetter(at: .door) }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    store.offerLetter(at: .door)
+                    Task { await store.offerFieldNotice() }   // rarely, the field says what it noticed
+                }
             }
         }
     }

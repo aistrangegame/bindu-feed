@@ -104,6 +104,11 @@ struct TurnOverlay: View {
                 .padding(.horizontal, 30)
 
                 Spacer()
+                // THE MOON AS A SECOND CLOCK · tonight's Nityā, named and nothing more
+                Text("☽ " + Sky.nityaToday())
+                    .font(.loraItalic(12))
+                    .foregroundStyle(Color(hex: "#9B6BD6").opacity(0.7))
+                    .padding(.bottom, 10)
                 Text("tap anywhere to stay")
                     .spaceMonoTracked(9, em: 2 / 9)
                     .foregroundStyle(BinduTheme.inkMuted.opacity(0.85 + 0.15 * breath.value))   // 4b · measured

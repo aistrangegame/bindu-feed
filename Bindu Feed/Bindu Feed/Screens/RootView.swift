@@ -11,6 +11,7 @@ struct RootView: View {
     @State private var sort: StorySort = .mostActive
     @State private var hasLoaded = false
     @State private var showHub = false
+    @State private var lalitaLine: String?        // SMALLER UPGRADE · Lalita plays, rarely
 
     // The custom cross-dissolve router: the feed at the base, then one opacity-transitioned
     // layer per pushed route. Every level stays mounted (state preserved); only the top is
@@ -33,6 +34,11 @@ struct RootView: View {
                     .accessibilityHidden(index != path.count - 1)
                     .transition(.opacity)
             }
+
+            if let line = lalitaLine, path.isEmpty {
+                LalitaPlay(line: line, onDone: { lalitaLine = nil })
+                    .zIndex(500)
+            }
         }
         .task(id: "initial-load") {
             guard !hasLoaded else { return }
@@ -40,6 +46,13 @@ struct RootView: View {
             await reloadFeed()
             // A destination chosen from the launch Door's turn — push it now that
             // the feed is reachable.
+            // SMALLER UPGRADE · Lalita plays with the app — rarely, unannounced
+            if store.lalitaMayPlay() {
+                let line = store.kept.randomElement()?.line ?? store.storyOfDay()?.closingLine ?? ""
+                if !line.isEmpty, line.count < 140 {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { lalitaLine = line }
+                }
+            }
             if let route = store.pendingLaunchRoute {
                 // His own turn at the Door outranks a link that was waiting behind it.
                 store.pendingLaunchRoute = nil
