@@ -19,6 +19,8 @@ struct PracticeDoorView: View {
     @State private var visible = false
     @State private var hasStarted = false
     @State private var hasCrossed = false
+    /// SLICE 8 · nil until he answers a seed; then true (offered) or false (held in silence).
+    @State private var seedAnswer: Bool?
 
     var body: some View {
         ZStack {
@@ -199,7 +201,67 @@ struct PracticeDoorView: View {
             storyDoor(story)
         case .binduDot:
             binduEmber
+        case .leela(let drop):
+            seedDoor(drop, accent: accent)
         }
+    }
+
+    /// SLICE 8 · A SEED THAT FOUND HIM. The passage, then the act set apart, then two equal
+    /// answers — neither carries shame (a-strange-game D34: *offer it · hold in silence*). An
+    /// answer is a whisper and nothing more: the two choices fade, the act stays. A touch
+    /// anywhere else still crosses, unanswered, and that is complete too.
+    private func seedDoor(_ drop: LeelaDrop, accent: Color) -> some View {
+        VStack(spacing: 22) {
+            ForEach(Array(drop.passage.enumerated()), id: \.offset) { _, para in
+                Text(para)
+                    .font(.loraItalic(19))
+                    .foregroundColor(BinduTheme.inkPrimary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(7)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 320)
+            }
+            if !drop.act.isEmpty {
+                Text(drop.act)
+                    .font(.lora(16, weight: .medium))
+                    .foregroundColor(accent)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: 300)
+                    .padding(.top, 6)
+            }
+            Group {
+                if let answered = seedAnswer {
+                    Text(answered ? "◡" : "·")
+                        .font(.lora(18))
+                        .foregroundColor(accent.opacity(0.9))
+                        .transition(.opacity)
+                } else {
+                    HStack(spacing: 34) {
+                        Button { answer(drop, offered: true) } label: {
+                            Text("offer it").spaceMonoTracked(10, em: 0.2)
+                                .foregroundColor(BinduTheme.inkSecondary)
+                                .padding(.vertical, 10)
+                        }
+                        Button { answer(drop, offered: false) } label: {
+                            Text("hold in silence").spaceMonoTracked(10, em: 0.2)
+                                .foregroundColor(BinduTheme.inkSecondary)
+                                .padding(.vertical, 10)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .transition(.opacity)
+                }
+            }
+            .padding(.top, 8)
+        }
+    }
+
+    private func answer(_ drop: LeelaDrop, offered: Bool) {
+        soundEngine.fieldThreshold(hz: offered ? 136.1 : 110, dur: 6)
+        withAnimation(.easeInOut(duration: 1.6)) { seedAnswer = offered }
+        Task { await store.answerLeela(drop, offered: offered) }
     }
 
     private func proseBody(_ text: String, italic: Bool) -> some View {
@@ -316,6 +378,7 @@ struct PracticeDoorView: View {
         case .gaiaSeed:  return "A GAIA SEED"
         case .story:     return "WHAT FOUND YOU"
         case .binduDot:  return ""    // canon — no label, the dot is the whole thing
+        case .leela:     return ""    // SLICE 8 · never labelled — the play never names itself
         }
     }
 
@@ -327,6 +390,7 @@ struct PracticeDoorView: View {
         case .story(let story):
             return store.room(named: story.room)?.color ?? BinduTheme.colorGaia
         case .binduDot:  return BinduTheme.colorBindu
+        case .leela:     return BinduTheme.colorLalita
         }
     }
 }

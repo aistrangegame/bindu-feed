@@ -121,8 +121,12 @@ final class FeedStore: ObservableObject {
             async let roomsT = service.fetchRooms()
             async let archetypesT = service.fetchArchetypes()
             async let sentencesT = service.fetchThresholdSentences()
+            // SLICE 8 · the seeds ride with the foundation, so the Door can choose one on the
+            // very open it was meant for. Their failure never blocks the Door (try? inside).
+            async let leelaT: Void = loadLeela()
 
             let (r, a, s) = try await (roomsT, archetypesT, sentencesT)
+            _ = await leelaT
             self.rooms = r
             self.archetypes = a
             self.thresholdSentences = s
@@ -347,6 +351,75 @@ final class FeedStore: ObservableObject {
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
 
+    // MARK: - SLICE 8 · Seeds that find him
+
+    @Published var leelaDrops: [LeelaDrop] = []
+    private var activityTypes: Set<String> = []
+    private var activityLinked: Set<String> = []
+    private static let leelaSurfacedKey = "bindu.leela.surfaced"     // [dropId: day]
+    private static let leelaLastDayKey  = "bindu.leela.lastDay"
+    private static func ropeKey(_ day: String) -> String { "bindu.rope.\(day)" }
+
+    func loadLeela() async {
+        if let drops = try? await service.fetchLeelaDrops() { leelaDrops = drops }
+        let shape = await service.fetchActivityShape()
+        activityTypes = shape.types
+        activityLinked = shape.linked
+    }
+
+    /// The rope was reached for today — the low-state door. No seed arrives on such a day:
+    /// *"in a low state reflection mirrors the low back"* (a-strange-game, the playing side).
+    func markRopeToday() {
+        UserDefaults.standard.set(true, forKey: Self.ropeKey(AirtableService.localDayString()))
+    }
+
+    /// Every seed that has found him, with the day — his to carry (`carry your road`).
+    var leelaSurfaced: [String: String] {
+        (UserDefaults.standard.dictionary(forKey: Self.leelaSurfacedKey) as? [String: String]) ?? [:]
+    }
+
+    /// A seed for today's Door, or nil. The first seed comes the first time it can; after
+    /// that, rarely (one open in four), never two days running, never twice the same, never
+    /// on a day the rope was reached for. Conditions only ever make a seed AVAILABLE; once it
+    /// has found him it stays his (`carry your road`), it never locks anything.
+    func leelaForToday() -> LeelaDrop? {
+        let today = AirtableService.localDayString()
+        if UserDefaults.standard.bool(forKey: Self.ropeKey(today)) { return nil }
+        let surfaced = leelaSurfaced
+        // already found him today → the same seed stays his for the day
+        if let id = surfaced.first(where: { $0.value == today })?.key {
+            return leelaDrops.first { $0.id == id }
+        }
+        let last = UserDefaults.standard.string(forKey: Self.leelaLastDayKey)
+        if let last, last == AirtableService.localDayString(Date().addingTimeInterval(-86_400)) { return nil }
+        let eligible = leelaDrops.filter { d in
+            surfaced[d.id] == nil && !activityLinked.contains(d.id)
+                && d.after.allSatisfy { activityTypes.contains($0) }
+                && (d.notBefore.map { today >= $0 } ?? true)
+        }
+        guard let next = eligible.min(by: { $0.sortOrder < $1.sortOrder }) else { return nil }
+        let first = surfaced.isEmpty && activityLinked.isDisjoint(with: Set(leelaDrops.map(\.id)))
+        guard first || Int.random(in: 0..<4) == 0 else { return nil }
+        var map = surfaced
+        map[next.id] = today
+        UserDefaults.standard.set(map, forKey: Self.leelaSurfacedKey)
+        UserDefaults.standard.set(today, forKey: Self.leelaLastDayKey)
+        return next
+    }
+
+    /// His answer — the act offered, or held in silence. Both complete; neither is scored.
+    func answerLeela(_ drop: LeelaDrop, offered: Bool) async {
+        activityLinked.insert(drop.id)
+        _ = try? await service.logActivity(
+            type: offered ? .note : .silenceHeld,
+            feedRecordId: drop.id,
+            activityName: offered ? "A seed found him — offered" : "A seed found him — held in silence",
+            detail: offered ? "He offered the act to his day." : "He held it in silence.",
+            excerpt: nil,
+            voice: "Lalita"
+        )
+    }
+
     func loadGaiaSeeds() async {
         do {
             self.gaiaSeeds = try await service.fetchGaiaSeeds()
@@ -451,6 +524,8 @@ final class FeedStore: ObservableObject {
     // isn't loaded yet are filtered out — covers early launch when only
     // foundation has arrived.
     func selectPracticeDoorContent() -> PracticeDoorContent? {
+        // SLICE 8 · a seed, when one has found its moment, comes before the day's weather.
+        if let drop = leelaForToday() { return .leela(drop) }
         let saved = UserDefaults.standard.string(forKey: doorLastKindKey)
         let lastKind = saved.flatMap(PracticeDoorKind.init(rawValue:))
 
@@ -489,6 +564,7 @@ final class FeedStore: ObservableObject {
         case .gaiaSeed:  return !gaiaSeeds.isEmpty
         case .story:     return !stories.isEmpty
         case .binduDot:  return thresholdSentences.contains { $0.source == "Bindu" }
+        case .leela:     return false          // never by weight; see leelaForToday()
         }
     }
 
@@ -508,6 +584,8 @@ final class FeedStore: ObservableObject {
             let pool = thresholdSentences.filter { $0.source == "Bindu" }
             guard let chosen = pool.randomElement() else { return nil }
             return .binduDot(chosen)
+        case .leela:
+            return nil
         }
     }
 

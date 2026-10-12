@@ -360,6 +360,14 @@ struct SettingsView: View {
                 for k in carved { lines.append("· \(titles[k] ?? k)") }
             }
         }
+        // SLICE 8 · every seed that found him stays his — here, with its day and its act.
+        let found = store.leelaSurfaced.sorted { $0.value < $1.value }
+        let seeds = found.compactMap { pair in store.leelaDrops.first { $0.id == pair.key }.map { (pair.value, $0) } }
+        if !seeds.isEmpty {
+            lines.append("")
+            lines.append("What found you")
+            for (day, d) in seeds { lines.append("· \(day) — \(d.act)") }
+        }
         return lines.joined(separator: "\n")
     }
 

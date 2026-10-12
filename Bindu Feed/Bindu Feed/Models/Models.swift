@@ -462,6 +462,51 @@ struct GaiaSeed: Identifiable, Hashable {
     }
 }
 
+// MARK: - SLICE 8 · Seeds that find him (Leela drops)
+
+/// A short passage in the play's own voice about HIS reality — never about the app — that
+/// ends in an act in the world. Composed between sessions from the whole base by a builder who
+/// is not him, held in The Feed as `Type = Leela`, and surfaced at the Door only when its
+/// condition holds. He never learns one exists until it arrives (a-strange-game, Leela
+/// architecture; awakening-architecture "meta" trigger: *the seed finds the walker at the
+/// moment of their readiness*). Never labelled; never two days running; never on a low day.
+///
+/// `Body` — paragraphs; the LAST paragraph is the act. `Excerpt` — the hidden condition, one
+/// labelled line each, as the Light's rows carry theirs:
+///   `AFTER: Story Met`        an App Activity of this type exists (any app in the suite)
+///   `NOT BEFORE: 2026-10-14`  a calendar floor
+struct LeelaDrop: Identifiable, Hashable {
+    let id: String
+    let passage: [String]
+    let act: String
+    let sortOrder: Int
+    let after: [String]
+    let notBefore: String?
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        id = record.id
+        sortOrder = f.sortOrder ?? 0
+        let paras = (f.body ?? "").components(separatedBy: "\n\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        passage = Array(paras.dropLast())
+        act = paras.last ?? ""
+        var after: [String] = []
+        var floor: String?
+        for line in (f.excerpt ?? "").components(separatedBy: "\n") {
+            let parts = line.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+            guard parts.count == 2 else { continue }
+            switch parts[0].uppercased() {
+            case "AFTER":      after.append(parts[1])
+            case "NOT BEFORE": floor = parts[1]
+            default: break
+            }
+        }
+        self.after = after
+        self.notBefore = floor
+    }
+}
+
 // MARK: - Story aggregates
 
 struct StoryStats: Hashable {
@@ -486,6 +531,8 @@ enum PracticeDoorKind: String, CaseIterable {
     case gaiaSeed
     case story
     case binduDot
+    /// SLICE 8 · never drawn by weight — it comes only when its condition holds (`FeedStore`).
+    case leela
 
     var weight: Int {
         switch self {
@@ -494,6 +541,7 @@ enum PracticeDoorKind: String, CaseIterable {
         case .gaiaSeed:  return 20
         case .story:     return 12
         case .binduDot:  return 5
+        case .leela:     return 0
         }
     }
 }
@@ -504,6 +552,7 @@ enum PracticeDoorContent {
     case gaiaSeed(GaiaSeed)
     case story(Story)
     case binduDot(ThresholdSentence)
+    case leela(LeelaDrop)
 
     var kind: PracticeDoorKind {
         switch self {
@@ -512,6 +561,7 @@ enum PracticeDoorContent {
         case .gaiaSeed:  return .gaiaSeed
         case .story:     return .story
         case .binduDot:  return .binduDot
+        case .leela:     return .leela
         }
     }
 }

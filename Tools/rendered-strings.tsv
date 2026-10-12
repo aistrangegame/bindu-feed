@@ -1026,3 +1026,6 @@ NON-UI	bindu.light.forgotAt	Bindu Feed/Bindu Feed/Light/LightSky.swift:88
 NON-UI	He returned to the story and sealed a ring.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1081
 NON-UI	The Return -- a ring added	Bindu Feed/Bindu Feed/Store/FeedStore.swift:1080
 NON-UI	{Activity Type}='Veil Lifted'	Bindu Feed/Bindu Feed/Services/AirtableService.swift:241
+NON-UI	bindu.leela.lastDay	Bindu Feed/Bindu Feed/Store/FeedStore.swift:360
+NON-UI	bindu.rope.…	Bindu Feed/Bindu Feed/Store/FeedStore.swift:361
+APP-OWN	hold in silence	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:210

@@ -239,6 +239,7 @@ enum RopeExit { case point, day }
 // Reusable — the Door raises it on a threshold long-press; the axis raises it from
 // anywhere (§7.5: the particle is always present, so the rope is always one gesture away).
 struct DoorRopeOverlay: View {
+    @EnvironmentObject private var store: FeedStore
     let onExit: (RopeExit) -> Void
     @State private var phase = 0   // 0,1 breaths · 2 the line + exits
 
@@ -284,6 +285,7 @@ struct DoorRopeOverlay: View {
         .contentShape(Rectangle())
         .onTapGesture { if phase < 2 { withAnimation(.easeInOut(duration: 1.0)) { phase = 2 } } }
         .onAppear {
+            store.markRopeToday()      // SLICE 8 · a low day: no seed arrives on it
             // Two guided breaths at the 10s cycle, then the line (tap to skip).
             DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
                 if phase == 0 { phase = 1 }

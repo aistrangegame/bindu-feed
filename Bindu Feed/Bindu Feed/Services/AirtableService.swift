@@ -37,6 +37,8 @@ enum FeedActivityType: String {
     case veilLifted     = "Veil Lifted"   // the Light — created on first write (typecast)
     case walkCompleted  = "Walk Completed" // the Point — created on first write (typecast)
     case returned       = "Return"         // SLICE 5 · a ring sealed in the Return (option already exists)
+    case note           = "Note"           // SLICE 8 · a seed offered — he will do the act
+    case silenceHeld    = "Silence Held"   // SLICE 8 · a seed held in silence — complete as it is
 }
 
 final class AirtableService {
@@ -301,6 +303,50 @@ final class AirtableService {
             sort: [(field: "Sort Order", direction: "asc")]
         )
         return records.map(GaiaSeed.init(from:))
+    }
+
+    /// SLICE 8 · the seeds that find him.
+    func fetchLeelaDrops() async throws -> [LeelaDrop] {
+        let records = try await fetch(
+            filter: "AND({Type}='Leela',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(LeelaDrop.init(from:))
+    }
+
+    /// SLICE 8 · what has happened anywhere in the suite, as types only (never contents),
+    /// and which Feed records an activity already links — a seed's condition reads the first,
+    /// and the second says which seeds he has already answered on any device.
+    func fetchActivityShape() async -> (types: Set<String>, linked: Set<String>) {
+        guard !token.isEmpty else { return ([], []) }
+        var types = Set<String>(), linked = Set<String>()
+        var offset: String?
+        var pages = 0
+        repeat {
+            var comps = URLComponents(string: appActivityURLString)
+            var q = [
+                URLQueryItem(name: "pageSize", value: "100"),
+                URLQueryItem(name: "fields[]", value: "Activity Type"),
+                URLQueryItem(name: "fields[]", value: "Link to Feed"),
+            ]
+            if let offset { q.append(URLQueryItem(name: "offset", value: offset)) }
+            comps?.queryItems = q
+            guard let url = comps?.url else { break }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            do {
+                let (data, response) = try await session.data(for: req)
+                try Self.validate(response: response, data: data)
+                let page = try decoder.decode(ActivityLinkPage.self, from: data)
+                for r in page.records {
+                    if let t = r.fields.type { types.insert(t) }
+                    for id in r.fields.link ?? [] { linked.insert(id) }
+                }
+                offset = page.offset
+            } catch { break }
+            pages += 1
+        } while offset != nil && pages < 50
+        return (types, linked)
     }
 
     func fetchPracticeInvitations() async throws -> [PracticeInvitation] {
