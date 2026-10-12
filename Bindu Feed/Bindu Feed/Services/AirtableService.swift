@@ -40,6 +40,8 @@ enum FeedActivityType: String {
     case note           = "Note"           // SLICE 8 · a seed offered — he will do the act
     case silenceHeld    = "Silence Held"   // SLICE 8 · a seed held in silence — complete as it is
     case called         = "Called"         // WAVE 1 · the Call was answered — a wordless pulse (typecast)
+    case readByHand     = "Read by Hand"   // WAVE 2 · a story read at his own pace (typecast)
+    case kept           = "Kept"           // WAVE 2 · a line held into his book (typecast)
 }
 
 final class AirtableService {
@@ -508,6 +510,45 @@ final class AirtableService {
         let records = try await fetch(filter: "AND({Type}='Return',{Status}='Live')",
                                       sort: [(field: "Sort Order", direction: "asc")])
         return records.compactMap(ReturnRing.init(from:))
+    }
+
+    // MARK: - WAVE 2 · his book
+
+    func fetchKept() async throws -> [KeptLine] {
+        let records = try await fetch(filter: "AND({Type}='Kept',{Status}='Live')",
+                                      sort: [(field: "Sort Order", direction: "asc")])
+        return records.map(KeptLine.init(from:)).filter { !$0.line.isEmpty }
+    }
+
+    func writeKept(line: String, storyId: String, sortOrder: Int) async throws -> KeptLine {
+        let rec = try await createRecord(fields: [
+            "Name": String(line.prefix(80)),
+            "Type": "Kept",
+            "Status": "Live",
+            "Body": line,
+            "Linked Story": [storyId],
+            "Source Date": Self.localDayString(),
+            "Sort Order": sortOrder,
+        ])
+        return KeptLine(from: rec)
+    }
+
+    /// Any app-written row in The Feed, by the same one POST (the waves' new places share it).
+    func createFeedRecord(fields: [String: Any]) async throws -> AirtableRecord {
+        try await createRecord(fields: fields)
+    }
+
+    /// A PATCH on one Feed row — his margin word, a letter opened, a release.
+    func patchFeedRecord(id: String, fields: [String: Any]) async throws {
+        guard !token.isEmpty else { throw AirtableError.missingToken }
+        guard let url = URL(string: "\(baseURLString)/\(id)") else { throw AirtableError.badURL }
+        var req = URLRequest(url: url)
+        req.httpMethod = "PATCH"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: ["fields": fields, "typecast": true])
+        let (data, response) = try await session.data(for: req)
+        try Self.validate(response: response, data: data)
     }
 
     /// The one POST both writers share, so the payload shape is stated once.

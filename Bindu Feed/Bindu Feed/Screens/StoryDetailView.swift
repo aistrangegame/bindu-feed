@@ -40,6 +40,7 @@ struct StoryDetailView: View {
     @State private var depthVoice: FieldComment?
 
     @State private var showHub = false
+    @State private var choosingParagraph: Int?     // WAVE 2 · a held paragraph, its lines apart
     @State private var arrivalSettings: ArrivalSettings = .init()
 
     // The Audio Anchor — one shared player for the whole story; a quiet mark on any Ash entry
@@ -215,12 +216,65 @@ struct StoryDetailView: View {
             .filter { !$0.isEmpty }
 
         return VStack(alignment: .leading, spacing: 20) {
-            ForEach(Array(paragraphs.enumerated()), id: \.offset) { _, p in
-                Text(p)
-                    .font(.lora(17))
-                    .foregroundColor(BinduTheme.inkPrimary)
-                    .lineSpacing(14)  // approx Lora 17 * (1.82 − 1) = 13.94pt
-                    .fixedSize(horizontal: false, vertical: true)
+            // WAVE 2 · the second door, of equal weight to reading: read it by hand.
+            Button { $path.pushDissolve(FeedRoute.readByHand(story)) } label: {
+                HStack(spacing: 8) {
+                    Circle().fill(storyRoomColor).frame(width: 5, height: 5)
+                    Text("read by hand").spaceMonoTracked(9, em: 0.2)
+                        .foregroundColor(storyRoomColor.opacity(0.85))
+                }
+            }
+            .buttonStyle(.plain)
+            .padding(.bottom, 2)
+
+            ForEach(Array(paragraphs.enumerated()), id: \.offset) { i, p in
+                if choosingParagraph == i {
+                    // WAVE 2 · which line? Each sentence of the held paragraph stands apart for
+                    // a moment; touching one keeps it. Touching nothing lets them close again.
+                    VStack(alignment: .leading, spacing: 10) {
+                        ForEach(Sentences.split(p).map { $0.text }, id: \.self) { line in
+                            Button {
+                                store.keep(line, from: story)
+                                withAnimation(.easeInOut(duration: 0.5)) { choosingParagraph = nil }
+                            } label: {
+                                Text(line)
+                                    .font(.lora(17))
+                                    .foregroundColor(store.isKept(line) ? storyRoomColor : BinduTheme.inkPrimary)
+                                    .lineSpacing(10)
+                                    .multilineTextAlignment(.leading)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .padding(.vertical, 8).padding(.horizontal, 10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(RoundedRectangle(cornerRadius: 6).fill(storyRoomColor.opacity(0.07)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        Text("touch the line to keep").spaceMonoTracked(8, em: 0.2)
+                            .foregroundColor(BinduTheme.inkTertiary)
+                            .onTapGesture { withAnimation { choosingParagraph = nil } }
+                    }
+                    .transition(.opacity)
+                } else {
+                    HStack(alignment: .top, spacing: 0) {
+                        Text(p)
+                            .font(.lora(17))
+                            .foregroundColor(BinduTheme.inkPrimary)
+                            .lineSpacing(14)  // approx Lora 17 * (1.82 − 1) = 13.94pt
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .overlay(alignment: .topLeading) {
+                        // a line he kept from this paragraph leaves an ember in the margin
+                        if Sentences.split(p).contains(where: { store.isKept($0.text) }) {
+                            Circle().fill(storyRoomColor).frame(width: 4, height: 4)
+                                .shadow(color: storyRoomColor.opacity(0.8), radius: 4)
+                                .offset(x: -11, y: 11)
+                        }
+                    }
+                    .contentShape(Rectangle())
+                    .onLongPressGesture(minimumDuration: 0.6) {
+                        withAnimation(.easeInOut(duration: 0.5)) { choosingParagraph = i }
+                    }
+                }
             }
         }
     }

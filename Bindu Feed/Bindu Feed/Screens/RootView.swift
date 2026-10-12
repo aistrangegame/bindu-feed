@@ -237,6 +237,10 @@ struct RootView: View {
             InstrumentView(path: $path, startZ: z)
         case .aperture:
             ApertureView(path: $path)
+        case .readByHand(let story):
+            ReadByHandView(path: $path, story: story)
+        case .book:
+            BookView(path: $path)
         }
     }
 

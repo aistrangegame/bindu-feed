@@ -547,6 +547,74 @@ struct CallAnswer: Identifiable, Hashable {
     }
 }
 
+// MARK: - WAVE 2 · What he kept
+
+/// One line he held, in the order he found it (`Type = Kept`, sort band 900+, written by the
+/// app). `Body` is the line exactly as it stood in the story; `Comment Body` is his margin
+/// word, if he ever writes one; `Linked Story` is where it was found; `Source Date` the day.
+struct KeptLine: Identifiable, Hashable {
+    let id: String
+    let line: String
+    var note: String
+    let storyId: String?
+    let day: String
+    let order: Int
+    let created: String
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        id = record.id
+        line = (f.body ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        note = f.commentBody ?? ""
+        storyId = f.linkedStory?.first
+        day = f.sourceDate ?? ""
+        order = f.sortOrder ?? 0
+        created = record.createdTime
+    }
+
+    init(localId: String, line: String, storyId: String, day: String, order: Int) {
+        id = localId
+        self.line = line
+        note = ""
+        self.storyId = storyId
+        self.day = day
+        self.order = order
+        created = ""
+    }
+}
+
+/// The sentences of a passage, each with the paragraph it stands in — the unit he reads by
+/// hand and the unit he keeps. A sentence ends at . ? ! or an em-dash pause that closes a
+/// paragraph; nothing is rewritten, only divided.
+enum Sentences {
+    static func split(_ text: String) -> [(paragraph: Int, text: String)] {
+        var out: [(Int, String)] = []
+        let paras = text.components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        for (pi, p) in paras.enumerated() {
+            var cur = ""
+            let chars = Array(p)
+            var i = 0
+            while i < chars.count {
+                cur.append(chars[i])
+                if ".?!".contains(chars[i]) {
+                    // swallow closing quotes / brackets that belong to this sentence
+                    while i + 1 < chars.count, "\"\u{201D}\u{2019}')".contains(chars[i + 1]) {
+                        i += 1; cur.append(chars[i])
+                    }
+                    let t = cur.trimmingCharacters(in: .whitespaces)
+                    if !t.isEmpty { out.append((pi, t)) }
+                    cur = ""
+                }
+                i += 1
+            }
+            let t = cur.trimmingCharacters(in: .whitespaces)
+            if !t.isEmpty { out.append((pi, t)) }
+        }
+        return out
+    }
+}
+
 // MARK: - Story aggregates
 
 struct StoryStats: Hashable {

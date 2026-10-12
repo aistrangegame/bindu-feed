@@ -1035,3 +1035,20 @@ APP-OWN-INSTRUCTIONAL	hold, and lay it down	Bindu Feed/Bindu Feed/Screens/CallVi
 APP-OWN	LAY IT DOWN	Bindu Feed/Bindu Feed/Screens/DoorView.swift:280
 NON-UI	The Call was answered	Bindu Feed/Bindu Feed/Store/FeedStore.swift:380
 NON-UI	·call·	Bindu Feed/Bindu Feed/Store/FeedStore.swift:372
+APP-OWN-INSTRUCTIONAL	+ a word of yours	Bindu Feed/Bindu Feed/Screens/BookView.swift:123
+APP-OWN	-- Ashrey	Bindu Feed/Bindu Feed/Screens/ReadByHandView.swift:276
+NON-UI	A line kept	Bindu Feed/Bindu Feed/Store/FeedStore.swift:395
+APP-OWN	every line you held	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41
+APP-OWN	every line you held, in the order you found it	Bindu Feed/Bindu Feed/Screens/BookView.swift:29
+NON-UI	He kept a line into his book.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:395
+NON-UI	He read a story at his own pace.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:418
+NON-UI	local-	Bindu Feed/Bindu Feed/Store/FeedStore.swift:372
+NON-UI	local-…	Bindu Feed/Bindu Feed/Store/FeedStore.swift:372
+APP-OWN-INSTRUCTIONAL	Nothing kept yet. Hold any line in a story, and it comes here.	Bindu Feed/Bindu Feed/Screens/BookView.swift:40
+APP-OWN	read by hand	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:223
+APP-OWN-INSTRUCTIONAL	rest a finger to read	Bindu Feed/Bindu Feed/Screens/ReadByHandView.swift:115
+APP-OWN	This came through you	Bindu Feed/Bindu Feed/Screens/ReadByHandView.swift:267
+APP-OWN-INSTRUCTIONAL	touch the line to keep	Bindu Feed/Bindu Feed/Screens/StoryDetailView.swift:252
+APP-OWN	what keeps calling	Bindu Feed/Bindu Feed/Screens/BookView.swift:146
+APP-OWN	What You Kept	Bindu Feed/Bindu Feed/Components/TurnOverlay.swift:41
+APP-OWN	where you stayed	Bindu Feed/Bindu Feed/Screens/ReadByHandView.swift:249

@@ -126,10 +126,12 @@ final class FeedStore: ObservableObject {
             async let leelaT: Void = loadLeela()
             // WAVE 1 · his own words ride with it too — the Call must answer on a cold open.
             async let callT: Void = loadCallAnswers()
+            async let keptT: Void = loadKept()           // WAVE 2 · his book, on every open
 
             let (r, a, s) = try await (roomsT, archetypesT, sentencesT)
             _ = await leelaT
             _ = await callT
+            _ = await keptT
             self.rooms = r
             self.archetypes = a
             self.thresholdSentences = s
@@ -353,6 +355,99 @@ final class FeedStore: ObservableObject {
         self.metStoryIDs = await service.fetchMetStoryIDs()
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
     }
+
+    // MARK: - WAVE 2 · What he kept · where he stayed
+
+    @Published var kept: [KeptLine] = []
+    private static let keptCacheKey = "bindu.kept.cache"        // [[line, storyId, day]] for offline
+    private static let stayedKey = "bindu.stayed"               // [storyId: [sentence: seconds]]
+
+    func loadKept() async {
+        if let k = try? await service.fetchKept() {
+            kept = k
+            let cache = k.map { [$0.line, $0.storyId ?? "", $0.day, $0.note] }
+            UserDefaults.standard.set(cache, forKey: Self.keptCacheKey)
+        } else if kept.isEmpty, let cache = UserDefaults.standard.array(forKey: Self.keptCacheKey) as? [[String]] {
+            kept = cache.enumerated().map { i, c in
+                var l = KeptLine(localId: "local-\(i)", line: c[0], storyId: c[1], day: c[2], order: i)
+                if c.count > 3 { l.note = c[3] }
+                return l
+            }
+        }
+    }
+
+    func isKept(_ line: String) -> Bool { kept.contains { $0.line == line } }
+
+    /// Keep a line into his book. In the order found; nothing scored, nothing counted.
+    func keep(_ line: String, from story: Story) {
+        let t = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty, !isKept(t) else { return }
+        let order = 900 + Int(Date().timeIntervalSince1970) % 1_000_000_000
+        let local = KeptLine(localId: "local-\(UUID().uuidString)", line: t, storyId: story.id,
+                             day: AirtableService.localDayString(), order: order)
+        kept.append(local)
+        Task {
+            if let rec = try? await service.writeKept(line: t, storyId: story.id, sortOrder: order),
+               let i = kept.firstIndex(where: { $0.id == local.id }) {
+                kept[i] = rec
+            }
+            _ = try? await service.logActivity(type: .kept, feedRecordId: story.id,
+                                               activityName: "A line kept", detail: "He kept a line into his book.",
+                                               excerpt: nil, voice: "Sakshi")
+        }
+    }
+
+    /// His own word in the margin of a kept line.
+    func setNote(_ note: String, on line: KeptLine) {
+        guard let i = kept.firstIndex(where: { $0.id == line.id }) else { return }
+        kept[i].note = note
+        guard !line.id.hasPrefix("local-") else { return }
+        Task { try? await service.patchFeedRecord(id: line.id, fields: ["Comment Body": note]) }
+    }
+
+    /// Where he stayed — seconds held on each sentence when reading by hand. Device-local,
+    /// never shown as a number; it decides only which lines the close gives back.
+    func recordStays(_ stays: [String: Double], for storyId: String) {
+        var all = (UserDefaults.standard.dictionary(forKey: Self.stayedKey) as? [String: [String: Double]]) ?? [:]
+        var mine = all[storyId] ?? [:]
+        for (k, v) in stays { mine[k, default: 0] += v }
+        all[storyId] = mine
+        UserDefaults.standard.set(all, forKey: Self.stayedKey)
+        Task {
+            _ = try? await service.logActivity(type: .readByHand, feedRecordId: storyId,
+                                               activityName: "Read by hand", detail: "He read a story at his own pace.",
+                                               excerpt: nil, voice: "Sakshi")
+        }
+    }
+
+    func stays(for storyId: String) -> [String: Double] {
+        ((UserDefaults.standard.dictionary(forKey: Self.stayedKey) as? [String: [String: Double]]) ?? [:])[storyId] ?? [:]
+    }
+
+    /// WHAT KEEPS CALLING — a word that recurs in what he kept across three or more rooms.
+    /// Never a theme invented for him: only a word his own kept lines share, and only once it
+    /// crosses three rooms. Otherwise nothing is said.
+    func keepsCalling() -> (word: String, rooms: [String])? {
+        var roomsByWord: [String: Set<String>] = [:]
+        for k in kept {
+            guard let sid = k.storyId, let st = stories.first(where: { $0.id == sid }) else { continue }
+            let words = Set(k.line.lowercased()
+                .components(separatedBy: CharacterSet.letters.inverted)
+                .filter { $0.count >= 5 && !Self.quietWords.contains($0) })
+            for w in words { roomsByWord[w, default: []].insert(st.room) }
+        }
+        guard let best = roomsByWord.filter({ $0.value.count >= 3 })
+                .max(by: { ($0.value.count, $1.key) < ($1.value.count, $0.key) }) else { return nil }
+        return (best.key, best.value.sorted())
+    }
+
+    private static let quietWords: Set<String> = [
+        "about", "after", "again", "always", "another", "because", "before", "being", "between",
+        "could", "every", "everything", "first", "found", "going", "hasn", "having", "himself",
+        "into", "itself", "know", "little", "might", "never", "nothing", "other", "really",
+        "should", "something", "still", "their", "there", "these", "thing", "things", "think",
+        "those", "through", "under", "until", "where", "which", "while", "would", "yourself",
+    ]
 
     // MARK: - WAVE 1 · The Call
 

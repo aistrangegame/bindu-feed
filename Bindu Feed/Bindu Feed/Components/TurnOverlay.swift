@@ -38,6 +38,7 @@ let turnRows: [TurnRow] = [
     .init(id: "universe", name: "The Universe", sub: "the whole of it, from above", glyph: "✧", hex: "#9FB2C4", dest: .route(.instrument(-4)), unmetOnly: false),
     .init(id: "light", name: "The Light", sub: "the future, already underway", glyph: "▷", hex: "#EDE3CE", dest: .route(.instrument(-5)), unmetOnly: false),
     .init(id: "point", name: "The Point", sub: "everything you know, arranged", glyph: "·", hex: "#C0392B", dest: .route(.instrument(1)), unmetOnly: false),
+    .init(id: "kept", name: "What You Kept", sub: "every line you held", glyph: "❙", hex: "#C9A07A", dest: .route(.book), unmetOnly: false),
     .init(id: "players", name: "The Players", sub: "the lenses that read", glyph: "◊", hex: "#3AADA8", dest: .route(.players), unmetOnly: false),
     .init(id: "arrive", name: "How You Arrive", sub: "name, colour, mark", glyph: "◉", hex: "#C47A52", dest: .route(.settings), unmetOnly: false),
 ]
@@ -150,6 +151,12 @@ private struct TurnMark: View {
             case "players":                     // two overlapping lenses
                 ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.10, y: H * 0.28, width: W * 0.52, height: H * 0.44)), with: .color(c.opacity(0.85)), lineWidth: 1)
                 ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.38, y: H * 0.28, width: W * 0.52, height: H * 0.44)), with: .color(c.opacity(0.85)), lineWidth: 1)
+            case "kept":                        // a margin rule and three held lines
+                ctx.fill(Path(CGRect(x: W * 0.2, y: H * 0.18, width: 1.2, height: H * 0.64)), with: .color(c.opacity(0.85)))
+                for i in 0..<3 {
+                    let y = H * (0.28 + Double(i) * 0.22)
+                    ctx.fill(Path(CGRect(x: W * 0.32, y: y, width: W * (0.5 - Double(i) * 0.1), height: 1.2)), with: .color(c.opacity(0.75 - Double(i) * 0.15)))
+                }
             case "arrive":                      // ◉ — the mark of arrival
                 ctx.stroke(Path(ellipseIn: CGRect(x: W * 0.24, y: H * 0.24, width: W * 0.52, height: H * 0.52)), with: .color(c.opacity(0.85)), lineWidth: 1.2)
                 dot(W * 0.5, H * 0.5, 2.4, 0.95)

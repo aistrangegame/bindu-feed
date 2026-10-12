@@ -25,6 +25,11 @@ struct GameView: View {
 
     @State private var showHub = false
 
+    // WAVE 2 · the room answers time spent in it
+    @State private var arrivedInRoom = Date()
+    @State private var settled = false
+    @State private var turned: Double = 0
+
     init(path: Binding<[FeedRoute]>, room: Room) {
         self._path = path
         self.initialRoom = room
@@ -41,7 +46,7 @@ struct GameView: View {
             // its edges inward — each room reads as somewhere before it's named.
             heroBackground(currentRoom)
                 .ignoresSafeArea()
-                .opacity(heroVisible ? 1 : 0)
+                .opacity(heroVisible ? (settled ? 1 : 0.86) : 0)
                 .animation(.easeInOut(duration: 0.28), value: currentRoom.id)
 
             ScrollView {
@@ -100,6 +105,21 @@ struct GameView: View {
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             withAnimation(.easeInOut(duration: 0.9)) { floodOpacity = 0 }
+            beginStay()
+        }
+        .onChange(of: currentRoom.id) { _, _ in beginStay() }
+        .task(id: currentRoom.id) {
+            // WAVE 2 · the stay clock — checked gently, never shown
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                let held = Date().timeIntervalSince(arrivedInRoom)
+                if !settled, held >= RoomStay.settleAt {
+                    withAnimation(.easeInOut(duration: 6)) { settled = true }
+                }
+                if turned == 0, held >= RoomStay.turnAt {
+                    withAnimation(.easeInOut(duration: 4)) { turned = 1 }
+                }
+            }
         }
         .task(id: TaskKey(room: currentRoom.id, sort: sort)) {
             await loadStoriesForCurrentRoom()
@@ -164,9 +184,10 @@ struct GameView: View {
                 size: style.heroGlyph,                 // the room's own hero glyph scale (comp 44–78)
                 color: currentRoom.color,
                 animation: currentRoom.animation,
-                glow: style.heroGlyph * 0.30           // the hero glow reads strong
+                glow: style.heroGlyph * (settled ? 0.46 : 0.30)   // the hero glow reads strong; deeper once settled
             )
             .id(currentRoom.id)
+            .overlay { if turned > 0 { RoomTurnMark(roomName: currentRoom.name, color: currentRoom.color, size: style.heroGlyph, turned: turned) } }
 
             // the room's own bespoke title typography (comp nameStyle), not a uniform 28pt
             Text(style.uppercase ? currentRoom.name.uppercased() : currentRoom.name)
@@ -180,6 +201,17 @@ struct GameView: View {
                     .foregroundColor(BinduTheme.inkSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, BinduTheme.space12)
+            }
+
+            // WAVE 2 · the turned premise, for the one who stayed
+            if turned > 0, let line = RoomStay.turn[currentRoom.name] {
+                Text(line)
+                    .font(.loraItalic(15))
+                    .foregroundColor(currentRoom.color.opacity(0.95))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, BinduTheme.space20)
+                    .padding(.top, 6)
+                    .opacity(turned)
             }
         }
         .frame(maxWidth: .infinity)
@@ -418,6 +450,12 @@ struct GameView: View {
 
     private var roomIndex: Int {
         roomsInOrder.firstIndex(where: { $0.id == currentRoom.id }) ?? 0
+    }
+
+    private func beginStay() {
+        arrivedInRoom = Date()
+        settled = false
+        turned = 0
     }
 
     private func stepRoom(by delta: Int) {

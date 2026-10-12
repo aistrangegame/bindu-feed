@@ -63,4 +63,6 @@ enum FeedRoute: Hashable {
                                  // sealed story (from its page); nil = the daily standalone summons.
     case instrument(Int) // the continuous axis at a target Z (Wave 6)
     case aperture        // the live Aperture (was a raw NavigationLink; now a real route)
+    case readByHand(Story)   // WAVE 2 · the second door into a story
+    case book                // WAVE 2 · what he kept
 }
