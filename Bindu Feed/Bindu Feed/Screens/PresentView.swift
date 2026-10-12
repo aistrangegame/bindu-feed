@@ -188,7 +188,7 @@ struct PresentView: View {
                                         Circle().stroke(gold.opacity(0.7), lineWidth: 0.8).frame(width: 13, height: 13)
                                     }
                                     Circle().fill(color(ds.first?.category ?? "", ds.first?.sourceApp ?? ""))
-                                        .frame(width: CGFloat(4 + min(4, ds.count) * 1.5), height: CGFloat(4 + min(4, ds.count) * 1.5))
+                                        .frame(width: CGFloat(4 + Double(min(4, ds.count)) * 1.5), height: CGFloat(4 + Double(min(4, ds.count)) * 1.5))
                                         .opacity(openDay == day ? 1 : 0.6)
                                 }
                                 .frame(width: 22, height: 22)

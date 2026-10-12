@@ -17,6 +17,7 @@ final class SpeechCapture: ObservableObject {
     private var task: SFSpeechRecognitionTask?
     private var prefix = ""
     private var wanted = false
+    private var tookSession = false
     private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US"))
 
     /// Begin listening; whatever is already written stays, and the new words follow it.
@@ -44,6 +45,7 @@ final class SpeechCapture: ObservableObject {
             try session.setCategory(.playAndRecord, mode: .measurement,
                                     options: [.mixWithOthers, .defaultToSpeaker, .allowBluetooth])
             try session.setActive(true, options: [])
+            tookSession = true
         } catch { return }
 
         let req = SFSpeechAudioBufferRecognitionRequest()
@@ -53,6 +55,7 @@ final class SpeechCapture: ObservableObject {
 
         let input = engine.inputNode
         let format = input.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else { cleanup(); return }
         input.removeTap(onBus: 0)
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { @Sendable buffer, _ in
             req.append(buffer)
@@ -90,7 +93,8 @@ final class SpeechCapture: ObservableObject {
         task?.cancel()
         task = nil
         request = nil
-        if listening {
+        if tookSession {
+            tookSession = false
             try? AVAudioSession.sharedInstance().setCategory(.ambient, mode: .default, options: [.mixWithOthers])
         }
         listening = false
