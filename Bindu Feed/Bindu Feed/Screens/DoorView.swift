@@ -222,6 +222,10 @@ struct DoorView: View {
         switch exit {
         case .day:
             withAnimation(.easeInOut(duration: 0.8)) { showRope = false }
+        case .call:
+            // WAVE 1 · the rope's third way: the Call, over wherever he is.
+            withAnimation(.easeInOut(duration: 0.8)) { showRope = false }
+            store.callOpen = true
         case .point:
             // "Walk the Point" — enter the Instrument at the gate (z=1), one drag inward from
             // the Point itself. Parked, then RootView pushes it once the feed is reachable.
@@ -234,7 +238,7 @@ struct DoorView: View {
 
 // MARK: - The rope
 
-enum RopeExit { case point, day }
+enum RopeExit { case point, day, call }
 
 // Reusable — the Door raises it on a threshold long-press; the axis raises it from
 // anywhere (§7.5: the particle is always present, so the rope is always one gesture away).
@@ -271,6 +275,10 @@ struct DoorRopeOverlay: View {
                             Button { onExit(.point) } label: {
                                 Text("WALK THE POINT").spaceMonoTracked(11, em: 2 / 11)
                                     .foregroundStyle(Color(hex: "#C0392B").opacity(0.9))
+                            }
+                            Button { onExit(.call) } label: {
+                                Text("LAY IT DOWN").spaceMonoTracked(11, em: 2 / 11)
+                                    .foregroundStyle(BinduTheme.colorBindu.opacity(0.85))
                             }
                             Button { onExit(.day) } label: {
                                 Text("RETURN TO THE DAY").spaceMonoTracked(11, em: 2 / 11)

@@ -10,6 +10,9 @@ struct StoryDetailView: View {
     @Binding var path: [FeedRoute]
     let story: Story
 
+    /// WAVE 1 · the two rooms that go down carry a heartbeat under the page.
+    static let pulseRooms: Set<String> = ["The Descent", "The Forgetting"]
+
     // Comment state
     @State private var commentNodes: [CommentNode] = []
     @State private var commentsLoaded = false
@@ -137,12 +140,14 @@ struct StoryDetailView: View {
             await loadComments()
         }
         .onAppear {
+            HeartbeatService.shared.set("story", on: Self.pulseRooms.contains(story.room))   // WAVE 1
             arrivalSettings = ArrivalSettings.load()
             if store.consumeStoryRefresh(storyId: story.id) {
                 Task { await forceReloadComments() }
             }
         }
         .onDisappear {
+            HeartbeatService.shared.set("story", on: false)
             depthHoldTask?.cancel()
             depthAutoAdvanceTask?.cancel()
             anchor.stop()

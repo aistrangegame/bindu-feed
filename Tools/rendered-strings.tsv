@@ -1029,3 +1029,9 @@ NON-UI	{Activity Type}='Veil Lifted'	Bindu Feed/Bindu Feed/Services/AirtableServ
 NON-UI	bindu.leela.lastDay	Bindu Feed/Bindu Feed/Store/FeedStore.swift:360
 NON-UI	bindu.rope.…	Bindu Feed/Bindu Feed/Store/FeedStore.swift:361
 APP-OWN	hold in silence	Bindu Feed/Bindu Feed/Screens/PracticeDoorView.swift:210
+APP-OWN	-- Ashrey · …	Bindu Feed/Bindu Feed/Screens/CallView.swift:180
+NON-UI	He called; his own words answered.	Bindu Feed/Bindu Feed/Store/FeedStore.swift:381
+APP-OWN-INSTRUCTIONAL	hold, and lay it down	Bindu Feed/Bindu Feed/Screens/CallView.swift:153
+APP-OWN	LAY IT DOWN	Bindu Feed/Bindu Feed/Screens/DoorView.swift:280
+NON-UI	The Call was answered	Bindu Feed/Bindu Feed/Store/FeedStore.swift:380
+NON-UI	·call·	Bindu Feed/Bindu Feed/Store/FeedStore.swift:372

@@ -507,6 +507,46 @@ struct LeelaDrop: Identifiable, Hashable {
     }
 }
 
+// MARK: - WAVE 1 · The Call
+
+/// One passage of his OWN Codex words, kept for the moment the Lila takes over (`Type = Call`,
+/// sort 10001+). `Body` is verbatim; `Excerpt` carries the state it answers (`STATE: heavy`);
+/// `Archetype` is the voice that signs it at first, before the name resolves to his own.
+struct CallAnswer: Identifiable, Hashable {
+    let id: String
+    let words: String
+    let state: String?
+    let codexId: String
+    let date: String
+    let signer: String
+
+    init(from record: AirtableRecord) {
+        let f = record.fields
+        id = record.id
+        words = (f.body ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        var st: String?
+        for line in (f.excerpt ?? "").components(separatedBy: "\n") {
+            let parts = line.split(separator: ":", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+            if parts.count == 2, parts[0].uppercased() == "STATE" { st = parts[1].lowercased() }
+        }
+        state = st
+        codexId = f.codexId ?? ""
+        date = f.sourceDate ?? ""
+        signer = f.archetype ?? "Bindu"
+    }
+
+    /// "14 March 2025" — the day he said it, read as a calendar day (UTC: a date-only field).
+    var spokenOn: String {
+        guard let d = AirtableService.dayFormatter(timeZone: TimeZone(identifier: "UTC")!).date(from: date) else { return date }
+        let out = DateFormatter()
+        out.locale = Locale(identifier: "en_GB")
+        out.calendar = Calendar(identifier: .gregorian)
+        out.timeZone = TimeZone(identifier: "UTC")
+        out.dateFormat = "d MMMM yyyy"
+        return out.string(from: d)
+    }
+}
+
 // MARK: - Story aggregates
 
 struct StoryStats: Hashable {

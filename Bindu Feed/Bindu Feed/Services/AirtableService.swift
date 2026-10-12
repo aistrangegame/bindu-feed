@@ -39,6 +39,7 @@ enum FeedActivityType: String {
     case returned       = "Return"         // SLICE 5 · a ring sealed in the Return (option already exists)
     case note           = "Note"           // SLICE 8 · a seed offered — he will do the act
     case silenceHeld    = "Silence Held"   // SLICE 8 · a seed held in silence — complete as it is
+    case called         = "Called"         // WAVE 1 · the Call was answered — a wordless pulse (typecast)
 }
 
 final class AirtableService {
@@ -312,6 +313,15 @@ final class AirtableService {
             sort: [(field: "Sort Order", direction: "asc")]
         )
         return records.map(LeelaDrop.init(from:))
+    }
+
+    /// WAVE 1 · his own words, kept for the Call.
+    func fetchCallAnswers() async throws -> [CallAnswer] {
+        let records = try await fetch(
+            filter: "AND({Type}='Call',{Status}='Live')",
+            sort: [(field: "Sort Order", direction: "asc")]
+        )
+        return records.map(CallAnswer.init(from:)).filter { !$0.words.isEmpty }
     }
 
     /// SLICE 8 · what has happened anywhere in the suite, as types only (never contents),

@@ -124,9 +124,12 @@ final class FeedStore: ObservableObject {
             // SLICE 8 · the seeds ride with the foundation, so the Door can choose one on the
             // very open it was meant for. Their failure never blocks the Door (try? inside).
             async let leelaT: Void = loadLeela()
+            // WAVE 1 · his own words ride with it too — the Call must answer on a cold open.
+            async let callT: Void = loadCallAnswers()
 
             let (r, a, s) = try await (roomsT, archetypesT, sentencesT)
             _ = await leelaT
+            _ = await callT
             self.rooms = r
             self.archetypes = a
             self.thresholdSentences = s
@@ -349,6 +352,36 @@ final class FeedStore: ObservableObject {
     func loadMetStories() async {
         self.metStoryIDs = await service.fetchMetStoryIDs()
         rebuildUniSky()          // DENS is derived from met-ness, so it moves when met-ness does
+    }
+
+    // MARK: - WAVE 1 · The Call
+
+    @Published var callAnswers: [CallAnswer] = []
+    /// Raised by the two-finger hold anywhere, or by the rope's LAY IT DOWN.
+    @Published var callOpen = false
+
+    func loadCallAnswers() async {
+        if let a = try? await service.fetchCallAnswers(), !a.isEmpty { callAnswers = a }
+    }
+
+    /// One passage for the state he laid down (or any, if none) — a rendezvous on the day and
+    /// the state, so the same state on the same day answers the same way, and a new day turns.
+    func callAnswer(for state: String?) -> CallAnswer? {
+        let pool = state.map { s in callAnswers.filter { $0.state == s } } ?? []
+        let from = pool.isEmpty ? callAnswers : pool
+        let key = AirtableService.localDayString() + "·call·" + (state ?? "none")
+        return MirrorDay.pick(from.map(\.id), key: key).map { from[$0] }
+    }
+
+    /// Only a wordless pulse reaches the record — never the state, never the passage.
+    func logCall() async {
+        _ = try? await service.logActivity(
+            type: .called,
+            activityName: "The Call was answered",
+            detail: "He called; his own words answered.",
+            excerpt: nil,
+            voice: "Bindu"
+        )
     }
 
     // MARK: - SLICE 8 · Seeds that find him

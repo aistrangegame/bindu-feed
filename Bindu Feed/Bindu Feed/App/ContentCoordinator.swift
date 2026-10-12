@@ -19,6 +19,9 @@ struct ContentCoordinator: View {
     @State private var blinking = false
     @State private var lid: CGFloat = 0      // 0 open … 1 shut (each lid covers its half)
 
+    // WAVE 1 · the Waking — every cold open begins with the particle assembling.
+    @State private var waking = true
+
     var body: some View {
         ZStack {
             BinduTheme.bgDeep.ignoresSafeArea()
@@ -62,7 +65,24 @@ struct ContentCoordinator: View {
                 .ignoresSafeArea()
                 .allowsHitTesting(true)   // swallow taps during the crossing
             }
+
+            // WAVE 1 · the Call — over every layer, wherever he is when the Lila takes over.
+            if store.callOpen {
+                CallView(onClose: { withAnimation(.easeInOut(duration: 0.6)) { store.callOpen = false } })
+                    .transition(.opacity)
+                    .zIndex(20)
+            }
+
+            if waking {
+                WakingView(onDone: { waking = false })
+                    .zIndex(30)
+            }
         }
+        // two fingers held, anywhere — the Call (never before the field is reachable)
+        .background(CallGestureInstaller(onCall: {
+            guard store.hasToken, !showTokenEntry, !store.callOpen else { return }
+            store.callOpen = true
+        }))
         // While blinking, the Door→feed swap is INSTANT (hidden behind the shut lids) — the
         // blink is the transition, so the 1.0s crossfade must not run underneath and leave
         // the field ghosted as the lids open. The crossfade still governs non-blink changes

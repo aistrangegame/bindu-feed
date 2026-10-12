@@ -112,6 +112,10 @@ struct InstrumentView: View {
 
     private var z: Double { travel.z }
     private var here: AxisRegister { Axis.nearest(z) }
+
+    /// WAVE 1 · where the axis goes DOWN, a heartbeat is felt under the hand: the fall
+    /// (who sat with it), the Veil, the Chamber, the Mirrors.
+    static let pulseKeys: Set<String> = ["fall", "d3", "d4", "d5"]
     private var atSky: Bool { abs(z + 4) < 0.45 }
     private var inUniverse: Bool { ["sky", "region", "world", "fall"].contains(here.key) }
 
@@ -355,8 +359,9 @@ struct InstrumentView: View {
         )
         .overlay {
             if showRope {
-                DoorRopeOverlay(onExit: { _ in
+                DoorRopeOverlay(onExit: { exit in
                     withAnimation(.easeInOut(duration: 0.8)) { showRope = false }
+                    if exit == .call { store.callOpen = true }   // WAVE 1 · the Call
                 })
                 .transition(.opacity)
             }
@@ -365,7 +370,8 @@ struct InstrumentView: View {
         // 0, d1…d7 1…7, the centre 9) — the same arithmetic the yantra's camera uses, so the
         // pitch he hears and the enclosure he is standing in can never disagree. Off the
         // Point band the field bed resumes: a room that hums rather than climbs.
-        .onChange(of: here.key) { _, _ in
+        .onChange(of: here.key) { _, key in
+            HeartbeatService.shared.set("axis", on: Self.pulseKeys.contains(key))   // WAVE 1 · the pulse
             let onPoint = travel.z >= 0.5
             soundEngine.setContext(onPoint
                 ? .point(enclosure: Int(PointYantra.focus(forAxisZ: travel.z).rounded()))
@@ -495,7 +501,7 @@ struct InstrumentView: View {
             travel.start()
             soundEngine.startAxisGlide()
         }
-        .onDisappear { travel.stop(); soundEngine.stopAxisGlide() }
+        .onDisappear { travel.stop(); soundEngine.stopAxisGlide(); HeartbeatService.shared.set("axis", on: false) }
     }
 
     // MARK: - Travel (the hand feeds AxisTravel; the engine owns the physics)
