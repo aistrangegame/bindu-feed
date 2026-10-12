@@ -2,8 +2,11 @@ import SwiftUI
 
 struct RootView: View {
     @EnvironmentObject private var store: FeedStore
+    @EnvironmentObject private var soundEngine: SoundEngine
 
     @State private var path: [FeedRoute] = []
+    /// SLICE 6 · the homecoming glow — 0 at rest; rises and falls once when a ceremony closes.
+    @State private var homeLight: Double = 0
     @State private var selectedRoom: String? = nil
     @State private var sort: StorySort = .mostActive
     @State private var hasLoaded = false
@@ -56,6 +59,26 @@ struct RootView: View {
         }
         .onChange(of: sort) {
             Task { await store.loadStories(room: selectedRoom, sort: sort) }
+        }
+        // SLICE 6 · A WHISPER AND ONE WARMER LIGHT, NEVER A CHECKMARK (padakarshini ceremony
+        // grammar; rupakarshini EC 2482 — never fabricate a response to show something
+        // happened). When a ceremony layer comes off, the place he returns to is a little warmer
+        // for one breath, and the Om sounds once, low. Nothing says done.
+        .overlay {
+            RadialGradient(colors: [Color(hex: "#C9A07A").opacity(0.22), .clear],
+                           center: .center, startRadius: 0, endRadius: 420)
+                .opacity(homeLight)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+        }
+        .onChange(of: path) { old, new in
+            guard new.count < old.count, let left = old.last, left.isCeremony else { return }
+            soundEngine.fieldThreshold(hz: 136.1, dur: 5)
+            withAnimation(.easeOut(duration: 1.6)) { homeLight = 1 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.6) {
+                withAnimation(.easeInOut(duration: 4.4)) { homeLight = 0 }
+            }
         }
     }
 
@@ -117,13 +140,13 @@ struct RootView: View {
 
     @ViewBuilder
     private var cards: some View {
-        if store.stories.isEmpty {
+        if store.feedStories.isEmpty {
             emptyState
                 .padding(.horizontal, BinduTheme.space16)
                 .padding(.top, BinduTheme.space24)
         } else {
             LazyVStack(spacing: BinduTheme.space14) {
-                ForEach(store.stories) { story in
+                ForEach(store.feedStories) { story in
                     Button {
                         $path.pushDissolve(FeedRoute.story(story))
                     } label: {

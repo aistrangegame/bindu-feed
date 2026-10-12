@@ -765,31 +765,42 @@ final class AirtableService {
     /// an empty set, so the sky reads unmet rather than inventing a life.
     func fetchMetStoryIDs() async -> Set<String> {
         guard !token.isEmpty else { return [] }
-        var comps = URLComponents(string: appActivityURLString)
-        comps?.queryItems = [
-            URLQueryItem(name: "filterByFormula", value: "{Activity Type}='Story Met'"),
-            URLQueryItem(name: "pageSize", value: "100"),
-            URLQueryItem(name: "fields[]", value: "Activity Type"),
-            URLQueryItem(name: "fields[]", value: "Link to Feed"),
-        ]
-        guard let url = comps?.url else { return [] }
-        var req = URLRequest(url: url)
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        do {
-            let (data, response) = try await session.data(for: req)
-            try Self.validate(response: response, data: data)
-            let page = try decoder.decode(ActivityMetPage.self, from: data)
-            var out = Set<String>()
-            for r in page.records where r.fields.type == "Story Met" {
-                for id in r.fields.link ?? [] { out.insert(id) }
+        // SLICE 6 · every page. One page of 100 was the whole history while the history was
+        // young; past it, the sky would under-light — met worlds read unmet. Fail-safe as
+        // before: an error keeps what was read so far, smaller, never larger.
+        var out = Set<String>()
+        var offset: String?
+        var pages = 0
+        repeat {
+            var comps = URLComponents(string: appActivityURLString)
+            var q = [
+                URLQueryItem(name: "filterByFormula", value: "{Activity Type}='Story Met'"),
+                URLQueryItem(name: "pageSize", value: "100"),
+                URLQueryItem(name: "fields[]", value: "Activity Type"),
+                URLQueryItem(name: "fields[]", value: "Link to Feed"),
+            ]
+            if let offset { q.append(URLQueryItem(name: "offset", value: offset)) }
+            comps?.queryItems = q
+            guard let url = comps?.url else { break }
+            var req = URLRequest(url: url)
+            req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            do {
+                let (data, response) = try await session.data(for: req)
+                try Self.validate(response: response, data: data)
+                let page = try decoder.decode(ActivityLinkPage.self, from: data)
+                for r in page.records where r.fields.type == "Story Met" {
+                    for id in r.fields.link ?? [] { out.insert(id) }
+                }
+                offset = page.offset
+            } catch {
+                #if DEBUG
+                print("[AirtableService] fetchMetStoryIDs stopped early: \(error)")
+                #endif
+                break
             }
-            return out
-        } catch {
-            #if DEBUG
-            print("[AirtableService] fetchMetStoryIDs failed (sky reads unmet): \(error)")
-            #endif
-            return []
-        }
+            pages += 1
+        } while offset != nil && pages < 50
+        return out
     }
 
     /// Is today "met"? A day is met when a `Story Met` activity record exists

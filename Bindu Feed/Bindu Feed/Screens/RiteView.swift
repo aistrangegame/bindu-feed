@@ -137,7 +137,7 @@ struct RiteView: View {
         if let onFinish {
             onFinish()
         } else if !path.isEmpty {
-            $path.popToRootDissolve()
+            $path.closeCeremony()
         }
     }
 }

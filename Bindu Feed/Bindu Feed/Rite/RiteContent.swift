@@ -17,6 +17,9 @@ enum RiteCanon {
 
     static let title   = "The Two Who Were One"
     static let codexId = "C-1052"
+    /// SLICE 6 · the canon story BY RECORD (§10: found by record id, never by Codex ID or
+    /// title). Two Live stories carry `C-1052`; only this one is *The Two Who Were One*.
+    static let recordId = "rec0DReVXAssEftsn"
     static let date    = "Feb 11, 2025"
 
     // The ten paragraphs, verbatim (The Rite v3.html:1179–1190).

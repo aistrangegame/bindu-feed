@@ -235,7 +235,8 @@ struct SignalView: View {
         }
 
         let key = Self.dayKey
-        let idx = Int(Self.fnv1a(key + "·signal") % UInt32(signals.count))
+        // SLICE 6 · rendezvous (`MirrorDay`): a new signal wins only the days it wins.
+        let idx = MirrorDay.pick(signals.map(\.id), key: key + "·signal") ?? 0
         currentSignal = signals[idx]
         loaded = true
         beginArrival()

@@ -13,6 +13,16 @@ import SwiftUI
 // The one deliberate loss vs. NavigationStack is the interactive edge-swipe-back — but
 // every screen already hides the system back button and carries its own back/leave
 // control, so nothing becomes unreachable.
+extension FeedRoute {
+    /// SLICE 6 · the routes that are ceremonies — a crossing with a close of its own.
+    var isCeremony: Bool {
+        switch self {
+        case .rite, .light, .returnCeremony: return true
+        default: return false
+        }
+    }
+}
+
 extension Binding where Value == [FeedRoute] {
     func pushDissolve(_ value: FeedRoute) {
         withAnimation(.easeInOut(duration: 0.5)) { wrappedValue.append(value) }
@@ -20,6 +30,14 @@ extension Binding where Value == [FeedRoute] {
     func popDissolve() {
         guard !wrappedValue.isEmpty else { return }
         withAnimation(.easeInOut(duration: 0.5)) { _ = wrappedValue.removeLast() }
+    }
+    /// SLICE 6 · RETURN TO WHERE YOU WERE (padakarshini ceremony grammar, step 8; rupakarshini
+    /// S14: *"out to the exact depth left from; never to a generic home"*). A ceremony is one
+    /// layer, and every layer beneath it stayed mounted — the axis at the depth he left, the
+    /// story page he opened it from, the Feed. Closing takes off this one layer and nothing
+    /// else, so he is simply where he was. It used to send him to the Feed every time.
+    func closeCeremony() {
+        popDissolve()
     }
     func popToRootDissolve() {
         guard !wrappedValue.isEmpty else { return }

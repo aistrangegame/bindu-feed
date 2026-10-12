@@ -175,7 +175,7 @@ struct LightView: View {
             // Always a quiet way out — never trapped in the Light.
             VStack {
                 HStack {
-                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
+                    Button { if !path.isEmpty { $path.closeCeremony() } } label: {
                         Text("‹ leave").spaceMonoTracked(9, em: 2 / 9)
                             .foregroundStyle(Color(hex: "#EDE3CE").opacity(0.4)).padding(16)
                     }
@@ -852,7 +852,7 @@ struct LightView: View {
                 Button { restart() } label: {
                     Text("again ›").spaceMonoTracked(10, em: 0.2).foregroundStyle(BinduTheme.inkTertiary)
                 }
-                Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
+                Button { if !path.isEmpty { $path.closeCeremony() } } label: {
                     Text("the archive waits ›").spaceMonoTracked(10, em: 0.2).foregroundStyle(Color(hex: "#EDE3CE"))
                 }
             }

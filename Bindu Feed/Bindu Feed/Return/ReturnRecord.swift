@@ -96,8 +96,10 @@ enum ReturnRecord {
     /// off the Record. The authored line comes from `RiteVoices.voice(key)`, and taking it
     /// from the wrong one of two same-named fields would have restored the fault while
     /// reading as the fix.
-    static func entries(codexId: String, voices: [RiteVoice]) -> [Entry] {
-        guard codexId != RiteCanon.codexId else { return gathering }
+    static func entries(recordId: String, voices: [RiteVoice]) -> [Entry] {
+        // SLICE 6 · keyed on the record: the second `C-1052` story (*The Severance of Being
+        // Born*) was being handed *The Two Who Were One*'s condensed gathering.
+        guard recordId != RiteCanon.recordId else { return gathering }
         return voices.map { v in
             Entry(key: v.key, name: v.name, hex: v.hex, glyph: v.glyph, role: v.role,
                   line: RiteVoices.voice(v.key)?.passing ?? v.passing)

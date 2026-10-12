@@ -77,7 +77,7 @@ struct ReturnView: View {
             // Always a quiet way out — never trapped in the Return.
             VStack {
                 HStack {
-                    Button { if !path.isEmpty { $path.popToRootDissolve() } } label: {
+                    Button { if !path.isEmpty { $path.closeCeremony() } } label: {
                         Text("‹ leave").spaceMonoTracked(9, em: 2 / 9)
                             .foregroundStyle(ReturnCanon.ashColor.opacity(0.5)).padding(16)
                     }
@@ -617,15 +617,13 @@ struct ReturnView: View {
                 VStack(spacing: 14) {
                     Text(ReturnCanon.sealDwell1).font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
                     Text(ReturnCanon.sealDwell2).font(.lora(13)).italic().foregroundStyle(BinduTheme.inkTertiary).multilineTextAlignment(.center)
-                    // walk-continuity — if he crossed from the axis, he goes back to the
-                    // depth he left, not to a cold Door. The way back is already open behind
-                    // him because the axis was never unmounted; only the route is restored.
+                    // walk-continuity — he goes back to where he was. The axis (or the story
+                    // page, or the Feed) was never unmounted beneath this layer, so closing the
+                    // one layer IS the return. SLICE 6: the old path popped to the root and then
+                    // parked a route nothing read after launch, so he always landed on the Feed.
                     Button {
-                        if let z = store.departureZ() {
-                            store.clearDeparture()
-                            $path.popToRootDissolve()
-                            store.pendingLaunchRoute = .instrument(Int(z.rounded()))
-                        } else if !path.isEmpty { $path.popToRootDissolve() }
+                        store.clearDeparture()
+                        if !path.isEmpty { $path.closeCeremony() }
                     } label: {
                         Text(ReturnCanon.archiveWaits).spaceMonoTracked(10, em: 0.2).foregroundStyle(ReturnCanon.ashColor).padding(.top, 8)
                     }

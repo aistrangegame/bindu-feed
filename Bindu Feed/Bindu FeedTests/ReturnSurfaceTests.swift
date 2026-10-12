@@ -209,7 +209,7 @@ struct ReturnRecordTests {
         // `C-1052`'s ten lines are ABOUT `C-1052` — *"The elevator moved. The forgetting came
         // and went"* condenses that gathering and no other, which is the whole reason the
         // second branch below cannot simply reuse them.
-        let e = ReturnRecord.entries(codexId: RiteCanon.codexId, voices: [voice("neev", first: "x")])
+        let e = ReturnRecord.entries(recordId: RiteCanon.recordId, voices: [voice("neev", first: "x")])
         #expect(e.count == 10, "the canon story did not get the corpus")
         #expect(e.map(\.key) == ReturnRecord.gathering.map(\.key))
     }
@@ -221,7 +221,7 @@ struct ReturnRecordTests {
         // passed-in voice's own field would put the first spoken line back on the Record —
         // the exact fault E3.3 names, restored by a change that reads as the fix.
         let spoken = "The elevator moved, and I moved with it."
-        let e = ReturnRecord.entries(codexId: "C-2000", voices: [voice("neev", first: spoken)])
+        let e = ReturnRecord.entries(recordId: "recOtherStory000", voices: [voice("neev", first: spoken)])
         #expect(e.count == 1)
         #expect(e[0].line != spoken, "the Record is re-reading the first spoken line again")
         #expect(e[0].line == RiteVoices.voice("neev")?.passing,
@@ -233,8 +233,8 @@ struct ReturnRecordTests {
         // The property that makes it a Record rather than a second reading. Asserted across
         // BOTH branches, because the canon one was already condensed and the other is the one
         // that was wrong — a test of the corpus alone would have stayed green through the bug.
-        let canon = ReturnRecord.entries(codexId: RiteCanon.codexId, voices: [])
-        let other = ReturnRecord.entries(codexId: "C-2000",
+        let canon = ReturnRecord.entries(recordId: RiteCanon.recordId, voices: [])
+        let other = ReturnRecord.entries(recordId: "recOtherStory000",
                                          voices: ["neev", "gaia", "sid"].map { voice($0, first: "a long first line") })
         for e in canon + other {
             #expect(!e.line.isEmpty, "\(e.key) has no Record line at all")
@@ -247,7 +247,7 @@ struct ReturnRecordTests {
         // Falling back to `C-1052`'s gathering for an empty story would put another story's
         // condensation under this one's title — authored text in the wrong place, which no
         // string checker can see.
-        #expect(ReturnRecord.entries(codexId: "C-2000", voices: []).isEmpty)
+        #expect(ReturnRecord.entries(recordId: "recOtherStory000", voices: []).isEmpty)
     }
 }
 

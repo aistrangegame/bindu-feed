@@ -17,7 +17,12 @@ final class FeedStore: ObservableObject {
     @Published var thresholdSentences: [ThresholdSentence] = []
 
     // Feed data
+    /// EVERY live story, unfiltered. The Rite, the Return, the sky, the rings and the links
+    /// all read this — never the Feed's filtered view, or a room filter would quietly change
+    /// which story meets him today and empty the sky of every other room.
     @Published var stories: [Story] = []
+    /// SLICE 6 · what the Feed's own list shows: the room filter and the sort he chose.
+    @Published var feedStories: [Story] = []
     @Published var storyStats: [String: StoryStats] = [:]
     /// story record id → its rings, in `Ring Index` order. The strata's depth and every
     /// story's age both come from here, and from nothing else.
@@ -140,7 +145,14 @@ final class FeedStore: ObservableObject {
         defer { isLoadingStories = false }
         do {
             let result = try await service.fetchStories(room: room, sort: sort)
-            self.stories = result
+            self.feedStories = result
+            // The whole set only ever comes from an unfiltered fetch; a room view never
+            // narrows it. If a room view is the first load, fetch the whole set beside it.
+            if room == nil {
+                self.stories = result
+            } else if self.stories.isEmpty {
+                self.stories = (try? await service.fetchStories(room: nil, sort: sort)) ?? result
+            }
             self.error = nil
         } catch {
             self.error = error
@@ -689,10 +701,10 @@ final class FeedStore: ObservableObject {
     // over day and stands alone), the same date-hash discipline as the Mirror/Signal.
     func storyOfDay() -> Story? {
         guard !stories.isEmpty else { return nil }
+        // SLICE 6 · rendezvous, not modulus (`MirrorDay`): a story published at noon no longer
+        // changes which story met him this morning, and the Feed's sort can't move it either.
         let key = AirtableService.localDayString()
-        var h: UInt32 = 2166136261
-        for b in key.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
-        return stories[Int(h % UInt32(stories.count))]
+        return MirrorDay.pick(stories.map(\.id), key: key).map { stories[$0] }
     }
 
     // The Gathering's voices for a story = the archetypes who ACTUALLY spoke on it (their
@@ -792,9 +804,8 @@ final class FeedStore: ObservableObject {
             candidates.removeAll { $0.id == riteId }
         }
         let key = "return." + AirtableService.localDayString()
-        var h: UInt32 = 2166136261
-        for b in key.utf8 { h = (h ^ UInt32(b)) &* 16777619 }
-        let story = candidates[Int(h % UInt32(candidates.count))]
+        guard let pick = MirrorDay.pick(candidates.map(\.id), key: key) else { return nil }
+        let story = candidates[pick]
         guard let sealed = sealedByStory[story.id] else { return nil }
         let field = await loadComments(for: story.id).field
         let seals = ash.filter { $0.belongs(to: story.id) && !$0.body.isEmpty }
@@ -835,7 +846,7 @@ final class FeedStore: ObservableObject {
         // E3.3 · the Record is the gathering CONDENSED — the canon corpus for `C-1052`,
         // whose ten lines are about that story, and each voice's authored passing line for
         // every other. A Record recalls that a voice was here; it does not re-read it.
-        let record = ReturnRecord.entries(codexId: story.codexId,
+        let record = ReturnRecord.entries(recordId: story.id,
                                           voices: riteVoices(from: field))
         let room = room(named: story.room)
         let paras = story.body
@@ -1104,6 +1115,10 @@ final class FeedStore: ObservableObject {
     private static let pendingVowsKey = "bindu.vows.pending"
 
     func writeVow(text: String) async {
+        // SLICE 6 · the runtime sort order is counted from the Mirror's cards, which loaded
+        // only when the Mirror was visited — so every Vow carved without a visit wrote 900.
+        // Read the cards fresh first, so each Vow takes the next place in the band.
+        await loadMirrorCards()
         do {
             _ = try await service.writeVow(
                 text: text,
@@ -1128,6 +1143,7 @@ final class FeedStore: ObservableObject {
         guard !pending.isEmpty else { return }
         var remaining: [String] = []
         for text in pending {
+            await loadMirrorCards()     // SLICE 6 · each retry takes its own place in the band
             do {
                 _ = try await service.writeVow(
                     text: text,
