@@ -79,14 +79,31 @@ The build on his phone loads every `Live` record. So **every new record this gam
 
 | Band | Holds | Owner |
 |---|---|---|
-| existing story/room/sentence bands | unchanged | — |
-| 810–899 | Leela drops | Track 1 |
-| 1000–7303 | the Point (stars, texts, registers) | unchanged |
-| **11001–11999** | **new stories** (C0–C6), assigned in wave order | Track 1 |
-| **12001–12999** | **Waiting Roles** (the Unwritten's Waiting Room) | Track 1 |
-| 1–21 | Room rows (the eight new ones are 14–21; Old Light last, closing the ring onto A Maya Game) | Track 1 |
-| 13001–13099 | the eight new Room rows' children (blurbs, sentences) if any need a band | Track 1 |
-| 13101–13199 | Interlude lines (W0's crossing interludes, Type `Interlude`) | Track 1 |
+| 1–40 | Room rows (13 existing = 1–13; the eight new = 14–21, Old Light last closing the ring onto A Maya Game; 22–40 only for rooms that ripen from the Lalita loop, W3) | Track 1 |
+| 1–137 | the existing stories (unchanged) | — |
+| 801–809 | existing Leela rows (unchanged) | — |
+| **810–899** | new Leela drops (W4 board rises 810–817 with Excerpt line `KIND: rise`; C5 round 2 after) | Track 1 |
+| 1000–7303, 9001–9137 | the Point (unchanged) | — |
+| 10001–10999 | Call rows (existing 10001–10054; C5 body answers continue from 10055) | Track 1 |
+| **11001–11999** | **new stories** (C1 = 11001–11085; C2 from 11101, C3 from 11301, C4 from 11501, C5 from 11701, C6 from 11901) | Track 1 |
+| **12001–12999** | **Waiting Roles** (Type `Waiting Role`) | Track 1 |
+| 13001–13099 | the new Room rows' children, if any need a band | Track 1 |
+| 13101–13199 | Interludes (Type `Interlude`, W0) | Track 1 |
+| 13201–13299 | Veil rows — the Mirror's year of veils (`Card Register` = `Veil`, W6) | Track 1 |
+| 13301–13499 | Second Letters (Type `Second Letter`, W4) | Track 1 |
+| 13501–13699 | Swatches (Type `Swatch`, W5) | Track 1 |
+| 13701–13799 | authored Letters (Type `Letter`; the Good Morning letter = 13701, seal `WHEN: before`, W5) | Track 1 |
+| 13801–13999 | Constellations (Type `Constellation`, Gaia-seed constellations, W6) | Track 1 |
+| 14001–14999 | Planted Seeds (Type `Planted Seed` — one Type for W6's planted seeds and W8's pipeline plantings) | Track 1 / pipeline |
+| 15001–15999 | pipeline overflow and set-aside records (W8) | pipeline |
+
+**Reconciliation (12 Oct, after W3–W8 were scored in parallel):** W4, W5, W6 and W8 each proposed overlapping 13xxx/14xxx bands and W8 named its seed Type `Planted`. The table above is the one truth: Second Letters moved to 13301–13499, Swatches to 13501–13699, the Good Morning letter to 13701, Constellations to 13801–13999, and `Planted` is `Planted Seed`. Where a score says otherwise, this table wins.
+
+### 2.4a Types this game adds (all written Staged; choices created by typecast on first write)
+`Interlude` · `Swatch` · `Waiting Role` · `Second Letter` · `Constellation` · `Planted Seed` · (`Letter` already exists — the app writes it). `Card Register` gains `Veil`.
+
+### 2.4b Activity Types still to be created (by typecast, on the app's first write)
+`Called` · `Read by Hand` · `Kept` · `Letter Sealed` · `Letter Opened` · `Codex Written` · `Released` (W0 proves) · `Circuit Closed` (W3) · `Wager` (W4; `Wager Resolved` exists) · `Received` · `Joined` · `Carried` · `Sent Back` · `Drawn` · `Asked` (W7, or earlier where a wave writes them). Every read of `Walk Completed` also checks `Source App` (the Feed's own Point walks use that type too).
 
 Children (Field Comment / Resonance Voice) keep using `Comment Order` under their parent, not Sort Order.
 

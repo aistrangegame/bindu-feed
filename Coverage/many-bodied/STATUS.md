@@ -7,3 +7,4 @@
 - C0b · coordinates on all 137 stories; 14 pairs migrated into Rhymes + 23 new pairs, every pair with its Convergence Line. content/C0b-coordinates.tsv, content/C0b-notes.md.
 - Room rows · the eight new rooms created (Staged), sort 14–21.
 - C1 · A, B, C written (54 stories + 5 children each, all Staged, sort 11001–11058). Manifests: content/C1-A/B/C-manifest.md. Paused 12 Oct 13:01 before agent D: §B rows 55–71, the four folds, the unused suit seeds (band 11061–11099) still to write.
+- C1 · D written (25 stories, sort 11061–11085, 5 children each, all Staged): §B rows 55–71, the three folds, the unused suit seeds. C1 complete (79 stories, 11001–11085). Manifest: content/C1-D-manifest.md.
