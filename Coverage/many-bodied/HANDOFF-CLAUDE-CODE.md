@@ -3,7 +3,7 @@
 *Written 12 Oct 2026 by Track 1 (the cloud session); readiness fixes applied the same day (READINESS-REVIEW.md, "Fixes applied"). This file is your whole briefing. Ashrey pastes one short prompt that points here; after that, nobody briefs you again.*
 
 **The start prompt (Ashrey pastes this once):**
-> In this folder run `git fetch origin && git checkout many-bodied && git pull`. Then read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md` in full and follow it to the end. You are Track 2: build the Many-Bodied Game, W0 through W8.
+> In this folder run `git fetch origin && git checkout many-bodied && git pull`. The branch carries `.claude/settings.json` (the build's permissions) — if this session started before the checkout, say so in one line and I will restart you. Then read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md` in full and follow it to the end. You are Track 2: build the Many-Bodied Game, W0 through W8.
 
 **The resume prompt (pasted into every later session, verbatim):**
 > In this folder run `git checkout many-bodied && git pull`. Then continue the Many-Bodied build: read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md`, then `Coverage/many-bodied/STATUS.md` → `## Resume here`, and carry on from there.

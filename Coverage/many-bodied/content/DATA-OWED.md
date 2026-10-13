@@ -58,7 +58,7 @@
 | W8-4 | bindu-feed skill brought current | W8 E4, §3.1 | — | delivery, after step 10 | held |
 | W8-5 | GAMEPLAN as built; DECISIONS verdicts | W8 E5 | — | coord (Slice 30) | owed |
 | W8-6 | Mark the device walk's rows (`BUILD PROOF · `, Feed rows `Archived`) | W8 §6 | App Activity / Feed | **Track 2**, at once after the walk (`-HarnessMarkWindow`, W8 §6) | owed at W8; not Track 1's |
-| W8-8 | Confirm that no Airtable automation on the Codex table fires on record **creation** (proof and walk Codex rows are created, dated 2000-01-01, then marked; re-review R9) | W0 15.2 (d); W8 §6 | Codex | Track 1 | owed — before W0's Codex proof; until confirmed, W0 defers the Codex proof |
+| W8-8 (SUPERSEDED 12 Oct — Codex never written by a build) | Confirm that no Airtable automation on the Codex table fires on record **creation** (proof and walk Codex rows are created, dated 2000-01-01, then marked; re-review R9) | W0 15.2 (d); W8 §6 | Codex | Track 1 | owed — before W0's Codex proof; until confirmed, W0 defers the Codex proof |
 | W8-7 | Flip, renames, the one line | W8 E6, §7 | — | delivery | DELIVERY-DAY |
 
 ---
