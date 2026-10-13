@@ -145,3 +145,5 @@ Body = the Practice Book's page-1 frame (`chakra-maps/references/practice-book/m
 - C-1003's list numbering (`1\.`–`4\.`) was dropped so no numeral shows; the words are unchanged.
 - The book's "Here's what you said: *Remind me of the names.*" gives way to his own words; the book's last line becomes the house's: **"This house is that reminder."**
 - `Letter` Type choice did not exist; this write created it by typecast (the W0 diagnosis listed it as never landed).
+
+- 12 Oct · Codex automation question answered (Track 1): a deployed automation does act on Codex rows — so the Codex proof is a request-level unit test only (DECISIONS, 12 Oct). Closed.
