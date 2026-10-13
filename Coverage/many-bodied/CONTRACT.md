@@ -1,6 +1,6 @@
 # The Many-Bodied Game — the shared contract
 
-*Written 12 Oct 2026. Binding on both build tracks. When this file and GAMEPLAN.md disagree, this file wins; when either disagrees with a house law in `Bindu Feed/CLAUDE.md` §10, the house law wins and the conflict is written into `DECISIONS.md`. **One exception, ruled 12 Oct: the Staged law (§2.3) deliberately amends CLAUDE.md §6/§10's Live-only read** — W0's first commit edits CLAUDE.md to say so (scores/W0.md §1a); it is an amendment, not a conflict.*
+*Written 12 Oct 2026. Binding on both build tracks. Rank: house laws › this file › `FORM.md` › the wave's score › GAMEPLAN (§1). When this file and GAMEPLAN.md disagree, this file wins; when either disagrees with a house law in `Bindu Feed/CLAUDE.md` §10, the house law wins and the conflict is written into `DECISIONS.md`. **One exception, ruled 12 Oct: the Staged law (§2.3) deliberately amends CLAUDE.md §6/§10's Live-only read** — W0's first commit edits CLAUDE.md to say so (scores/W0.md §1a); it is an amendment, not a conflict.*
 
 The plan is `GAMEPLAN.md` (this folder). The 20 reader reports and the adversarial review it was built from are in `readers/`. The 137 existing stories are in `content/feed-stories-137.txt`.
 
@@ -15,6 +15,7 @@ The plan is `GAMEPLAN.md` (this folder). The 20 reader reports and the adversari
 | Never | edits Swift; installs | writes story text or Airtable records by hand (except the W0 write-proof rows, §6); asks Ashrey anything |
 
 - **Both push to branch `many-bodied`, never to `main`** — so no Xcode Cloud workflow on `main` can build or send a TestFlight build mid-build. Always `git pull --rebase` before pushing. No force pushes. `main` is merged from `many-bodied` only at delivery, after the install on Neev (scores/W8.md §7 step 5). Track 2 never pushes to `main` before then and never starts Xcode Cloud or TestFlight.
+- **Rank (form pass, 12 Oct):** house laws (`Bindu Feed/CLAUDE.md` §10, as amended by the Staged law) › `CONTRACT.md` › `FORM.md` (the design authority: one map, one look, one hand, one voice, one machine) › the wave's score › `GAMEPLAN.md`. Where a score and FORM disagree, FORM wins until the score is folded.
 - **Ashrey is the experiencer, not the reviewer.** Nobody asks him questions, sends him builds, screenshots or progress. He receives the whole piece once, on Neev, with one line and no spoilers (GAMEPLAN §9 "Delivery").
 - Track 2 does **not** install on Neev until W8's final walk is green. The current install (main @ 275eabd) stays on his phone until then.
 - A question Track 2 cannot answer from the plan, the score or the readers: decide by the house laws, write the call and the reason in `DECISIONS.md`, and keep going. Track 1 reviews `DECISIONS.md` and either agrees or writes a correction into the next score.
@@ -50,6 +51,9 @@ Write rules: field IDs in code, `typecast: true`, batches of ≤15, `Status` **s
 | Arc-kind | `fldnyhqTvijcMUIgg` | singleSelect | Accumulation · Rhyme · Activation · Inversion · Cartography · Recognition · Return · Synthesis · Threshold |
 | Codex Game | `fldvTKgKZF63ySyxy` | singleSelect | System · Learning · Work · Maya · Family · Health · Social · Seva · Fire |
 | Shakti | `fldsjkiGt4vG3kjSu` | link → Mandala `tblrRwXJD0uP8HU8G` | the Shakti this katha is (Teller = Shakti); inverse on Mandala `fldFvmoomlj53BiiM` |
+| Client Write Id | `fldhhaGzoNoFneSqv` | text (added 12 Oct, F-220) | the app's idempotency key for a runtime write; one id per intended write, so a retried send never lands twice |
+
+**App Activity `tblJlBeiHnqGpYrL7` — new field (12 Oct, F-220):** `Client Write Id` `fldUuEkjLy8YRVQiz` (text) — same role as on The Feed. Adding only; nothing renamed or deleted.
 
 All of these are **backstage**. None of their names or values ever appears on screen (GAMEPLAN §2: no suit, grammar, signature, chakra, chapter, position or mechanism words). Every one may be empty on any record; the app treats empty as "unknown" and falls back, never hides the story.
 
@@ -172,6 +176,10 @@ Fixed inputs from GAMEPLAN §3.3 that the map must honour:
 - Send back = Book only. Lay down = Unwinding and Gates only.
 - Every gesture has a stillness twin and a VoiceOver action (the Accessibility column of §3.3).
 - Holds run on one G0 hold engine: progress rises while held, drains on early release, never fails; commit 0.7–1.3 s, ceremonial 1.1–2.9 s.
+- **Form pass (FORM §3.6, §4):** *a press means what the thing pressed is.* Holds take their length from their meaning family (FORM §3.6), not per surface; still holds cancel at 10 pt (24 pt only for travel holds).
+- The rope opens at the threshold **while held** (G13 everywhere; one shared ring as its preview) — never act-on-release (R-13).
+- Join's VoiceOver action is **`lay it beside…`** (R-27). The page curl's rotor is **`other sides`**, action `turn the page` (R-26).
+- The eagle-eye is reached as the row **The Whole House** in WHERE TO's band 2 (FORM §2.2), or by the pinch past the sky's widest zoom.
 
 `GESTURES.md` = one table: gesture × register × hold length × what answers × stillness twin × VoiceOver action, plus a "collisions resolved" list.
 
@@ -196,4 +204,8 @@ For each Activity Type the app codes (the seven never-landed plus every new one 
 - Sound: two voices at most, ceiling 0.55, sound on first touch never on load, new sound on the 110 / 136.1 roots; the Om under the house at near-zero gain.
 - Accessibility: every story text reachable by VoiceOver even mid-reveal; Reduce Motion keeps order and hold duration; Dynamic Type; dim marks ≥ 3:1.
 - Archetype voices that already exist (including the ones named for family) stay as they are — they were established by Ashrey; no wave renames or removes a voice. New text never *adds* a private name.
+- **The touch budget (law 12, FORM §3.7.5):** stillness never writes on its own; the ledger records only what a hand began. Crossing is chosen.
+- **One red point per screen** (`#E5533C`, the One; `#C0392B` only at the centre of depth).
+- **Readable text ≥ `ink.3`** (each ink ≥ 4.5:1); nothing readable is dimmed by opacity; controls and ways out ≥ `ink.2`.
+- **The low day is known at the opening** (R-11): the rope after 18:00 yesterday, the Call laid down within 12 h, or (from W7) Being's last in-between word a heavy one — the quiet weather leads, before he has to ask.
 - Lineage: nothing from an earlier build vanishes. Track 2 keeps `LINEAGE.md` (here) — one line per existing feature touched, and where it lives now.
