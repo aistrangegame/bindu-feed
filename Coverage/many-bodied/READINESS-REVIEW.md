@@ -302,3 +302,165 @@ Coordinator rulings were applied where they differ from the suggested fix (flag 
 | S17 | W0 15.3 (`-HarnessTranscript`); W0 §7C step 14; HANDOFF; W4 §7.5; W8 §6 (real speech on the device walk, never on Neev) |
 
 Also applied from the notes: N1 (HANDOFF source root), N2 (CONTRACT §1 table), N4 (CONTRACT §2.4 band 900–999), N6 (W6 `dance.m4a` generation), N7 (W0 §3 `completeForAccessibility()`), N8 (GAMEPLAN `readers/`). N5 is superseded by S16's read (19 stories carry `⟪watch:`). Not applied (no fix needed by Track 2 or a coordinator call): N3, N9, N10, N11, N12.
+
+---
+
+## Re-review (fresh eyes)
+
+**Verdict: NOT READY.** One blocker remains, introduced by the B3 fix. It needs about one hour of edits. Nothing else stops the run.
+
+*Reviewed on 12 Oct 2026 at `0a168c3` (branch `many-bodied`) by a second independent reviewer. Read in full: HANDOFF, CONTRACT, DECISIONS, STATUS and DATA-OWED. Read in the fixed sections: W0 (§1–§1a, 15.2–15.4, 15.6, 15.10–15.11, §3, §6–§8), W8 (§1–§10) and DELIVERY-DAY. Spot-read: W1–W7 at every place the fix table names. Checked against the tree: `canon/leela/leela-on-the-33.html` (SQ at :132–166, ARROWS/SNAKES at :169–170, the care line at :106, begin-again at :105, all correct); `275eabd` (`isTodayMet` :922, `fetchMetStoryIDs` :878, `fetchActivityShape` :337, `fetchActivityMarks` :1166, `codexQuiet` :1084, all where 15.2 says); `project.pbxproj` (bundle `com.ashrey.bindufeed.Bindu-Feed`, team `VADN2G8B83`, `CURRENT_PROJECT_VERSION = 1`); the shared scheme; `Tools/bar.sh` and `Tools/bar_count.py`.*
+
+### 1 · The earlier fixes
+
+| id | Verdict | Note |
+|---|---|---|
+| B1 | VERIFIED | W0 15.2 has the sandbox and proof rules (a)–(e), the 275eabd audit table and deferred proofs. CONTRACT §6, HANDOFF, DECISIONS and DELIVERY-DAY §5 agree. Residue: R4, R5, R9 below. |
+| B2 | VERIFIED | W0 15.3 defines `-HarnessReadBack` (including `activity-since:`), `-HarnessArchiveProofs`, `-HarnessMarkWindow` and `-HarnessDump`. W3, W4, W6, W7 and W8 use them. No curl and no MCP anywhere. |
+| B3 | VERIFIED, but it introduced **X1** | The HANDOFF gesture map, the shims, the attachments export and `NOT DRIVEN` are all present. The walks and proofs now live in the UI test target that `Tools/bar.sh` runs (X1). |
+| B4 | VERIFIED | The canon is in the repo and W4 §3.2's line numbers match the file. Note for Track 1, not a blocker: the file's own comment says ARROWS/SNAKES are a "first draft, for Ashrey's ruling". |
+| B5 | VERIFIED | Every score uses the new names: `store.houseLight`, `store.ledger`, `store.conditions`, `fetchHouseRows`, `Services/AirtableService+HouseRows.swift`, `WalkStore`/`HouseWalk`. W6's §14.A grep uses `ledger\.`. No `HouseLedger.swift` name collision remains. |
+| B6 | VERIFIED | HANDOFF item 0, W0 header item 1, W0 §1a, W0 §8 and the CONTRACT preamble all agree. |
+| B7 | **INCONSISTENT** on one point | W8 §4–§7, HANDOFF "The end" and DELIVERY-DAY §1 agree on `READY FOR THE FLIP` and on running with no Track 1 gate. The phone line contradicts W8 §7 step 3 and DECISIONS (R1). |
+| B8 | VERIFIED as written | Residue: R10 (the branch scope is assumed, never confirmed). |
+| B9 | VERIFIED | MET / OWED-TO-TRACK-1 / OWED-TO-SELF appear consistently in HANDOFF, CONTRACT §1 rhythm 3, the W0 15.2 and §7D lines, the W3/W4/W7 headers and the DATA-OWED preamble. |
+| S1 | VERIFIED | Gap: `-HarnessCallAnswer` is used but never defined (R8). |
+| S2 | VERIFIED in W1 | W3 :43 still says "use whichever exists" (R11). |
+| S3 | VERIFIED | W1 §2.2 rule 1. |
+| S4 | VERIFIED | W5 §2.1 `enum DoorAsk`; W5 R6 holds the overrides. |
+| S5 | VERIFIED | W6 §9.3 `fetchWaitingTellings()`; the W8 §8.B(2) exemption is in place. |
+| S6 | **INCONSISTENT** | W8 §1.3 is fixed, but W8 §8 C2 still says the seeds "sit **after** the room's stories … tap → the raw memo". W6 §9.4 says "first in its room" and draws the page from the row's `Body` (R7). |
+| S7 | VERIFIED | W0 15.4 uses W2's field names and a single circle. |
+| S8 | VERIFIED | W6 §8.4. |
+| S9 | VERIFIED | W0 15.3 defines one ISO clock; W2 and W3 use it. |
+| S10 | VERIFIED | No body text says new content is `Live` (W8 §10 keeps the claim only as recorded history). |
+| S11 | VERIFIED | W2 §12a and Slice 20; `bindu.room.stay.<key>`; `bindu.kathas.dwell.<id>` (that key is in W0 STATE); W5 §3.2 and §2.2; W6 §6.2 D. |
+| S12 | VERIFIED | Every item has a home, and DECISIONS records "No GAMEPLAN item is held". |
+| S13 | VERIFIED | W0 15.10 `Tools/contrast.py`. |
+| S14 | VERIFIED | Prompts, the pinned Simulator and permissions are in place. Gaps: R2 (a stop no one sees), R3 (what to do after the token line), R12, R13. |
+| S15 | VERIFIED | Gap: R6 (the build number). |
+| S16 | VERIFIED | DATA-OWED W8-6 points to "W8 §5"; it should be §6 (R11). |
+| S17 | VERIFIED | `-HarnessTranscript`; W0 §7C step 14; W8 §6. |
+
+### 2 · BLOCKERS
+
+**X1 · `Tools/bar.sh`, the three-run test bar, runs every walk and every write proof, three times, on the wrong Simulator.**
+- **Where:** `Tools/bar.sh` :38 and :44. HANDOFF "Commits and checks", "Walks are XCUITests" and "One pinned Simulator". W0 §6.
+- **What's wrong:**
+  - Every wave's Done list requires "three clean runs, counted with `xcresulttool`". In this repo that is `bar.sh`.
+  - `bar.sh` runs the whole scheme, which includes `Bindu FeedUITests`, with `-destination 'platform=iOS Simulator,name=iPhone 17'`. That is not the pinned `Bindu Feed Walk`.
+  - After B3, the UI target holds `W<k>Walk.swift`, `W0Proof.swift` (launched with `-HarnessWrites YES`) and later `W8DeviceWalk.swift`.
+  - On the "iPhone 17" Simulator there is no token in the keychain. Every walk stops at the token gate and every proof fails, and `bar_count.py` counts skipped and failed tests as failures. So the bar goes permanently red from W0 on, every wave stays `OWED-TO-SELF`, and the run stalls.
+  - If Claude Code repoints the bar at the pinned UDID, which HANDOFF's "every `xcodebuild test` … uses `-destination 'id=<that UDID>'`" invites, the bar instead re-runs the real write proofs against the base three times per run, plus every walk. That means a pile of proof rows and hours per slice.
+- **Fix:**
+  1. **HANDOFF "Commits and checks"**, after the "Every slice" bullet, add: *"The bar (`Tools/bar.sh`) is the unit bar. W0's first Swift commit edits it so that: `DEST="${BAR_DEST:-id=$(sed -n 's/^UDID: //p' "$TOOLS/../Coverage/many-bodied/STATUS.md" | head -1)}"`; and the `xcodebuild test` line gains `-skip-testing:"Bindu FeedUITests/W0Proof"` plus one `-skip-testing:"Bindu FeedUITests/<Class>"` per file matching `Bindu FeedUITests/W*Walk.swift` or `W*Proof.swift` (build the list with `ls`). Walks run only as `xcodebuild test … -destination 'id=<UDID>' -only-testing:"Bindu FeedUITests/W<k>Walk"`. Proofs run only as `-only-testing:"Bindu FeedUITests/W<k>Proof"`, once per proof session. Record the change in DECISIONS and in CLAUDE.md §2's build check."*
+  2. **HANDOFF "One pinned Simulator"**: record it in STATUS.md as a line of exactly the form `UDID: <udid>`, so the bar can read it.
+  3. **W0 §6, first paragraph**: add *"Run only with `-only-testing:"Bindu FeedUITests/W0Proof"`. It is excluded from the bar."*
+
+### 3 · SHOULD-FIX
+
+**R1 · The phone line contradicts W8 and DECISIONS.**
+- **The conflict:**
+  - HANDOFF "The only three things" item 2: *"Please connect your iPhone to this Mac and unlock it." Then wait.*
+  - W8 §7 step 3: write `BLOCKED · NEEV NOT CONNECTED` and stop, with no message.
+  - DECISIONS :18: *"The only other thing Track 2 may ever say to him is the token line."*
+  - HANDOFF is not in the binding order, so the score would win and the run would stop silently.
+- **Fix:**
+  - W8 §7 step 3: replace "write `BLOCKED · NEEV NOT CONNECTED` in STATUS.md and stop (no message to Ashrey; Track 1 reads STATUS)" with *"send HANDOFF's phone line once and wait for his reply; if Neev is still unreachable after it, write `BLOCKED · NEEV NOT CONNECTED` and stop."*
+  - Change the phone line in HANDOFF and W8 to: *"Please connect your iPhone to this Mac, unlock it, tap Trust, and turn on Developer Mode if it asks."* Without Developer Mode, `devicectl install` fails.
+  - DECISIONS :18: *"…the token line and, only at W8 if Neev is unreachable, the phone line."*
+  - Add to HANDOFF "Binding order": *"This file settles how you run (branch, messages, walks, stops); where a score disagrees on those, this file wins."*
+
+**R2 · A stop that nobody sees.**
+- **The problem:**
+  - HANDOFF "Decisions, status, context" says to stop when context runs low and to "say nothing".
+  - "If you are blocked … write it in STATUS.md and stop; Track 1 reads STATUS.md." But the same file says "Track 1 is not running during the build".
+  - Either stop leaves the build silently parked, and Ashrey has no reason to paste the resume prompt.
+- **Fix:**
+  - Replace the Context bullet with *"Do not stop for context: Claude Code compacts automatically. After every slice, keep `## Resume here` current, so that a compacted or fresh session resumes exactly."*
+  - Add a fourth allowed line, used only for a hard block that the house laws cannot decide: *"The build has paused — please tell the cloud session to read STATUS.md."*
+  - Record the line in DECISIONS.
+
+**R3 · The token line never says what comes next.**
+- **Fix:** add to HANDOFF item 1: *"Before the line, run `open -a Simulator` with the pinned device booted on the token screen. After the line, end your turn. When he replies, whatever he writes, re-run the step and continue."*
+
+**R4 · The write queue undoes the sandbox.**
+- **Where:** W0 15.2 (queue, sandbox) and 15.3 (`-HarnessFresh`).
+- **What's wrong:**
+  - A proof write queued behind a 422 is supposed to stay queued until the choice exists (15.2; §6 step 11).
+  - But the next walk launches without `-HarnessWrites`. If the flush goes through `send`, it is sandboxed and returns `.landed("sbx-…")`, and the owed write is silently dropped.
+  - `-HarnessFresh YES` also deletes `bindu.writes.pending`, which sits under `bindu.*`.
+  - At W8 §6, a Release build on the pinned Simulator flushes whatever is still queued. If the proof marking is applied at send time, those rows go out unmarked, as Live rows dated today.
+- **Fix:** add to W0 15.2:
+  > *"In DEBUG without `-HarnessWrites`, the queue is never flushed: entries stay untouched, and only new writes are sandboxed. The proof marking (rules a–c) is applied when a request is built, and is stored in the queue entry, so a later flush by any build sends it marked. `-HarnessFresh` keeps `bindu.writes.pending`. Before the W8 device walk, STATUS.md records the queue as empty, or lists each entry as proof-marked."*
+
+**R5 · The W8 device walk still exposes real rows to 275eabd for a few minutes.**
+- **Where:** W8 §6 "When", and §7 steps 1 and 3.
+- **What's wrong:**
+  - The Release walk sends `Story Met` (today), Letters, Kept lines and new Activity Types unmarked, before step 3.
+  - If Ashrey opens 275eabd during that window, his Door reads the day as met and 275eabd caches it locally for the day, after the mark too.
+  - 275eabd's `fetchActivityShape` also never filters `BUILD PROOF`.
+- **Fix:** walk after the install, while the new build sits on Neev unopened.
+  - W8 §6 "When": *"immediately after §7 step 3 (Neev then holds the new build, unopened, and it skips marked rows)"*.
+  - §7 step 1's check: drop "§6".
+  - Add step 3a: *"§6 device walk, `-HarnessMarkWindow`, read-back."*
+  - Step 3's ledger check moves after 3a and becomes *"every row listed by `-HarnessReadBack activity-since:<install time>` carries `BUILD PROOF · `"*.
+
+**R6 · The build number is undefined, and TestFlight could put the old build back.**
+- **Where:** W8 §7 step 3; HANDOFF "The end" item 2.
+- **What's wrong:**
+  - The local `CURRENT_PROJECT_VERSION` is 1. Only Xcode Cloud raises it, to 101+.
+  - So the Neev install is 1.0 (1), *below* the TestFlight build it replaces. "At the new build number" is therefore undefined.
+  - With TestFlight automatic updates on, a higher-numbered TestFlight build could reinstall itself over the delivery.
+- **Fix:** in step 3, before the build:
+  1. Read the installed number: `xcrun devicectl device info apps --device <Neev UDID> --bundle-id com.ashrey.bindufeed.Bindu-Feed`.
+  2. Build with `CURRENT_PROJECT_VERSION=<installed + 1>` on the `xcodebuild` line.
+  3. Set the check to "lists the bundle at `<installed + 1>`".
+  4. Find Neev's UDID with `xcrun devicectl list devices` and record it in STATUS.md.
+
+**R7 · S6 residue.**
+- **Fix:** in W8 §8 C2, replace "the seeds sit after the room's stories with their names; tap → the raw memo" with *"each unripe seed's card sits first in its room (W6 §9.4); tap → its page from the row's `Body`"*.
+
+**R8 · An undefined shim, and a proof step that can't be driven.**
+- **Fixes:**
+  - Add `-HarnessCallAnswer <recId>` (DEBUG; open the Call on that answer) to W0 15.3's flag list.
+  - In W0 §6 step 1, replace "Two fingers held anywhere" with "`-HarnessOpen call` (walk shim)".
+
+**R9 · Codex proof and walk rows land, dated today, in the shared ASG Codex.**
+- **What's wrong:**
+  - Sibling apps, digests and the composing pipeline read the Codex. 15.2 (d) hides the row only from 275eabd's Present river.
+- **Fix:**
+  - 15.2 (d): add *"and `Date = 2000-01-01`"*.
+  - The `-HarnessMarkWindow` Codex rule (15.3 and W8 §6): add *"`Date` → 2000-01-01"*.
+  - DATA-OWED: add a line for Track 1 to confirm that no Codex automation fires on record creation.
+
+**R10 · The Xcode Cloud branch scope is assumed, never confirmed.**
+- **What's wrong:**
+  - The branch ruling protects Ashrey only if no workflow starts on `many-bodied`, and nobody has checked that.
+  - DECISIONS :8 (Track 1 owes the confirmation before the handoff) and :19 (it is not verifiable, so `main` is never pushed by W8) also read differently.
+- **Fix:**
+  - **Before pasting the start prompt,** Track 1 or Ashrey confirms in App Store Connect that every workflow's start condition names `main` only (or is manual), and records "Xcode Cloud: confirmed — start condition `<x>`" in DECISIONS.
+  - Rewrite :8 so it agrees with :19.
+
+**R11 · Stale references.**
+- W3 :43: replace "W1 may have left it named `RhymeGate.received` — use whichever exists" with "`ReceptionMemory.received` (W0 deleted `RhymeGate`; `house_law.sh` forbids the name)".
+- DATA-OWED W8-6: "W8 §5" → "W8 §6".
+
+**R12 · The pinned device type may not exist.**
+- **Fix:** add to HANDOFF "One pinned Simulator": *"If the installed Xcode has no 'iPhone 16' device type, use the oldest installed 6.1-inch iPhone type and record it."*
+
+**R13 · Permissions are left to Ashrey's setup.**
+- **Fix:** commit `.claude/settings.json` with `{"permissions":{"allow":["Bash(xcodebuild:*)","Bash(xcrun:*)","Bash(git:*)","Bash(python3:*)","Bash(Tools/*)","Bash(say:*)","Bash(afconvert:*)","Bash(open -a Simulator*)","Edit","Write"]}}`.
+- Change HANDOFF "Permissions" to point to it, plus "start with `--permission-mode acceptEdits`".
+
+### 4 · Read cold
+
+Reading HANDOFF as Claude Code with only the repo: W0 can start. The read order, step 0, the branch, the flags, the status convention and the walk mechanics are all unambiguous.
+
+The run would hit four snags:
+- **X1:** the bar is red, or it writes to the base.
+- **R2:** a silent stop.
+- **R3:** what to do after the token line.
+- **R1:** which W8 rule wins when Neev is unreachable.
+
+With X1 fixed and R1–R4 applied, W0 → W8 runs with no question to anyone beyond the allowed lines.
