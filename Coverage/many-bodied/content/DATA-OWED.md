@@ -13,8 +13,8 @@
 | W0-3 | Activity Types never landed: `Called` `Read by Hand` `Kept` `Letter Sealed` `Letter Opened` `Codex Written` `Released` | W0 15.2, §6 | App Activity `fldXNRBZy6QvIP8yz` | app (typecast) | owed by W0 write proof; on 422 Track 2 writes DECISIONS and the write stays queued |
 | W0-4 | Feed Types `Kept` `Letter` `Filament` (proof) | W0 §6 | Feed `Type` | app (typecast) | `Letter` **now exists** (created by DATA-A's Good Morning write); `Kept`, `Filament` on first app write |
 | W0-5 | Codex proof row: rename `Codex Name` → `OLD · build proof` | W0 §6 step 6 | Codex | Track 2 at W8 (`-HarnessMarkWindow`'s Codex rule) or Track 1 after delivery | owed after W0 proof (row id in STATUS.md); not blocking |
-| W0-6 | Freeze the "names a formula reads" list (never rename those fields) | W0 15.1 (5) | — | coord | standing rule |
-| W0-7 | Rename `Suit` / `Rhymes With` → `… OLD` | W0 15.1; W1 §2.3; CONTRACT §2.2 | fields `fldROWFIDFHyfdOxp`, `fldCpLf91KeWoYpJH` | delivery (after install) | held — DELIVERY-DAY §6 |
+| W0-6 | Freeze the "names a formula reads" list (never rename those fields) | W0 14a.2b (5) | — | coord | standing rule |
+| W0-7 | Rename `Suit` / `Rhymes With` → `… OLD` | W0 14a.2b; W1 §2.3; CONTRACT §2.2 | fields `fldROWFIDFHyfdOxp`, `fldCpLf91KeWoYpJH` | delivery (after install) | held — DELIVERY-DAY §6 |
 | W1-1 | Mark `Suit` / `Rhymes With` OLD in their *descriptions* | W1 §2.3 | — | coord | done per CONTRACT §2.2 ("TO BE OLD") |
 | W1-2 | Copy the 14 legacy `Rhymes With` links into `Rhymes` | W1 contr. 6 | `fldAFBBdsItsIvJVY` | C0b | done (STATUS: 14 migrated + 23 new pairs) |
 | W1-3 | `Source Date` in CONTRACT §2.5 | W1 contr. 5; W4 D6; W6 D7; W8 E2 | — | coord | done (§2.5 lists it) |
