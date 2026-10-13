@@ -485,3 +485,77 @@ With X1 fixed and R1–R4 applied, W0 → W8 runs with no question to anyone bey
 | R11 | W3 :43 (`ReceptionMemory.received` only); DATA-OWED W8-6 → W8 §6 |
 | R12 | HANDOFF "One pinned Simulator" (fallback: any available iPhone type with an iOS runtime ≥ 18, recorded once in STATUS.md) |
 | R13 | `.claude/settings.json` at the repo root (allowlist: git subcommands incl. `git push origin many-bodied`, `xcodebuild`, `xcrun simctl/devicectl/xcresulttool/xctrace`, `swift`, `Tools/*.sh`, `python3`, `plutil`, `say`, `afconvert`, `open -a Simulator`, read tools, Read/Edit/Write in the repo; deny: `curl`, `wget`, `ssh`, `scp`, `xcrun altool`, `xcrun notarytool`, `xcodebuild -exportArchive`, `git push origin main`, force pushes, WebFetch); HANDOFF "Permissions" points to it and to `--permission-mode acceptEdits` |
+
+---
+
+## Final review after the form pass (12 Oct 2026, fresh reviewer)
+
+### Verdict: **NOT READY** — one blocker (two parts, both in W0's order); everything else is SHOULD-FIX. Apply F1 and the build is READY.
+
+**What was checked.** FORM §0–§6 against W0 in full, the "stands on" tables and folded sections of W1–W8, CONTRACT, DECISIONS, HANDOFF, `.claude/settings.json`, and the app tree (`Services/AirtableService.swift`, `Components/TurnOverlay.swift`, `Screens/ArchiveBookView.swift`, `App/Navigation.swift`).
+- **Fold fidelity.** All 227 F-ids appear in the score that FORM names. The text was checked against FORM for 57 items: every W0 MUST (F-009–016, 019, 021, 022, 024, 030–034, 036–038, 040–045, 049, 050, 053–057), plus F-001–006, F-008, F-059, F-063, F-071, F-075, F-076, F-081, F-104, F-107, F-112, F-122, F-127, F-128, F-130, F-134, F-149, F-155, F-157, F-160, F-167, F-174, F-182, F-191, F-201, F-205, F-206, F-210. **All are built into the named section, not just listed.** Two show seams only (S3, S5 below). Nothing is missing or half-folded.
+- **Runnability (Q4) is intact.**
+  - HANDOFF names no `/mnt` or cloud path. The `/mnt/skills` mentions in W0 §3 and W8 §3.1/App. A degrade gracefully, as NOTE 3 says.
+  - Every safety law survives the fold: the Staged law and Step 0; Codex never written (15.2 (d)(e), 15.3, W8); DEBUG writes off by default (`-HarnessWrites`); BUILD PROOF and the proof rules; the queue never undoes the sandbox; branch `many-bodied`; no push to `main` (and denied in settings); no TestFlight; install by `devicectl` without launching, with the device walk never on Neev; the four allowed lines.
+- **Whole-app walk (Q1).**
+  - An ordinary morning works: Waking → Door with one slot → tap → river → WHERE TO (18 places in 4 bands) → any place → ‹.
+  - A low day works: the quiet weather is known at the opening (W4 on), with the rest mark, a Rest a Moment row at the head of band 1, and the Call always open.
+  - After a month works: resume after ≥ 3 h opens the Door over the stack, and every retired row has a LINEAGE address.
+  - The menu fits, and FORM and the scores agree on bands, names, subs and owners. The exceptions are S1 and S2 below.
+
+### BLOCKER
+
+**F1 · W0 builds the field-ID transport and snapshot before the decoder can read them (W0 §2a 14a.2–14a.3 vs §15.1).**
+- **The order fault.** 14a.2 makes `AirtableClient` send `returnFieldsByFieldId=true` "on every request", and 14a.3 keys the snapshot by field ID. But `RecordFields.CodingKeys` only change from names to IDs in 15.1, about 40 commits later. Every commit from 14a.2 to 15.1 decodes empty Feed and App Activity rows, so 14a's own proof ("renders exactly as before, then airplane mode") cannot pass.
+- **The scope fault.** "Every request" also covers the tables 15.1 never converts: Codex `tblDF4OCMcRoxkQjU`; `fetchRaw` on Bindu Field `tblv3WvMZ90Sfhun6`, `tblrRwXJD0uP8HU8G`, `tbl5kW1msXYfThGbj`; and `tbll9fXzLSa44XqUi`. All of them decode by name (`AirtableService.swift:1086, 1222, 1287–1359`).
+- **Fix:**
+  1. In W0 §2a, insert **14a.2b · Decode by field ID (was 15.1)**, directly after 14a.2. Move 15.1's "Becomes" items 1–6, its ID tables and its proof there unchanged.
+  2. Leave 15.1 as one line: *"Built in 14a.2b."*
+  3. In 14a.2, replace "It carries 15.1's `returnFieldsByFieldId=true` on every request" with: *"Each request declares `byFieldId: Bool`. It is true for The Feed and App Activity (whose decoders move to IDs in 14a.2b) and false for the Codex and the sibling catalogs, which keep decoding by name until a later change converts them."*
+  4. In §2 line 189, change "14.0 starts after 14a.8" to **"14.0 starts after 14a.10"**.
+
+### SHOULD-FIX
+
+- **S1 · The Book's margin is orphaned from W0 to W2** (W0 15.5, 14.16; FORM §2.3).
+  - **Problem:** W0 retires the row What You Kept (the only route to `.book` today, `TurnOverlay.swift:43`) and says BookView is "reached from the Book's back matter". `ArchiveBookView` has no link to `.book`, and the contents lines only arrive in W3. As a result W0 §7C steps 17 and 22 (*what found you*), and LINEAGE's "can be opened" check, cannot be driven.
+  - **Fix:** in 15.5, add to `ArchiveBookView`'s back cover one line `what found you ›` (`t.label`, `ink.2`, 44 pt) pushing `.book`. Give it a LINEAGE line, *carries forward → W3's contents lines*. W3 §7.2 retires it when the three contents lines land.
+- **S2 · The resume's ‹ has nowhere to sit before W6** (W0 §5 resume, 14.24; FORM §2.1).
+  - **Problem:** crossing a resumed Door lands on the river, and before W6 the river is the root, with no ‹. But 14.24's labelled ‹ exists only "on the axis", so §7C step 24 ("cross; ‹ returns to the story") has no control to press.
+  - **Fix:** in §5 and 14.24, add: *"Before W6, while `NavModel.axisReturn` is set, the river header shows the same labelled glyph `‹ <first three words>` (`t.mark`, `ink.2`, VO `back to <title>`) after AshMark. A tap re-pushes the stored stack and clears the thread. W6 folds it into the root axis's ‹."*
+- **S3 · Order inside W0's foundations: 14a's checks depend on tools and code built in Slice 15.**
+  - **Problem:** 14a.1, 14a.2, 14a.6 and 14a.10 are proven by `house_law.sh` checks and `contrast.py`, which are created in 15.10. 14a.4, 14a.8 and 14a.9 test `forgetMe()`, which is built in 15.9.
+  - **Fix:**
+    1. Add **14a.0 · the gates first**. Create `Tools/house_law.sh` (skeleton, plus the checks 14a needs: one network door, one disk door, clock ratchet, tokens, pure domain), `Tools/fixtures/house_law/`, `Tools/contrast.py` (base, `--tier`, `--cvd`, `--gate`), a skeleton of `Tools/check_state.py`, and `Tools/ratchet.txt`.
+    2. Move `forgetMe()`'s code (clear the FORGET keys, clear the walk kinds and `taught`, rebuild the walk-side models) into 14a.4.
+    3. 15.9 keeps STATE.md, `roadRecord` and the alert copy. 15.10 completes the battery (the VO battery, the counted allowlist, the SHOULD checks).
+- **S4 · W0 depends on its SHOULD foundations, so a deferral breaks later waves.**
+  - **Problem:** W2–W6 "stand on" these as built: F-018 (Haptics `.room`; W2), F-020 (Discovery; W3), F-025 (`DeviceKey.ropeByDay`; W0 14.21 and §5 R3 already read it), F-026/027 (`Domain/`, routes by id; E6 and E11), F-035 (G38; W0 14.24), F-039 (`TurnMark`; W4 §3.11, W6), F-046 (`PageFootDoors`; W3, W4 §3.2/§3.5, W5).
+  - **Fix:** mark each **MUST** in FORM §5 and in the W0 header and sections. Alternatively, add to each dependent's "stands on" row: *"if W0 deferred it, build it here first."*
+- **S5 · W4 claims W0 symbols that W0 never builds** (W4 §0 row W0, :63; §2.4 :188).
+  - **Problem:** W4 attributes `chooseForDoor(weather:)` and `DeviceKey.arrivalBag` to W0. W0 builds `choose(eligible:)` and `arrivalLastKind`. The bag is W5's R7.
+  - **Fix:**
+    1. In W4 :63, read `choose(eligible:)` and drop `arrivalBag`.
+    2. In W4 §2.3, add: *"W4 adds `ArrivalRules.chooseForDoor(weather:)` (pure, in `Domain/ArrivalRules.swift`), which filters by weather and then calls `choose(eligible:)`."*
+- **S6 · Stale names left after the fold** (one owner, but some old names still stand).
+  - **Problem:**
+    - DECISIONS (the "Names" entry) still says `store.ledger` / `Store/HouseLedger.swift`, `WalkStore` / `HouseWalk` as a store, and keys `bindu.conditions.*`.
+    - W3 :32 still says "W6's ledger is `store.ledger`".
+    - W3 :65/:728 and W6 :47/:137 say the ledger is "15.9"; it is now 14a.9.
+    - W3 :72 says `Rooms/RoomCanon.swift`; it is `Domain/RoomCanon.swift` + `Rooms/RoomCanon+Look.swift`.
+    - W6 :43 says `Harness.swift`; it is `Harness/HarnessConfig.swift`.
+    - W0 14.22 says `NavModel.callOpen`, but 14a.4's NavModel list has no `callOpen` (FORM §2.2 says `store.callOpen`).
+  - **Fix:**
+    1. Append to DECISIONS: *"12 Oct · Track 1 · final review · supersedes the 'Names' entry: the ledger is W0's `Data/LedgerLog` + `WalkModel` (14a.9; no `HouseLedger`, no `WalkStore`; `HouseWalk` is a projected value); `HouseConditions` is an `@Observable` model under `AppModel` with `DeviceKey.conditionsCursor`; harness flags live in `Harness/HarnessConfig.swift`."*
+    2. Correct the four score references.
+    3. Add `callOpen` to 14a.4's NavModel list.
+- **S7 · Two numbers disagree with their own rule** (FORM §1 law 8 and §2.2; DECISIONS "breath units").
+  - **Problem 1:** law 8 says WHERE TO is ≤ 700 pt tall at 390 wide, but the Veil measures ≈ 734 pt.
+  - **Fix 1:** restate law 8's measure as W0 14.22's Done line: *"fits one screen at 390 × 844; scrolls on SE, opening on band 1 and his row"*.
+  - **Problem 2:** DECISIONS says every non-breath stillness is snapped, but FORM §3.7.4 keeps the name rite at 12 s and other designed thresholds as they are.
+  - **Fix 2:** append to that DECISIONS line *"new twins only; FORM §3.7.4's kept thresholds (the name rite 12 s, the Watcher 6 s, the Light 4.6 s, G2 4.6 s …) stay."*
+- **S8 · W0's size (Q5).**
+  - **Assessment:** W0 is buildable as specified (≈ 48 changes, 1,506 lines), and its order is right once F1 and S3 are applied: gates → seams → transport → decode → snapshot → models → tokens → conductor → ledger → Slice 14 → Slice 15. Splitting it would renumber cross-references in nine scores.
+  - **Fix (instead of a split):** add a **14a checkpoint** to §1 and §7.
+    - 14a closes like a wave: §7 J and I MET, walk steps 23 and 24, and a parity run of §7C steps 3, 5, 8 and 9 on the same screenshots as before 14a.
+    - It gets its own STATUS.md section `W0 · 14a`.
+    - 14.0 starts only when that section has no `OWED-TO-SELF`.
