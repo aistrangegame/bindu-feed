@@ -15,4 +15,4 @@
 - C4 · 47 stories: lineage by objects and days + the Name (11501–11522); makers, customers, the travelling sentence and the Chain of Houses (11551–11575).
 - C5 · 63 stories: machine/instrument (11701–11716), 15 songs + 12 body voices (11721–11747), 20 Shakti kathas (11781–11800); Song links on 85 existing + 37 new stories; 47 Call answers from bodies (10055–10101); 30 Leela drops (818–847). New field `Shakti`.
 - C6 · 13 Unwritten stories (11901–11913), 119 Waiting Roles (12001–12119; 22 left, 7 waiting tellings), 30 Constellations (13801–13830), 4 Planted Seeds (14001–14004).
-- **Total new stories: 338**, each with five children, all Staged. The house goes from 137 to 475.
+- **Total new stories: 332** (C1 79 · C2 69 · C3 61 · C4 47 · C5 63 · C6 13), each with five children, all Staged. The house goes from 137 to 475.
