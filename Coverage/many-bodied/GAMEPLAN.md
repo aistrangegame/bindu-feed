@@ -18,7 +18,7 @@
 - every story-voice skill: fabric, archive, the four brand families, the story-book, makers, emergence, SupAbsorb, timelines, storylines, the machine's mirror;
 - the prior session's nine reader reports.
 
-A twenty-first reader then attacked the first draft: every one of the 290 ledger items, every restriction and island in the app, all 30 of his Codex game laws, and every concept that two or more readers raised. This version answers that review. The reports live in `plan/reports/`, and the review is `21-plan-review.md`.
+A twenty-first reader then attacked the first draft: every one of the 290 ledger items, every restriction and island in the app, all 30 of his Codex game laws, and every concept that two or more readers raised. This version answers that review. The reports live in `readers/` (this folder), and the review is `readers/21-plan-review.md`.
 
 **What it answers.** Ashrey's ruling of 12 Oct:
 - Take him out of the equation. The Feed is reality meeting itself, and his memos are one suit among many.
@@ -609,7 +609,7 @@ The shared ledger (App Activity) becomes **conditions that light up, never lock*
 - **Five children per story.** Archetypes gather around every body's story.
 - **Authored line breaks** in field comments.
 - **Data:**
-  - Status Live, in a **new sort band: 11001+** (Waiting roles 12001+; Leela 810–899), clear of every existing band including the Point's 1000–7303.
+  - Status **Staged** until delivery day, read Live ∪ Staged by the new build (CONTRACT §2.3); then flipped Live in one pass. In a **new sort band: 11001+** (Waiting roles 12001+; Leela 810–899), clear of every existing band including the Point's 1000–7303.
   - Batches of ≤15; child links verified.
   - New threshold sentences from each wave added to the pool.
   - The SKL sort-band contract updated.

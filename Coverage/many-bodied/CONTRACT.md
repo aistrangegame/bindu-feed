@@ -1,6 +1,6 @@
 # The Many-Bodied Game — the shared contract
 
-*Written 12 Oct 2026. Binding on both build tracks. When this file and GAMEPLAN.md disagree, this file wins; when either disagrees with a house law in `Bindu Feed/CLAUDE.md` §10, the house law wins and the conflict is written into `DECISIONS.md`.*
+*Written 12 Oct 2026. Binding on both build tracks. When this file and GAMEPLAN.md disagree, this file wins; when either disagrees with a house law in `Bindu Feed/CLAUDE.md` §10, the house law wins and the conflict is written into `DECISIONS.md`. **One exception, ruled 12 Oct: the Staged law (§2.3) deliberately amends CLAUDE.md §6/§10's Live-only read** — W0's first commit edits CLAUDE.md to say so (scores/W0.md §1a); it is an amendment, not a conflict.*
 
 The plan is `GAMEPLAN.md` (this folder). The 20 reader reports and the adversarial review it was built from are in `readers/`. The 137 existing stories are in `content/feed-stories-137.txt`.
 
@@ -11,18 +11,18 @@ The plan is `GAMEPLAN.md` (this folder). The 20 reader reports and the adversari
 | | Track 1 — the cloud session (Claude, claude.ai) | Track 2 — Claude Code on the Mac (`~/Bindu Feed`) |
 |---|---|---|
 | Owns | Airtable **data and schema**; every story and child; `scores/`; `content/` manifests; review of Track 2's commits | All **Swift**; `Tools/`; `canon/`; `Bindu Feed/CLAUDE.md`; `rendered-strings.tsv`; Simulator walks; the single install on Neev |
-| Writes in git | only under `Coverage/many-bodied/` (never Swift) | everything else, plus `Coverage/many-bodied/STATUS.md` and `DECISIONS.md` |
+| Writes in git | only under `Coverage/many-bodied/` (never Swift), on branch `many-bodied` | everything else, plus, under `Coverage/many-bodied/`: `STATUS.md`, `DECISIONS.md`, `GESTURES.md`, `STATE.md`, `LINEAGE.md`, `PITCH.md`, `PARITY.md`, `CONSTELLATION.md` and `evidence/` — on branch `many-bodied` |
 | Never | edits Swift; installs | writes story text or Airtable records by hand (except the W0 write-proof rows, §6); asks Ashrey anything |
 
-- Both push to `main`. Always `git pull --rebase` before pushing. No force pushes.
+- **Both push to branch `many-bodied`, never to `main`** — so no Xcode Cloud workflow on `main` can build or send a TestFlight build mid-build. Always `git pull --rebase` before pushing. No force pushes. `main` is merged from `many-bodied` only at delivery, after the install on Neev (scores/W8.md §7 step 5). Track 2 never pushes to `main` before then and never starts Xcode Cloud or TestFlight.
 - **Ashrey is the experiencer, not the reviewer.** Nobody asks him questions, sends him builds, screenshots or progress. He receives the whole piece once, on Neev, with one line and no spoilers (GAMEPLAN §9 "Delivery").
 - Track 2 does **not** install on Neev until W8's final walk is green. The current install (main @ 275eabd) stays on his phone until then.
 - A question Track 2 cannot answer from the plan, the score or the readers: decide by the house laws, write the call and the reason in `DECISIONS.md`, and keep going. Track 1 reviews `DECISIONS.md` and either agrees or writes a correction into the next score.
 
 ### The rhythm
 1. Track 1 writes `scores/W<n>.md` (five tracks: scene · sound · gesture · motion · logic, plus "Done means") **before** Track 2 starts that wave.
-2. Track 2 builds the wave as Slices, each slice its own commit(s) with the slice number in the message, runs `Tools/verify.sh` (seven checkers green) and the wave's Simulator walk.
-3. At the end of each wave Track 2 appends to `STATUS.md`: wave, commits, what the walk showed, every "Done means" line with its evidence (grep output, Simulator screenshot path under `Coverage/many-bodied/evidence/W<n>/`), and anything left owed.
+2. Track 2 builds the wave as Slices, each slice its own commit(s) with the slice number in the message, runs `Tools/verify.sh` (seven checkers green) and the wave's Simulator walk — an XCUITest on the one pinned Simulator, with Airtable writes off (HANDOFF).
+3. At the end of each wave Track 2 appends to `STATUS.md`: wave, commits, what the walk showed, every "Done means" line with its status and evidence (grep output, Simulator screenshot path under `Coverage/many-bodied/evidence/W<n>/`). **Status convention:** `MET` (with evidence) · `OWED-TO-TRACK-1` (data or schema not yet in the base; not blocking; a harness fixture proves the code path) · `OWED-TO-SELF` (blocking). A wave closes when no `OWED-TO-SELF` line remains.
 4. Track 1 reviews, writes fixes into the next score's "Carried from W<n-1>" section.
 5. Content waves (C0–C6) land in Airtable on their own clock. The app must render gracefully whatever is or isn't there yet.
 
@@ -30,7 +30,7 @@ The plan is `GAMEPLAN.md` (this folder). The 20 reader reports and the adversari
 
 ## 2 · Airtable — base `app248ZTWhYJlvQj2`
 
-Write rules (unchanged): field IDs in code, `typecast: true`, batches of ≤15, `Status` = `Live` for anything meant to be seen (the blank-Status lesson, CLAUDE.md §6). **Never delete anything** — retire by marking OLD.
+Write rules: field IDs in code, `typecast: true`, batches of ≤15, `Status` **set explicitly on every write** (the blank-Status lesson, CLAUDE.md §6): `Staged` for this game's new content until delivery day (§2.3), `Live` after it; the app's runtime writes as each wave's score says. **Never delete anything** — retire by marking OLD.
 
 ### 2.1 The Feed `tbl7vzODMMJUgeX0b` — new fields (created 12 Oct 2026)
 
@@ -67,7 +67,8 @@ All of these are **backstage**. None of their names or values ever appears on sc
 - **Closing Line** repeats the body's last paragraph (house convention), except where the room's form forbids a fifth paragraph (the Stack's four bands): there it is stored but not repeated. Grammars that move the landing line (the Ground's *before the drain*) must not show it twice.
 - **Swatches link to their host through `Rhymes`.** `RhymeIndex` (W1) excludes `Type = Swatch` partners from rhyme pairs; the Swatch arrival (W5) reads them.
 - **Marks in use** (scores/W2.md §1.4 plus): `⟪watch: …⟫` (W4 wager's watch-for) · `⟪one more⟫` (W3; one per teller with ≥3 stories — already on His Memo, Cloth, Company, Machine, Land, Object) · `⟪will: …⟫` / `⟪act: …⟫` (W3 circuit) · `⟪ask: …⟫` (W7, stories with a Song) · `⟪telling⟫` (W6 waiting tellings) · `⟪then: …⟫` · `⟪held: …⟫`.
-- **Call rows from bodies** (10055+) carry `SIGNED:` (role words the signature resolves to) and `FROM:` (source story record id) lines in `Excerpt`, and an empty `Codex ID`. The Call screen must sign them `— <SIGNED> · <date>`, never with his name (today `CallView.answerLayer` always signs `— Ashrey`): **owed in whichever wave first reads Staged Call rows (W0's Staged read) — fix it there.**
+- **Call rows from bodies** (10055+) carry `SIGNED:` (role words the signature resolves to) and `FROM:` (source story record id) lines in `Excerpt`, and an empty `Codex ID`. The Call screen must sign them `— <SIGNED> · <date>`, never with his name (today `CallView.answerLayer` always signs `— Ashrey`): **built in W0 as change 15.11**, in the slice that switches reads to Live ∪ Staged.
+- **`⟪yard⟫`** (W2 §12a E) marks a story of a thing that cannot be made again; its close is the completed yard. Optional; Track 1 writes it on new Staged stories only.
 - **`Linked Story` is shared** by children, Lalita replies, Waiting Roles that have left, and Second Letters. Every children fetch and any "five children" logic filters by `Type` (Field Comment, Ash Comment, Resonance Voice).
 - **Journeys** (C4-B): `⟪journey⟫` · `⟪takes⟫ ⟪gives⟫ ⟪keeps⟫` · `⟪continues⟫` mark the travelling sentence (11556–11561) and the Chain of Houses (11551–11555) for W6.
 - **Leela drops** may carry `AFTER:` (an Activity Type) and `NOT BEFORE:` (a date) lines; conditions light, they never lock what is already surfaced.
@@ -95,6 +96,7 @@ The build on his phone loads every `Live` record. So **every new record this gam
 | 1–40 | Room rows (13 existing = 1–13; the eight new = 14–21, Old Light last closing the ring onto A Maya Game; 22–40 only for rooms that ripen from the Lalita loop, W3) | Track 1 |
 | 1–137 | the existing stories (unchanged) | — |
 | 801–809 | existing Leela rows (unchanged) | — |
+| 900–999 | app runtime writes (Kept, Letter, Filament, vows) — the installed app's own band, unchanged | app |
 | **810–899** | new Leela drops (W4 board rises 810–817 with Excerpt line `KIND: rise`; C5 round 2 after) | Track 1 |
 | 1000–7303, 9001–9137 | the Point (unchanged) | — |
 | 10001–10999 | Call rows (existing 10001–10054; C5 body answers continue from 10055) | Track 1 |
@@ -121,7 +123,7 @@ The build on his phone loads every `Live` record. So **every new record this gam
 Children (Field Comment / Resonance Voice) keep using `Comment Order` under their parent, not Sort Order.
 
 ### 2.5 Content each new story carries
-`Name` (title, last) · `Body` (may carry the `⟪…⟫` content marks defined in `scores/W2.md` §1.4 — the only place structure inside a story lives) · `Source Date` (the Book needs one) · `Excerpt` · `Room` · `Type`=Story · `Status`=Live · `Sort Order` (band) · `Teller` · `Face` · `Verb` · `Rhyme Family` · `Rhymes` (if paired) · `Convergence Line` (host) · `Mirror Line` · `Vertebra` · `Chapter` · `Arc-kind` · `Codex Game` · `Codex ID` / `Trigger Codex Entry` where it came from a memo · `Story Origin` · five children (Field Comment rows linked by `Linked Story`, with `Archetype`, authored line breaks). `Song` is filled in C5.
+`Name` (title, last) · `Body` (may carry the `⟪…⟫` content marks defined in `scores/W2.md` §1.4 — the only place structure inside a story lives) · `Source Date` (the Book needs one) · `Excerpt` · `Room` · `Type`=Story · `Status`=Staged (read Live ∪ Staged; Live from delivery day) · `Sort Order` (band) · `Teller` · `Face` · `Verb` · `Rhyme Family` · `Rhymes` (if paired) · `Convergence Line` (host) · `Mirror Line` · `Vertebra` · `Chapter` · `Arc-kind` · `Codex Game` · `Codex ID` / `Trigger Codex Entry` where it came from a memo · `Story Origin` · five children (Field Comment rows linked by `Linked Story`, with `Archetype`, authored line breaks). `Song` is filled in C5.
 
 ---
 
@@ -181,7 +183,7 @@ One row per piece of persistent state (UserDefaults key, file, Airtable field): 
 
 ## 6 · W0's write proof
 
-For each Activity Type the app codes (the seven never-landed plus every new one added in W0), Track 2 triggers it once in the Simulator against the real base and confirms the row lands (`Source App`=Feed, correct type, link where expected). Proof rows are marked so they never surface on his phone: App Activity `Detail` and Feed `Name` start with `BUILD PROOF · `, Feed proof rows carry Status `Archived`, and every read that turns activity into a condition skips them (scores/W0.md §15). Never delete them; list their record IDs in `STATUS.md`. If a write fails, the HTTP status and body go in `STATUS.md` and the fix goes in the same wave. Same for the Feed-table writes: Filament (FeedStore ~:536), Letter (~:666), Kept (AirtableService ~:541), Codex (~:1132).
+For each Activity Type the app codes (the seven never-landed plus every new one added in W0), Track 2 triggers it once in the Simulator against the real base and confirms the row lands (`Source App`=Feed, correct type, link where expected). **DEBUG builds make no Airtable writes by default**; a proof runs only under `-HarnessWrites YES`, which always marks its rows (scores/W0.md 15.2–15.3). Proof rows never surface on his phone — neither in the new build nor in the installed one (main @ 275eabd): Feed proof rows are written `Status = Staged` (275eabd reads Live only) with `Name` prefixed `BUILD PROOF · `, then `Archived`; App Activity proof rows carry `Detail` prefixed `BUILD PROOF · `, `Activity Date` 2000-01-01 and a link only to a proof row, so 275eabd's date- and link-keyed reads never see them; `Story Met`, `Veil Lifted`, `Walk Completed` and `Ash Replied` are never sent from DEBUG. W0 audits each 275eabd App Activity read; **a proof that cannot be made invisible to 275eabd is deferred to delivery day** (after the install) and listed in `STATUS.md`. Read-back, archive and mark go only through the app's own Debug flags (`-HarnessReadBack`, `-HarnessArchiveProofs`, `-HarnessMarkWindow`) — no curl, no MCP on the Mac. Never delete them; list their record IDs in `STATUS.md`. If a write fails, the HTTP status and body go in `STATUS.md` and the fix goes in the same wave. Same for the Feed-table writes: Filament (FeedStore ~:536), Letter (~:666), Kept (AirtableService ~:541), Codex (~:1132).
 
 ## 7 · House laws every wave is checked against
 

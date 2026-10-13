@@ -265,3 +265,40 @@ Each fix below names the file, the section and the text to add.
 3. **W2 per-glyph hit-testing** (the Name's trace) and the Wash's circular-gesture centroid. Plain SwiftUI `Text` gives no glyph rects, so these need CoreText/Canvas layout. They are feasible, but bigger than they read.
 4. **W6 §8.2: 55 `LightHand` cases,** each with its own timing and a test. This is the largest single slice. Expect several context resets; the resume protocol (S14) matters here.
 5. **Scope.** 17 slices, about 6,600 score lines, three clean test runs per wave and an XCUITest walk per wave. Plan for many sessions. Every slice must end pushed, with a `## Resume here`.
+
+---
+
+## Fixes applied (12 Oct 2026, on branch `many-bodied`)
+
+Coordinator rulings were applied where they differ from the suggested fix (flag name `-HarnessWrites`; branch instead of an Xcode Cloud setting; one STATUS wording `READY FOR THE FLIP`; one message from Track 2).
+
+| id | Where fixed |
+|---|---|
+| B1 | W0 15.2 (DEBUG writes off by default; proof rules a–e; the 275eabd read audit table; deferred proofs), W0 15.3 (`-HarnessWrites`, aliases), W0 §6 (steps 3–9, 11–13 rewritten: Staged Feed rows, 2000-01-01 App Activity rows, archive by flag), W0 §7C (walk writes off; step 12); every wave's walk header (W1–W7) "writes off"; W3 §3.6, W4 §5, W5 §9.6, W6 D steps 11/18, W7 §8.4 (proofs under the rules, deferral of first-written types); W8 §7 step 4 (deferred proofs after install); CONTRACT §6; HANDOFF "Writes never reach his phone"; DELIVERY-DAY §5 (skip `BUILD PROOF`); DECISIONS |
+| B2 | W0 15.3 (`-HarnessReadBack` incl. `activity-since:`, `-HarnessArchiveProofs`, `-HarnessMarkWindow`, `-HarnessDump leela`); W0 §6 intro; W3 §3.6 and §17.4 step 5; W5 §9.6; W6 D step 18; W7 §8.4; W8 §6 (Track 2 marks) and §7 step 3 (ledger check); CONTRACT §6; HANDOFF |
+| B3 | HANDOFF "Walks are XCUITests" (gesture map, `-HarnessOpen` shims in GESTURES.md, attachments exported to `evidence/W<k>/`, `NOT DRIVEN`); W0 15.3 (`-HarnessOpen`), W0 §7C header and steps 1, 22; walk headers W1 §8.4, W2, W3 §17.4, W4 §7.5, W5 §9.4, W6 §14.D, W7 §10.4; W8 §6 (`W8DeviceWalk.swift`, NOT DRIVEN items); CONTRACT §1 rhythm |
+| B4 | W4 header item 6 and §3.2: canon is `canon/leela/leela-on-the-33.html` (SQ lines 132–166, ARROWS/SNAKES 169–170; care :106, begin again :105) and `canon/leela/18-leela-on-the-33.md`; App. A citation |
+| B5 | W3 (`store.houseLight`, `WalkStore.shared.walk.*`, header item 7); W6 (`store.ledger`, `ledger.note/has/ids/last/dwellByRoom/weight`, §14.A greps, `WalkStore`/`HouseWalk`, header item 7); W7 (`store.conditions`, `Services/AirtableService+HouseRows.swift`, `fetchHouseRows`, `house-rows.json`, `bindu.conditions.*`, `-HarnessHouseRows`, header item 9); W6 §6.2 (four figures, `HouseYantra` beyond the pager); DECISIONS |
+| B6 | HANDOFF "Read, in this order" item 0 and binding-order note; W0 header item 1 and §1a Step 0 (first commit amends CLAUDE.md §6/§10); W0 §8 (blank-Status law for writes; reads Live ∪ Staged); CONTRACT preamble; DECISIONS |
+| B7 | W8 §4 (Track 2's own parity verdict; Track 1 review not a gate), §5, §6 (Track 2 marks), §7 rewritten (steps 1–6 Track 2 alone; `READY FOR THE FLIP · <sha> · <time>`; one message; Track 1 steps 7–12 after it; install by devicectl without launch, then merge `main`), §8 D/F/H, §10 calls 6 and 8, data-owed E-rows; HANDOFF "The end"; DELIVERY-DAY header, §1, §5–§7; DATA-OWED W8-6 |
+| B8 | HANDOFF "The branch"; CONTRACT §1 (both tracks push `many-bodied`; `main` only at delivery); W0 header item 7 and §1; W8 §7 step 5 (merge after the install; push `main` only with Track 1's Xcode Cloud confirmation, else `MAIN MERGE NOT PUSHED`); DECISIONS (Track 1 owes that confirmation) |
+| B9 | HANDOFF "Order and the Done means status convention" (MET / OWED-TO-TRACK-1 / OWED-TO-SELF; a wave closes when no OWED-TO-SELF remains); CONTRACT §1 rhythm 3; W0 15.2 (queued-for-choice is owed), §6 step 11, §7D; W3/W4/W7 headers (D1 owed, never blocking); DATA-OWED preamble; DECISIONS |
+| S1 | W0 15.11 (CallView.answerLayer signs `— <SIGNED> · <date>`; strips `SIGNED:`/`FROM:`; `CallAnswerTests`; §7B grep; walk step 1 · 02b); CONTRACT §2.6 |
+| S2 | W1 §0 P2, §2.3 rows, §5.1, §6 (`ReceptionMemory.received` / `.mark`) |
+| S3 | W1 §2.2 rule 1 (every story in `store.stories`, Type Story only, no Status check) and the lit-word document frequency |
+| S4 | W5 §2.1 (`enum DoorAsk`), §2.2 (`seasonLetter`, `wager` as overrides), §2.5 R6.5–R6.6 and R7 |
+| S5 | W6 §9.3 (`fetchWaitingTellings()`; Excerpt only for `⟪telling⟫` rows; Body never rendered); W8 §8.B(2) exemption; W2 §1.5 (Waiting Roles fetch Excerpt-free) |
+| S6 | W8 header item 9, §1.3 (verify W6 §9.4), `Planted` → `Planted Seed` throughout incl. App. A (PLANT writes `Body`), `fetchPlantedSeeds()`; DECISIONS |
+| S7 | W0 15.4 (W2's field names `arcChapter`, `region`, `weather`, `stayTurn`; one circle at r 0.40 per W2 §3.3) |
+| S8 | W6 §8.4 (replaces W3 §3.5's static motes) |
+| S9 | W0 15.3 (`-HarnessClock yyyy-MM-dd'T'HH:mm` defined once; `advance 10 min` / `-HarnessAdvance`); W2 walk header and Garden row; W3 §17.3 and step 10; W4 §2.1 points to W0 |
+| S10 | W0 15.6; W2 §1.1, §1.5, App. A; GAMEPLAN §8; CONTRACT §2 write rules and §2.5 |
+| S11 | W2 §12a A–B and Slice 20 item 7; W2 §3.1 (`bindu.room.stay.<key>`); W2 §7.2 / §11 (`bindu.kathas.dwell.<id>`); W5 §3.2 (*the day's first grammar*); W6 §6.2 D (the Spine); W5 §2.2 (`leela` in `warmestRoom`) |
+| S12 | W2 §12a C–E (Beat, Trace, the completed yard) and Slice 20 item 8; W6 §2.5 (witness line, Wall of Voices), §10.5 (walked chains), §9.1 (released vows); W4 §3.5 G (steer, tune); partly-scored items ruled in DECISIONS; CONTRACT §2.6 (`⟪yard⟫`) |
+| S13 | W0 15.10 (`Tools/contrast.py`, `--min`, `--oklch`, `--selftest`) |
+| S14 | HANDOFF: start and resume prompts verbatim; one pinned Simulator `Bindu Feed Walk` (UDID in STATUS.md); the only two messages to Ashrey (token line, final line); permissions note |
+| S15 | W8 §7 step 3 (`com.ashrey.bindufeed.Bindu-Feed`, `-allowProvisioningUpdates`, project path `Bindu Feed/Bindu Feed.xcodeproj`, Neev paired/unlocked/Developer Mode, development build replaces TestFlight, team `VADN2G8B83`); W8 §6 archive line |
+| S16 | content/DATA-OWED.md status column re-read from the base on 12 Oct (Waiting Roles 119 / 22 linked / 7 tellings; Swatches 31; Leela 818–847; Constellations 30; Planted Seeds 4; `⟪one more⟫` 14; `⟪watch:` 19; `⟪journey` 11; `Song` 143; `Shakti` 20; Unwritten 11901–11913); W6-6 marked absent (both states handled; fixtures) |
+| S17 | W0 15.3 (`-HarnessTranscript`); W0 §7C step 14; HANDOFF; W4 §7.5; W8 §6 (real speech on the device walk, never on Neev) |
+
+Also applied from the notes: N1 (HANDOFF source root), N2 (CONTRACT §1 table), N4 (CONTRACT §2.4 band 900–999), N6 (W6 `dance.m4a` generation), N7 (W0 §3 `completeForAccessibility()`), N8 (GAMEPLAN `readers/`). N5 is superseded by S16's read (19 stories carry `⟪watch:`). Not applied (no fix needed by Track 2 or a coordinator call): N3, N9, N10, N11, N12.
