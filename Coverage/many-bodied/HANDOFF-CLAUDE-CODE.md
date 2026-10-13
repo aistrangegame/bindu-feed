@@ -3,10 +3,10 @@
 *Written 12 Oct 2026 by Track 1 (the cloud session); readiness fixes applied the same day (READINESS-REVIEW.md, "Fixes applied"). This file is your whole briefing. Ashrey pastes one short prompt that points here; after that, nobody briefs you again.*
 
 **The start prompt (Ashrey pastes this once):**
-> Build the Many-Bodied Game: read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md` on branch `many-bodied` and follow it.
+> In this folder run `git fetch origin && git checkout many-bodied && git pull`. Then read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md` in full and follow it to the end. You are Track 2: build the Many-Bodied Game, W0 through W8.
 
 **The resume prompt (pasted into every later session, verbatim):**
-> Continue the Many-Bodied build: read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md`, then STATUS.md `## Resume here`.
+> In this folder run `git checkout many-bodied && git pull`. Then continue the Many-Bodied build: read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md`, then `Coverage/many-bodied/STATUS.md` → `## Resume here`, and carry on from there.
 
 ## Who you are in this
 You are **Track 2**: you build every line of Swift for the Many-Bodied Game, waves **W0 → W8** (Slices 14–30), in `~/Bindu Feed`. Track 1 (the cloud session) has already done the reading, the plan, the scores, the Airtable schema, and **all the content**: 332 new stories with their children, Waiting Roles, Swatches, Interludes, Veils, Second Letters, Leela drops, Call answers, Constellations, Planted Seeds. All of it sits in Airtable with `Status = Staged`, so the build on his phone (which reads only `Live`) cannot see it.
@@ -75,11 +75,12 @@ Binding order when things disagree: house laws (CLAUDE.md §10, as amended by it
 - **After each wave**, append to `STATUS.md`: wave, commits, every "Done means" line with its status (MET / OWED-TO-TRACK-1 / OWED-TO-SELF) and evidence path, deferred proofs, `NOT DRIVEN` steps.
 - **Context:** this is a long build. When your context runs low, finish the current slice, push, write the exact next step at the bottom of STATUS.md under `## Resume here`, and stop. Say nothing to Ashrey; the resume prompt above is all a new session needs.
 
-## The only two things you ever say to Ashrey
+## The only three things you ever say to Ashrey
 1. **The token line**, once, only if the pinned Simulator shows the token gate: first add `NEEDS TOKEN IN SIMULATOR` to STATUS.md, then tell him in one sentence: *"Please paste your Airtable token into the Bindu Feed Walk Simulator's token screen."* Never read, print, store or commit the token.
-2. **The final line**, once, at W8 after the install: *"It's on your phone. Tell the cloud session to flip."*
+2. **The phone line**, once, only at W8 if Neev is not reachable for the install: *"Please connect your iPhone to this Mac and unlock it."* Then wait for it.
+3. **The final line**, once, at W8 after the install: *"It's on your phone. Tell the cloud session to flip."*
 
-Nothing else: no questions, no progress, no screenshots, no pauses announced. If you are blocked (Neev not connected at W8, a failure you cannot fix), write it in STATUS.md and stop; Track 1 reads STATUS.md.
+Nothing else: no questions, no progress, no screenshots, no pauses announced. If you are blocked (a failure you cannot fix), write it in STATUS.md and stop; Track 1 reads STATUS.md.
 
 ## The end (W8)
 Follow `scores/W8.md` §4–§7 exactly. Track 2 does all of it alone; Track 1 is not running during the build and nothing waits for it. In short:
