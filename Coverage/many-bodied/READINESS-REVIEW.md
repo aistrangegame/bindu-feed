@@ -464,3 +464,24 @@ The run would hit four snags:
 - **R1:** which W8 rule wins when Neev is unreachable.
 
 With X1 fixed and R1–R4 applied, W0 → W8 runs with no question to anyone beyond the allowed lines.
+
+---
+
+## Re-review fixes applied (12 Oct 2026, on branch `many-bodied`)
+
+| id | Where fixed |
+|---|---|
+| X1 | W0 §1a **step 0b** (W0's first Swift-side commit edits `Tools/bar.sh`: `DEST` from STATUS.md's `UDID:` line, `-skip-testing` for every `W*Walk` / `W*Proof` class and `W0Proof`; walks and proofs run singly with `-only-testing`; DECISIONS and CLAUDE.md §2 record it); W0 header item 1; W0 §6 intro (`-only-testing:"Bindu FeedUITests/W0Proof"`, excluded from the bar); HANDOFF "Commits and checks" (the bar is the unit bar; three clean runs = three bar runs) and "One pinned Simulator" (`UDID: <udid>` line); DECISIONS |
+| R1 | HANDOFF binding note (this file wins on run rules) and line 2 (the coordinator's phone line; end the turn; re-run on reply; then `BLOCKED` + pause line); W8 §7 step 3; DECISIONS :18 |
+| R2 | HANDOFF "Context" (never stop for context; auto-compaction; `## Resume here` kept current) and line 4, the pause line *"The build is paused — the cloud session can read STATUS.md."*; DECISIONS :18 |
+| R3 | HANDOFF line 1 (`open -a Simulator`, device on the token screen; end the turn; re-run on reply) |
+| R4 | W0 15.2 (DEBUG without `-HarnessWrites` never flushes the queue; marking stored in the entry at build time; `-HarnessFresh` keeps `bindu.writes.pending`; queue state recorded before the device walk); W0 15.3 `-HarnessFresh`; W8 §7 step 1 check |
+| R5 | W8 §6 "When" (after the install); §7 step 1 no longer includes §6; new step 3a (device walk, `-HarnessMarkWindow`, read-back, the ledger check: every row since the install carries `BUILD PROOF · `); HANDOFF "The end" item 2 |
+| R6 | W8 §7 step 3 (Neev UDID via `devicectl list devices` into STATUS; installed `CFBundleVersion` N read first; build with `CURRENT_PROJECT_VERSION=<N+1>`; check lists N + 1); HANDOFF "The end" item 2 |
+| R7 | W8 §8 C2 (seed card first in its room, page from the row's `Body`) |
+| R8 | W0 15.3 `-HarnessCallAnswer <recId>`; W0 §6 step 1 uses `-HarnessOpen call` |
+| R9 | W0 15.2 (d) `Date = 2000-01-01` (and deferral until DATA-OWED W8-8 is confirmed); `-HarnessMarkWindow` Codex rule in W0 15.3 and W8 §6 (`Date` → 2000-01-01); DATA-OWED W8-8 (Track 1 confirms no Codex automation fires on creation) |
+| R10 | Ruling applied: HANDOFF "The branch" (local commits; first push only if DECISIONS has `XCODE CLOUD CONFIRMED: main only`, else no push until W8 §7 step 6); W8 §7 steps 1, 2, 5 (merge `main` locally, never pushed by Track 2), 6 (push `many-bodied` and tag always), 12; DELIVERY-DAY §7; DECISIONS :8 rewritten and :19 extended so they agree |
+| R11 | W3 :43 (`ReceptionMemory.received` only); DATA-OWED W8-6 → W8 §6 |
+| R12 | HANDOFF "One pinned Simulator" (fallback: any available iPhone type with an iOS runtime ≥ 18, recorded once in STATUS.md) |
+| R13 | `.claude/settings.json` at the repo root (allowlist: git subcommands incl. `git push origin many-bodied`, `xcodebuild`, `xcrun simctl/devicectl/xcresulttool/xctrace`, `swift`, `Tools/*.sh`, `python3`, `plutil`, `say`, `afconvert`, `open -a Simulator`, read tools, Read/Edit/Write in the repo; deny: `curl`, `wget`, `ssh`, `scp`, `xcrun altool`, `xcrun notarytool`, `xcodebuild -exportArchive`, `git push origin main`, force pushes, WebFetch); HANDOFF "Permissions" points to it and to `--permission-mode acceptEdits` |

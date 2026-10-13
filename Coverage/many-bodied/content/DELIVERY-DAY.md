@@ -57,7 +57,7 @@ DATA-A's Staged rows, for the cross-check: 15 Interludes, 13 Veils, 14 Second Le
 ## 7 · Close (W8 §7 steps 10–12)
 - [ ] The composing pipeline: `create_trigger` with W8 Appendix B exactly (notifications `{}`). Then `fire_trigger` it once and read the run.
 - [ ] The one message about the house was Track 2's (*"It's on your phone. Tell the cloud session to flip."*). Track 1's reply to his "flip" is one word, nothing with it: `Done.`
-- [ ] Update the bindu-feed skill (W8 §3.1). Add one ARC Action Center line: *"Bindu Feed — new build delivered to Neev, <date>."* Commit `Coverage/many-bodied/` on `many-bodied`, merge into `main`, push both (push `main` too if W8 §7 step 5 left it local).
+- [ ] Update the bindu-feed skill (W8 §3.1). Add one ARC Action Center line: *"Bindu Feed — new build delivered to Neev, <date>."* Commit `Coverage/many-bodied/` on `many-bodied`, merge into `main`, push `many-bodied`, and push `main` (W8 §7 step 5 merged it locally; only Track 1 pushes it).
 
 ## Also held for this day, if they happen at all
 - **C0c** (the light-touch screen of existing story text: 3, 44, 72, 74, 76, 81, 106, 109, and the backstage fields of 118 and 120). Any edit to a Live story's `Body`, `Name` or `Excerpt` would show on the installed build, so it waits for this day, after §5.
