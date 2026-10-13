@@ -559,3 +559,17 @@ With X1 fixed and R1–R4 applied, W0 → W8 runs with no question to anyone bey
     - 14a closes like a wave: §7 J and I MET, walk steps 23 and 24, and a parity run of §7C steps 3, 5, 8 and 9 on the same screenshots as before 14a.
     - It gets its own STATUS.md section `W0 · 14a`.
     - 14.0 starts only when that section has no `OWED-TO-SELF`.
+
+## Final review fixes applied (12 Oct 2026)
+
+| Id | Where fixed |
+|---|---|
+| **F1** | W0 §2a: new **14a.2b · Decode by field ID** (15.1's items 1–6, ID tables and proof moved unchanged); 15.1 reads *"Built in 14a.2b."*; 14a.2 now declares `byFieldId: Bool` per request (true for The Feed and App Activity, false for the Codex and sibling catalogs); "14.0 starts after 14a.10" (and after the 14a checkpoint). References to 15.1 updated (15.2, 15.11, §7 E). |
+| **S1** | W0 15.5 (+14.16, LINEAGE §4.3): `ArchiveBookView` back cover gains `what found you ›` (`t.label`, `ink.2`, 44 pt) → `.book`; W3 §7.2 retires it when the contents lines land. |
+| **S2** | W0 14.24 and §5 (resume-as-opening): before W6, the river header shows the labelled `‹ <first three words>` after AshMark while `NavModel.axisReturn` is set; W6 folds it into the root axis's ‹. |
+| **S3** | W0 new **14a.0 · the gates first** (`house_law.sh` skeleton + 14a's checks, fixtures, `contrast.py` base/`--tier`/`--cvd`/`--gate`, `check_state.py` skeleton, `ratchet.txt`); `forgetMe()` moved into 14a.4; 15.9 keeps STATE.md, `roadRecord`, the alert; 15.10 completes the battery. |
+| **S4** | FORM §5: F-018, F-020, F-025, F-026, F-027, F-035, F-039, F-046 → **MUST**; the same marked MUST in W0's header and in 14a.7, 14a.8, 14a.9, 14a.10, 14.4, 14.22, 14.26. |
+| **S5** | Coherent choice: W0 keeps its real API (`choose(eligible:)`, `DeviceKey.arrivalLastKind`); W4 §0 row W0 renamed to it (bag attributed to W5's R7); W4 §2.3 adds `ArrivalRules.chooseForDoor(weather:)` (pure, `Domain/`) filtering by weather then calling `choose(eligible:)` — the Door's single slot seam; W5 fills the bag behind it. DECISIONS line added. |
+| **S6** | DECISIONS: superseding "Names" entry appended. W3 :32, :72, :149, :728 and W6 :41, :43, :47, :137 corrected (ledger 14a.9 / `WalkModel`, `Domain/RoomCanon.swift` + `Rooms/RoomCanon+Look.swift`, `Harness/HarnessConfig.swift`). W0 14a.4's NavModel list gains `callOpen`. |
+| **S7** | FORM §1 law 8 and §2.2: the ≤ 700 pt budget withdrawn; the measure is "fits one screen at 390 × 844; scrolls on SE, opening on band 1 and his row" (W0 14.22 matches). DECISIONS: the breath-units line limited to new twins, and the kept stillness exceptions listed explicitly. |
+| **S8** | W0 §1 and end of §2a: **the 14a checkpoint** — §7 I and J MET, walk steps 23–24, parity run of §7C steps 3, 5, 8, 9; its own STATUS.md section `W0 · 14a`; 14.0 starts only when it has no `OWED-TO-SELF`. §7 J updated. |
