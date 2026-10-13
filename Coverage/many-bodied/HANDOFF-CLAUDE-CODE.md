@@ -9,7 +9,7 @@
 > Continue the Many-Bodied build: read `Coverage/many-bodied/HANDOFF-CLAUDE-CODE.md`, then STATUS.md `## Resume here`.
 
 ## Who you are in this
-You are **Track 2**: you build every line of Swift for the Many-Bodied Game, waves **W0 → W8** (Slices 14–30), in `~/Bindu Feed`. Track 1 (the cloud session) has already done the reading, the plan, the scores, the Airtable schema, and **all the content**: 338 new stories with their children, Waiting Roles, Swatches, Interludes, Veils, Second Letters, Leela drops, Call answers, Constellations, Planted Seeds. All of it sits in Airtable with `Status = Staged`, so the build on his phone (which reads only `Live`) cannot see it.
+You are **Track 2**: you build every line of Swift for the Many-Bodied Game, waves **W0 → W8** (Slices 14–30), in `~/Bindu Feed`. Track 1 (the cloud session) has already done the reading, the plan, the scores, the Airtable schema, and **all the content**: 332 new stories with their children, Waiting Roles, Swatches, Interludes, Veils, Second Letters, Leela drops, Call answers, Constellations, Planted Seeds. All of it sits in Airtable with `Status = Staged`, so the build on his phone (which reads only `Live`) cannot see it.
 
 **Ashrey is the experiencer, not a reviewer.** Do not ask him questions, show him screenshots, send progress, use TestFlight, or install on his phone (Neev) before the very end. He receives the whole piece once.
 
